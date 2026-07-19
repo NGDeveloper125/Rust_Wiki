@@ -40,6 +40,42 @@ fn main() {
 an unterminated block comment is a compile error, unlike a line comment
 which simply ends at the newline.
 
+## Best practices & deeper information
+
+### Scenario: Testing
+
+While tracking down a failing test, it's common to temporarily comment
+out a whole test function to isolate the problem. `/* */`'s nesting is
+what makes this safe even when the test body already contains its own
+comments — a plain `//`-based approach would require commenting out
+every line individually.
+
+```
+/*
+#[test]
+fn flaky_retry_logic() {
+    // this test intermittently fails on slow CI runners — disabled
+    // while investigating; see issue tracker
+    let result = retry_with_backoff(3);
+    assert!(result.is_ok());
+}
+*/
+// <- the whole block above (including its own // comments) is inert;
+//    because /* */ nests, a stray */ inside the disabled code can't
+//    accidentally close this wrapper early
+
+#[test]
+fn stable_retry_logic() {
+    assert_eq!(retry_with_backoff(0), Ok(()));
+}
+```
+
+**Why this way:** this is a deliberately temporary debugging aid, not a
+substitute for `#[ignore]` — once the investigation is done, either fix
+the test or mark it properly with `#[ignore = "reason"]` so it still
+shows up (as skipped) in `cargo test` output instead of silently
+vanishing from the codebase.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure lexical construct — no `std` dependency.
