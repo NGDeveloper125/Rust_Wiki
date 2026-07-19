@@ -78,6 +78,11 @@ Every page starts from the same skeleton (fields TBD once we pick a stack):
 ```
 Title:            <the syntax word or concept name>
 Group:            syntax | concept
+Groups:           [sidebar groups this page appears under — many-to-many;
+                   a page can belong to multiple groups at once, each shown
+                   here rather than picking one "primary" home]
+Embedded support: full | partial | none   (drives the Classic/Embedded
+                   toggle — see §2.5; disabled in the UI when `none`)
 Related concepts: [links]   (on syntax pages)
 Related syntax:   [links]   (on concept pages)
 See also:         [links to sibling pages]
@@ -85,6 +90,7 @@ See also:         [links to sibling pages]
 ## Explanation
 ## Basic usage example
 ## Best practices & deeper information
+## Embedded Rust Notes   (short delta note, see §2.5 — not a rewritten page)
 ```
 
 ### 2.2 Cross-reference rule
@@ -106,6 +112,34 @@ See also:         [links to sibling pages]
 - "Best practices" is opinionated by nature. Where a claim is non-obvious, cite
   it (std docs, RFCs, Rust reference, clippy lint) so the wiki stays trustworthy
   and reviewable.
+
+### 2.5 Embedded Rust toggle — DECIDED: lightweight delta notes, per-page support status
+
+Every page carries a **Classic Rust / Embedded Rust** toggle in the UI.
+Toggling does **not** swap out the three core sections (Explanation / Basic
+usage / Best practices) — those stay written for hosted, `std`-available
+Rust, unchanged. Instead, each page gets one additional block, **Embedded
+Rust Notes**, shown when the toggle is switched to Embedded. This avoids
+duplicating explanations for the (large) majority of syntax/concepts that
+behave identically in `#![no_std]` — see the "lightweight vs full parallel
+page" tradeoff this resolves.
+
+**Front-matter field:** `embedded_support: full | partial | none`
+- `full` — behaves identically in `#![no_std]`; toggle enabled.
+- `partial` — available with a caveat (typically: needs the `alloc` crate
+  plus a `#[global_allocator]`, or an idiomatic embedded substitute like
+  `heapless`); toggle enabled.
+- `none` — fundamentally requires `std`/an OS (`std::thread`, `std::fs`, a
+  hosted async runtime, …); **toggle rendered disabled/grayed out** in the
+  UI. The Embedded Rust Notes block is still present even when disabled —
+  it explains *why* the toggle is off, so a disabled toggle isn't a dead
+  end for the reader.
+
+**Content rule:** the Embedded Rust Notes block is short — a few sentences,
+not a rewritten page. It states the support level, the reason for any
+caveat, and the idiomatic embedded alternative if one exists
+(`heapless::Vec` instead of `alloc::vec::Vec`, a `critical-section`-based
+mutex instead of `std::sync::Mutex`, etc.).
 
 ---
 
@@ -256,6 +290,8 @@ check.
 | 7 | Authoring: raw HTML vs. generator (§4.8) | _open_ | |
 | 8 | Token→slug table (§4.11) | _open (needed before mass page creation)_ | |
 | 9 | First vertical slice page set (§4.7) | _open_ | |
+| 10 | Sidebar/group membership | **Many-to-many** — a page may belong to multiple groups at once (e.g. a syntax token appearing under two concept areas, or a concept appearing under several taxonomies); no forced single "primary" group. Group names are listed on the page itself | 2026-07-18 |
+| 11 | Embedded Rust toggle (§2.5) | **Lightweight delta notes** — the 3 core sections stay hosted-Rust-only; one added "Embedded Rust Notes" block per page, driven by an `embedded_support: full/partial/none` field. `none` disables the toggle in the UI but the block still explains why | 2026-07-18 |
 
 ---
 
