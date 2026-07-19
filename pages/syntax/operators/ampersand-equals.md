@@ -31,6 +31,29 @@ flags &= 0b1010; // <- clears bits not set in the mask, in place
 **Restriction:** the left-hand side must be a mutable binding
 (`let mut`) — `&=` assigns in place.
 
+## Best practices & deeper information
+
+### Scenario: Bit manipulation and flags
+
+Clearing a single flag bit without disturbing the rest of the set is the
+classic use of `&=`: AND the current bits against the complement of the
+bit you want gone.
+
+```
+const FLAG_ACTIVE: u8   = 0b0001;
+const FLAG_PENDING: u8  = 0b0010;
+const FLAG_ARCHIVED: u8 = 0b0100;
+
+let mut status: u8 = FLAG_ACTIVE | FLAG_PENDING | FLAG_ARCHIVED;
+status &= !FLAG_PENDING; // <- clears the PENDING bit in place, keeping the others
+assert_eq!(status, FLAG_ACTIVE | FLAG_ARCHIVED);
+```
+
+**Why this way:** `flags &= !bit` is the standard clear-a-bit idiom
+documented on [`BitAndAssign`](https://doc.rust-lang.org/std/ops/trait.BitAndAssign.html) —
+see [`+=`](plus-equals.md) for the fuller treatment of compound-assignment
+operators shared across `+=`, `-=`, `*=`, and the rest of the family.
+
 ## Embedded Rust Notes
 
 **Full support.** `BitAndAssign` lives in `core::ops` — clearing specific

@@ -42,6 +42,37 @@ let done = false;
 let not_done = !done; // <- `!` negates the bool
 ```
 
+## Best practices & deeper information
+
+### Scenario: Validating input
+
+Writing a guard as `if !is_valid(x)` keeps the happy path as the
+unindented continuation of the function, instead of nesting the whole
+body inside `if is_valid(x) { ... }`.
+
+```
+struct Config {
+    port: u16,
+    hostname: String,
+}
+
+fn is_valid(config: &Config) -> bool {
+    config.port > 0 && !config.hostname.is_empty()
+}
+
+fn load(config: &Config) {
+    if !is_valid(config) { // <- `!` negates the validity check into a guard condition
+        panic!("invalid config: {}:{}", config.hostname, config.port);
+    }
+    println!("loading {}:{}", config.hostname, config.port);
+}
+```
+
+**Why this way:** the early-return/early-panic style is favored by the
+[Rust Design Patterns' idioms](https://rust-unofficial.github.io/patterns/idioms.html)
+over deeply nesting the success path inside a positive `if`, and `!`
+combined with a guard clause is the idiomatic way to write it.
+
 ## Embedded Rust Notes
 
 **Full support.** `Not` lives in `core::ops`; macro invocation and the

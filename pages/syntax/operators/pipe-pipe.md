@@ -36,6 +36,57 @@ condition) is expected can only be a closure.
 let out_of_range = a < 0 || a > 100; // <- `||` short-circuiting logical OR
 ```
 
+## Best practices & deeper information
+
+### Scenario: Validating input
+
+Rejecting a request that's either empty or over a configured limit reads
+naturally as an `||` of two independent conditions, with short-circuiting
+avoiding a wasted `len()` call when the list is already empty.
+
+```
+const MAX_ITEMS: usize = 100;
+
+fn reject(order_items: &[u32]) -> bool {
+    order_items.is_empty() || order_items.len() > MAX_ITEMS
+    //                     ^^ only evaluated if `is_empty()` was false
+}
+
+assert!(reject(&[]));
+assert!(!reject(&[1, 2, 3]));
+```
+
+**Why this way:** ordering the cheaper, more-likely-true check first
+lets short-circuiting skip the second check entirely on the common path,
+which the [Rust Reference](https://doc.rust-lang.org/reference/expressions/operator-expr.html#lazy-boolean-operators)
+documents as guaranteed evaluation order, not just an optimization detail
+to rely on incidentally.
+
+### Scenario: Handling and propagating errors
+
+Guarding a fallible operation behind an `||` check lets the guard clause
+bail out via `?` before an operation that would otherwise panic or return
+an `Err`, such as indexing into a possibly-too-short buffer.
+
+```
+fn read_header(buf: &[u8]) -> Result<u16, &'static str> {
+    if buf.is_empty() || buf.len() < 2 {
+        // <- `||`: either condition alone is enough to reject `buf`
+        return Err("buffer too short to contain a header");
+    }
+    Ok(u16::from_be_bytes([buf[0], buf[1]]))
+}
+
+assert!(read_header(&[0x01]).is_err());
+assert_eq!(read_header(&[0x00, 0x2A]), Ok(42));
+```
+
+**Why this way:** checking both failure conditions up front with `||`
+turns a potential panic (indexing `buf[1]` on a one-byte slice) into a
+handled `Err`, in line with the fail-fast validation style the
+[Book](https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html)
+recommends for recoverable input errors.
+
 ## Embedded Rust Notes
 
 **Full support** for both meanings — logical OR and zero-argument
