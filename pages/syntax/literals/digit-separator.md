@@ -35,6 +35,29 @@ let value = 10_000;
 **Restriction:** an underscore can't be the very first character of the
 literal — `_1_000` is parsed as an identifier, not a numeric literal.
 
+## Best practices & deeper information
+
+### Scenario: Numeric computation
+
+A large constant like a byte limit or a Unix timestamp is much easier to
+proofread once it's grouped into readable chunks.
+
+```
+const MAX_UPLOAD_BYTES: u64 = 10_485_760;   // <- digit separators: 10 MiB, grouped in thousands
+const EPOCH_2024_01_01: u64 = 1_704_067_200; // <- digit separators: easier to verify against a known timestamp
+
+fn is_within_limit(size: u64) -> bool {
+    size <= MAX_UPLOAD_BYTES
+}
+```
+
+**Why this way:** grouping digits in threes mirrors how people read large
+numbers, which makes a stray or missing digit far more likely to jump out
+during review than in one unbroken run — the
+[Rust Reference](https://doc.rust-lang.org/reference/tokens.html#integer-literals)
+permits `_` anywhere inside a numeric literal specifically to support
+this.
+
 ## Embedded Rust Notes
 
 **Full support.** Purely cosmetic at compile time — no `std` dependency,

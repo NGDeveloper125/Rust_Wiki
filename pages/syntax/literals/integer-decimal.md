@@ -31,6 +31,56 @@ to pin the literal's type explicitly — see
 let count = 42; // <- decimal integer literal: base 10, no prefix needed
 ```
 
+## Best practices & deeper information
+
+### Scenario: Numeric computation
+
+Decimal is the natural base for everyday quantities — order counts, prices
+in cents — and feeds straight into checked arithmetic when the inputs
+might overflow.
+
+```
+fn total_cents(unit_price_cents: u32, quantity: u32) -> Option<u32> {
+    unit_price_cents.checked_mul(quantity)
+}
+
+let subtotal = total_cents(1999, 3); // <- decimal literals: the natural base for prices and counts
+assert_eq!(subtotal, Some(5997));
+```
+
+**Why this way:** `checked_mul` turns a would-be silent overflow into an
+explicit `None` the caller must handle, which the
+[std docs for `checked_mul`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_mul)
+recommend over plain `*` whenever either operand could come from outside
+the function.
+
+### Scenario: Creating a new object
+
+A `Default` impl built from plain decimal literals gives callers a
+documented, zero-argument starting point instead of forcing every call
+site to repeat the same constants.
+
+```
+struct RetryPolicy {
+    max_attempts: u32,
+    backoff_ms: u64,
+}
+
+impl Default for RetryPolicy {
+    fn default() -> Self {
+        RetryPolicy {
+            max_attempts: 3,   // <- decimal literal: a sensible default value
+            backoff_ms: 500,   // <- decimal literal: a sensible default value
+        }
+    }
+}
+```
+
+**Why this way:** implementing `Default` with straightforward literal
+values documents the intended starting point at one place, which the
+[API Guidelines' C-COMMON-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits)
+recommends for any type with an obvious default.
+
 ## Embedded Rust Notes
 
 **Full support.** Integer literals are core lexical grammar — identical

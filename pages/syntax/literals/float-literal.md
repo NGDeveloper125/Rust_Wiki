@@ -36,6 +36,47 @@ let temp = 36.6; // <- float literal: the decimal point makes this an `f64` by d
 method-call syntax immediately after — `2.abs()` requires a space or
 parentheses (`2 .abs()` / `(2.).abs()`) to parse as intended.
 
+## Best practices & deeper information
+
+### Scenario: Numeric computation
+
+A unit-conversion formula reads clearest when every literal in it is
+visibly floating-point, including whole numbers.
+
+```
+fn celsius_to_fahrenheit(c: f64) -> f64 {
+    c * 1.8 + 32.0 // <- float literals: `1.8` and `32.0` are unambiguously f64, not coerced ints
+}
+
+let reading = celsius_to_fahrenheit(21.5);
+```
+
+**Why this way:** writing whole-number operands as `32.0` rather than
+`32` keeps every value in the expression visibly floating-point, so a
+type mismatch shows up as a compile error at the exact spot it was
+introduced instead of relying on inference to paper over it.
+
+### Scenario: Validating input
+
+Float equality is unreliable, so validating a measurement against a
+target uses a small tolerance instead of `==`.
+
+```
+const EPSILON: f64 = 1e-9; // <- float literal: exponent form, a tiny comparison tolerance
+
+fn is_close_to_target(measured: f64, target: f64) -> bool {
+    (measured - target).abs() < EPSILON
+}
+
+assert!(is_close_to_target(98.6000001, 98.6));
+```
+
+**Why this way:** direct `==` on floats fails for values that are
+mathematically equal but differ in their last bit due to rounding;
+comparing against an epsilon threshold is the standard workaround, which
+is why [Clippy's `float_cmp` lint](https://rust-lang.github.io/rust-clippy/master/index.html#float_cmp)
+flags direct float equality checks in the first place.
+
 ## Embedded Rust Notes
 
 **Full support**, but worth checking your target: many microcontrollers
