@@ -40,6 +40,49 @@ count = 5; // <- `=` assigns 5 to `count`
 **Restriction:** reassigning with `=` requires the binding to be
 declared `mut` — `let x = 0; x = 1;` without `mut` is a compile error.
 
+## Best practices & deeper information
+
+### Scenario: Modifying an existing object
+
+Reassigning a mutable binding with `=` replaces its value wholesale,
+which keeps the binding always representing one complete, valid state
+rather than a half-updated one.
+
+```
+enum ConnectionState {
+    Disconnected,
+    Connected,
+}
+
+let mut state = ConnectionState::Disconnected;
+// ... connection succeeds ...
+state = ConnectionState::Connected; // <- `=` replaces the old value entirely, not piecemeal
+```
+
+**Why this way:** replacing the whole binding in one `=` avoids any
+window where `state` is partially updated, echoing the "make invalid
+states unrepresentable" idea from [Effective Rust](https://effective-rust.com/)
+applied to a plain mutable variable rather than a struct's fields.
+
+### Scenario: Creating a new object
+
+The `=` in a `let` binds a new value to a new name; unlike a later
+reassignment, this occurrence never requires `mut`.
+
+```
+struct Reading {
+    sensor_id: u32,
+    celsius: f64,
+}
+
+let reading = Reading { sensor_id: 7, celsius: 21.4 }; // <- `=` binds the new value to `reading`
+```
+
+**Why this way:** per the [Book's variables chapter](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html),
+bindings are immutable by default — add `mut` only once a binding is
+actually going to be reassigned later, keeping the default the more
+restrictive, safer one.
+
 ## Embedded Rust Notes
 
 **Full support.** Assignment and move semantics are core language

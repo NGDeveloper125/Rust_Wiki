@@ -44,6 +44,49 @@ if x > 0 {
 }
 ```
 
+## Best practices & deeper information
+
+### Scenario: Branching on data (pattern matching)
+
+A chain of `else if` branches testing the same value one case at a time
+still compiles fine, but once every branch tests a different variant of
+the same enum, that's the signal to reach for `match` instead — the
+compiler then checks that every variant is handled, rather than trusting
+the chain's final `else` to catch what's left.
+
+```
+enum ConnectionState { Connecting, Connected, Disconnected, Failed(String) }
+
+// AVOID: an else-if chain re-testing the same value, one variant at a time
+fn describe_avoid(state: &ConnectionState) -> &str {
+    if matches!(state, ConnectionState::Connecting) {
+        "connecting"
+    } else if matches!(state, ConnectionState::Connected) { // <- each `else if` re-tests the same value against one more variant
+        "connected"
+    } else if matches!(state, ConnectionState::Disconnected) {
+        "disconnected"
+    } else { // <- silently also catches `Failed(_)`, discarding its message
+        "failed"
+    }
+}
+
+// PREFER: `match` forces every variant to be handled explicitly
+fn describe(state: &ConnectionState) -> &str {
+    match state {
+        ConnectionState::Connecting => "connecting",
+        ConnectionState::Connected => "connected",
+        ConnectionState::Disconnected => "disconnected",
+        ConnectionState::Failed(_) => "failed",
+    }
+}
+```
+
+**Why this way:** a `match` on an enum is checked for exhaustiveness at
+compile time, so adding a new variant later forces every `match` on it to
+be updated — an `else`-if chain gives no such guarantee, per the
+[Book's chapter on `match`](https://doc.rust-lang.org/book/ch06-02-match.html).
+See [`if`](if.md) for the fuller `if`/`else` treatment.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency — behaves identically in `#![no_std]`.

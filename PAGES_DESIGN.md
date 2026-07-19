@@ -63,7 +63,8 @@ Every page (both groups) has the same three sections, in order:
 1. **Explanation** — the pure, plain explanation of what it is and what it does.
 2. **Basic usage example** — the simplest representative, runnable example.
 3. **Best practices & deeper information** — idioms, gotchas, scenario-specific
-   guidance, performance notes, and anything else worth knowing.
+   guidance, performance notes, and anything else worth knowing. Structured as
+   scenario blocks from a fixed catalog — see [SECTION3_GUIDE.md](SECTION3_GUIDE.md).
 
 ---
 
@@ -292,6 +293,7 @@ check.
 | 9 | First vertical slice page set (§4.7) | _open_ | |
 | 10 | Sidebar/group membership | **Many-to-many** — a page may belong to multiple groups at once (e.g. a syntax token appearing under two concept areas, or a concept appearing under several taxonomies); no forced single "primary" group. Group names are listed on the page itself | 2026-07-18 |
 | 11 | Embedded Rust toggle (§2.5) | **Lightweight delta notes** — the 3 core sections stay hosted-Rust-only; one added "Embedded Rust Notes" block per page, driven by an `embedded_support: full/partial/none` field. `none` disables the toggle in the UI but the block still explains why | 2026-07-18 |
+| 12 | Section 3 structure (§1.3) | **Scenario-based** — a fixed catalog of real-world scenarios with stable titles (`### Scenario: …`); each page gets 2–4 blocks for only the scenarios where its item is load-bearing. Catalog, crate policy, sources, and QA rules in [SECTION3_GUIDE.md](SECTION3_GUIDE.md) | 2026-07-19 |
 
 ---
 

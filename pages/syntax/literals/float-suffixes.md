@@ -28,6 +28,31 @@ GPU/graphics interop or memory-constrained contexts).
 let ratio = 0.5f32; // <- `f32` suffix pins the literal's type explicitly
 ```
 
+## Best practices & deeper information
+
+### Scenario: Numeric computation
+
+In a generic numeric function, the compiler has nothing but the literals
+themselves to pin the type parameter — without a suffix, every argument
+would default to `f64`.
+
+```
+fn lerp<T>(a: T, b: T, t: T) -> T
+where
+    T: std::ops::Add<Output = T> + std::ops::Sub<Output = T> + std::ops::Mul<Output = T> + Copy,
+{
+    a + (b - a) * t
+}
+
+let position = lerp(0.0f32, 10.0f32, 0.25f32); // <- `f32` suffix: pins T to f32, not the f64 default
+```
+
+**Why this way:** without suffixes, `lerp(0.0, 10.0, 0.25)` would silently
+pick `f64` for `T`, which matters when the result is headed for
+`f32`-only territory like a GPU buffer — see
+[float literal](float-literal.md) for the `f64`-by-default rule this
+overrides.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency — see

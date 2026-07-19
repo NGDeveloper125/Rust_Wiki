@@ -35,6 +35,32 @@ let name: &std::ffi::CStr = c"sensor01"; // <- c-string literal: produces `&CStr
 **Restriction:** the content cannot contain an embedded `\0` — a C
 string is nul-terminated, so an interior null byte is a compile error.
 
+## Best practices & deeper information
+
+### Scenario: Working with text
+
+Preparing a `CStr` constant that will eventually be handed to a C API is
+just a matter of writing the literal and holding onto it — the FFI call
+itself is a separate concern, not shown here.
+
+```
+use std::ffi::CStr;
+
+// A device name a C driver expects as a nul-terminated string.
+const DEVICE_NAME: &CStr = c"sensor-hub-01"; // <- c-string literal: nul terminator added at compile time
+
+fn device_name() -> &'static CStr {
+    DEVICE_NAME // ready to pass to a C function expecting `*const c_char` -- the call itself is out of scope here
+}
+```
+
+**Why this way:** a `c"..."` literal produces its nul-terminated bytes at
+compile time, so a fixed constant like this never needs the fallible,
+allocating `CString::new(...).unwrap()` path at runtime — the
+[std docs for `CStr`](https://doc.rust-lang.org/std/ffi/struct.CStr.html)
+describe the literal as the direct replacement for that pattern whenever
+the content is known ahead of time.
+
 ## Embedded Rust Notes
 
 **Full support** — `CStr` lives in `core::ffi`, not `std::ffi`, which

@@ -33,6 +33,32 @@ let x = 1u8 << 3; // <- `<<` shifts the bits of `1u8` left by 3
 type's bit width panics in debug builds; use `checked_shl`/`wrapping_shl`
 for defined behavior at the boundary.
 
+## Best practices & deeper information
+
+### Scenario: Bit manipulation and flags
+
+Turning a bit position into a single-bit mask — "the bit for pin 5" — is
+one of `<<`'s most common jobs, and reads far more clearly than writing
+out the equivalent literal by hand.
+
+```
+const PIN_COUNT: u8 = 8;
+
+fn pin_mask(pin: u8) -> u8 {
+    debug_assert!(pin < PIN_COUNT);
+    1 << pin // <- `<<` turns a pin index into a single set bit
+}
+
+let enabled = pin_mask(0) | pin_mask(3) | pin_mask(5);
+assert_eq!(enabled, 0b0010_1001);
+```
+
+**Why this way:** `1 << pin` names the intent ("the bit at this
+position") directly, whereas hand-computing the equivalent power-of-two
+literal invites off-by-one mistakes; the
+[Rust by Example bitwise chapter](https://doc.rust-lang.org/rust-by-example/primitives/literals.html)
+shows the same shift-to-build-a-mask idiom.
+
 ## Embedded Rust Notes
 
 **Full support.** `Shl` lives in `core::ops` — bit shifts are used

@@ -50,6 +50,38 @@ extremely deep list can overflow the stack on drop, which is why
 production code often reworks deeply recursive structures into an
 iterative form instead.
 
+## Best practices & deeper information
+
+### Scenario: Branching on data (pattern matching)
+
+Matching directly on a `Box`-recursive enum reads no differently than
+matching any other enum — the compiler auto-derefs through the `Box` at
+each step of the recursion.
+
+```
+enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+use List::{Cons, Nil};
+
+fn sum(list: &List) -> i32 {
+    match list { // <- recurses through the Box at each step, one match arm per shape
+        Cons(value, rest) => value + sum(rest), // <- rest: &Box<List>, matched and recursed into directly
+        Nil => 0,
+    }
+}
+
+let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))));
+println!("{}", sum(&list)); // 6
+```
+
+**Why this way:** the
+[Rust Book](https://doc.rust-lang.org/book/ch15-01-box.html) walks
+through this exact `Cons`-list shape — matching straight through the
+`Box` keeps the recursive walk as simple to read as any non-boxed enum,
+despite the heap indirection each `Cons` involves underneath.
+
 ## Embedded Rust Notes
 
 **Partial support.** `Box<T>` lives in `alloc` and needs a configured

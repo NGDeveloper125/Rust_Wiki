@@ -31,6 +31,28 @@ let path: &[u8] = br"D:\logs\out"; // <- `br"..."`: raw (no escapes) + byte stri
 `"`, it must be wrapped in matching `#` delimiters — `br#"..."#` — with
 enough `#`s to avoid ambiguity.
 
+## Best practices & deeper information
+
+### Scenario: Bit manipulation and flags
+
+A byte sequence that's naturally full of backslashes — a Windows-style
+path embedded as bytes — reads far better as a raw byte string.
+
+```
+// AVOID: every backslash needs doubling, and this is a byte string on top of that
+let escaped: &[u8] = b"C:\\Windows\\System32\\drivers\\etc\\hosts";
+
+// PREFER: raw byte string, backslashes are literal bytes, not escapes
+let raw: &[u8] = br"C:\Windows\System32\drivers\etc\hosts"; // <- raw byte string literal: no escape processing
+
+assert_eq!(escaped, raw);
+```
+
+**Why this way:** a raw byte string avoids doubling every backslash in a
+byte sequence that's naturally full of them — see
+[byte string literal](byte-string-literal.md) for the escape-processing
+rules this form opts out of.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency, no allocation required.

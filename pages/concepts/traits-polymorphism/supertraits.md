@@ -52,6 +52,64 @@ impl Greet for Cat {} // only allowed because Cat also implements Named
 println!("{}", Cat.greet());
 ```
 
+## Best practices & deeper information
+
+### Scenario: Implementing traits
+
+The standard library itself leans on supertraits: `Eq` requires
+`PartialEq`, so implementing `Eq` for a type is only possible once
+`PartialEq` is implemented too.
+
+```
+#[derive(PartialEq)] // <- required first: Eq's supertrait
+struct SensorId(u32);
+
+impl Eq for SensorId {} // only allowed because SensorId already implements PartialEq
+
+fn all_present<T: Eq>(ids: &[T], target: &T) -> bool { // <- Eq usable here because SensorId satisfies it
+    ids.contains(target)
+}
+
+all_present(&[SensorId(1), SensorId(2)], &SensorId(2));
+```
+
+**Why this way:** `Eq` adds no methods of its own — it only asserts that
+`PartialEq`'s equality is total (reflexive for every value) — which is
+exactly the kind of "implementer promises an extra property" role a
+supertrait exists to express; see
+[`std::cmp::Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html).
+
+### Scenario: Writing generic code
+
+A generic function bounded by a trait that has a supertrait can call the
+supertrait's methods too, without adding a second bound — the supertrait
+relationship already guarantees it's implemented.
+
+```
+trait Named {
+    fn name(&self) -> String;
+}
+trait Reportable: Named { // <- Reportable's supertrait guarantees name() exists
+    fn severity(&self) -> u8;
+}
+
+fn report<T: Reportable>(item: &T) -> String {
+    format!("[{}] severity {}", item.name(), item.severity()) // <- name() usable with only a Reportable bound
+}
+
+struct DiskAlert;
+impl Named for DiskAlert { fn name(&self) -> String { "disk".into() } }
+impl Reportable for DiskAlert { fn severity(&self) -> u8 { 3 } }
+
+report(&DiskAlert);
+```
+
+**Why this way:** writing `fn report<T: Reportable + Named>` would be
+redundant — the
+[Rust Book](https://doc.rust-lang.org/book/ch10-02-traits.html) treats a
+supertrait bound as already implying its own bound is satisfied wherever
+the sub-trait's bound is required.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std`/allocator dependency.

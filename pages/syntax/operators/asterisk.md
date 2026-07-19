@@ -38,6 +38,53 @@ let r = &x;
 let y = *r; // <- `*` dereferences `r`, reading the value it points to
 ```
 
+## Best practices & deeper information
+
+### Scenario: Sharing data with multiple references
+
+Reading through a smart pointer with explicit `*` is mostly needed
+outside method calls — for comparisons, formatting, or passing the
+pointee itself somewhere a reference isn't wanted.
+
+```
+use std::rc::Rc;
+
+let shared_config = Rc::new(String::from("production"));
+let handle_a = Rc::clone(&shared_config);
+let handle_b = Rc::clone(&shared_config);
+
+if *handle_a == *handle_b { // <- `*` follows each handle to the String it points to
+    println!("both handles agree: {}", *handle_a); // <- and again here, for formatting
+}
+```
+
+**Why this way:** `Deref` lets `Rc<T>`/`Box<T>` be read as if they were a
+plain `&T`, and auto-deref already handles method calls (`handle_a.len()`
+needs no `*`) — explicit `*` is reserved for the cases auto-deref doesn't
+cover, per the [Book's Deref chapter](https://doc.rust-lang.org/book/ch15-02-deref.html).
+
+### Scenario: Mutating through a reference
+
+Writing `*reference = value` (or a compound form like `*reference +=
+value`) is how a function mutates the caller's data through a `&mut`
+parameter, rather than rebinding its own local copy of the pointer.
+
+```
+fn apply_offset(reading: &mut f64, offset: f64) {
+    *reading += offset; // <- `*` dereferences the &mut, writing through it
+}
+
+let mut temperature = 21.5;
+apply_offset(&mut temperature, -0.3);
+println!("calibrated: {temperature}");
+```
+
+**Why this way:** per the [Book's references chapter](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html),
+writing `reading = ...` without the `*` would just rebind the local
+`&mut f64` parameter and never touch `temperature` in the caller —
+`*reading = ...` is what reaches through the reference to the value
+itself.
+
 ## Embedded Rust Notes
 
 **Full support** for all three meanings. `Mul`/`Deref` live in `core::ops`,

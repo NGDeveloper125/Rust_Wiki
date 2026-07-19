@@ -48,6 +48,71 @@ println!("{}", data.borrow());
 compile time — holding two overlapping `borrow_mut()`s (or a `borrow()`
 alongside a `borrow_mut()`) panics instead of failing to compile.
 
+## Best practices & deeper information
+
+### Scenario: Modifying an existing object
+
+A single-threaded lookup type caches its last computed result behind a
+`RefCell`, so `&self` methods can still update the cache internally
+without forcing every caller through `&mut self`.
+
+```
+use std::cell::RefCell;
+
+struct PriceLookup {
+    cache: RefCell<Option<(String, f64)>>,
+}
+
+impl PriceLookup {
+    fn price_for(&self, sku: &str) -> f64 { // <- `&self`, not `&mut self`: mutation stays internal
+        if let Some((cached_sku, price)) = &*self.cache.borrow() {
+            if cached_sku == sku {
+                return *price;
+            }
+        }
+        let price = 19.99; // pretend this is an expensive lookup
+        *self.cache.borrow_mut() = Some((sku.to_string(), price)); // <- mutates through &self
+        price
+    }
+}
+```
+
+**Why this way:** `RefCell` lets a type present a read-only (`&self`)
+public API while still updating internal bookkeeping like a cache — the
+[Rust Book](https://doc.rust-lang.org/book/ch15-05-interior-mutability.html)
+frames this as the case interior mutability exists for: a mutation that's
+an implementation detail, not part of the type's externally visible
+contract.
+
+### Scenario: Sharing state across threads
+
+The moment that single-threaded cache needs to be touched from more than
+one thread, `RefCell` stops being an option — the fix is `Mutex`, not a
+thread-safe variant of `RefCell`.
+
+```
+use std::sync::Mutex;
+
+struct SharedCounter {
+    hits: Mutex<u64>, // <- Mutex, not RefCell: RefCell's borrow tracking isn't thread-safe
+}
+
+impl SharedCounter {
+    fn record_hit(&self) {
+        let mut hits = self.hits.lock().unwrap(); // <- blocks other threads instead of racing
+        *hits += 1;
+    }
+}
+```
+
+**Why this way:** `RefCell` doesn't implement `Sync`, so it can't be
+shared across threads at all — its runtime borrow check has no protection
+against two threads racing on it simultaneously; `Mutex` is the
+thread-safe equivalent, enforcing exclusivity by blocking instead of
+panicking, as the
+[Rust Book](https://doc.rust-lang.org/book/ch16-03-shared-state.html)
+covers when introducing `Mutex<T>`.
+
 ## Embedded Rust Notes
 
 **Full support.** Both `Cell` and `RefCell` live in `core::cell` — no

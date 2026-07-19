@@ -34,6 +34,30 @@ fn tokenize() {}
 normally placed at the top of the file it applies to. In practice,
 prefer `//!` (see [`//!`](inner-line-doc-comment.md)); this form is rare.
 
+## Best practices & deeper information
+
+### Scenario: Documenting an API
+
+`/*! */` documents its enclosing module/crate exactly like `//!` — again,
+purely a stylistic choice, and `//!` is what idiomatic code uses.
+
+```
+/*! # my_crate
+
+A small library for parsing duration strings. */
+// <- `/*! */` above documents the crate itself, same as `//!` would
+
+pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
+    todo!()
+}
+```
+
+**Why this way:** see [`//!`](inner-line-doc-comment.md) for the full
+treatment (crate-root landing page, stating module invariants once) —
+everything there applies here unchanged. `/*! */` is rare enough in real
+codebases that introducing it fresh mostly just surprises readers
+expecting `//!`.
+
 ## Embedded Rust Notes
 
 **Full support.** Same as [`//!`](inner-line-doc-comment.md) — no `std`

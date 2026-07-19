@@ -36,6 +36,62 @@ let grade: char = 'A'; // <- char literal: produces a `char`, a full Unicode sca
 value — `'ab'` is a compile error, and lone surrogate-pair halves are
 never valid scalar values.
 
+## Best practices & deeper information
+
+### Scenario: Branching on data (pattern matching)
+
+A small hand-written tokenizer matches individual characters directly,
+including as inclusive range-pattern bounds.
+
+```
+enum Token {
+    Plus,
+    Minus,
+    Number(char),
+    Whitespace,
+}
+
+fn classify(c: char) -> Token {
+    match c {
+        '+' => Token::Plus,             // <- char literal: matched directly as a pattern
+        '-' => Token::Minus,            // <- char literal: matched directly as a pattern
+        '0'..='9' => Token::Number(c),  // <- char literals as inclusive range-pattern bounds
+        ' ' | '\t' => Token::Whitespace,
+        _ => panic!("unexpected character {c:?}"),
+    }
+}
+```
+
+**Why this way:** matching `char` literals directly, including as range
+bounds, is exactly the form a small tokenizer needs, and the compiler
+enforces exhaustiveness over the match — a guarantee spelled out in the
+[Reference's pattern grammar](https://doc.rust-lang.org/reference/patterns.html).
+
+### Scenario: Working with text
+
+A `char` is a decoded Unicode scalar value, not a byte — iterating text
+`char`-by-char avoids the panics that raw byte indexing risks on
+multi-byte characters.
+
+```
+let word = "café";
+
+// PREFER: iterate by char, not by byte, when the text may contain non-ASCII
+let first_char: char = word.chars().next().unwrap(); // <- char, not a byte: always a full Unicode scalar value
+assert_eq!(first_char, 'c');
+
+let len_chars = word.chars().count(); // 4 chars
+let len_bytes = word.len();           // 5 bytes -- 'é' is 2 bytes in UTF-8
+assert_ne!(len_chars, len_bytes);
+```
+
+**Why this way:** a `char` is always a full Unicode scalar value, so
+`.chars()` is the safe way to walk text that might contain multi-byte
+characters — indexing a `String` by raw byte offset can panic if the
+offset falls inside a multi-byte character, which the
+[std `str` docs](https://doc.rust-lang.org/std/primitive.str.html#method.chars)
+call out explicitly.
+
 ## Embedded Rust Notes
 
 **Full support.** `char` is a `core` primitive — no `std` dependency,

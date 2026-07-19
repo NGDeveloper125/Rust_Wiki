@@ -49,6 +49,66 @@ consume(a); // <- ownership of `a` moves into the function call
 // println!("{a}"); // would fail to compile: `a` was moved
 ```
 
+## Best practices & deeper information
+
+### Scenario: Transferring ownership
+
+A function that consumes a `String` to build a `Report` should take it by
+value, not by reference — the report becomes the text's new owner, and
+the signature says so.
+
+```
+struct Report {
+    body: String,
+}
+
+fn finalize(body: String) -> Report { // <- takes ownership: `body` is moved in, not borrowed
+    Report { body }
+}
+
+let draft = String::from("quarterly summary");
+let report = finalize(draft); // <- `draft` moves here
+// println!("{draft}"); // would fail to compile: draft was moved into finalize
+println!("{}", report.body);
+```
+
+**Why this way:** taking `String` by value instead of `&str` is the right
+signature when the callee needs to keep the data — moving avoids an
+unnecessary clone, and the compiler statically stops the caller from
+reusing a value it no longer owns, which the
+[Rust Book](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html)
+highlights as move semantics' main benefit over languages with implicit
+sharing.
+
+### Scenario: Multi-threading
+
+Spawning a worker thread that might outlive the function that started it
+means the thread needs to own its input data for its whole lifetime, not
+just borrow it.
+
+```
+use std::thread;
+
+let batch = vec![1, 2, 3, 4, 5];
+
+let handle = thread::spawn(move || { // <- `move` forces `batch` to move into the closure, not borrow it
+    let sum: i32 = batch.iter().sum();
+    println!("batch sum: {sum}");
+});
+
+// batch is no longer usable here: ownership moved into the spawned thread
+handle.join().unwrap();
+```
+
+**Why this way:** `thread::spawn` can't prove the spawned thread finishes
+before the caller's local variables go out of scope, so it requires
+`'static` data — moving ownership into the closure with `move` is how a
+value that isn't already `'static` becomes safe to hand to an
+independently-running thread; the
+[Rust Book](https://doc.rust-lang.org/book/ch16-01-threads.html#using-move-closures-with-threads)
+covers this as the standard way to share owned data with a spawned
+thread.
+
 ## Embedded Rust Notes
 
 **Full support.** Move semantics are core-language and allocator-free —

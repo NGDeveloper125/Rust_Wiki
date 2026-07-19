@@ -47,6 +47,45 @@ size, but it isn't purely decorative — it still affects variance and
 drop-check analysis as if a real `T` were stored, which can change
 whether certain lifetime or drop patterns compile.
 
+## Best practices & deeper information
+
+### Scenario: Writing generic code
+
+A typestate-style marker parameter lets a generic type encode which
+state a value is in — so operations invalid for that state simply don't
+exist as callable methods — at zero bytes of runtime cost.
+
+```
+use std::marker::PhantomData;
+
+struct Open;   // <- zero-sized marker types
+struct Closed;
+
+struct Connection<State> {
+    socket_fd: i32,
+    _state: PhantomData<State>, // <- costs 0 bytes; only tracked at compile time
+}
+
+impl Connection<Closed> {
+    fn open(self) -> Connection<Open> { // <- consumes a Closed connection, returns an Open one
+        Connection { socket_fd: self.socket_fd, _state: PhantomData }
+    }
+}
+
+impl Connection<Open> {
+    fn send(&self, data: &[u8]) { /* ... */ }
+    // send() simply doesn't exist on Connection<Closed> -- calling it on a
+    // closed connection is a compile error, not a runtime panic
+}
+```
+
+**Why this way:** this typestate pattern, covered in the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
+book, moves a whole category of "used it in the wrong order" bugs from a
+runtime check to a compile error, and `PhantomData<State>` is what makes
+the state parameter free — it contributes nothing to `Connection`'s
+runtime size.
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — `PhantomData`-based typestate

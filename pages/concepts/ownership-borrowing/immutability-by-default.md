@@ -40,6 +40,70 @@ y = 6; // <- `mut` explicitly opts this binding into reassignment
 println!("{x} {y}");
 ```
 
+## Best practices & deeper information
+
+### Scenario: Creating a new object
+
+Constructing a fully-formed `Order` in one expression, rather than
+creating a default and mutating fields into place afterward, means the
+binding never needs `mut` at all.
+
+```
+struct Order {
+    id: u64,
+    total_cents: u64,
+    status: &'static str,
+}
+
+// AVOID: default-then-mutate needs `mut` and leaves a window where `order` is incompletely formed
+// let mut order = Order { id: 0, total_cents: 0, status: "" };
+// order.id = 42;
+// order.total_cents = 1999;
+// order.status = "pending";
+
+// PREFER: build the finished value in one immutable binding
+let order = Order { id: 42, total_cents: 1999, status: "pending" }; // <- no `mut` needed: fully formed up front
+```
+
+**Why this way:** constructing a value complete at its point of creation
+means there's no intermediate state where the struct exists but is only
+half-initialized — the
+[Rust Book](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html)
+frames immutable-by-default as nudging code toward exactly this shape,
+reserving `mut` for values that genuinely change over their lifetime.
+
+### Scenario: Designing a public API
+
+A public config type that hands back a new, independent value from an
+"update" — instead of exposing mutable setters — means no caller has to
+worry about a value changing out from under them after they've stored it.
+
+```
+#[derive(Clone)]
+struct RetryPolicy {
+    max_attempts: u32,
+    backoff_ms: u32,
+}
+
+impl RetryPolicy {
+    fn with_max_attempts(&self, max_attempts: u32) -> Self { // <- PREFER: returns a new, independent value
+        Self { max_attempts, ..self.clone() }
+    }
+}
+
+// AVOID: a public `set_max_attempts(&mut self, ...)` lets any holder mutate a policy others may rely on
+
+let default_policy = RetryPolicy { max_attempts: 3, backoff_ms: 100 };
+let aggressive = default_policy.with_max_attempts(10); // default_policy is untouched
+```
+
+**Why this way:** an API built around producing new immutable values
+instead of mutating shared ones means no caller has to track whether a
+`RetryPolicy` they're holding might change later — the
+[API Guidelines](https://rust-lang.github.io/api-guidelines/predictability.html)
+favor predictable, non-surprising behavior, and an immutable-by-default
+value type is the simplest way to guarantee it.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std`/allocator dependency — the immutable-by-default

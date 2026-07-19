@@ -32,6 +32,51 @@ fn main() {
 }
 ```
 
+## Best practices & deeper information
+
+### Scenario: Testing
+
+A `//` comment above a non-obvious test case records *why* that specific
+input is being checked, so a future reader (including yourself in six
+months) doesn't have to reverse-engineer the intent from the assertion
+alone.
+
+```
+#[test]
+fn rejects_empty_username() {
+    // regression test for #142: an empty string used to pass validation
+    // <- this comment survives in source but never reaches compiled output
+    let result = validate_username("");
+    assert!(result.is_err());
+}
+```
+
+**Why this way:** the comment explains *why* the test exists, not *what*
+the code does — the assertion already says what; only the ticket/context
+behind an easy-to-delete-looking test case is worth spelling out.
+
+### Scenario: Documenting an API
+
+`//` and `///` look almost identical but serve opposite audiences: `//`
+is for the next person reading the source, `///` is for the next person
+*calling* the function who may never open the source at all.
+
+```
+/// Parses a duration string like "5s" or "10m" into seconds.
+pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
+    // AVOID: burying caller-relevant info in a // comment nobody sees
+    // the trailing unit character determines the multiplier
+    let (digits, unit) = input.split_at(input.len() - 1);
+    // ...
+}
+```
+
+**Why this way:** anything the caller needs to know (accepted formats,
+error conditions, examples) belongs in a `///` doc comment — see
+[`///`](outer-line-doc-comment.md) — where `cargo doc` and IDE tooltips
+surface it; `//` is reserved for notes aimed at maintainers, per the
+[rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html).
+
 ## Embedded Rust Notes
 
 **Full support.** Pure lexical construct, discarded before compilation —

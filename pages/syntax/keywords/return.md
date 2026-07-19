@@ -48,6 +48,50 @@ fn abs(x: i32) -> i32 {
 the last expression in the body (no trailing `;`) is returned implicitly;
 `return` is only for early exits, as in the branch above.
 
+## Best practices & deeper information
+
+### Scenario: Handling and propagating errors
+
+Inside a single `match` arm that needs to diverge from the rest of the
+function, `return` is often clearer than restructuring the whole function
+around `?`.
+
+```
+fn parse_temperature(raw: &str) -> Result<f64, String> {
+    let value = match raw.trim().parse::<f64>() {
+        Ok(v) => v,
+        Err(e) => return Err(format!("invalid temperature {raw:?}: {e}")), // <- exits the function early with the error
+    };
+    Ok(value)
+}
+```
+
+**Why this way:** when the error needs to be reformatted rather than
+passed straight through, `return` inside the failing arm reads more
+directly than threading a `map_err` into a `?` chain — see the
+[Book's chapter on recoverable errors](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html).
+
+### Scenario: Validating input
+
+A guard clause at the top of a function checks for invalid input and
+`return`s immediately, so the rest of the function can assume the value
+is valid.
+
+```
+fn set_fan_speed(percent: i32) -> Result<(), String> {
+    if !(0..=100).contains(&percent) {
+        return Err(format!("fan speed {percent}% out of range")); // <- guard clause: bail out before doing any real work
+    }
+    Ok(())
+}
+```
+
+**Why this way:** checking the invalid case first and returning keeps the
+rest of the function at a single indentation level instead of nesting the
+valid path inside an `if` — the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+favor this guard-clause shape over deep nesting.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency. Note that a `#![no_std]` binary's

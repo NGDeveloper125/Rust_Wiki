@@ -41,6 +41,56 @@ println!("{:?}", s);       // [20, 30]
 — use `.get(range)`, which returns `Option`, when the bounds aren't
 already known to be valid.
 
+## Best practices & deeper information
+
+### Scenario: Working with collections
+
+A function that only needs to *read* a sequence should take `&[T]`
+rather than committing to `&Vec<T>` or `&[T; N]` specifically — the same
+function then works no matter how the caller happens to be storing the
+data.
+
+```
+fn average(readings: &[f64]) -> f64 { // <- &[f64] accepts a Vec, an array, or a sub-slice of either
+    readings.iter().sum::<f64>() / readings.len() as f64
+}
+
+let today: Vec<f64> = vec![21.5, 22.0, 21.8];
+let fixed: [f64; 3] = [19.0, 19.5, 20.1];
+
+average(&today);  // Vec derefs to &[f64]
+average(&fixed);  // array derefs to &[f64] too -- same function, no duplication
+```
+
+**Why this way:** the API Guidelines'
+[C-GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html#functions-minimize-assumptions-about-parameters-by-using-generic-types-c-generic)
+advice is to minimize assumptions about parameters — taking `&[T]`
+instead of a specific owning type is exactly that, for any function that
+only reads.
+
+### Scenario: Sharing data with multiple references
+
+Slicing borrows rather than copies, so splitting one collection into
+several logical views for different readers is essentially free, and
+any number of shared slices can coexist over the same data at once.
+
+```
+let sensor_log = vec![10.1, 10.3, 9.8, 11.0, 10.5];
+
+let morning = &sensor_log[0..2]; // <- borrows part of sensor_log; no elements are copied
+let evening = &sensor_log[2..5]; // <- a second, independent shared view into the same Vec
+
+println!("morning avg: {}", morning.iter().sum::<f64>() / morning.len() as f64);
+println!("evening avg: {}", evening.iter().sum::<f64>() / evening.len() as f64);
+```
+
+**Why this way:** the
+[Rust Book](https://doc.rust-lang.org/book/ch04-03-slices.html) covers
+slices as borrowed views specifically so multiple readers can look at
+different (or overlapping) parts of the same data without any of them
+needing ownership — the borrow checker still guarantees none of these
+slices can outlive `sensor_log` itself.
+
 ## Embedded Rust Notes
 
 **Full support.** `[T]` lives in `core` — no allocator needed. Slices

@@ -42,6 +42,72 @@ println!("count = {}", Rc::strong_count(&a));
 println!("{a} {b}");
 ```
 
+## Best practices & deeper information
+
+### Scenario: Shared ownership
+
+A UI-style panel tree needs several panels to read the same theme config,
+with no single panel a natural sole owner of it — a job for `Rc`, not for
+threading a reference through every constructor.
+
+```
+use std::rc::Rc;
+
+struct Theme {
+    background: String,
+    accent: String,
+}
+
+struct Panel {
+    theme: Rc<Theme>, // <- shared ownership: several panels reference the same Theme
+}
+
+let theme = Rc::new(Theme { background: "#111".into(), accent: "#0af".into() });
+
+let sidebar = Panel { theme: Rc::clone(&theme) }; // <- increments the count, no deep copy
+let toolbar = Panel { theme: Rc::clone(&theme) };
+
+println!("live owners: {}", Rc::strong_count(&theme)); // theme + sidebar + toolbar
+```
+
+**Why this way:** `Rc` is the right tool exactly when no single struct is
+the obvious sole owner of a value several others need to keep alive — the
+[Rust Book](https://doc.rust-lang.org/book/ch15-04-rc.html) introduces
+`Rc` for graph-like structures like this one, where plain ownership would
+force picking one arbitrary owner and threading references everywhere
+else.
+
+### Scenario: Multi-threading
+
+The same shared-config pattern, read from multiple OS threads instead of
+multiple panels, needs `Arc` rather than `Rc` — `Rc`'s reference count
+isn't safe to update from more than one thread.
+
+```
+use std::sync::Arc;
+use std::thread;
+
+let config = Arc::new(String::from("max_connections=100"));
+
+let handles: Vec<_> = (0..3).map(|i| {
+    let config = Arc::clone(&config); // <- cheap, atomic increment; each thread gets its own handle
+    thread::spawn(move || {
+        println!("worker {i} sees: {config}");
+    })
+}).collect();
+
+for h in handles {
+    h.join().unwrap();
+}
+```
+
+**Why this way:** `Rc`'s reference count isn't updated atomically, so
+cloning it across threads isn't safe (it isn't `Send`); `Arc` uses an
+atomic counter to make the exact same shared-ownership pattern
+thread-safe, at the cost of slightly more overhead per clone — the
+[Rust Book](https://doc.rust-lang.org/book/ch16-03-shared-state.html#atomic-reference-counting-with-arct)
+covers this as the reason `Arc` exists alongside `Rc`.
+
 ## Embedded Rust Notes
 
 **Partial support.** Neither `Rc` nor `Arc` is in `core` — both live in

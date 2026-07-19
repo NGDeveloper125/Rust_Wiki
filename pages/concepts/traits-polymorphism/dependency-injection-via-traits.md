@@ -49,6 +49,70 @@ fn run(logger: &impl Logger) { // <- depends on the abstraction, not a concrete 
 run(&ConsoleLogger);
 ```
 
+## Best practices & deeper information
+
+### Scenario: Serving a web endpoint
+
+An axum handler shouldn't hardcode a concrete database or user store —
+depending on a trait lets the handler's dependencies be swapped (real
+service, mock, different backend) without touching the handler itself.
+
+```
+// [dependencies] axum = "0.8", tokio = { version = "1", features = ["full"] }
+use axum::extract::State;
+use std::sync::Arc;
+
+trait UserStore {
+    fn find_name(&self, id: u32) -> Option<String>;
+}
+
+struct AppState {
+    users: Arc<dyn UserStore + Send + Sync>, // <- handler depends on the trait, not a concrete store
+}
+
+async fn get_user(State(state): State<Arc<AppState>>) -> String {
+    state.users.find_name(1).unwrap_or_else(|| "unknown".into())
+}
+```
+
+**Why this way:** wiring the concrete `UserStore` implementation once, at
+startup, and injecting only the trait into handlers keeps request-handling
+code decoupled from *which* store backs it — the same inversion-of-control
+[axum's docs](https://docs.rs/axum/) build shared application state
+around via `State<T>` extractors.
+
+### Scenario: Testing
+
+The same trait seam that decouples a handler from its real dependency in
+production lets a test swap in an in-memory mock, with no server, network,
+or database involved.
+
+```
+trait UserStore { // the same seam the handler above depends on
+    fn find_name(&self, id: u32) -> Option<String>;
+}
+
+struct MockUserStore;
+impl UserStore for MockUserStore { // <- test double implementing the same trait as the real store
+    fn find_name(&self, id: u32) -> Option<String> {
+        if id == 1 { Some("Ada".into()) } else { None }
+    }
+}
+
+#[test]
+fn returns_known_user_name() {
+    let store: Box<dyn UserStore> = Box::new(MockUserStore);
+    assert_eq!(store.find_name(1), Some("Ada".into()));
+}
+```
+
+**Why this way:** because handler code only ever calls through
+`UserStore`, this test never starts a server or talks to a real database
+— the
+[Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
+and the wider DI pattern both rely on the trait boundary being the only
+thing production and test code have in common.
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — this is precisely the pattern

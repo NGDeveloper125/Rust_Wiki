@@ -40,6 +40,32 @@ largest(1, 2);         // <- compiler generates a largest::<i32> copy
 largest("a", "b");     // <- ...and a separate largest::<&str> copy, chosen at compile time
 ```
 
+## Best practices & deeper information
+
+### Scenario: Writing generic code
+
+A generic function called with a small, known set of concrete types is a
+good candidate for static dispatch — each call site gets its own
+specialized, inlinable copy with no vtable indirection.
+
+```
+fn largest<T: PartialOrd>(a: T, b: T) -> T { // <- generic: monomorphized per concrete type used
+    if a > b { a } else { b }
+}
+
+largest(3, 7);       // compiler emits a largest::<i32> copy
+largest(3.5, 2.1);   // ...and a separate largest::<f64> copy, both resolved at compile time
+```
+
+**Why this way:** static dispatch trades binary size for speed — no
+runtime lookup, and each copy can be inlined and optimized as if
+hand-written — which
+[Effective Rust's item on generics vs. trait objects](https://effective-rust.com/generics.html)
+recommends as the default choice; reach for
+[trait objects & dynamic dispatch](trait-objects-dynamic-dispatch.md)
+instead once the set of concrete types is only known at runtime or code
+size becomes the binding constraint.
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — and often the preferred

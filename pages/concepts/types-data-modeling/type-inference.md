@@ -42,6 +42,41 @@ v.push(3.14); // <- this later use tells the compiler v: Vec<f64>
 return types must always be written explicitly, so `fn largest(items: &[T]) -> &T`
 can't have its signature worked out just from how the function is used.
 
+## Best practices & deeper information
+
+### Scenario: Creating a new object
+
+`collect()` is generic over what it builds and has no default target
+type, so when nothing downstream pins that down, inference has nothing
+to resolve against — either a turbofish or an annotated binding has to
+supply it.
+
+```
+let readings = ["21.5", "22.0", "19.8"];
+
+// AVOID: the compiler can't tell which collection collect() should build here
+// let parsed = readings.iter().map(|r| r.parse::<f64>().unwrap()).collect(); // <- ambiguous target type
+
+// PREFER: turbofish pins the target type at the call site
+let parsed = readings
+    .iter()
+    .map(|r| r.parse::<f64>().unwrap())
+    .collect::<Vec<f64>>(); // <- turbofish disambiguates what collect() should build
+
+// PREFER (equivalent): or let the binding's own annotation do the same job
+let parsed_alt: Vec<f64> = readings // <- annotation on the binding instead of the call
+    .iter()
+    .map(|r| r.parse::<f64>().unwrap())
+    .collect();
+```
+
+**Why this way:** the
+[standard library's `collect()` docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect)
+recommend exactly this — turbofish or an annotated binding — as the fix
+whenever inference can't work out the target collection on its own,
+which is common enough with `collect()` specifically that it's the
+canonical example of when an explicit type is needed.
+
 ## Embedded Rust Notes
 
 **Full support.** A compile-time-only mechanism — no `std` dependency,

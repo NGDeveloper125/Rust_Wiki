@@ -38,6 +38,57 @@ let p = Point(1.0, 2.0);
 println!("{}", p.0); // <- positional access: p.0, p.1
 ```
 
+## Best practices & deeper information
+
+### Scenario: Designing a public API
+
+A tuple struct is the right call when field order is self-evident and
+spelling out names would just repeat what the position already says —
+here, a color's three positional bytes.
+
+```
+struct Rgb(u8, u8, u8); // <- three positional fields; order IS the meaning (red, green, blue)
+
+fn paint(color: Rgb) {
+    println!("#{:02x}{:02x}{:02x}", color.0, color.1, color.2);
+}
+
+paint(Rgb(255, 87, 34));
+```
+
+**Why this way:** the API Guidelines' flexibility advice
+([C-GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html#functions-minimize-assumptions-about-parameters-by-using-generic-types-c-generic)
+and neighboring naming guidance) favors clarity over ceremony — once
+field meaning stops being obvious from position, switch to a named
+struct; once the goal shifts from readability to *preventing* values of
+the same underlying type from being mixed up, reach for
+[the newtype pattern](the-newtype-pattern.md) instead.
+
+### Scenario: Creating a new object
+
+Even a tuple struct benefits from a named constructor once the positions
+mean something specific enough that spelling them out at every call site
+would be easy to get wrong.
+
+```
+struct Version(u32, u32, u32); // <- positional: major, minor, patch
+
+impl Version {
+    fn new(major: u32, minor: u32, patch: u32) -> Self {
+        Version(major, minor, patch) // <- constructor documents what each position means
+    }
+}
+
+let v = Version::new(1, 4, 0);
+println!("{}.{}.{}", v.0, v.1, v.2);
+```
+
+**Why this way:** the API Guidelines'
+[C-CTOR](https://rust-lang.github.io/api-guidelines/predictability.html#constructors-are-static-inherent-methods-c-ctor)
+convention applies just as much to tuple structs as to named ones — a
+`new()` with named parameters is far less error-prone at the call site
+than three bare positional arguments to the tuple constructor directly.
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — commonly used in embedded

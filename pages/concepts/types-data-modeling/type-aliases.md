@@ -46,6 +46,38 @@ interchangeable with what it aliases, so the compiler won't catch two
 aliases of the same underlying type being mixed up (unlike a
 [newtype](the-newtype-pattern.md)).
 
+## Best practices & deeper information
+
+### Scenario: Designing a public API
+
+An alias earns its place when a long, repeated generic type would
+otherwise clutter every signature it appears in — but it's worth being
+honest that it buys readability only, nothing more.
+
+```
+use std::collections::HashMap;
+
+type SensorIndex = HashMap<String, Vec<u32>>; // <- pure readability: SensorIndex IS a HashMap, nothing new
+
+fn build_index(entries: &[(String, u32)]) -> SensorIndex { // <- reads far better than the full HashMap<...> type
+    let mut index: SensorIndex = HashMap::new();
+    for (name, reading) in entries {
+        index.entry(name.clone()).or_default().push(*reading);
+    }
+    index
+}
+
+// but the alias gives zero type safety: this still compiles, alias or not --
+let raw: HashMap<String, Vec<u32>> = build_index(&[]); // <- SensorIndex and this HashMap are the same type
+```
+
+**Why this way:** an alias is fully interchangeable with what it
+aliases, so it's the right tool purely for shortening a long,
+repeated signature — the moment the goal is preventing two values that
+happen to share an underlying type from being mixed up, that's a job for
+[the newtype pattern](the-newtype-pattern.md) instead, which actually
+creates a new, distinct type.
+
 ## Embedded Rust Notes
 
 **Full support.** Purely a compile-time naming convenience — no `std`

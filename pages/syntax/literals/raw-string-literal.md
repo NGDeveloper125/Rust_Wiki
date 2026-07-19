@@ -35,6 +35,29 @@ let path = r"C:\temp\file"; // <- `r"..."`: raw string, backslashes are literal,
 `r#"..."#` needs the same number of `#` on both sides, chosen high
 enough to avoid ambiguity with any `#` sequences in the content.
 
+## Best practices & deeper information
+
+### Scenario: Working with text
+
+A Windows path written as a normal string literal needs every backslash
+doubled — a raw string sidesteps that entirely.
+
+```
+// AVOID: every backslash must be doubled, easy to miscount
+let escaped = "C:\\Users\\alice\\AppData\\config.toml";
+
+// PREFER: raw string, backslashes are literal, no escaping needed
+let path = r"C:\Users\alice\AppData\config.toml"; // <- raw string literal: backslashes taken literally
+
+assert_eq!(escaped, path);
+```
+
+**Why this way:** a raw string removes the need to double every
+backslash, which for a Windows path or a regex pattern (`r"\d+\.\d+"`)
+quickly becomes hard to both write correctly and review; see
+[string literal](string-literal.md) for the general escape-processing
+rules a raw string opts out of.
+
 ## Embedded Rust Notes
 
 **Full support.** Same as an ordinary string literal — no allocator

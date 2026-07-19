@@ -41,6 +41,49 @@ let y = { // <- `{` opens a block expression
 }; // <- `}` closes it; y is now 2
 ```
 
+## Best practices & deeper information
+
+### Scenario: Creating a new object
+
+A struct literal's `{ }` can build the whole value in one expression,
+including computing derived fields inline — no separate mutation step
+needed afterward.
+
+```
+struct Rectangle { width: f64, height: f64, area: f64 }
+
+fn rectangle(width: f64, height: f64) -> Rectangle {
+    Rectangle { width, height, area: width * height } // <- `{ }` builds the whole value at once
+}
+```
+
+**Why this way:** constructing the fully-formed value in one struct
+literal, rather than creating a default/partial value and mutating fields
+into place, avoids ever having an inconsistent intermediate state (e.g.
+`area` not yet matching `width`/`height`) that some other code could
+observe.
+
+### Scenario: Branching on data (pattern matching)
+
+Every `match` arm's body is itself a block expression — `{ }` is what
+lets an arm run several statements before producing its value, while a
+short arm can skip the braces entirely.
+
+```
+let description = match status {
+    Status::Ok => "ready",
+    Status::Error(code) => { // <- `{` opens a multi-statement arm body
+        log::warn!("request failed with code {code}");
+        "failed"
+    } // <- `}` closes it; "failed" is this arm's value
+};
+```
+
+**Why this way:** because every arm is a block expression, all arms must
+produce the same type — this is what lets `match` be used as an
+expression assigned directly to a binding, rather than requiring a
+separate mutable variable set inside each arm.
+
 ## Embedded Rust Notes
 
 **Full support.** Block and struct-literal delimiters are core grammar —
