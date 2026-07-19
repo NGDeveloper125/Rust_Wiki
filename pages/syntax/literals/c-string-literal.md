@@ -26,6 +26,15 @@ still accepts full Unicode content (encoded as UTF-8, same as a normal
 string literal) — the constraint is "no embedded nul bytes," not
 "ASCII only."
 
+## Basic usage example
+
+```
+let name: &std::ffi::CStr = c"sensor01"; // <- c-string literal: produces `&CStr`, nul-terminated
+```
+
+**Restriction:** the content cannot contain an embedded `\0` — a C
+string is nul-terminated, so an interior null byte is a compile error.
+
 ## Embedded Rust Notes
 
 **Full support** — `CStr` lives in `core::ffi`, not `std::ffi`, which

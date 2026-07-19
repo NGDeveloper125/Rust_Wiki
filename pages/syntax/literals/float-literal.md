@@ -26,6 +26,16 @@ no digits after) is legal but `2.method()` is ambiguous with method-call
 syntax, so a space or parentheses (`2. .abs()` or `(2.).abs()`) is
 sometimes required to disambiguate.
 
+## Basic usage example
+
+```
+let temp = 36.6; // <- float literal: the decimal point makes this an `f64` by default
+```
+
+**Restriction:** a bare trailing-dot literal like `2.` is ambiguous with
+method-call syntax immediately after — `2.abs()` requires a space or
+parentheses (`2 .abs()` / `(2.).abs()`) to parse as intended.
+
 ## Embedded Rust Notes
 
 **Full support**, but worth checking your target: many microcontrollers

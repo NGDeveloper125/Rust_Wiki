@@ -23,6 +23,16 @@ since a single `u8` can't represent it. This is distinct from a
 [character literal](char-literal.md) (`'H'`), which produces a full
 Unicode `char` (4 bytes) instead of a `u8`.
 
+## Basic usage example
+
+```
+let byte: u8 = b'A'; // <- byte literal: produces a `u8` (65), not a `char`
+```
+
+**Restriction:** only ASCII characters (code points 0–127) are legal
+inside a byte literal — anything requiring Unicode beyond ASCII is a
+compile error.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency — commonly used for protocol magic

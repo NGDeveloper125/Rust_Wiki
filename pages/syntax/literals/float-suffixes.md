@@ -22,6 +22,12 @@ it has more precision than `f32` at the cost of double the memory, and is
 what Rust favors unless you specifically need `f32` (e.g. for
 GPU/graphics interop or memory-constrained contexts).
 
+## Basic usage example
+
+```
+let ratio = 0.5f32; // <- `f32` suffix pins the literal's type explicitly
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency — see
