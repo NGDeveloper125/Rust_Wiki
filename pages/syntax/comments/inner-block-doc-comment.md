@@ -21,6 +21,19 @@ As with `/** */` vs `///`, this form is rarely used in idiomatic Rust —
 `//!` is the conventional choice — but both are equivalent to the
 compiler.
 
+## Basic usage example
+
+```rust
+/*! This module implements the parser's tokenizer. */
+// ^ the `/*!` above documents this whole module, not `tokenize` below
+
+fn tokenize() {}
+```
+
+**Restriction:** same as `//!` — it documents its container, so it's
+normally placed at the top of the file it applies to. In practice,
+prefer `//!` (see [`//!`](inner-line-doc-comment.md)); this form is rare.
+
 ## Embedded Rust Notes
 
 **Full support.** Same as [`//!`](inner-line-doc-comment.md) — no `std`

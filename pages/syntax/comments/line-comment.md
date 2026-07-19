@@ -22,6 +22,16 @@ let x = 5; // so is everything after this // on this line
 Nesting doesn't apply, since a line comment simply consumes the rest of
 the line regardless of what characters follow.
 
+## Basic usage example
+
+```rust
+fn main() {
+    // <- this is a line comment: everything from `//` to the end of the line
+    let x = 5; // comments can also trail code on the same line
+    println!("{x}");
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Pure lexical construct, discarded before compilation —

@@ -24,6 +24,22 @@ is a single, correctly-closed comment — the compiler tracks nesting depth
 rather than closing at the first `*/` encountered. This makes it safe to
 comment out a chunk of code that itself already contains a block comment.
 
+## Basic usage example
+
+```rust
+fn main() {
+    /* <- this is a block comment: everything up to the matching `*/` is ignored,
+       even across multiple lines */
+    let x = 5;
+    /* nesting works: /* an inner comment */ doesn't end the outer one early */
+    println!("{x}");
+}
+```
+
+**Restriction:** the opening `/*` and closing `*/` must both be present —
+an unterminated block comment is a compile error, unlike a line comment
+which simply ends at the newline.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure lexical construct — no `std` dependency.
