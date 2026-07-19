@@ -30,6 +30,16 @@ distinct syntactic positions that are easy to conflate:
 mutable, not the type `i32`), but it *is* part of the type in the
 reference sense (`&mut T` and `&T` are different types entirely).
 
+## Basic usage example
+
+```
+let mut x = 5; // <- `mut` allows `x` to be reassigned
+x = 6;
+```
+
+**Restriction:** `mut` must appear at the binding site (`let mut x`); it
+cannot be added later to make an already-immutable binding mutable.
+
 ## Embedded Rust Notes
 
 **Full support.** `mut` is core grammar. It's used constantly in embedded

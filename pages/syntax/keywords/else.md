@@ -34,6 +34,16 @@ diverge — it must `return`, `break`, `continue`, or `panic!`, since control
 flow cannot continue past it without the pattern's bindings having been
 established.
 
+## Basic usage example
+
+```
+if x > 0 {
+    println!("positive");
+} else {
+    println!("non-positive"); // <- `else` runs when the `if` condition is false
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency — behaves identically in `#![no_std]`.

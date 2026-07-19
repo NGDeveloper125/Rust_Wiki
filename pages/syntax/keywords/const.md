@@ -33,6 +33,12 @@ rather than by another type.
 Naming convention is `SCREAMING_SNAKE_CASE`. `const` bindings are always
 implicitly immutable — `const mut` does not exist.
 
+## Basic usage example
+
+```
+const MAX_POINTS: u32 = 100_000; // <- `const` declares a compile-time constant
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `const` is especially valuable in embedded code:

@@ -33,6 +33,21 @@ of type `!` (never) — it never evaluates to anything at its own call
 site, because control has already left — which lets it appear in
 expression position, e.g. `let x = if cond { return; } else { 5 };`.
 
+## Basic usage example
+
+```
+fn abs(x: i32) -> i32 {
+    if x < 0 {
+        return -x; // <- exits the function immediately with `-x`
+    }
+    x
+}
+```
+
+**Restriction:** `return` is rarely needed for a function's final value —
+the last expression in the body (no trailing `;`) is returned implicitly;
+`return` is only for early exits, as in the branch above.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency. Note that a `#![no_std]` binary's
