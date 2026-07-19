@@ -47,6 +47,57 @@ rejected — both `Display` and `Vec` are foreign to this crate. The fix is
 [the newtype pattern](../types-data-modeling/the-newtype-pattern.md): wrap
 `Vec<f64>` in a local type like `Meters` above, then implement on that.
 
+## Best practices & deeper information
+
+### Scenario: Designing a public API
+
+Needing to implement a foreign trait (`Display`) for a foreign type
+(`Vec<f64>`) is blocked by the orphan rule — the workaround is a local
+newtype, which is a genuinely local type the rule permits implementing
+anything on.
+
+```
+struct Readings(Vec<f64>); // <- local newtype: turns a foreign Vec<f64> into a type this crate owns
+
+impl std::fmt::Display for Readings { // allowed: Readings is local, even though Display isn't
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.0)
+    }
+}
+
+println!("{}", Readings(vec![1.0, 2.5, 3.75]));
+```
+
+**Why this way:** the newtype costs one wrapper type in exchange for full
+freedom to implement anything on it — the
+[Rust Design Patterns book](https://rust-unofficial.github.io/patterns/patterns/behavioural/newtype.html)
+documents this as the standard route around the orphan rule, rather than
+forking or vendoring the foreign crate.
+
+### Scenario: Converting between types
+
+Once data lives inside a newtype, `From`/`Into` make moving between the
+newtype and the underlying foreign type ergonomic, instead of exposing
+the wrapped field directly.
+
+```
+struct Readings(Vec<f64>);
+
+impl From<Vec<f64>> for Readings { // <- lets `.into()` build a Readings from a plain Vec<f64>
+    fn from(values: Vec<f64>) -> Self {
+        Readings(values)
+    }
+}
+
+let readings: Readings = vec![1.0, 2.5, 3.75].into(); // <- conversion, not direct field access
+```
+
+**Why this way:** the
+[API Guidelines' C-CONV-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html)
+recommend `From`/`Into` specifically so a newtype composes with any code
+already written against the standard conversion traits, instead of
+requiring callers to learn a bespoke constructor name.
+
 ## Embedded Rust Notes
 
 **Full support.** A compile-time-only rule enforced identically regardless

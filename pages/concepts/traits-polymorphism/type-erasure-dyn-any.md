@@ -46,6 +46,41 @@ fn describe(value: &dyn Any) {
 describe(&42);
 ```
 
+## Best practices & deeper information
+
+### Scenario: Designing a public API
+
+Reaching for `dyn Any` is usually a signal to step back and check whether
+a generic function or an enum would express the same design without
+giving up static type checking — but a genuinely dynamic case, like a
+plugin registry keyed by type, is a legitimate use.
+
+```
+use std::any::{Any, TypeId};
+use std::collections::HashMap;
+
+struct PluginRegistry {
+    plugins: HashMap<TypeId, Box<dyn Any>>, // <- narrow, deliberate use: keys aren't known until runtime
+}
+
+impl PluginRegistry {
+    fn insert<T: Any>(&mut self, plugin: T) {
+        self.plugins.insert(TypeId::of::<T>(), Box::new(plugin));
+    }
+
+    fn get<T: Any>(&self) -> Option<&T> {
+        self.plugins.get(&TypeId::of::<T>())?.downcast_ref::<T>() // <- runtime check recovers the concrete type
+    }
+}
+```
+
+**Why this way:** every other trait/generic bound in this page's own
+Explanation is checked at compile time; `Any` gives that up, so it earns
+its place only where the set of types genuinely isn't known until runtime
+— [`std::any::Any`](https://doc.rust-lang.org/std/any/trait.Any.html)
+documents `TypeId`-keyed lookups like this as the intended use, not a
+general-purpose substitute for generics or an enum.
+
 ## Embedded Rust Notes
 
 **Full support.** `Any` and `downcast_ref` live in `core::any` — no

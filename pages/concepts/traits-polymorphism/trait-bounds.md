@@ -47,6 +47,59 @@ fn largest<T: PartialOrd>(items: &[T]) -> &T { // <- bound: only types supportin
 largest(&[3, 7, 2]);
 ```
 
+## Best practices & deeper information
+
+### Scenario: Writing generic code
+
+Once a generic function needs more than one bound, or the bound list gets
+long, moving it to a `where` clause keeps the signature itself scannable
+without changing what's required.
+
+```
+fn unique_sorted<T>(readings: &[T]) -> Vec<T>
+where
+    T: Ord + Clone, // <- bounds relocated to `where`, still constraining T the same way
+{
+    let mut sorted: Vec<T> = readings.to_vec(); // needs Clone
+    sorted.sort();                              // needs Ord
+    sorted.dedup();
+    sorted
+}
+
+unique_sorted(&[3, 1, 3, 2, 1]);
+```
+
+**Why this way:** the
+[Rust Book](https://doc.rust-lang.org/book/ch10-02-traits.html)
+recommends `where` once a function has multiple generic parameters each
+carrying their own bounds — it separates "what the function does" (the
+signature) from "what its inputs must support" (the bounds).
+
+### Scenario: Designing a public API
+
+A generic function should only require what its own body actually uses —
+bounding it against a broader trait than necessary forces every caller's
+type to satisfy requirements the function never touches.
+
+```
+// AVOID: over-constrained — Clone is required but never used
+fn describe_avoid<T: Clone + std::fmt::Debug>(item: &T) -> String {
+    format!("{item:?}")
+}
+
+// PREFER: bound only what the body needs
+fn describe<T: std::fmt::Debug>(item: &T) -> String { // <- Debug is the only bound this fn needs
+    format!("{item:?}")
+}
+```
+
+**Why this way:** minimal bounds keep the function usable by the widest
+range of types and make the signature an honest description of its
+requirements — the
+[API Guidelines' C-GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html)
+names this directly: functions should minimize assumptions about their
+parameters.
+
 ## Embedded Rust Notes
 
 **Full support.** A purely compile-time mechanism — no `std`/allocator
