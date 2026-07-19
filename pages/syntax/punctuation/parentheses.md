@@ -30,7 +30,7 @@ construction; nothing (or an operator) means grouping or a tuple.
 
 ## Basic usage example
 
-```rust
+```
 fn add(a: i32, b: i32) -> i32 { a + b } // <- `( )` groups the parameter list
 let sum = add(1, 2); // <- `( )` here is the call, passing the arguments
 let pair = (1, "a"); // <- `( )` here builds a tuple value

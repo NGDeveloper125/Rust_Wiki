@@ -27,7 +27,7 @@ token, not as two colons.
 
 ## Basic usage example
 
-```rust
+```
 let x: i32 = 5;
 //   ^ `:` here separates the binding name from its type annotation
 ```

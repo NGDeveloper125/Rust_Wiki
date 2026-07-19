@@ -34,7 +34,7 @@ otherwise try to read the struct literal as the `if`'s block.
 
 ## Basic usage example
 
-```rust
+```
 let y = { // <- `{` opens a block expression
     let x = 1;
     x + 1 // no trailing `;`, so this is the block's value

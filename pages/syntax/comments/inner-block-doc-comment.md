@@ -23,7 +23,7 @@ compiler.
 
 ## Basic usage example
 
-```rust
+```
 /*! This module implements the parser's tokenizer. */
 // ^ the `/*!` above documents this whole module, not `tokenize` below
 

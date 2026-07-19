@@ -33,7 +33,7 @@ in a bare function-pointer type, `fn(i32) -> i32`.
 
 ## Basic usage example
 
-```rust
+```
 fn add(a: i32, b: i32) -> i32 { a + b }
 //                      ^^ `->` introduces the return type, `i32`
 ```

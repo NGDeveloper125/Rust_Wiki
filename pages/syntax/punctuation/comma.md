@@ -33,7 +33,7 @@ parenthesized expression, not a tuple at all.
 
 ## Basic usage example
 
-```rust
+```
 let point = (1, 2, 3);
 //            ^     ^ each `,` separates one tuple element from the next
 ```

@@ -30,7 +30,7 @@ unrelated code between them breaks the association.
 
 ## Basic usage example
 
-```rust
+```
 /// <- this doc comment documents the function immediately below it
 /// Adds two numbers together.
 fn add(a: i32, b: i32) -> i32 {

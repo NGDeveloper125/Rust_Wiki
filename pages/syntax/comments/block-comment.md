@@ -26,7 +26,7 @@ comment out a chunk of code that itself already contains a block comment.
 
 ## Basic usage example
 
-```rust
+```
 fn main() {
     /* <- this is a block comment: everything up to the matching `*/` is ignored,
        even across multiple lines */

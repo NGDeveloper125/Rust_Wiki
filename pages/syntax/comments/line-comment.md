@@ -24,7 +24,7 @@ the line regardless of what characters follow.
 
 ## Basic usage example
 
-```rust
+```
 fn main() {
     // <- this is a line comment: everything from `//` to the end of the line
     let x = 5; // comments can also trail code on the same line

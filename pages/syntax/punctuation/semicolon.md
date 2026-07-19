@@ -33,7 +33,7 @@ statement-terminator role.
 
 ## Basic usage example
 
-```rust
+```
 fn increment(x: i32) -> i32 {
     x + 1 // <- no `;`: this expression IS the function's return value
 }

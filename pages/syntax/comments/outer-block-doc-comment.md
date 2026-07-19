@@ -25,7 +25,7 @@ codebases even though it's fully supported.
 
 ## Basic usage example
 
-```rust
+```
 /** <- this block doc comment documents the function immediately below it */
 fn add(a: i32, b: i32) -> i32 { a + b }
 ```

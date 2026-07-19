@@ -25,7 +25,7 @@ top of `lib.rs`/`main.rs`, documenting the whole crate).
 
 ## Basic usage example
 
-```rust
+```
 //! <- this doc comment documents the enclosing module/crate, not an item below it
 //! This module implements the parser's tokenizer.
 

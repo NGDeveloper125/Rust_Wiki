@@ -32,7 +32,7 @@ see the [Arrays vs Vec](../../concepts/arrays-vs-vec.md) concept page.
 
 ## Basic usage example
 
-```rust
+```
 let arr: [i32; 3] = [1, 2, 3]; // <- `[i32; 3]` is the type, `[1, 2, 3]` the literal
 let first = arr[0];            // <- `[0]` here is indexing
 let slice: &[i32] = &arr[1..3]; // <- `[1..3]` here is slicing
