@@ -31,6 +31,21 @@ itself, which is why the [serialization](../../concepts/serialization.md)
 ecosystem is able to plug into ordinary struct/enum definitions with a
 single attribute rather than requiring hand-written conversion code.
 
+## Basic usage example
+
+```
+#[derive(Debug, Clone, PartialEq)] // <- mechanically generates all three impls
+struct Point { x: f64, y: f64 }
+
+let a = Point { x: 1.0, y: 2.0 };
+let b = a.clone();
+println!("{:?} {}", b, a == b);
+```
+
+**Restriction:** a derive only works if every field's own type already
+implements the trait being derived — a struct with a non-`Clone` field
+cannot itself derive `Clone`.
+
 ## Embedded Rust Notes
 
 **Full support.** The built-in derives (`Debug`, `Clone`, `PartialEq`,

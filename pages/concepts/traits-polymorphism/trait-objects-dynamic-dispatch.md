@@ -39,6 +39,24 @@ different concrete types behind one interface. This is Rust's nearest
 analogue to interface-typed references in Java/C#, though notably
 without null being a possible value.
 
+## Basic usage example
+
+```
+trait Shape {
+    fn area(&self) -> f64;
+}
+struct Circle;
+impl Shape for Circle { fn area(&self) -> f64 { 3.14 } }
+struct Square;
+impl Shape for Square { fn area(&self) -> f64 { 4.0 } }
+
+let shapes: Vec<Box<dyn Shape>> = vec![Box::new(Circle), Box::new(Square)];
+// <- `dyn Shape` erases the concrete type; each element can be a different one
+for s in &shapes {
+    println!("{}", s.area()); // resolved at runtime via a vtable
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support** for `&dyn Trait`/`&mut dyn Trait` — the vtable mechanism

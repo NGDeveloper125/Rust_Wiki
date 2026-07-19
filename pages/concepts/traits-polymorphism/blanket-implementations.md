@@ -34,6 +34,26 @@ restrictive ways (only the crate defining the trait can write a blanket
 impl for it), specifically to prevent two different crates from
 providing conflicting blanket impls for the same trait.
 
+## Basic usage example
+
+```
+trait Describe {
+    fn describe(&self) -> String;
+}
+
+impl<T: std::fmt::Display> Describe for T { // <- one impl covers every Display type at once
+    fn describe(&self) -> String {
+        format!("value: {self}")
+    }
+}
+
+println!("{}", 5.describe());
+```
+
+**Restriction:** only the crate that defines `Describe` may write this
+blanket impl — the orphan rule forbids a downstream crate from
+blanket-implementing someone else's trait for someone else's types.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std`/allocator dependency — the mechanism is purely

@@ -29,6 +29,24 @@ how an abstract base class in an OO language can implement some methods
 concretely while leaving others abstract, but without requiring an actual
 inheritance relationship between the types involved.
 
+## Basic usage example
+
+```
+trait Greet {
+    fn name(&self) -> String;
+    fn greet(&self) -> String { // <- default body, used unless the implementer overrides it
+        format!("Hello, {}!", self.name())
+    }
+}
+
+struct Cat;
+impl Greet for Cat {
+    fn name(&self) -> String { "Cat".into() } // greet() is inherited, not redefined
+}
+
+println!("{}", Cat.greet());
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — default methods work

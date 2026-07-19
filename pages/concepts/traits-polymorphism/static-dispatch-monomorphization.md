@@ -29,6 +29,17 @@ Rust's design: the abstraction (writing generic code once) costs nothing
 at runtime compared to the non-abstracted equivalent (writing each
 specialized version by hand yourself).
 
+## Basic usage example
+
+```
+fn largest<T: PartialOrd>(a: T, b: T) -> T {
+    if a > b { a } else { b }
+}
+
+largest(1, 2);         // <- compiler generates a largest::<i32> copy
+largest("a", "b");     // <- ...and a separate largest::<&str> copy, chosen at compile time
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — and often the preferred
