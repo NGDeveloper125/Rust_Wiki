@@ -19,6 +19,12 @@ implement `!=` separately from `==`.
 if a != b { ... }
 ```
 
+## Basic usage example
+
+```
+let ready = state != 0; // <- `!=` tests for inequality
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Same trait as [`==`](equal-equal.md), no `std`

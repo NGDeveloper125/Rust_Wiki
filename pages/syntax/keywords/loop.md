@@ -44,6 +44,14 @@ loop.
 Like other loops, `loop` accepts a label (`'a: loop { ... }`) so nested
 `break`/`continue` can target a specific enclosing loop.
 
+## Basic usage example
+
+```
+let result = loop { // <- `loop` repeats the block forever until a `break`
+    break 5;
+};
+```
+
 ## Embedded Rust Notes
 
 **Full support.** An unconditional `loop {}` is the idiomatic body of

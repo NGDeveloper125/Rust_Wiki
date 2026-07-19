@@ -34,6 +34,14 @@ what's being iterated:
 cannot yield a value via `break`. It accepts a loop label the same way
 `while`/`loop` do.
 
+## Basic usage example
+
+```
+for item in [1, 2, 3] { // <- `for` iterates over anything implementing `IntoIterator`
+    println!("{item}");
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Iterating a fixed-size array or a `heapless::Vec` with

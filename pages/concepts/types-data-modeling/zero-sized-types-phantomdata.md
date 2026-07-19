@@ -29,6 +29,24 @@ information that has real compile-time meaning but zero runtime cost —
 the compiler tracks and enforces it, and none of it survives into the
 compiled binary as actual bytes.
 
+## Basic usage example
+
+```
+use std::marker::PhantomData;
+
+struct Typed<T> {
+    value: u32,
+    _marker: PhantomData<T>, // <- no T is stored, but the compiler treats this as "owning" a T
+}
+
+let x: Typed<f64> = Typed { value: 1, _marker: PhantomData };
+```
+
+**Restriction:** `PhantomData<T>` contributes zero bytes to the struct's
+size, but it isn't purely decorative — it still affects variance and
+drop-check analysis as if a real `T` were stored, which can change
+whether certain lifetime or drop patterns compile.
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — `PhantomData`-based typestate

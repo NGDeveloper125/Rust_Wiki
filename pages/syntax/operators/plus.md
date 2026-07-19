@@ -34,6 +34,12 @@ the trait object must implement `Trait` and be `Send`. This is pure
 compile-time grammar with no `Add`-trait involvement at all; don't
 confuse the two uses.
 
+## Basic usage example
+
+```
+let sum = 1 + 2; // <- `+` adds two values
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `Add` lives in `core::ops` (re-exported as `std::ops`),

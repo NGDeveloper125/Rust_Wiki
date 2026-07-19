@@ -25,6 +25,12 @@ normal string literal — see [escape sequences](escape-sequences.md); use
 a [raw string literal](raw-string-literal.md) when you want backslashes
 taken literally.
 
+## Basic usage example
+
+```
+let msg = "connected"; // <- string literal: produces `&'static str`, not `String`
+```
+
 ## Embedded Rust Notes
 
 **Full support.** A `&str`/`&'static str` literal needs no allocator at

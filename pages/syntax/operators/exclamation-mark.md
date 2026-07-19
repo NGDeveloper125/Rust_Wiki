@@ -35,6 +35,13 @@ immediately preceding the `!` with no space or operator between them.
 value, such as `return`, `break`, `panic!()`, or an infinite `loop` with
 no `break`.
 
+## Basic usage example
+
+```
+let done = false;
+let not_done = !done; // <- `!` negates the bool
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `Not` lives in `core::ops`; macro invocation and the

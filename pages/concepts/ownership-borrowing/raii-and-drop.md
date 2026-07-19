@@ -33,6 +33,23 @@ types — Rust just makes the compiler enforce that every type follows it,
 rather than relying on the programmer to write correct destructors and
 never forget to use them.
 
+## Basic usage example
+
+```
+struct Guard;
+
+impl Drop for Guard {
+    fn drop(&mut self) {
+        println!("cleaning up");
+    }
+}
+
+{
+    let _g = Guard;
+    println!("using resource");
+} // <- _g goes out of scope here: drop() runs automatically
+```
+
 ## Embedded Rust Notes
 
 **Full support** — and arguably more central to embedded Rust than to

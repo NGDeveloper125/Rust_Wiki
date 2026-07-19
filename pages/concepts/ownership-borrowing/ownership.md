@@ -32,6 +32,20 @@ ownership first is what makes the rest of the ownership-and-borrowing
 system click, rather than feeling like a wall of arbitrary compiler
 complaints.
 
+## Basic usage example
+
+```
+let s1 = String::from("hello");
+let s2 = s1; // <- ownership of the String moves from s1 to s2 here
+
+println!("{s2}"); // fine: s2 owns the value now
+// println!("{s1}"); // would fail to compile: s1 no longer owns anything
+```
+
+**Restriction:** once ownership moves, the old binding (`s1`) can no
+longer be used — this is enforced at compile time, not left as a runtime
+footgun.
+
 ## Embedded Rust Notes
 
 **Full support.** Ownership is a compile-time concept enforced regardless

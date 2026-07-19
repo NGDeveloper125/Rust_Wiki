@@ -31,6 +31,17 @@ which is why they're so often combined with
 [interior mutability](interior-mutability.md) (`Rc<RefCell<T>>`,
 `Arc<Mutex<T>>`) when the shared data also needs to change.
 
+## Basic usage example
+
+```
+use std::rc::Rc;
+
+let a = Rc::new(String::from("shared"));
+let b = Rc::clone(&a); // <- increments the reference count, no deep copy
+println!("count = {}", Rc::strong_count(&a));
+println!("{a} {b}");
+```
+
 ## Embedded Rust Notes
 
 **Partial support.** Neither `Rc` nor `Arc` is in `core` — both live in

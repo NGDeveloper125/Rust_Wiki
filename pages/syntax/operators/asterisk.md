@@ -30,6 +30,14 @@ expression with nothing on its left is prefix (dereference); `*` between
 two expressions is binary (multiplication); `*const`/`*mut` immediately
 followed by a type is the raw pointer type former.
 
+## Basic usage example
+
+```
+let x = 5;
+let r = &x;
+let y = *r; // <- `*` dereferences `r`, reading the value it points to
+```
+
 ## Embedded Rust Notes
 
 **Full support** for all three meanings. `Mul`/`Deref` live in `core::ops`,

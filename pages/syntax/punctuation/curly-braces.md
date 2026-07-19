@@ -32,6 +32,15 @@ brace (a type path vs. nothing), which is also why `if SomeStruct { .. } { }`
 needs disambiguating parentheses in condition position — the parser would
 otherwise try to read the struct literal as the `if`'s block.
 
+## Basic usage example
+
+```
+let y = { // <- `{` opens a block expression
+    let x = 1;
+    x + 1 // no trailing `;`, so this is the block's value
+}; // <- `}` closes it; y is now 2
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Block and struct-literal delimiters are core grammar —

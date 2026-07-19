@@ -18,6 +18,13 @@ let mut x = 7;
 x %= 2; // x is now 1
 ```
 
+## Basic usage example
+
+```
+let mut x = 7;
+x %= 2; // <- `%=` assigns the remainder of `x / 2` back into `x`
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `RemAssign` lives in `core::ops` — no `std` dependency.

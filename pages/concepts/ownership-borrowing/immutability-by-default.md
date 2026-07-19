@@ -29,6 +29,17 @@ of why data races are ruled out at compile time: you cannot have two
 simultaneous mutable accesses to the same data without the compiler
 seeing an explicit `&mut` for it.
 
+## Basic usage example
+
+```
+let x = 5;
+// x = 6; // would fail to compile: x is immutable by default
+
+let mut y = 5;
+y = 6; // <- `mut` explicitly opts this binding into reassignment
+println!("{x} {y}");
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No `std`/allocator dependency — the immutable-by-default

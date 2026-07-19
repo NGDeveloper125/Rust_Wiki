@@ -32,6 +32,15 @@ annotation; the property propagates structurally, and only types doing
 something genuinely unusual (raw pointers, certain FFI types) need to
 opt out explicitly.
 
+## Basic usage example
+
+```
+struct Sensor { reading: i32 } // <- auto-`Send`: every field (i32) is Send, so no impl is needed
+
+fn assert_send<T: Send>() {}
+assert_send::<Sensor>();
+```
+
 ## Embedded Rust Notes
 
 **Full support.** All defined in `core` — no `std` dependency. `Send`/`Sync`

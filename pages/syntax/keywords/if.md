@@ -39,6 +39,14 @@ when the condition is false must exist and match the other branch's type.
 family under pattern matching — that matches a single pattern instead of
 testing a `bool`.
 
+## Basic usage example
+
+```
+if x > 0 { // <- `if` branches on a boolean condition
+    println!("positive");
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No dependency on `std`. Extremely common in embedded

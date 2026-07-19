@@ -33,6 +33,20 @@ passed in at a call site genuinely satisfies the bound. Multiple bounds
 combine with `+` (`T: Clone + Debug`), and a `where` clause is available
 for bounds that get too long to read comfortably inline.
 
+## Basic usage example
+
+```
+fn largest<T: PartialOrd>(items: &[T]) -> &T { // <- bound: only types supporting `>` allowed
+    let mut m = &items[0];
+    for item in items {
+        if item > m { m = item; }
+    }
+    m
+}
+
+largest(&[3, 7, 2]);
+```
+
 ## Embedded Rust Notes
 
 **Full support.** A purely compile-time mechanism — no `std`/allocator
