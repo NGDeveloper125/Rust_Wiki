@@ -29,6 +29,21 @@ statically (see [The borrow checker](borrow-checker.md) and
 [Lifetimes](lifetimes.md)) rather than checking at runtime the way a
 garbage-collected language would.
 
+## Basic usage example
+
+```
+let s = String::from("hello");
+let r1 = &s;
+let r2 = &s; // <- a second shared reference coexists safely with r1
+
+println!("{r1} and {r2}");
+println!("{s}"); // s is still usable: borrowing never took ownership
+```
+
+**Restriction:** a shared reference only permits reading — mutating
+through it, or mutating the original value while any shared reference to
+it is still alive, is rejected at compile time.
+
 ## Embedded Rust Notes
 
 **Full support.** Borrowing is a compile-time-only mechanism — no runtime

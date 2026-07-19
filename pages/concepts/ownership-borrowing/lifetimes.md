@@ -31,6 +31,26 @@ proof happens once, at compile time, instead of via a runtime check
 (garbage collection, reference counting) every single language with
 manual memory management otherwise needs.
 
+## Basic usage example
+
+```
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str { // <- ties the output's lifetime to both inputs
+    if x.len() > y.len() { x } else { y }
+}
+
+let s1 = String::from("long string");
+let result;
+{
+    let s2 = String::from("short");
+    result = longest(&s1, &s2);
+    println!("{result}"); // must be used while s2 is still alive
+}
+```
+
+**Restriction:** the returned reference can't outlive the shorter-lived
+input — using `result` after `s2` goes out of scope would fail to
+compile, since `'a` is bound by the shorter of the two borrows.
+
 ## Embedded Rust Notes
 
 **Full support.** Lifetimes are erased entirely before codegen — a purely

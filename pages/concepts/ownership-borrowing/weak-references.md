@@ -26,6 +26,24 @@ commonly: children hold a strong reference to a parent's data, parents
 hold only a `Weak` reference back down to children) breaks the cycle
 while still letting either side reach the other when needed.
 
+## Basic usage example
+
+```
+use std::rc::{Rc, Weak};
+
+let strong = Rc::new(5);
+let weak: Weak<i32> = Rc::downgrade(&strong); // <- doesn't count toward strong_count
+
+match weak.upgrade() { // <- must upgrade to access the value; can fail
+    Some(v) => println!("{v}"),
+    None => println!("value already dropped"),
+}
+```
+
+**Restriction:** a `Weak<T>` cannot be dereferenced directly — it must be
+upgraded via `.upgrade()` first, which returns `None` if every strong
+owner has already dropped the value.
+
 ## Embedded Rust Notes
 
 **Partial support.** Same caveat as

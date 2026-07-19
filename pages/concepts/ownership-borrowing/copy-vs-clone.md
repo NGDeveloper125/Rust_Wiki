@@ -34,6 +34,22 @@ reasoning about performance — a `.clone()` scattered through a hot loop is
 immediately visible as a candidate for a closer look, in a way an
 implicit copy in a GC'd language typically isn't.
 
+## Basic usage example
+
+```
+let a = 5;
+let b = a; // <- i32 is Copy: a is silently duplicated, both remain usable
+println!("{a} {b}");
+
+let s1 = String::from("hi");
+let s2 = s1.clone(); // <- String is not Copy: duplication must be explicit
+println!("{s1} {s2}");
+```
+
+**Restriction:** `Copy` can only be implemented for a type if every one
+of its fields is also `Copy` — any type owning a heap allocation (like
+`String`) can never be `Copy`, only `Clone`.
+
 ## Embedded Rust Notes
 
 **Full support.** `Copy` and `Clone` are both defined in `core` — no

@@ -31,6 +31,13 @@ value — it changes *where* the data lives (heap instead of stack), not
 C++'s `std::unique_ptr`, and the one to reach for whenever heap allocation
 is needed but shared ownership isn't.
 
+## Basic usage example
+
+```
+let boxed: Box<i32> = Box::new(5); // <- value is allocated on the heap; boxed is its sole owner
+println!("{boxed}");
+```
+
 ## Embedded Rust Notes
 
 **Partial support.** `Box<T>` lives in `alloc`, not `core` — it needs

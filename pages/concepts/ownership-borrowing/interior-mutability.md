@@ -34,6 +34,20 @@ overlapping mutable borrows of a `RefCell`) becomes a runtime panic
 instead of a compile-time error — the safety guarantee is preserved, but
 enforcement moves later, and with it the chance of catching the mistake.
 
+## Basic usage example
+
+```
+use std::cell::RefCell;
+
+let data = RefCell::new(5);
+*data.borrow_mut() += 1; // <- mutates through a shared RefCell value
+println!("{}", data.borrow());
+```
+
+**Restriction:** `RefCell`'s borrow rules are checked at runtime, not
+compile time — holding two overlapping `borrow_mut()`s (or a `borrow()`
+alongside a `borrow_mut()`) panics instead of failing to compile.
+
 ## Embedded Rust Notes
 
 **Full support.** Both `Cell` and `RefCell` live in `core::cell` — no

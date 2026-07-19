@@ -36,6 +36,14 @@ real, measurable time), and what's possible at all (a
 *requires* heap indirection, because their size isn't knowable at compile
 time the way a stack allocation requires).
 
+## Basic usage example
+
+```
+let a = 5;           // stack: fixed size, popped automatically at scope end
+let b = Box::new(5); // <- heap: explicit allocation, freed when `b` is dropped
+println!("{a} {b}");
+```
+
 ## Embedded Rust Notes
 
 **Full support** — and a genuinely central concern in embedded Rust.
