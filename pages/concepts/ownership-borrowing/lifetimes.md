@@ -51,6 +51,66 @@ let result;
 input — using `result` after `s2` goes out of scope would fail to
 compile, since `'a` is bound by the shorter of the two borrows.
 
+## Best practices & deeper information
+
+### Scenario: Designing a public API
+
+A `Parser`'s methods should carry an explicit lifetime parameter only
+where the elision rules genuinely can't infer one — anywhere they can,
+writing `'a` out by hand adds noise without adding a constraint.
+
+```
+struct Parser<'a> {
+    input: &'a str,
+    pos: usize,
+}
+
+impl<'a> Parser<'a> {
+    // AVOID: writing out a lifetime the elision rules already infer for free
+    // fn peek<'b>(&'b self) -> Option<&'b str> { self.input.get(self.pos..) }
+
+    fn peek(&self) -> Option<&str> { // <- PREFER: elided; output borrows from `&self` automatically
+        self.input.get(self.pos..)
+    }
+}
+```
+
+**Why this way:** an explicit lifetime that elision would have inferred
+anyway doesn't express anything the compiler didn't already know — the
+[API Guidelines](https://rust-lang.github.io/api-guidelines/) favor the
+simplest signature that expresses the real contract, which keeps a
+type's explicit lifetime parameters meaningful on the cases where they
+truly are load-bearing (see [Lifetime elision](lifetime-elision.md)).
+
+### Scenario: Sharing data with multiple references
+
+A function borrowing from two differently-lived inputs needs its
+lifetime annotation to be what lets the compiler catch a caller trying to
+use the result after the shorter-lived input is gone.
+
+```
+fn shorter<'a>(a: &'a str, b: &'a str) -> &'a str { // <- ties the result to whichever input's borrow ends first
+    if a.len() < b.len() { a } else { b }
+}
+
+let long_lived = String::from("configuration");
+let result;
+{
+    let short_lived = String::from("cfg");
+    result = shorter(&long_lived, &short_lived);
+    println!("{result}"); // must run while short_lived is still alive
+}
+// using `result` here would fail to compile: it may borrow from short_lived, now dropped
+```
+
+**Why this way:** naming the shared lifetime `'a` across both parameters
+and the return type is what lets the borrow checker reject uses of
+`result` after the shorter-lived input is gone — without it, the compiler
+would otherwise have to assume the return value could outlive either
+input, which the
+[Rust Book](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html)
+covers as the core case explicit lifetimes exist for.
+
 ## Embedded Rust Notes
 
 **Full support.** Lifetimes are erased entirely before codegen — a purely

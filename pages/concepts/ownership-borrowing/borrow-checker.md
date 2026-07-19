@@ -48,6 +48,72 @@ println!("{first}");      // ...while `first` still borrows it
 the fix is to shorten `first`'s scope (or restructure the code) so it no
 longer overlaps with the mutable use.
 
+## Best practices & deeper information
+
+### Scenario: Sharing data with multiple references
+
+Reading a shared config in several places goes smoothly as long as each
+borrow's scope is kept as small as the code that actually needs it,
+rather than held open for the rest of a function "just in case."
+
+```
+struct Config {
+    max_retries: u32,
+    timeout_ms: u32,
+}
+
+fn summarize(cfg: &Config) -> String {
+    format!("retries={} timeout={}", cfg.max_retries, cfg.timeout_ms)
+}
+
+let cfg = Config { max_retries: 3, timeout_ms: 500 };
+
+{
+    let view = &cfg; // <- borrow scoped tightly to this block
+    println!("{}", summarize(view));
+} // borrow ends here, well before any later mutation of cfg would need to happen
+```
+
+**Why this way:** letting a shared borrow's scope end at its last actual
+use, rather than its last syntactic appearance, is what keeps later
+mutations of the same value from ever colliding with it — the
+[Rust Book](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html)
+covers this scoping behavior as the key to avoiding borrow-checker
+friction, not a workaround for it.
+
+### Scenario: Mutating through a reference
+
+Updating one field of a struct while still needing to read another is
+best done by borrowing only the field that changes, rather than taking
+`&mut self` on the whole struct for a change that only touches one part
+of it.
+
+```
+struct Sensor {
+    readings: Vec<f32>,
+    last_error: Option<String>,
+}
+
+fn record(sensor: &mut Sensor, value: f32) {
+    sensor.readings.push(value); // <- mutable borrow limited to the `readings` field
+}
+
+let mut sensor = Sensor { readings: Vec::new(), last_error: None };
+record(&mut sensor, 21.5);
+
+if let Some(err) = &sensor.last_error { // fine: no mutable borrow of `sensor` is still open
+    println!("last error: {err}");
+}
+```
+
+**Why this way:** structuring code so a mutation only ever borrows the
+field it changes — instead of the whole struct — keeps borrows narrow
+enough that unrelated reads of the same value don't conflict with them;
+the
+[Rust Book](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html)
+covers disjoint borrows of separate fields as one of the standard ways to
+keep the checker satisfied without restructuring the data itself.
+
 ## Embedded Rust Notes
 
 **Full support.** The borrow checker runs at compile time on the host

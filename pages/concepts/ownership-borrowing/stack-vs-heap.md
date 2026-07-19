@@ -44,6 +44,37 @@ let b = Box::new(5); // <- heap: explicit allocation, freed when `b` is dropped
 println!("{a} {b}");
 ```
 
+## Best practices & deeper information
+
+### Scenario: Boxing and heap allocation
+
+A large, rarely-used buffer stored inline in an enum variant forces every
+variant of that enum to reserve the biggest one's stack space — boxing
+the large variant keeps the common ones cheap.
+
+```
+struct Board {
+    cells: [[u8; 64]; 64], // 4 KiB — fine on its own, expensive to carry in every enum variant
+}
+
+enum GameState {
+    Menu,
+    Loading(u8),
+    Playing(Box<Board>), // <- PREFER: heap-allocated; GameState's size is one pointer, not 4 KiB, even for `Menu`
+}
+
+let state = GameState::Playing(Box::new(Board { cells: [[0; 64]; 64] }));
+```
+
+**Why this way:** an enum's stack size is the size of its largest
+variant — inlining a large `Board` directly would force `Menu` and
+`Loading` to reserve the same 4 KiB on the stack even though they never
+use it. Boxing the large variant is the standard fix, covered in the
+[Rust Book](https://doc.rust-lang.org/book/ch15-01-box.html) as one of
+`Box`'s core use cases; see
+[Smart pointers (Box<T>)](smart-pointers-box.md) for the fuller
+treatment.
+
 ## Embedded Rust Notes
 
 **Full support** — and a genuinely central concern in embedded Rust.

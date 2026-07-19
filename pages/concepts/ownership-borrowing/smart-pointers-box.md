@@ -38,6 +38,73 @@ let boxed: Box<i32> = Box::new(5); // <- value is allocated on the heap; boxed i
 println!("{boxed}");
 ```
 
+## Best practices & deeper information
+
+### Scenario: Boxing and heap allocation
+
+An AST-like `Expr` type that contains itself needs `Box` to give the
+recursive variant a fixed, known size — without it, the type would need
+infinite space.
+
+```
+enum Expr {
+    Literal(i32),
+    Add(Box<Expr>, Box<Expr>), // <- Box breaks the infinite size: each variant is one pointer
+}
+
+fn eval(e: &Expr) -> i32 {
+    match e {
+        Expr::Literal(n) => *n,
+        Expr::Add(lhs, rhs) => eval(lhs) + eval(rhs),
+    }
+}
+
+let expr = Expr::Add(Box::new(Expr::Literal(2)), Box::new(Expr::Literal(3)));
+println!("{}", eval(&expr));
+```
+
+**Why this way:** without `Box`, `Expr::Add(Expr, Expr)` would need
+infinite size — an `Expr` containing two more `Expr`s, recursively.
+Boxing the recursive fields gives the compiler a fixed-size pointer to
+store instead, which the
+[Rust Book](https://doc.rust-lang.org/book/ch15-01-box.html) covers as
+`Box`'s canonical use case for recursive types.
+
+### Scenario: Runtime polymorphism
+
+A plugin-style list of handlers with different concrete types needs
+somewhere to live together despite not sharing a size — `Box<dyn Trait>`
+erases the concrete type behind a uniform, heap-allocated pointer.
+
+```
+trait Handler {
+    fn handle(&self, event: &str);
+}
+
+struct Logger;
+impl Handler for Logger {
+    fn handle(&self, event: &str) { println!("log: {event}"); }
+}
+
+struct Notifier;
+impl Handler for Notifier {
+    fn handle(&self, event: &str) { println!("notify: {event}"); }
+}
+
+let handlers: Vec<Box<dyn Handler>> = vec![Box::new(Logger), Box::new(Notifier)]; // <- heterogeneous, heap-allocated trait objects
+for h in &handlers {
+    h.handle("order.created");
+}
+```
+
+**Why this way:** `Box<dyn Handler>` is needed because `Logger` and
+`Notifier` have different sizes and the `Vec` needs one uniform element
+type — boxing erases the concrete type behind a fixed-size pointer plus a
+vtable, which the
+[Rust Book](https://doc.rust-lang.org/book/ch18-02-trait-objects.html)
+recommends specifically for heterogeneous collections like this one,
+reaching for `&dyn Handler` instead when a non-owning borrow will do.
+
 ## Embedded Rust Notes
 
 **Partial support.** `Box<T>` lives in `alloc`, not `core` — it needs

@@ -43,6 +43,37 @@ impl<'a> Parser<'a> {
 }
 ```
 
+## Best practices & deeper information
+
+### Scenario: Designing a public API
+
+A `Cache`'s lookup method relies entirely on elision — with exactly one
+reference-typed receiver (`&self`), its lifetime is silently assigned to
+the returned reference, so the signature stays clean.
+
+```
+struct Cache {
+    entries: Vec<(String, String)>,
+}
+
+impl Cache {
+    fn get(&self, key: &str) -> Option<&str> { // <- elided: return borrows from `&self`, not `key`
+        self.entries.iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.as_str())
+    }
+}
+```
+
+**Why this way:** because there's exactly one reference-typed receiver,
+the elision rules assign its lifetime to the elided output automatically
+— writing `fn get<'a>(&'a self, key: &str) -> Option<&'a str>` by hand
+would express the identical contract with no added clarity, which is why
+the
+[Rust Book](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html#lifetime-elision)
+recommends leaving cases like this elided; see [Lifetimes](lifetimes.md)
+for when spelling one out by hand is actually necessary.
+
 ## Embedded Rust Notes
 
 **Full support.** Same elision rules apply regardless of target — no
