@@ -35,6 +35,37 @@ impl Tag for Marker {} // <- typically exists so it can implement a trait
 let _m = Marker; // zero bytes at runtime
 ```
 
+## Best practices & deeper information
+
+### Scenario: Implementing traits
+
+A unit struct works well as a pure trait-only tag: it carries no data of
+its own, exists only so the type system can distinguish "a door in the
+locked state" from "a door in the unlocked state" at compile time.
+
+```
+struct Locked;   // <- marker types: no fields, exist only to be distinct types
+struct Unlocked;
+
+trait DoorState {}
+impl DoorState for Locked {}
+impl DoorState for Unlocked {} // <- each unit struct just needs to exist to satisfy the trait
+
+fn describe<S: DoorState>(_state: S) -> &'static str {
+    "handling a door in some DoorState"
+}
+
+describe(Unlocked); // <- constructing the marker value is free: zero bytes at runtime
+```
+
+**Why this way:** this is the typestate pattern from the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
+book — encoding state as a marker type makes illegal states impossible to
+construct in the first place, rather than merely checked at runtime, and
+costs nothing beyond what the type system already tracks at compile time;
+see [Zero-sized types & PhantomData](zero-sized-types-phantomdata.md) for
+why that cost really is zero.
+
 ## Embedded Rust Notes
 
 **Full support.** Zero-sized and allocator-free — embedded HAL crates use

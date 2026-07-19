@@ -48,6 +48,40 @@ sum([1, 2, 3, 4]);    // N = 4, a distinct monomorphized instantiation
 literal, a `const`, or inferred from context, but never a value computed
 at runtime (like a `Vec`'s length).
 
+## Best practices & deeper information
+
+### Scenario: Writing generic code
+
+A fixed-size buffer type parameterized over its length lets the compiler
+catch a capacity mismatch at compile time, and stack-allocate the backing
+array, instead of needing a heap-allocated `Vec` just to carry a length
+that's actually known up front.
+
+```
+struct RingBuffer<const N: usize> { // <- N is part of the type: RingBuffer<8> and RingBuffer<256> differ
+    data: [u8; N],
+    len: usize,
+}
+
+impl<const N: usize> RingBuffer<N> {
+    fn new() -> Self {
+        RingBuffer { data: [0; N], len: 0 }
+    }
+
+    fn capacity(&self) -> usize {
+        N // <- N is an ordinary compile-time constant inside the impl, not a runtime field
+    }
+}
+
+let small: RingBuffer<8> = RingBuffer::new();
+let large: RingBuffer<256> = RingBuffer::new();
+```
+
+**Why this way:** encoding the capacity in the type itself means passing
+a `RingBuffer<8>` where a `RingBuffer<256>` is expected is a compile
+error rather than a bug discovered at runtime — the same compile-time
+guarantee [generics](generics.md) give for types, extended to a value.
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — const generics are

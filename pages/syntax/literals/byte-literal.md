@@ -33,6 +33,30 @@ let byte: u8 = b'A'; // <- byte literal: produces a `u8` (65), not a `char`
 inside a byte literal — anything requiring Unicode beyond ASCII is a
 compile error.
 
+## Best practices & deeper information
+
+### Scenario: Bit manipulation and flags
+
+Matching a single magic byte in a protocol header reads clearest against
+a byte literal, right inside the match pattern.
+
+```
+fn parse_frame(data: &[u8]) -> Option<&[u8]> {
+    match data.first() {
+        Some(&b'\x7E') => Some(&data[1..]), // <- byte literal: matches the frame's single start-of-frame marker
+        _ => None,
+    }
+}
+
+assert_eq!(parse_frame(&[0x7E, 1, 2, 3]), Some(&[1u8, 2, 3][..]));
+```
+
+**Why this way:** matching against `b'\x7E'` directly reads as "this
+specific marker byte," clearer at the call site than comparing against a
+bare numeric constant like `126` — see the
+[std primitive `u8` docs](https://doc.rust-lang.org/std/primitive.u8.html)
+for byte-oriented pattern matching in general.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency — commonly used for protocol magic

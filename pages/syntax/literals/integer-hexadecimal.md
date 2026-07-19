@@ -32,6 +32,53 @@ let addr = 0x2000; // <- `0x` prefix marks a base-16 (hexadecimal) integer liter
 **Restriction:** only digits `0`–`9` and letters `a`–`f`/`A`–`F` are
 legal after the `0x` prefix.
 
+## Best practices & deeper information
+
+### Scenario: Bit manipulation and flags
+
+Hex groups bits into 4-bit nibbles, so a multi-bit register mask reads as
+"which nibble, which bits" at a glance — far harder to see in decimal.
+
+```
+const TX_ENABLE: u32   = 0x0000_0001;
+const RX_ENABLE: u32   = 0x0000_0002;
+const PARITY_EVEN: u32 = 0x0000_0004;
+const BAUD_MASK: u32   = 0x0000_0F00; // <- hex literal: a multi-bit mask, nibble boundaries stay visible
+
+fn configure(control: u32) -> u32 {
+    control | TX_ENABLE | RX_ENABLE | PARITY_EVEN
+}
+
+let baud_bits = configure(0) & BAUD_MASK;
+```
+
+**Why this way:** hex digits map exactly onto 4-bit groups, so a mask like
+`0x0F00` communicates "bits 8–11" directly — the convention most
+register-level code follows, per the
+[Rust Reference's integer literal grammar](https://doc.rust-lang.org/reference/tokens.html#integer-literals).
+
+### Scenario: Numeric computation
+
+Power-of-two sizes and addresses read as recognizable patterns in hex in
+a way their decimal equivalents don't, which matters for anything doing
+alignment arithmetic.
+
+```
+const PAGE_SIZE: usize = 0x1000; // <- hex literal: a power-of-two boundary reads clearly in hex
+
+fn is_page_aligned(addr: usize) -> bool {
+    addr & (PAGE_SIZE - 1) == 0
+}
+
+assert!(is_page_aligned(0x4000));
+assert!(!is_page_aligned(0x4010));
+```
+
+**Why this way:** `0x1000` and `0x4000` are instantly recognizable as
+round, aligned values in a way `4096` and `16384` aren't — which is why
+the [std `usize` docs](https://doc.rust-lang.org/std/primitive.usize.html)
+and most systems code write addresses and alignment constants in hex.
+
 ## Embedded Rust Notes
 
 **Full support.** Hex literals are the conventional way to write register

@@ -36,6 +36,57 @@ let same = a == b; // <- `==` compares `a` and `b` for equality
 since the `bool` result of `a == b` doesn't implement `PartialEq<T>` for
 an arbitrary `T`.
 
+## Best practices & deeper information
+
+### Scenario: Validating input
+
+Rejecting a request whose version doesn't match what the server supports
+is a plain equality check — `==` compares the field directly rather than
+inspecting it piecemeal.
+
+```
+struct Request {
+    api_version: u32,
+    payload: String,
+}
+
+const SUPPORTED_VERSION: u32 = 3;
+
+fn is_valid(request: &Request) -> bool {
+    request.api_version == SUPPORTED_VERSION // <- `==` checks the request matches what this server supports
+}
+```
+
+**Why this way:** deriving `PartialEq` on the surrounding types (rather
+than hand-rolling comparisons field by field) keeps `==` checks like this
+correct as fields are added — the
+[API Guidelines](https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits)
+recommend eagerly implementing `PartialEq` wherever structural equality
+is the intended comparison.
+
+### Scenario: Testing
+
+`assert_eq!` uses `==`/`PartialEq` under the hood, but — unlike a bare
+`assert!(a == b)` — prints both values on failure, which is why it's the
+default choice for equality checks in tests.
+
+```
+fn total_price(quantity: u32, unit_price: f64) -> f64 {
+    quantity as f64 * unit_price
+}
+
+#[test]
+fn computes_total_price() {
+    let total = total_price(3, 2.5);
+    assert_eq!(total, 7.5); // <- `assert_eq!` compares with `==` and reports both sides on failure
+}
+```
+
+**Why this way:** the [Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
+recommends `assert_eq!`/`assert_ne!` over a bare `assert!(a == b)`
+specifically because the macro captures and prints both operands when
+the assertion fails, saving a debugging round trip.
+
 ## Embedded Rust Notes
 
 **Full support.** `PartialEq` lives in `core::cmp` — no `std` dependency.

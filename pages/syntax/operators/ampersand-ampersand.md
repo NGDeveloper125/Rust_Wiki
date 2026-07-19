@@ -34,6 +34,32 @@ let both_positive = a > 0 && b > 0; // <- `&&` short-circuits: `b > 0` only runs
 overloaded for custom types — unlike `&`, there is no trait to implement
 to change its behavior.
 
+## Best practices & deeper information
+
+### Scenario: Validating input
+
+Chaining several guard conditions with `&&` reads as one sentence and
+short-circuits before any check that would panic on data the earlier
+checks already rejected.
+
+```
+struct SignupForm {
+    username: String,
+    age: u32,
+}
+
+fn is_valid(form: &SignupForm) -> bool {
+    !form.username.is_empty()
+        && form.username.chars().next().unwrap().is_alphabetic() // <- only runs if username isn't empty
+        && form.age >= 18                                        // <- `&&` short-circuits before this
+}
+```
+
+**Why this way:** ordering the cheap, panic-free checks first and letting
+`&&` short-circuit means the `unwrap()` on the first character never runs
+against an empty string — see [`||`](pipe-pipe.md) for the OR counterpart,
+used when any single condition failing should reject the input.
+
 ## Embedded Rust Notes
 
 **Full support.** Built into the language, not a trait — no `std`

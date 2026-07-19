@@ -46,6 +46,58 @@ println!("{:?} {}", b, a == b);
 implements the trait being derived — a struct with a non-`Clone` field
 cannot itself derive `Clone`.
 
+## Best practices & deeper information
+
+### Scenario: Implementing traits
+
+`#[derive(PartialEq)]` covers a plain field-by-field comparison, but a
+type with a field that shouldn't count toward equality — a cache, a
+timestamp — needs a manual `impl` instead.
+
+```
+struct Reading {
+    value: f64,
+    measured_at: u64, // shouldn't affect equality
+}
+
+impl PartialEq for Reading { // <- manual: derive would also compare measured_at
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+```
+
+**Why this way:** `#[derive(...)]` always compares/prints/clones *every*
+field — the moment equality (or `Debug`, or `Clone`) needs to mean
+something other than "all fields, mechanically," a manual `impl` is the
+only option; the
+[API Guidelines' C-COMMON-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html)
+still recommends implementing the trait, just not necessarily by
+deriving it.
+
+### Scenario: Testing
+
+`assert_eq!` requires both `PartialEq` (to compare) and `Debug` (to print
+the values in the failure message) — deriving both is what makes ordinary
+equality assertions possible in a test.
+
+```
+#[derive(Debug, PartialEq)] // <- both required: PartialEq for `==`, Debug for the failure message
+struct Order { id: u32, total_cents: u32 }
+
+#[test]
+fn totals_order_correctly() {
+    let order = Order { id: 1, total_cents: 1999 };
+    assert_eq!(order, Order { id: 1, total_cents: 1999 }); // needs PartialEq + Debug on Order
+}
+```
+
+**Why this way:** without `Debug`, this fails to *compile* on a mismatch,
+not just fail the test — the
+[Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
+notes both traits are needed so `assert_eq!` can print `left`/`right`
+when they differ.
+
 ## Embedded Rust Notes
 
 **Full support.** The built-in derives (`Debug`, `Clone`, `PartialEq`,

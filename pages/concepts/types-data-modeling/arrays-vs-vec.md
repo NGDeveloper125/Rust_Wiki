@@ -43,6 +43,56 @@ compile time — it cannot grow or shrink, and a length only known at
 runtime (parsed input, for example) can't be expressed as `[T; N]` at
 all, which is exactly when `Vec` is required instead.
 
+## Best practices & deeper information
+
+### Scenario: Working with collections
+
+Reach for an array the moment a collection's length is a fixed fact of
+the domain; reach for `Vec` the moment it depends on anything decided at
+runtime.
+
+```
+let rgb: [u8; 3] = [255, 87, 34]; // <- length is always exactly 3: no heap allocation, can't grow
+
+let mut samples: Vec<f64> = Vec::new(); // <- length isn't known ahead of time
+for reading in [21.5, 22.0, 21.8] {     // stand-in for readings arriving one at a time
+    samples.push(reading); // <- Vec can grow; an array's length could never change like this
+}
+```
+
+**Why this way:** the
+[Rust Cookbook](https://rust-lang-nursery.github.io/rust-cookbook/)'s
+collection recipes default to `Vec` for exactly the "length depends on
+runtime input" case — an array only works when the count really is a
+compile-time constant, like a color's three fixed channels.
+
+### Scenario: Designing a public API
+
+Whether a function signature takes `[T; N]` or `&[T]`/`Vec<T>` should
+reflect whether the length is a real, fixed contract of the domain or
+something the caller determines.
+
+```
+fn checksum(bytes: [u8; 4]) -> u8 { // <- fixed-size array: caller must supply exactly 4 bytes
+    bytes.iter().fold(0, |acc, b| acc ^ b)
+}
+
+fn checksum_stream(bytes: &[u8]) -> u8 { // <- slice: any length, decided by the caller at runtime
+    bytes.iter().fold(0, |acc, b| acc ^ b)
+}
+
+checksum([0x1, 0x2, 0x3, 0x4]);
+checksum_stream(&vec![0x1, 0x2, 0x3, 0x4, 0x5]);
+```
+
+**Why this way:** if a protocol genuinely fixes the length — a 4-byte
+header, say — saying so in the signature with `[T; N]` turns a
+wrong-length call into a compile error instead of a runtime bounds
+check; only widen to `&[T]`/`Vec<T>` once the length is truly
+caller-determined, per the API Guidelines'
+[C-GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html#functions-minimize-assumptions-about-parameters-by-using-generic-types-c-generic)
+guidance on not over- or under-committing a signature.
+
 ## Embedded Rust Notes
 
 **Partial support.** Fixed-size arrays (`[T; N]`) are full support — pure

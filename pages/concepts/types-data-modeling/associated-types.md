@@ -50,6 +50,41 @@ impl Container for Numbers {
 }
 ```
 
+## Best practices & deeper information
+
+### Scenario: Implementing traits
+
+When a trait method's result type has exactly one right answer per
+implementer, fixing it as an associated type keeps the trait's signature
+simple and keeps callers from having to specify a type parameter that was
+never theirs to choose.
+
+```
+trait Parser {
+    type Output;                     // <- fixed per implementer, not chosen by the caller
+    fn parse(&self, input: &str) -> Self::Output;
+}
+
+struct IntParser;
+impl Parser for IntParser {
+    type Output = i32;               // <- IntParser always produces i32, never anything else
+    fn parse(&self, input: &str) -> i32 {
+        input.parse().unwrap_or(0)
+    }
+}
+
+// A generic `trait Parser<Output> { ... }` would instead let one type implement
+// Parser<i32> AND Parser<String> at once -- rarely the right shape for
+// "the type this parser produces," which should have exactly one answer.
+```
+
+**Why this way:** use an associated type when there's exactly one correct
+answer per implementer (an iterator's `Item`, a parser's `Output`);
+reach for a generic parameter instead when a caller legitimately needs to
+choose it at the call site, the way a
+[trait bound](../traits-polymorphism/trait-bounds.md) like `From<T>` lets
+one type convert from many different `T`s.
+
 ## Embedded Rust Notes
 
 **Full support.** A compile-time mechanism — no `std`/allocator

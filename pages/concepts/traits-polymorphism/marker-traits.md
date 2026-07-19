@@ -41,6 +41,60 @@ fn assert_send<T: Send>() {}
 assert_send::<Sensor>();
 ```
 
+## Best practices & deeper information
+
+### Scenario: Multi-threading
+
+A type shared across threads only compiles where the API requires it if
+every field is itself `Send`/`Sync` — the marker traits are what the
+compiler checks, not something the code has to assert by hand.
+
+```
+struct SensorReading { value: f64, timestamp: u64 } // <- auto-Send/Sync: every field is
+
+fn spawn_worker(reading: SensorReading) {
+    std::thread::spawn(move || { // <- requires SensorReading: Send, checked at compile time
+        println!("{}: {}", reading.timestamp, reading.value);
+    });
+}
+
+spawn_worker(SensorReading { value: 21.5, timestamp: 1_700_000_000 });
+```
+
+**Why this way:** because `Send`/`Sync` propagate structurally from a
+type's fields, most types are thread-safe to move or share automatically
+— the
+[API Guidelines' C-SEND-SYNC](https://rust-lang.github.io/api-guidelines/interoperability.html)
+treats "is `Send`/`Sync` where possible" as a checklist item precisely
+because losing it (e.g. by adding an `Rc` or raw pointer field) is easy to
+do by accident.
+
+### Scenario: Designing a public API
+
+Manually implementing `Send`/`Sync` is `unsafe` and rare — it's only
+needed when a type contains something that isn't automatically
+thread-safe (a raw pointer, an FFI handle) and the author can prove, by
+hand, that sharing it really is safe.
+
+```
+struct FfiHandle(*mut u8); // raw pointer: not auto-Send
+
+// SAFETY: this handle is never dereferenced by more than one thread at a
+// time, which the caller must uphold for this impl to stay sound.
+unsafe impl Send for FfiHandle {} // <- manual, unsafe: author is vouching for thread-safety
+
+fn move_to_worker(handle: FfiHandle) {
+    std::thread::spawn(move || drop(handle)); // only compiles because of the impl above
+}
+```
+
+**Why this way:**
+[`std::marker::Send`](https://doc.rust-lang.org/std/marker/trait.Send.html)
+is an `auto trait` — the compiler derives it automatically for ordinary
+types, so a hand-written `unsafe impl` should be rare and deliberate,
+reserved for the specific fields (raw pointers, FFI types) that opt a
+type out of the automatic derivation.
+
 ## Embedded Rust Notes
 
 **Full support.** All defined in `core` — no `std` dependency. `Send`/`Sync`

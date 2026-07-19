@@ -57,6 +57,80 @@ for s in &shapes {
 }
 ```
 
+## Best practices & deeper information
+
+### Scenario: Runtime polymorphism
+
+An audio effect chain needs to apply an arbitrary, user-configured mix of
+effects in sequence — the exact set and order aren't known until runtime,
+which rules out a fixed enum or a single generic function.
+
+```
+trait Effect {
+    fn apply(&self, sample: f32) -> f32;
+}
+
+struct Gain(f32);
+impl Effect for Gain {
+    fn apply(&self, sample: f32) -> f32 { sample * self.0 }
+}
+
+struct Clip(f32);
+impl Effect for Clip {
+    fn apply(&self, sample: f32) -> f32 { sample.clamp(-self.0, self.0) }
+}
+
+fn process(sample: f32, chain: &[Box<dyn Effect>]) -> f32 { // <- one signature, any mix of effect types
+    chain.iter().fold(sample, |s, effect| effect.apply(s))
+}
+
+let chain: Vec<Box<dyn Effect>> = vec![Box::new(Gain(2.0)), Box::new(Clip(1.0))];
+process(0.6, &chain);
+```
+
+**Why this way:** the chain's length and composition are decided at
+runtime (config, user input), so no single generic instantiation could
+cover it — this is exactly the heterogeneous-collection case the
+[Rust Book](https://doc.rust-lang.org/book/ch18-02-trait-objects.html)
+uses trait objects for.
+
+### Scenario: Designing a public API
+
+A plugin-style registry is a natural `Vec<Box<dyn Trait>>` API: the crate
+owns the collection and dispatch logic, while callers register any type
+implementing the trait.
+
+```
+trait Command {
+    fn name(&self) -> &str;
+    fn run(&self, input: &str);
+}
+
+pub struct Registry {
+    commands: Vec<Box<dyn Command>>, // <- registry stores any Command impl behind one type
+}
+
+impl Registry {
+    pub fn register(&mut self, command: Box<dyn Command>) {
+        self.commands.push(command);
+    }
+
+    pub fn dispatch(&self, name: &str, input: &str) {
+        if let Some(cmd) = self.commands.iter().find(|c| c.name() == name) {
+            cmd.run(input);
+        }
+    }
+}
+```
+
+**Why this way:** designing `Command` to stay object-safe (no generic
+methods, no returning `Self`) is what makes this API possible at all —
+the [API Guidelines' C-OBJECT](https://rust-lang.github.io/api-guidelines/flexibility.html)
+calls out object safety as a deliberate design goal for traits meant to be
+used this way, and the shape matches the
+[command pattern](https://rust-unofficial.github.io/patterns/patterns/behavioural/command.html)
+in the Rust Design Patterns book.
+
 ## Embedded Rust Notes
 
 **Full support** for `&dyn Trait`/`&mut dyn Trait` — the vtable mechanism

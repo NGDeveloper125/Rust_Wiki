@@ -50,6 +50,77 @@ impl Drop for Guard {
 } // <- _g goes out of scope here: drop() runs automatically
 ```
 
+## Best practices & deeper information
+
+### Scenario: Managing resources (RAII)
+
+A file-writing session wraps an open file and guarantees its buffered
+contents are flushed no matter how the enclosing function exits —
+including an early `return`.
+
+```
+struct LogSession {
+    file: std::fs::File,
+}
+
+impl Drop for LogSession {
+    fn drop(&mut self) {
+        use std::io::Write;
+        let _ = self.file.flush(); // <- runs on every exit path: normal return, early return, or panic
+    }
+}
+
+fn write_entries(session: &LogSession, entries: &[&str]) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut file = &session.file;
+    for e in entries {
+        if e.is_empty() {
+            return Ok(()); // <- session still gets flushed: Drop runs when it goes out of scope
+        }
+        writeln!(file, "{e}")?;
+    }
+    Ok(())
+}
+```
+
+**Why this way:** tying cleanup to a value's scope via `Drop` means every
+exit path — including ones added later by a maintainer who forgets about
+cleanup — runs it automatically, instead of relying on a `finally`-style
+block or manual discipline at every return site; the
+[Rust Book](https://doc.rust-lang.org/book/ch15-03-drop.html) presents
+this as RAII's central guarantee.
+
+### Scenario: Querying a database
+
+A database transaction is represented as a guard value — if the code
+returns early or panics before calling `.commit()`, `Drop` rolls the
+transaction back automatically instead of leaving it half-applied.
+
+```
+// [dependencies] sqlx = "0.8", tokio = { version = "1", features = ["full"] }
+use sqlx::PgPool;
+
+async fn transfer_funds(pool: &PgPool, from: i64, to: i64, cents: i64) -> sqlx::Result<()> {
+    let mut tx = pool.begin().await?; // <- transaction guard: rolls back on Drop unless committed
+
+    sqlx::query("UPDATE accounts SET balance_cents = balance_cents - $1 WHERE id = $2")
+        .bind(cents).bind(from).execute(&mut *tx).await?;
+    sqlx::query("UPDATE accounts SET balance_cents = balance_cents + $1 WHERE id = $2")
+        .bind(cents).bind(to).execute(&mut *tx).await?;
+
+    tx.commit().await?; // <- only this makes the changes permanent; any earlier `?` drops `tx` first
+    Ok(())
+}
+```
+
+**Why this way:** representing an open transaction as a guard whose
+`Drop` rolls back by default means a failed query midway through (any of
+the `?`s above) can't accidentally leave a half-applied transfer
+committed — sqlx models `Transaction` exactly this way, per the
+[sqlx docs](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html), so
+RAII does the safety work a hand-written try/rollback block would
+otherwise need to get right manually.
+
 ## Embedded Rust Notes
 
 **Full support** — and arguably more central to embedded Rust than to

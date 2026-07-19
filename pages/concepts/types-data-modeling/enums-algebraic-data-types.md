@@ -55,6 +55,90 @@ match s {
 }
 ```
 
+## Best practices & deeper information
+
+### Scenario: Branching on data (pattern matching)
+
+An exhaustive `match` on an enum is the idiomatic way to branch on which
+variant a value currently is, extracting each variant's data by name
+instead of reaching into it afterward.
+
+```
+enum SensorReading {
+    Valid(f64),
+    OutOfRange { value: f64, limit: f64 },
+    SensorOffline,
+}
+
+fn describe(reading: &SensorReading) -> String {
+    match reading { // <- exhaustive: every variant must be handled, or this doesn't compile
+        SensorReading::Valid(v) => format!("{v:.1}"),
+        SensorReading::OutOfRange { value, limit } => format!("{value:.1} exceeds limit {limit:.1}"),
+        SensorReading::SensorOffline => "offline".to_string(),
+    }
+}
+```
+
+**Why this way:** the
+[Rust Book](https://doc.rust-lang.org/book/ch06-02-match.html) covers
+`match`'s exhaustiveness as central to enums' value — adding a new
+`SensorReading` variant later turns every `match` that needs updating
+into a compile error, instead of a silently-missing case.
+
+### Scenario: Handling and propagating errors
+
+A custom error enum lets each failure mode carry exactly the data that
+explains it, so callers can react to *which* case happened instead of
+parsing a generic error message.
+
+```
+enum ConfigError {
+    MissingField(String),          // <- each variant carries only the data relevant to that failure
+    InvalidValue { field: String, reason: String },
+    Io(std::io::Error),
+}
+
+fn load_port(raw: Option<&str>) -> Result<u16, ConfigError> {
+    let raw = raw.ok_or_else(|| ConfigError::MissingField("port".into()))?;
+    raw.parse().map_err(|_| ConfigError::InvalidValue {
+        field: "port".into(),
+        reason: "not a valid u16".into(),
+    })
+}
+```
+
+**Why this way:** structuring errors as a data-carrying enum rather than
+a string is one of [Effective Rust](https://effective-rust.com/)'s core
+error-handling recommendations — it lets a caller `match` on the failure
+and handle each case differently, which a formatted error message alone
+can't support.
+
+### Scenario: Serializing and deserializing
+
+`serde` can tag which variant a JSON object represents in more than one
+shape; picking the internally-tagged form keeps the output flat instead
+of nesting each variant's data under its own extra key.
+
+```
+// [dependencies] serde = { version = "1", features = ["derive"] }, serde_json = "1"
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type")] // <- variant name is stored under a "type" key instead of nesting it
+enum Event {
+    Connected { addr: String },
+    Disconnected { reason: String },
+}
+
+let json = serde_json::to_string(&Event::Connected { addr: "10.0.0.5".into() }).unwrap();
+// {"type":"Connected","addr":"10.0.0.5"}
+```
+
+**Why this way:** serde's default "externally tagged" representation
+round-trips fine but nests each variant's fields under their own key,
+which is awkward for non-Rust consumers;
+[serde's enum representations guide](https://serde.rs/enum-representations.html)
+covers `#[serde(tag = "...")]` as the option to reach for when a flatter
+JSON shape is what the wire format actually needs.
+
 ## Embedded Rust Notes
 
 **Full support.** Enums are core-language and allocator-free (their size

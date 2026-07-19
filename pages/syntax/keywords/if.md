@@ -47,6 +47,80 @@ if x > 0 { // <- `if` branches on a boolean condition
 }
 ```
 
+## Best practices & deeper information
+
+### Scenario: Validating input
+
+Rejecting an out-of-range value at the top of a function, before doing
+any real work, is the guard-clause shape — `if` tests the invalid case
+and returns immediately, leaving the rest of the function to assume valid
+input.
+
+```
+fn set_volume(level: i32) -> Result<(), String> {
+    if !(0..=100).contains(&level) {
+        // <- `if` as a guard clause: reject bad input before doing any real work
+        return Err(format!("volume {level} out of range"));
+    }
+    // ... apply the validated level
+    Ok(())
+}
+```
+
+**Why this way:** checking the invalid case first and returning keeps the
+rest of the function at one indentation level instead of nesting the
+valid path inside an `if`, an idiom the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
+collection favors for reducing nesting.
+
+### Scenario: Handling and propagating errors
+
+A malformed port string should stop `read_port` before any further
+processing happens — `if` here tests one condition at a time and returns
+early for each failure case.
+
+```
+fn read_port(raw: &str) -> Result<u16, String> {
+    let Ok(port) = raw.trim().parse::<u16>() else {
+        return Err(format!("invalid port: {raw:?}"));
+    };
+    if port == 0 {
+        // <- ordinary `if` used for a second early-return guard mid-function
+        return Err("port 0 is reserved".to_string());
+    }
+    Ok(port)
+}
+```
+
+**Why this way:** `return` inside an `if` is type `!` (never), which
+coerces to whatever type the surrounding context expects — the
+[Reference's page on the never type](https://doc.rust-lang.org/reference/types/never.html)
+is why this early exit can appear alongside other branches without a type
+mismatch.
+
+### Scenario: Branching on data (pattern matching)
+
+Logging only the valid variant of a two-variant enum doesn't need a full
+`match` — `if let` matches the one pattern that matters and silently does
+nothing for the rest.
+
+```
+enum Reading { Valid(f64), Error(String) }
+
+fn log_reading(reading: &Reading) {
+    if let Reading::Valid(value) = reading {
+        // <- `if let` matches one pattern without needing an exhaustive `match`
+        println!("reading: {value}");
+    }
+}
+```
+
+**Why this way:** `if let` is exactly for the case where only one pattern
+needs handling and the rest can be ignored — the
+[Book's section on `if let`](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+recommends it over `match` precisely to avoid writing a wildcard `_` arm
+that does nothing.
+
 ## Embedded Rust Notes
 
 **Full support.** No dependency on `std`. Extremely common in embedded

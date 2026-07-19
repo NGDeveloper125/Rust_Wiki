@@ -30,6 +30,31 @@ let x = 8u8 >> 3; // <- `>>` shifts the bits of `8u8` right by 3
 **Restriction:** as with `<<`, shifting by an amount greater than or
 equal to the type's bit width panics in debug builds.
 
+## Best practices & deeper information
+
+### Scenario: Bit manipulation and flags
+
+Extracting a specific field from a packed byte combines `>>` (move the
+field down to bit 0) with `&` (mask off everything else) — a pairing
+that shows up constantly when decoding protocol or register bytes.
+
+```
+// A status byte: bits 7-4 = error code, bits 3-0 = flags
+let status: u8 = 0b0101_0011;
+
+let error_code = status >> 4; // <- `>>` moves the high nibble down to bit 0
+let flags = status & 0b1111;   // low nibble, no shift needed
+
+assert_eq!(error_code, 0b0101);
+assert_eq!(flags, 0b0011);
+```
+
+**Why this way:** shifting before masking (or masking before shifting,
+for a low field) is the standard field-extraction idiom for packed data —
+the [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/literals.html)
+bitwise-operator examples use the same shift-then-mask shape for
+unpacking multi-field bytes.
+
 ## Embedded Rust Notes
 
 **Full support.** `Shr` lives in `core::ops` — no `std` dependency.

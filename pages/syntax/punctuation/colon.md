@@ -32,6 +32,49 @@ let x: i32 = 5;
 //   ^ `:` here separates the binding name from its type annotation
 ```
 
+## Best practices & deeper information
+
+### Scenario: Writing generic code
+
+Stacking multiple bounds after `:` (`T: Clone + std::fmt::Debug`) reads
+better than it sounds, but once a function needs several bounds on
+several type parameters, moving them to a `where` clause keeps the
+signature itself scannable.
+
+```
+fn summarize<T>(items: &[T]) -> String
+where
+    T: std::fmt::Debug + Clone, // <- `:` here still constrains T, just relocated
+{
+    format!("{items:?}")
+}
+```
+
+**Why this way:** the
+[API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html)
+and rustfmt both favor `where` once a bound list grows past one or two
+simple traits — it keeps the parameter list itself readable and puts
+every constraint in one predictable place.
+
+### Scenario: Creating a new object
+
+In a struct literal, `field: value` pairs use the same `:` token as a
+type annotation but mean something different — "this field gets this
+value," not "this name has this type."
+
+```
+struct Point { x: f64, y: f64 } // <- `:` here is a type annotation
+
+let origin = Point { x: 0.0, y: 0.0 }; // <- `:` here is a field initializer
+let shifted = Point { x: 1.0, ..origin }; // shorthand: y taken from origin
+```
+
+**Why this way:** when a local variable already shares a field's name
+(`let x = 0.0; Point { x, y: 0.0 }`), the field-init shorthand drops the
+`: value` entirely — `rustfmt`/clippy's
+[`redundant_field_names`](https://rust-lang.github.io/rust-clippy/master/#redundant_field_names)
+lint flags the redundant `field: field` form.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure grammar — no `std` dependency.
