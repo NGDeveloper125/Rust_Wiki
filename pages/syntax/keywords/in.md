@@ -35,6 +35,30 @@ for x in 0..10 { // <- `in` binds `x` to each value produced by `0..10`
 `for PATTERN in EXPR { ... }` grammar — it is not a standalone
 membership-test operator the way `in` works in Python.
 
+## Best practices & deeper information
+
+### Scenario: Working with collections
+
+`in` binds whatever pattern precedes it to each item an iterator chain
+produces — including a destructured tuple, when the source yields pairs.
+
+```
+let inventory = [("widget", 12), ("gadget", 0), ("gizmo", 5)];
+
+for (name, count) in inventory.into_iter().filter(|&(_, c)| c > 0) {
+    // <- `in` binds `(name, count)` to each item the adaptor chain yields
+    println!("{name}: {count} in stock");
+}
+```
+
+**Why this way:** destructuring directly in the pattern before `in` avoids
+a separate destructuring `let` inside the loop body — the
+[`Iterator::filter`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter)
+adaptor narrows what's seen before `in` ever binds it. `in` itself has no
+meaning outside this grammar — it isn't a general membership operator —
+so there's nothing further to say about it in isolation; see
+[`for`](for.md) for the loop it belongs to.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure grammar, part of the `for` loop form — no `std`
