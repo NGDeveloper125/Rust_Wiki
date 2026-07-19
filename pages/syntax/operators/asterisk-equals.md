@@ -22,6 +22,16 @@ Unrelated to the dereference sense of `*` — `*=` is purely the compound
 arithmetic-assignment operator; there is no "deref-assign" reading of
 this token.
 
+## Basic usage example
+
+```
+let mut x = 5;
+x *= 3; // <- multiplies `x` by 3 in place
+```
+
+**Restriction:** the left-hand side must be a mutable binding
+(`let mut`) — `*=` assigns in place.
+
 ## Embedded Rust Notes
 
 **Full support.** `MulAssign` lives in `core::ops` — no `std` dependency.

@@ -19,6 +19,17 @@ four ordering operators together, not just one.
 if a <= b { ... }
 ```
 
+## Basic usage example
+
+```
+let a = 3;
+let b = 5;
+let ok = a <= b; // <- true if `a` is less than or equal to `b`
+```
+
+**Restriction:** comparisons can't be chained like in Python —
+`a <= b <= c` doesn't compile; write `a <= b && b <= c` instead.
+
 ## Embedded Rust Notes
 
 **Full support.** `PartialOrd` lives in `core::cmp` — no `std` dependency.

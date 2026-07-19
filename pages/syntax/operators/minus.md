@@ -26,6 +26,16 @@ default; unsigned integers (`u32`, etc.) have no `Neg` impl, so `-x` where
 overflow from subtraction (e.g. `0u8 - 1`) panics; in release builds it
 wraps, unless explicitly guarded with methods like `checked_sub`.
 
+## Basic usage example
+
+```
+let diff = 10 - 3; // <- binary `-` subtracts the right operand
+```
+
+**Restriction:** subtracting past a type's minimum value (e.g. `0u8 - 1`)
+panics in debug builds; release builds wrap instead, unless you use a
+checked method like `checked_sub`.
+
 ## Embedded Rust Notes
 
 **Full support.** `Sub`/`Neg` live in `core::ops` — no `std` dependency.

@@ -21,6 +21,15 @@ result takes the sign of the dividend (`-7 % 2 == -1`, not `1`), which
 differs from the mathematical modulo used by some other languages. Like
 `/`, `%` panics on division by zero for integers.
 
+## Basic usage example
+
+```
+let r = 7 % 2; // <- `%` computes the remainder
+```
+
+**Restriction:** dividing (or taking the remainder) by zero panics
+unconditionally for integers, even in release builds.
+
 ## Embedded Rust Notes
 
 **Full support.** `Rem` lives in `core::ops` — same software-division
