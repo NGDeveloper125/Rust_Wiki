@@ -24,6 +24,17 @@ exactly the point: it lets you encode a piece of information ("this
 value is specifically an instance of `Marker`") purely in the type,
 enforced by the compiler, with no runtime representation to go with it.
 
+## Basic usage example
+
+```
+struct Marker; // <- no fields: exists only to be a distinct type
+
+trait Tag {}
+impl Tag for Marker {} // <- typically exists so it can implement a trait
+
+let _m = Marker; // zero bytes at runtime
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Zero-sized and allocator-free — embedded HAL crates use

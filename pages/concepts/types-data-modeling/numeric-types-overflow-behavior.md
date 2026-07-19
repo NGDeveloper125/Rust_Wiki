@@ -33,6 +33,21 @@ overflow panics) for explicitness everywhere it actually matters, rather
 than picking one runtime behavior and making every caller pay for it
 unconditionally.
 
+## Basic usage example
+
+```
+let a: u8 = 250;
+let b: u8 = 10;
+
+let sum = a.checked_add(b); // <- None: 260 doesn't fit in a u8, caught explicitly
+println!("{sum:?}");
+```
+
+**Restriction:** writing plain `a + b` here instead hides the same
+problem — it panics in a debug build but silently wraps to `4` in a
+release build, so the two profiles behave differently unless you use an
+explicit `checked_`/`wrapping_`/`saturating_` method.
+
 ## Embedded Rust Notes
 
 **Full support.** All defined in `core`, no `std` dependency. Overflow

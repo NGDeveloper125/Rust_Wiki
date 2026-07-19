@@ -33,6 +33,22 @@ the compiler verifies, once, at the definition site plus every call site,
 that every operation the generic code performs is valid for whatever
 concrete type ends up substituted in.
 
+## Basic usage example
+
+```
+fn largest<T: PartialOrd>(items: &[T]) -> &T {
+//        ^^^^^^^^^^^^^^ T is a generic type, constrained to types that support `>`
+    let mut best = &items[0];
+    for item in items {
+        if item > best { best = item; }
+    }
+    best
+}
+
+largest(&[3, 7, 2]);       // T = i32 here
+largest(&[1.5, 0.2]);      // T = f64 here, same function definition
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Generics and monomorphization are purely a compile-time
