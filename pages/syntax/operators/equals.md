@@ -30,6 +30,16 @@ pattern is unusual in Rust.
 associated-type bindings (`Item = T`), both unrelated to runtime
 assignment.
 
+## Basic usage example
+
+```
+let mut count = 0;
+count = 5; // <- `=` assigns 5 to `count`
+```
+
+**Restriction:** reassigning with `=` requires the binding to be
+declared `mut` — `let x = 0; x = 1;` without `mut` is a compile error.
+
 ## Embedded Rust Notes
 
 **Full support.** Assignment and move semantics are core language

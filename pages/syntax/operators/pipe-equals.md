@@ -19,6 +19,13 @@ let mut flags = 0b1000u8;
 flags |= 0b0010; // flags is now 0b1010
 ```
 
+## Basic usage example
+
+```
+let mut flags = 0b1000u8;
+flags |= 0b0010; // <- `|=` ORs the right operand into `flags` in place
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `BitOrAssign` lives in `core::ops` — setting flag bits

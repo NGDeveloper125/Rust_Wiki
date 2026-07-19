@@ -31,6 +31,13 @@ lambda syntax uses `=>`.
 trait bounds spelled out explicitly, e.g. `where F: Fn(i32) -> i32`, and
 in a bare function-pointer type, `fn(i32) -> i32`.
 
+## Basic usage example
+
+```
+fn add(a: i32, b: i32) -> i32 { a + b }
+//                      ^^ `->` introduces the return type, `i32`
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Pure grammar — no `std` dependency.

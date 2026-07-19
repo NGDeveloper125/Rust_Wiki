@@ -35,6 +35,19 @@ A `while` loop can be given a label (`'outer: while ... `) so an inner
 `break` or `continue` can target it specifically instead of the nearest
 enclosing loop.
 
+## Basic usage example
+
+```
+let mut count = 0;
+while count < 10 { // <- repeats the block while the condition is `true`
+    count += 1;
+}
+```
+
+**Restriction:** `while` is not an expression — it always evaluates to
+`()` and cannot produce a value via `break`, unlike `loop`, since the body
+may run zero times.
+
 ## Embedded Rust Notes
 
 **Full support.** `while` polling loops are a staple of bare-metal

@@ -32,6 +32,18 @@ target it explicitly: `break 'outer;` (see loop labels under `loop`,
 (`'a: { ... break 'a value; }`) to exit early with a value, a lesser-known
 form useful for structuring multi-step logic without a `loop` at all.
 
+## Basic usage example
+
+```
+let result = loop {
+    break 5; // <- `break` exits the loop immediately, with `5` as its value
+};
+```
+
+**Restriction:** `break value;` is only legal inside `loop` — `while` and
+`for` loops may run zero iterations, so `break` cannot carry a value out of
+them.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency; works identically in `#![no_std]`.

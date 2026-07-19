@@ -24,6 +24,16 @@ extra allocation, which matters for types like `String` or `Vec`), though
 for simple numeric types the two behave identically. The left operand
 must be a mutable place — `x` must be declared `let mut x`.
 
+## Basic usage example
+
+```
+let mut x = 5;
+x += 1; // <- `+=` adds the right operand into `x` in place
+```
+
+**Restriction:** the left operand must be a mutable place — `x` has to be
+declared with `let mut x`, or this won't compile.
+
 ## Embedded Rust Notes
 
 **Full support.** `AddAssign` lives in `core::ops` — no `std` dependency.

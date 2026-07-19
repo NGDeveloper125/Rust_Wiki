@@ -21,6 +21,15 @@ octal notation (`0755`), Rust requires the explicit `0o` prefix, so a
 literal like `0755` is just decimal 755, never accidentally
 misinterpreted as octal.
 
+## Basic usage example
+
+```
+let mode = 0o644; // <- `0o` prefix marks a base-8 (octal) integer literal
+```
+
+**Restriction:** only digits `0`–`7` are legal after the `0o` prefix —
+`0o8` is a compile error.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency; rarely used in embedded code

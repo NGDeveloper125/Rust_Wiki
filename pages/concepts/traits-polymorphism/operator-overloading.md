@@ -33,6 +33,23 @@ together (e.g. `Add`'s associated `Output` type must be specified
 explicitly, so `Point + Point` returning something other than `Point` is
 possible but has to be deliberate).
 
+## Basic usage example
+
+```
+use std::ops::Add;
+
+struct Point { x: i32, y: i32 }
+
+impl Add for Point { // <- gives `+` its meaning for Point
+    type Output = Point;
+    fn add(self, other: Point) -> Point {
+        Point { x: self.x + other.x, y: self.y + other.y }
+    }
+}
+
+let p = Point { x: 1, y: 2 } + Point { x: 3, y: 4 }; // <- calls Point::add
+```
+
 ## Embedded Rust Notes
 
 **Full support.** All `std::ops` traits live in `core::ops` — no `std`

@@ -37,6 +37,18 @@ handed off elsewhere, a whole category of bug (use-after-move,
 double-free) that move semantics eliminates by construction rather than
 by convention or discipline.
 
+## Basic usage example
+
+```
+fn consume(s: String) {
+    println!("{s}");
+} // s is dropped here, at the end of consume's scope
+
+let a = String::from("hi");
+consume(a); // <- ownership of `a` moves into the function call
+// println!("{a}"); // would fail to compile: `a` was moved
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Move semantics are core-language and allocator-free —

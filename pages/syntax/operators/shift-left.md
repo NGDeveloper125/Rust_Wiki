@@ -23,6 +23,16 @@ boundary). `<<` on integers is a pure bit-shift, unrelated to C++'s
 overload of `<<` for stream output — Rust uses `{}`/`write!` and the
 `Display`/`Debug` traits for formatting instead.
 
+## Basic usage example
+
+```
+let x = 1u8 << 3; // <- `<<` shifts the bits of `1u8` left by 3
+```
+
+**Restriction:** shifting by an amount greater than or equal to the
+type's bit width panics in debug builds; use `checked_shl`/`wrapping_shl`
+for defined behavior at the boundary.
+
 ## Embedded Rust Notes
 
 **Full support.** `Shl` lives in `core::ops` — bit shifts are used

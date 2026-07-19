@@ -29,6 +29,19 @@ exception: parameter and return types must always be written explicitly,
 which keeps a function's public contract readable and stable without
 having to read its body to know what it accepts and returns.
 
+## Basic usage example
+
+```
+let x = 5; // <- inferred as i32 from context (the default integer type)
+
+let mut v = Vec::new();
+v.push(3.14); // <- this later use tells the compiler v: Vec<f64>
+```
+
+**Restriction:** inference is local to a function body — parameter and
+return types must always be written explicitly, so `fn largest(items: &[T]) -> &T`
+can't have its signature worked out just from how the function is used.
+
 ## Embedded Rust Notes
 
 **Full support.** A compile-time-only mechanism — no `std` dependency,

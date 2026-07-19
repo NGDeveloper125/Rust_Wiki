@@ -23,6 +23,18 @@ membership-test operator the way `in` works in Python. Testing membership
 in a Rust collection is a method call instead
 (`collection.contains(&value)`).
 
+## Basic usage example
+
+```
+for x in 0..10 { // <- `in` binds `x` to each value produced by `0..10`
+    println!("{x}");
+}
+```
+
+**Restriction:** `in` only exists as part of the fixed
+`for PATTERN in EXPR { ... }` grammar — it is not a standalone
+membership-test operator the way `in` works in Python.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure grammar, part of the `for` loop form — no `std`

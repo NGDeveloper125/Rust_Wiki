@@ -30,6 +30,12 @@ empty parameter list — the parser distinguishes the two uses by context,
 since a bare `||` in expression position where a value (not a boolean
 condition) is expected can only be a closure.
 
+## Basic usage example
+
+```
+let out_of_range = a < 0 || a > 100; // <- `||` short-circuiting logical OR
+```
+
 ## Embedded Rust Notes
 
 **Full support** for both meanings — logical OR and zero-argument

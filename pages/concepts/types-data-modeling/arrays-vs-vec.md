@@ -29,6 +29,20 @@ functions that just need to *read* a sequence, regardless of its backing
 storage, conventionally take `&[T]` rather than committing to either
 `&Vec<T>` or `&[T; N]` specifically.
 
+## Basic usage example
+
+```
+let arr: [i32; 3] = [1, 2, 3];   // <- fixed length baked into the type, stack-allocated
+
+let mut v: Vec<i32> = vec![1, 2, 3];
+v.push(4);                        // <- Vec can grow at runtime; arr's length can never change
+```
+
+**Restriction:** an array's length is part of its type and fixed at
+compile time — it cannot grow or shrink, and a length only known at
+runtime (parsed input, for example) can't be expressed as `[T; N]` at
+all, which is exactly when `Vec` is required instead.
+
 ## Embedded Rust Notes
 
 **Partial support.** Fixed-size arrays (`[T; N]`) are full support — pure

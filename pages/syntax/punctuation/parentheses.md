@@ -28,6 +28,14 @@ Which meaning applies is determined entirely by what (if anything)
 immediately precedes the `(` — an identifier/path means a call or
 construction; nothing (or an operator) means grouping or a tuple.
 
+## Basic usage example
+
+```
+fn add(a: i32, b: i32) -> i32 { a + b } // <- `( )` groups the parameter list
+let sum = add(1, 2); // <- `( )` here is the call, passing the arguments
+let pair = (1, "a"); // <- `( )` here builds a tuple value
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Grouping, tuples, and calls are core grammar — no `std`

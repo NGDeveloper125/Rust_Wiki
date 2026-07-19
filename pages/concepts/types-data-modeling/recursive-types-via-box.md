@@ -32,6 +32,24 @@ way to write linked lists, trees, and other self-referential data
 structures in Rust — the indirection through the heap is exactly what
 makes the recursion possible to represent at all.
 
+## Basic usage example
+
+```
+enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+use List::{Cons, Nil};
+
+let list = Cons(1, Box::new(Cons(2, Box::new(Nil)))); // <- Box gives each Cons a fixed, known size
+```
+
+**Restriction:** each level of nesting is a real heap allocation, and
+dropping a very long chain recurses one stack frame per element — an
+extremely deep list can overflow the stack on drop, which is why
+production code often reworks deeply recursive structures into an
+iterative form instead.
+
 ## Embedded Rust Notes
 
 **Partial support.** `Box<T>` lives in `alloc` and needs a configured

@@ -33,6 +33,21 @@ This maps closely to what C++ templates have long allowed with
 non-type template parameters, but with Rust's stricter compile-time
 checking of what operations on `N` are actually valid.
 
+## Basic usage example
+
+```
+fn sum<const N: usize>(arr: [i32; N]) -> i32 { // <- N is a value, known at compile time
+    arr.iter().sum()
+}
+
+sum([1, 2, 3]);      // N = 3, inferred from the array literal
+sum([1, 2, 3, 4]);    // N = 4, a distinct monomorphized instantiation
+```
+
+**Restriction:** `N` must be resolvable at compile time — it can be a
+literal, a `const`, or inferred from context, but never a value computed
+at runtime (like a `Vec`'s length).
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — const generics are

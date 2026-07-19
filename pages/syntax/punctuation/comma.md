@@ -31,6 +31,16 @@ The one place a single trailing comma is *required*, not just allowed, is
 a one-element tuple: `(x,)` — without the comma, `(x)` is just a
 parenthesized expression, not a tuple at all.
 
+## Basic usage example
+
+```
+let point = (1, 2, 3);
+//            ^     ^ each `,` separates one tuple element from the next
+```
+
+**Restriction:** in a one-element tuple, the trailing comma is
+*mandatory* — `(x,)` is a tuple, `(x)` is just `x` in parentheses.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure list-separator grammar — no `std` dependency.

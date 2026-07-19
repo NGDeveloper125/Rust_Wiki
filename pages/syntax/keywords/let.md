@@ -37,6 +37,12 @@ mutability. A `let` can:
 `let` is a **statement**, not an expression — it has no value of its own
 and cannot be used where an expression is required.
 
+## Basic usage example
+
+```
+let x = 5; // <- `let` introduces a new binding named `x`
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `let` is core language grammar with no dependency on

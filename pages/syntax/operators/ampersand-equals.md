@@ -21,6 +21,16 @@ let mut flags = 0b1111u8;
 flags &= 0b1010; // flags is now 0b1010
 ```
 
+## Basic usage example
+
+```
+let mut flags = 0b1100u8;
+flags &= 0b1010; // <- clears bits not set in the mask, in place
+```
+
+**Restriction:** the left-hand side must be a mutable binding
+(`let mut`) — `&=` assigns in place.
+
 ## Embedded Rust Notes
 
 **Full support.** `BitAndAssign` lives in `core::ops` — clearing specific

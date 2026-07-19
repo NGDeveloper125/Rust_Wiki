@@ -22,6 +22,15 @@ in release builds) rather than producing infinity or undefined behavior;
 floating-point division by zero instead follows IEEE 754 and produces
 `inf`, `-inf`, or `NaN`.
 
+## Basic usage example
+
+```
+let quotient = 7 / 2; // <- `/` divides, truncating toward zero
+```
+
+**Restriction:** dividing an integer by zero panics unconditionally, even
+in release builds.
+
 ## Embedded Rust Notes
 
 **Full support.** `Div` lives in `core::ops`. Worth knowing: many small

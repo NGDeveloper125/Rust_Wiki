@@ -25,6 +25,16 @@ It may also appear directly between the digits and a type suffix
 `_1` is parsed as an identifier, not a numeric literal starting with an
 underscore.
 
+## Basic usage example
+
+```
+let value = 10_000;
+//            ^ digit separator: purely cosmetic, does not affect the value
+```
+
+**Restriction:** an underscore can't be the very first character of the
+literal — `_1_000` is parsed as an identifier, not a numeric literal.
+
 ## Embedded Rust Notes
 
 **Full support.** Purely cosmetic at compile time — no `std` dependency,

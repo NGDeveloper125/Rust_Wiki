@@ -21,6 +21,12 @@ Also commonly used with `bool` as an XOR/"exactly one of" operator, since
 `BitXor` is implemented for `bool` as well as the integer types (unlike
 `&&`/`||`, `^` never short-circuits — both operands are always evaluated).
 
+## Basic usage example
+
+```
+let x = 0b1100 ^ 0b1010; // <- bitwise XOR: bits that differ become 1
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `BitXor` lives in `core::ops` — bit-toggling a hardware

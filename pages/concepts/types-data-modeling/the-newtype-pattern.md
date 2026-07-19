@@ -34,6 +34,24 @@ like. This combination — meaningful type safety plus a way around the
 orphan rule — is common enough that it's considered one of Rust's
 signature idioms rather than a niche trick.
 
+## Basic usage example
+
+```
+struct Meters(f64); // <- a distinct type, not just another name for f64
+
+fn print_distance(d: Meters) {
+    println!("{} m", d.0); // <- the wrapped value is accessed via .0
+}
+
+print_distance(Meters(5.0));
+// print_distance(5.0); // <- would not compile: f64 is not a Meters
+```
+
+**Restriction:** the wrapper gets no behavior for free — arithmetic
+operators, trait impls, and methods that `f64` has don't automatically
+apply to `Meters`; each one needed on the newtype has to be implemented
+explicitly (e.g. `impl Add for Meters`).
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — this is one of the most-used

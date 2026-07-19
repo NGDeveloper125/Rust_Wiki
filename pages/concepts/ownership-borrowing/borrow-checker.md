@@ -35,6 +35,19 @@ because the checker can't prove they're safe, which is why escape hatches
 like [interior mutability](interior-mutability.md), reference counting,
 and (in the rare, unavoidable case) `unsafe` exist.
 
+## Basic usage example
+
+```
+let mut v = vec![1, 2, 3];
+let first = &v[0];       // <- shared borrow of v starts here
+v.push(4);                // borrow checker error: can't mutate v...
+println!("{first}");      // ...while `first` still borrows it
+```
+
+**Restriction:** this is a compile-time rejection, not a runtime panic —
+the fix is to shorten `first`'s scope (or restructure the code) so it no
+longer overlaps with the mutable use.
+
 ## Embedded Rust Notes
 
 **Full support.** The borrow checker runs at compile time on the host

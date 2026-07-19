@@ -34,6 +34,22 @@ that "exactly one, determined by the implementer" relationship directly,
 while a generic parameter would leave it open to the caller in a way that
 doesn't fit the intent.
 
+## Basic usage example
+
+```
+trait Container {
+    type Item;                 // <- associated type: each implementer fills this in
+    fn get(&self, i: usize) -> Self::Item;
+}
+
+struct Numbers(Vec<i32>);
+
+impl Container for Numbers {
+    type Item = i32;           // <- this impl fixes Item to i32, exactly once
+    fn get(&self, i: usize) -> i32 { self.0[i] }
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** A compile-time mechanism — no `std`/allocator

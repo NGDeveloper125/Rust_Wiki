@@ -30,6 +30,23 @@ if you need to implement a foreign trait for a foreign type, wrapping the
 foreign type in your own newtype gives you a type that isn't an orphan,
 which you're then free to implement anything on.
 
+## Basic usage example
+
+```
+struct Meters(f64); // <- local type, so a foreign trait may be implemented on it
+
+impl std::fmt::Display for Meters { // allowed: Meters is defined in this crate
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}m", self.0)
+    }
+}
+```
+
+**Restriction:** `impl std::fmt::Display for Vec<f64>` directly would be
+rejected — both `Display` and `Vec` are foreign to this crate. The fix is
+[the newtype pattern](../types-data-modeling/the-newtype-pattern.md): wrap
+`Vec<f64>` in a local type like `Meters` above, then implement on that.
+
 ## Embedded Rust Notes
 
 **Full support.** A compile-time-only rule enforced identically regardless

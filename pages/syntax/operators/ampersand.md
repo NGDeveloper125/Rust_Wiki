@@ -32,6 +32,13 @@ and does get lexed as `&` `&` `expr` in that specific position — a rare
 case where the lexer has to pick between the `&&`-token and two
 `&`-tokens based on what follows.
 
+## Basic usage example
+
+```
+let x = 5;
+let r = &x; // <- `&` borrows `x`, producing a shared reference `&i32`
+```
+
 ## Embedded Rust Notes
 
 **Full support** for both meanings. Borrowing is core-language and used

@@ -41,6 +41,21 @@ the runtime-polymorphism side, and
 [static dispatch & monomorphization](static-dispatch-monomorphization.md)
 for the compile-time side.
 
+## Basic usage example
+
+```
+trait Greet {
+    fn greet(&self) -> String;
+}
+
+struct Cat;
+impl Greet for Cat { // <- Cat implements the Greet trait
+    fn greet(&self) -> String { "meow".into() }
+}
+
+println!("{}", Cat.greet());
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Traits are core-language and allocator-free. The

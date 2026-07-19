@@ -31,6 +31,17 @@ introduces an escape sequence:
 None of these are processed inside a **raw** string/byte-string literal —
 see [raw string literal](raw-string-literal.md).
 
+## Basic usage example
+
+```
+let s = "tab\tnewline\n";
+//          ^^ ^^ escape sequences, processed at compile time
+```
+
+**Restriction:** a `\xNN` byte escape inside a `char`/`str` context is
+limited to `\x00`–`\x7F` (7-bit) — the full 8-bit range `\x00`–`\xFF` is
+only legal inside a byte (`b'...'`/`b"..."`) literal.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure lexical processing, resolved entirely at compile

@@ -30,6 +30,25 @@ signature and checked entirely at compile time (for `impl Trait`/generic
 bounds) or resolved via a simple vtable (for `dyn Trait`) — no separate
 framework, reflection, or runtime container needed.
 
+## Basic usage example
+
+```
+trait Logger {
+    fn log(&self, msg: &str);
+}
+
+struct ConsoleLogger;
+impl Logger for ConsoleLogger {
+    fn log(&self, msg: &str) { println!("{msg}"); }
+}
+
+fn run(logger: &impl Logger) { // <- depends on the abstraction, not a concrete logger type
+    logger.log("started");
+}
+
+run(&ConsoleLogger);
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — this is precisely the pattern

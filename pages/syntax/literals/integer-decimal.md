@@ -25,6 +25,12 @@ type suffix can be attached directly with no space (`42u8`, `1_000i64`)
 to pin the literal's type explicitly — see
 [integer suffixes](integer-suffixes.md).
 
+## Basic usage example
+
+```
+let count = 42; // <- decimal integer literal: base 10, no prefix needed
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Integer literals are core lexical grammar — identical

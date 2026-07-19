@@ -27,6 +27,15 @@ nothing else constrains it. `usize`/`isize` are pointer-sized (their width
 depends on the target platplatform) and are the required type for array
 indices and lengths.
 
+## Basic usage example
+
+```
+let port = 8080u16; // <- `u16` suffix pins the literal's type explicitly
+```
+
+**Restriction:** the literal's value must fit within the suffixed
+type's range — `300u8` is a compile error since `u8` maxes out at 255.
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency. `usize`/`isize` are still

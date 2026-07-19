@@ -36,6 +36,12 @@ a `trait` (a method signature, optionally with a default body), and
 nested inside another function body (an inner function — which, notably,
 cannot capture variables from its enclosing scope; only closures can).
 
+## Basic usage example
+
+```
+fn add(a: i32, b: i32) -> i32 { a + b } // <- `fn` declares a function named `add`
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Free functions, methods, and function pointers all work

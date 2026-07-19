@@ -28,6 +28,17 @@ for x in 0..10 {
 way exiting a `loop` can. Like `break`, it can target a labeled outer loop
 explicitly with `continue 'label;` from inside a nested loop.
 
+## Basic usage example
+
+```
+for x in 0..5 {
+    if x == 2 {
+        continue; // <- skips the rest of this iteration, jumps to `x = 3`
+    }
+    println!("{x}");
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No `std` dependency; works identically in `#![no_std]`.

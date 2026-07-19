@@ -28,6 +28,19 @@ double as both documentation and an executable example in one place.
 `///` must appear directly before the item it documents; a blank line or
 unrelated code between them breaks the association.
 
+## Basic usage example
+
+```
+/// <- this doc comment documents the function immediately below it
+/// Adds two numbers together.
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+```
+
+**Restriction:** `///` must sit directly above the item it documents —
+no blank line or unrelated code in between — or the association is lost.
+
 ## Embedded Rust Notes
 
 **Full support.** `#[doc = "..."]` generation works identically in

@@ -24,6 +24,18 @@ always). Comparing two values whose type doesn't implement `PartialEq` is
 a compile error, not a runtime failure — there's no default "compare by
 reference identity" fallback the way some languages have.
 
+## Basic usage example
+
+```
+let a = 5;
+let b = 5;
+let same = a == b; // <- `==` compares `a` and `b` for equality
+```
+
+**Restriction:** `==` can't be chained — `a == b == c` doesn't compile,
+since the `bool` result of `a == b` doesn't implement `PartialEq<T>` for
+an arbitrary `T`.
+
 ## Embedded Rust Notes
 
 **Full support.** `PartialEq` lives in `core::cmp` — no `std` dependency.

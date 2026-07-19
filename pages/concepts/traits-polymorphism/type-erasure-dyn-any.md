@@ -32,6 +32,20 @@ a runtime check, which is why reaching for `Any` is usually a sign a
 design could potentially be reworked around generics or an enum instead,
 unless the dynamism is genuinely inherent to the problem.
 
+## Basic usage example
+
+```
+use std::any::Any;
+
+fn describe(value: &dyn Any) {
+    if let Some(n) = value.downcast_ref::<i32>() { // <- runtime check + recovered concrete type
+        println!("an i32: {n}");
+    }
+}
+
+describe(&42);
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `Any` and `downcast_ref` live in `core::any` — no

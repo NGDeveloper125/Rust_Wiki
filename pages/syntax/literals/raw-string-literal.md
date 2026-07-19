@@ -25,6 +25,16 @@ Like a normal string literal, the result type is `&str`; the only
 difference is how the literal's *source text* is interpreted, not the
 resulting type.
 
+## Basic usage example
+
+```
+let path = r"C:\temp\file"; // <- `r"..."`: raw string, backslashes are literal, not escapes
+```
+
+**Restriction:** `#` delimiters must be balanced and matched —
+`r#"..."#` needs the same number of `#` on both sides, chosen high
+enough to avoid ambiguity with any `#` sequences in the content.
+
 ## Embedded Rust Notes
 
 **Full support.** Same as an ordinary string literal — no allocator

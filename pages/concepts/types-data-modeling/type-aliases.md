@@ -29,6 +29,23 @@ that mean different things from being mixed up, a
 [newtype](the-newtype-pattern.md) (an actual distinct type) is the tool
 for that, not a type alias.
 
+## Basic usage example
+
+```
+type Pair = (i32, i32); // <- just another name for (i32, i32)
+
+fn sum(pair: Pair) -> i32 {
+    pair.0 + pair.1
+}
+
+sum((3, 4)); // <- a plain tuple works too: Pair is not a distinct type
+```
+
+**Restriction:** an alias provides no type safety — it's fully
+interchangeable with what it aliases, so the compiler won't catch two
+aliases of the same underlying type being mixed up (unlike a
+[newtype](the-newtype-pattern.md)).
+
 ## Embedded Rust Notes
 
 **Full support.** Purely a compile-time naming convenience — no `std`

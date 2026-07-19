@@ -29,6 +29,15 @@ its own name — see [the newtype pattern](the-newtype-pattern.md) — where
 the point isn't brevity but using the type system to prevent mixing up
 values that happen to share an underlying representation.
 
+## Basic usage example
+
+```
+struct Point(f64, f64); // <- fields identified by position, not by name
+
+let p = Point(1.0, 2.0);
+println!("{}", p.0); // <- positional access: p.0, p.1
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator dependency — commonly used in embedded

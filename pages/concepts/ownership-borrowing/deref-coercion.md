@@ -29,6 +29,17 @@ a recognized anti-pattern in Rust (sometimes called "Deref polymorphism")
 of," and stretching it to the latter tends to produce confusing method
 resolution rather than genuinely reusable abstraction.
 
+## Basic usage example
+
+```
+fn greet(name: &str) {
+    println!("hello, {name}");
+}
+
+let boxed = Box::new(String::from("world"));
+greet(&boxed); // <- &Box<String> coerces through Box then String to &str
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `Deref`/`DerefMut` live in `core::ops` — no allocator

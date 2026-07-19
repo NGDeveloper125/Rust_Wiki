@@ -22,6 +22,15 @@ escapes beyond ASCII/byte escapes). Useful for binary protocol constants
 or magic-number byte sequences where you specifically want raw bytes, not
 validated UTF-8 text.
 
+## Basic usage example
+
+```
+let magic: &[u8; 3] = b"GIF"; // <- byte string literal: produces `&[u8; N]`, not `&str`
+```
+
+**Restriction:** only ASCII content is allowed — a byte string can't
+contain arbitrary Unicode the way a normal string literal can.
+
 ## Embedded Rust Notes
 
 **Full support.** Like a string literal, a byte string lives in the

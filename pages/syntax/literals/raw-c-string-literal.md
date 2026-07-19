@@ -20,6 +20,16 @@ let s: &std::ffi::CStr = cr"C:\path\to\thing";
 Useful for FFI constants that both need the C-compatible nul-terminated
 representation and contain literal backslashes.
 
+## Basic usage example
+
+```
+let path: &std::ffi::CStr = cr"C:\firmware\boot"; // <- `cr"..."`: raw (no escapes) C string (&CStr)
+```
+
+**Restriction:** the content still cannot contain an embedded NUL byte,
+and matching `#` delimiters (`cr#"..."#`) are required if the text
+itself contains a `"`.
+
 ## Embedded Rust Notes
 
 **Full support** — same `core::ffi::CStr` basis as

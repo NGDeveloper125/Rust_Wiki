@@ -38,6 +38,23 @@ compiler forces every `match` to handle every variant (see
 so adding a new variant later surfaces every place in the codebase that
 needs updating, as a compile error, rather than a silent gap in behavior.
 
+## Basic usage example
+
+```
+enum Status {
+    Active,
+    Paused(u32),                // <- this variant carries its own data
+    Stopped { reason: String },
+}
+
+let s = Status::Paused(30);
+match s {
+    Status::Active => println!("running"),
+    Status::Paused(secs) => println!("paused for {secs}s"), // <- data is extracted per-variant
+    Status::Stopped { reason } => println!("stopped: {reason}"),
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Enums are core-language and allocator-free (their size

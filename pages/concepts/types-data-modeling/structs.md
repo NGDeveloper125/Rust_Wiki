@@ -32,6 +32,18 @@ otherwise-unrelated types, covers most of what inheritance is used for in
 other languages, without the fragility multi-level inheritance
 hierarchies tend to accumulate over time.
 
+## Basic usage example
+
+```
+struct Point { // <- defines the struct: a new type with two named fields
+    x: f64,
+    y: f64,
+}
+
+let p = Point { x: 1.0, y: 2.0 }; // constructing a value of that type
+println!("{}", p.x); // fields are accessed by name
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Structs are core-language and allocator-free — the

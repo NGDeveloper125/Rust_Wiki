@@ -23,6 +23,12 @@ let done: bool = true;
 there's no implicit conversion between `bool` and `i32`/`u8`/etc. in
 either direction (an explicit `as` cast is required: `true as i32 == 1`).
 
+## Basic usage example
+
+```
+let done: bool = true; // <- `true` is the boolean literal for a true value
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `bool` is a primitive type defined in `core`, not `std`

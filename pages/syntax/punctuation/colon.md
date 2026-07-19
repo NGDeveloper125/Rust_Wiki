@@ -25,6 +25,13 @@ Compare with `::`, a completely different token (path separator) that
 happens to look like two of these stacked, but is lexed as its own single
 token, not as two colons.
 
+## Basic usage example
+
+```
+let x: i32 = 5;
+//   ^ `:` here separates the binding name from its type annotation
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Pure grammar — no `std` dependency.

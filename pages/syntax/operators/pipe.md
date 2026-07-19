@@ -26,6 +26,12 @@ The empty-parameter-list closure form uses `||` (its own token — see
 [`||`](pipe-pipe.md)) rather than `| |` with a space; the two are not
 interchangeable in the grammar.
 
+## Basic usage example
+
+```
+let mask = 0b0100 | 0b0001; // <- `|` bitwise OR between two integers
+```
+
 ## Embedded Rust Notes
 
 **Full support** for all three meanings. `BitOr` lives in `core::ops` —

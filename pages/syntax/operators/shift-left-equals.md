@@ -18,6 +18,13 @@ let mut x = 1u8;
 x <<= 3; // x is now 8
 ```
 
+## Basic usage example
+
+```
+let mut x = 1u8;
+x <<= 3; // <- `<<=` left-shifts `x` in place
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `ShlAssign` lives in `core::ops` — no `std` dependency.

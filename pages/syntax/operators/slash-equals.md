@@ -18,6 +18,13 @@ let mut x = 7;
 x /= 2; // x is now 3 (integer truncation, same as `/`)
 ```
 
+## Basic usage example
+
+```
+let mut x = 7;
+x /= 2; // <- `/=` divides `x` in place, truncating toward zero
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `DivAssign` lives in `core::ops` — same

@@ -26,6 +26,16 @@ different results for non-ASCII text. See
 [byte literal](byte-literal.md) for the ASCII-only, single-byte
 equivalent (`b'H'`).
 
+## Basic usage example
+
+```
+let grade: char = 'A'; // <- char literal: produces a `char`, a full Unicode scalar value
+```
+
+**Restriction:** a char literal must contain exactly one Unicode scalar
+value — `'ab'` is a compile error, and lone surrogate-pair halves are
+never valid scalar values.
+
 ## Embedded Rust Notes
 
 **Full support.** `char` is a `core` primitive — no `std` dependency,

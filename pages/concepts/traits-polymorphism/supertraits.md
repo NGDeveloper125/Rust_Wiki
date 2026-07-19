@@ -32,6 +32,26 @@ a trait can have several supertraits, and unrelated traits can share the
 same supertrait without any of them being related to each other beyond
 that one shared requirement.
 
+## Basic usage example
+
+```
+trait Named {
+    fn name(&self) -> String;
+}
+
+trait Greet: Named { // <- Greet requires Named too
+    fn greet(&self) -> String {
+        format!("Hello, {}!", self.name())
+    }
+}
+
+struct Cat;
+impl Named for Cat { fn name(&self) -> String { "Cat".into() } }
+impl Greet for Cat {} // only allowed because Cat also implements Named
+
+println!("{}", Cat.greet());
+```
+
 ## Embedded Rust Notes
 
 **Full support.** No `std`/allocator dependency.

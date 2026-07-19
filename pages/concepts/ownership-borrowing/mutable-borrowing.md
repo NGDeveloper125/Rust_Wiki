@@ -29,6 +29,18 @@ edges) — that's precisely the gap
 thread-safe counterparts `Mutex`/`RwLock`) exists to fill, by moving the
 exclusivity check from compile time to run time in a controlled way.
 
+## Basic usage example
+
+```
+let mut v = vec![1, 2, 3];
+let r = &mut v; // <- exclusive: no other reference to v may exist while r is alive
+r.push(4);
+println!("{r:?}");
+```
+
+**Restriction:** while `r` is alive, not even the owner (`v`) can be read
+or written through another path — this is enforced at compile time.
+
 ## Embedded Rust Notes
 
 **Full support.** No allocator or `std` dependency. The exclusivity

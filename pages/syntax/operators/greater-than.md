@@ -22,6 +22,17 @@ complaints — nested generics like `Vec<Vec<T>>` used to require a space
 before Rust's parser was taught to split `>>` into two closing angle
 brackets itself (no space needed in modern Rust).
 
+## Basic usage example
+
+```
+let a = 5;
+let b = 3;
+let bigger = a > b; // <- true if `a` is greater than `b`
+```
+
+**Restriction:** comparisons can't be chained like in Python —
+`a > b > c` doesn't compile; write `a > b && b > c` instead.
+
 ## Embedded Rust Notes
 
 **Full support.** Same as [`<`](less-than.md) — `core::cmp`, no `std`

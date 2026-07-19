@@ -18,6 +18,13 @@ let mut x = 8u8;
 x >>= 3; // x is now 1
 ```
 
+## Basic usage example
+
+```
+let mut x = 8u8;
+x >>= 3; // <- `>>=` right-shifts `x` in place
+```
+
 ## Embedded Rust Notes
 
 **Full support.** `ShrAssign` lives in `core::ops` — no `std` dependency.

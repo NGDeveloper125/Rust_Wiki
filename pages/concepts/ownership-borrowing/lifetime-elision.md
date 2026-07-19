@@ -29,6 +29,20 @@ unambiguous patterns the rules cover; anything the rules can't resolve
 relate to either) requires spelling the lifetime out by hand, precisely
 because the compiler has no safe default to guess.
 
+## Basic usage example
+
+```
+struct Parser<'a> {
+    input: &'a str,
+}
+
+impl<'a> Parser<'a> {
+    fn rest(&self) -> &str { // <- elided: output borrows from `&self`, inferred automatically
+        self.input
+    }
+}
+```
+
 ## Embedded Rust Notes
 
 **Full support.** Same elision rules apply regardless of target — no

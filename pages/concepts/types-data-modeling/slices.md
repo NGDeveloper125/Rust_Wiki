@@ -28,6 +28,19 @@ Bounds are checked at runtime on indexing and slicing (`arr[5]`,
 adjacent memory, which is part of what makes slices memory-safe despite
 being a thin, low-level view rather than an owning collection.
 
+## Basic usage example
+
+```
+let v = vec![10, 20, 30, 40];
+let s: &[i32] = &v[1..3]; // <- a view into part of v; no elements are copied
+println!("{:?}", s);       // [20, 30]
+```
+
+**Restriction:** indexing or slicing out of range panics at runtime
+(`&v[1..10]` here would panic) rather than being caught at compile time
+— use `.get(range)`, which returns `Option`, when the bounds aren't
+already known to be valid.
+
 ## Embedded Rust Notes
 
 **Full support.** `[T]` lives in `core` — no allocator needed. Slices
