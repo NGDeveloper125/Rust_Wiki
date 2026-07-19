@@ -30,6 +30,18 @@ known at compile time) and a slice type `[T]` (size is not part of the
 type, checked at runtime) is a frequent point of confusion for newcomers —
 see the [Arrays vs Vec](../../concepts/arrays-vs-vec.md) concept page.
 
+## Basic usage example
+
+```rust
+let arr: [i32; 3] = [1, 2, 3]; // <- `[i32; 3]` is the type, `[1, 2, 3]` the literal
+let first = arr[0];            // <- `[0]` here is indexing
+let slice: &[i32] = &arr[1..3]; // <- `[1..3]` here is slicing
+```
+
+**Restriction:** both indexing and slicing panic at runtime if the
+index/range is out of bounds — there is no `Option`-returning `[]` form
+(use `.get()` for that instead).
+
 ## Embedded Rust Notes
 
 **Full support.** Array and slice syntax is core grammar (`[T; N]` and

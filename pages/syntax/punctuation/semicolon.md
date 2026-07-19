@@ -31,6 +31,21 @@ call site.
 [square brackets](square-brackets.md)), which is unrelated to its
 statement-terminator role.
 
+## Basic usage example
+
+```rust
+fn increment(x: i32) -> i32 {
+    x + 1 // <- no `;`: this expression IS the function's return value
+}
+
+fn increment_wrong(x: i32) -> i32 {
+    x + 1; // <- `;` turns this into a statement; the block now returns `()`
+}
+```
+
+**Restriction:** `increment_wrong` above fails to compile — its body
+evaluates to `()`, which doesn't match the declared `-> i32` return type.
+
 ## Embedded Rust Notes
 
 **Full support.** Pure statement-terminator grammar — no `std` dependency.
