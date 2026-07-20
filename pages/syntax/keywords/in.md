@@ -10,11 +10,8 @@ see_also: [for]
 
 ## Explanation
 
-`in` binds the loop variable to the iterator source in a `for` loop:
-
-```
-for x in 0..10 { ... }
-```
+`in` binds the loop variable to the iterator source in a `for` loop, as in
+`for x in 0..10 { ... }`.
 
 Outside of `for ... in ...`, `in` appears in only one other place: the
 restricted-visibility syntax `pub(in crate::some::path)`. In both spots

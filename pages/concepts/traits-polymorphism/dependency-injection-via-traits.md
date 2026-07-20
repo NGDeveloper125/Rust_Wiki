@@ -12,13 +12,9 @@ see_also: ["Traits", "Trait bounds", "Trait objects & dynamic dispatch (dyn Trai
 Without a class hierarchy or a dependency-injection framework, Rust
 achieves the same decoupling goal — code depending on an abstraction
 rather than a concrete implementation — through trait bounds and trait
-objects directly:
-
-```
-fn run(logger: &impl Logger) { logger.log("started"); }
-// or, if the concrete type must vary at runtime:
-fn run(logger: &dyn Logger) { logger.log("started"); }
-```
+objects directly: a function can accept `&impl Logger` for a
+statically-resolved dependency, or `&dyn Logger` if the concrete type
+must vary at runtime.
 
 `run` depends only on "something implementing `Logger`" — a test can pass
 in a mock implementation, production code can pass in a real one, and

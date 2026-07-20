@@ -10,13 +10,7 @@ see_also: ["->"]
 
 ## Explanation
 
-`fn` declares a function:
-
-```
-fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
-```
+`fn` declares a function, giving it a name, a parameter list, and a body.
 
 Every parameter must have an explicit type; unlike closures, `fn`
 parameter and return types are never inferred from usage. Omitting the

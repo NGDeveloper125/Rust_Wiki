@@ -11,12 +11,9 @@ see_also: [let]
 ## Explanation
 
 `=` assigns a new value to an existing, mutable binding (or place
-expression), and also separates a binding from its initializer in `let`:
-
-```
-let mut x = 5; // = here: initializer, not reassignment
-x = 6;         // = here: reassignment, requires `mut`
-```
+expression), and also separates a binding from its initializer in `let` —
+the same `=` token serves both roles, distinguished only by whether the
+binding already existed.
 
 `=` is not overloadable — assignment always has the same built-in
 meaning: move (or copy, for `Copy` types) the right-hand value into the

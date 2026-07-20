@@ -10,29 +10,18 @@ see_also: [else, match]
 
 ## Explanation
 
-`if` evaluates a boolean condition and branches accordingly:
-
-```
-let x = 5;
-if x > 0 {
-    println!("positive");
-}
-```
-
-The condition must be a `bool` — Rust has no implicit truthiness
-conversion from integers, pointers, or `Option`, unlike C or Python.
-Parentheses around the condition are not required (and are conventionally
-omitted); the braces around each branch's body are mandatory, even for a
-single statement.
+`if` evaluates a boolean condition and branches accordingly. The condition
+must be a `bool` — Rust has no implicit truthiness conversion from
+integers, pointers, or `Option`, unlike C or Python. Parentheses around
+the condition are not required (and are conventionally omitted); the
+braces around each branch's body are mandatory, even for a single
+statement.
 
 Critically, `if` is an **expression**, not just a statement: an
 `if`/`else` chain where every branch is a single expression (no trailing
-semicolon) produces a value, and all branches must produce the same type:
-
-```
-let x = 5;
-let msg = if x > 0 { "positive" } else { "non-positive" };
-```
+semicolon) produces a value, and all branches must produce the same
+type — for example, `if x > 0 { "positive" } else { "non-positive" }`
+evaluates to a `&str`.
 
 An `if` with no matching `else` always has type `()`, since the "value"
 when the condition is false must exist and match the other branch's type.

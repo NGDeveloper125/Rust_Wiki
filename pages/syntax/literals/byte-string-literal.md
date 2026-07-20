@@ -11,11 +11,7 @@ see_also: [string-literal]
 ## Explanation
 
 A byte string literal, `b"hello"`, produces a `&[u8; N]` — a reference to
-a fixed-size array of bytes — rather than a `&str`:
-
-```
-let bytes: &[u8; 5] = b"hello";
-```
+a fixed-size array of bytes — rather than a `&str`.
 
 Like a byte literal, the *character* content must be ASCII — but `\xHH`
 byte escapes reach the full `0x00`–`0xFF` range (`b"\x89PNG"` is legal,

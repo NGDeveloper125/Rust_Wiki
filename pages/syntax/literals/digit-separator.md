@@ -11,13 +11,8 @@ see_also: [integer-decimal]
 ## Explanation
 
 An underscore may be placed almost anywhere within a numeric literal
-purely to improve readability — it carries no meaning and does not affect
-the value:
-
-```
-let million = 1_000_000;
-let mask = 0b1010_0101_u8;
-```
+purely to improve readability, as in `1_000_000` or `0b1010_0101_u8` — it
+carries no meaning and does not affect the value.
 
 It's permitted between digits, immediately after a base prefix
 (`0x_00FF`), trailing (`10_`), before a type suffix (`1_000_i64`), and in

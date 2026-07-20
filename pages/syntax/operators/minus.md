@@ -11,13 +11,7 @@ see_also: ["-="]
 ## Explanation
 
 `-` is both binary subtraction and unary negation, disambiguated by
-whether a left operand is present:
-
-```
-let x = 3;
-let diff = 5 - 2;   // binary: subtraction
-let neg = -x;        // unary: negation
-```
+whether a left operand is present.
 
 Binary `-` is overloadable via `std::ops::Sub`; unary `-` via
 `std::ops::Neg`. They're separate traits — a type can implement one

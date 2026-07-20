@@ -12,14 +12,8 @@ see_also: ["Tuple structs", "Unit structs", "Enums (algebraic data types)"]
 A struct groups related values together under named fields into a single
 type — the basic building block for modeling data with meaning attached
 to each piece, rather than passing several loose, unrelated parameters
-around.
-
-```
-struct Point {
-    x: f64,
-    y: f64,
-}
-```
+around; for example, `struct Point { x: f64, y: f64 }` gives a pair of
+coordinates a name and a shared identity instead of two bare `f64`s.
 
 Structs are Rust's primary way to give a related bundle of data its own
 identity and its own methods (via `impl` blocks), filling a role similar

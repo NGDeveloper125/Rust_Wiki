@@ -11,13 +11,9 @@ see_also: ["The newtype pattern"]
 
 A type alias gives an existing type a new name, purely for readability —
 it does not create a new, distinct type the way a
-[newtype](the-newtype-pattern.md) does:
-
-```
-type Kilometers = f64;
-let distance: Kilometers = 5.0;
-let x: f64 = distance; // fine — Kilometers and f64 are the same type
-```
+[newtype](the-newtype-pattern.md) does. `type Kilometers = f64;` is a
+typical example: a value declared as `Kilometers` is directly
+interchangeable with one declared as plain `f64`.
 
 Aliases are most valuable for shortening long, repeated type signatures
 (especially generic ones, like `type Result<T> = std::result::Result<T, MyError>;`,
@@ -32,13 +28,10 @@ for that, not a type alias.
 ## Basic usage example
 
 ```
-type Pair = (i32, i32); // <- just another name for (i32, i32)
+type Kilometers = f64; // <- just another name for f64, not a distinct type
 
-fn sum(pair: Pair) -> i32 {
-    pair.0 + pair.1
-}
-
-sum((3, 4)); // <- a plain tuple works too: Pair is not a distinct type
+let distance: Kilometers = 5.0;
+let x: f64 = distance; // <- fine: Kilometers and f64 are the same type
 ```
 
 **Restriction:** an alias provides no type safety — it's fully

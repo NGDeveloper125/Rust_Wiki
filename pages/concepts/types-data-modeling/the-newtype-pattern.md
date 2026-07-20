@@ -10,12 +10,8 @@ see_also: ["Tuple structs", "Type aliases", "The orphan rule & coherence"]
 ## Explanation
 
 The newtype pattern wraps an existing type in a single-field tuple struct
-to give it a distinct identity:
-
-```
-struct Meters(f64);
-struct Seconds(f64);
-```
+to give it a distinct identity — `struct Meters(f64);` and
+`struct Seconds(f64);` are a typical pair.
 
 Even though both wrap `f64`, `Meters` and `Seconds` are different types
 to the compiler — passing a `Seconds` value where `Meters` is expected is

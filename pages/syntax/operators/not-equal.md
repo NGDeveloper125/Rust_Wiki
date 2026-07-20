@@ -15,10 +15,6 @@ by `std::cmp::PartialEq` (a single trait supplies both `eq` and, by
 default, `ne` as `!self.eq(other)`); a type essentially never needs to
 implement `!=` separately from `==`.
 
-```
-if a != b { ... }
-```
-
 ## Basic usage example
 
 ```

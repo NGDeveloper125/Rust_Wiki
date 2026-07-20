@@ -12,10 +12,6 @@ see_also: ["<"]
 
 `>` is the greater-than comparison, overloadable via `std::cmp::PartialOrd`.
 
-```
-if a > b { ... }
-```
-
 Like `<`, `>` doubles as the **closing** delimiter for a generic parameter
 list (`Vec<T>`) — for nested generics like `Vec<Vec<T>>`, the parser
 splits the `>>` token into two closing angle brackets itself, so no space

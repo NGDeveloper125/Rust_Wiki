@@ -13,12 +13,9 @@ Many common traits have an obvious, mechanical implementation that can be
 generated automatically from a type's structure — comparing a struct
 field-by-field for `PartialEq`, printing every field for `Debug`, cloning
 every field for `Clone`. `#[derive(...)]` generates exactly that
-mechanical implementation, saving the boilerplate of writing it by hand:
-
-```
-#[derive(Debug, Clone, PartialEq)]
-struct Point { x: f64, y: f64 }
-```
+mechanical implementation, saving the boilerplate of writing it by hand —
+for example, `#[derive(Debug, Clone, PartialEq)]` on a `Point { x: f64, y: f64 }`
+struct generates all three implementations at once.
 
 A derive only works if every field's own type already implements the
 trait being derived — deriving `Clone` for a struct containing a

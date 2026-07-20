@@ -10,12 +10,8 @@ see_also: ["Structs", "The newtype pattern"]
 ## Explanation
 
 A tuple struct is a struct whose fields are identified by position rather
-than by name:
-
-```
-struct Point(f64, f64);
-let p = Point(1.0, 2.0);
-```
+than by name — `struct Point(f64, f64);` and a value of it, `Point(1.0, 2.0)`,
+are accessed positionally rather than by field name.
 
 It's a middle ground between a plain tuple `(f64, f64)` (no type identity
 of its own — any two `f64`s are interchangeable with it) and a full named

@@ -12,11 +12,7 @@ see_also: [byte-string-literal]
 
 `br"..."` (optionally with `#` delimiters, `br#"..."#`) combines the two:
 no escape processing (like a raw string) and a `&[u8; N]` result (like a
-byte string).
-
-```
-let pattern: &[u8] = br"C:\data\raw";
-```
+byte string), as in `br"C:\data\raw"`.
 
 Useful when a fixed byte sequence contains literal backslashes you don't
 want interpreted as escapes.

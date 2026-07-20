@@ -10,15 +10,10 @@ see_also: ["match expressions", "Exhaustiveness checking", "\"Make invalid state
 ## Explanation
 
 An enum defines a type as one of several distinct variants, each of which
-can optionally carry its own data:
-
-```
-enum Shape {
-    Circle(f64),
-    Rectangle(f64, f64),
-    Triangle { base: f64, height: f64 },
-}
-```
+can optionally carry its own data — for example, a `Shape` enum might
+have a tuple-style `Circle(f64)` variant, a `Rectangle(f64, f64)` variant,
+and a struct-style `Triangle { base: f64, height: f64 }` variant, all as
+alternatives of the same type.
 
 This is what's meant by "algebraic data type" — a *sum* type, where a
 value is exactly one of several alternatives (as opposed to a struct, a

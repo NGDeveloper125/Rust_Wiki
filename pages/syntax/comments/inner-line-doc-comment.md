@@ -13,11 +13,8 @@ see_also: [outer-line-doc-comment]
 `//!` documents the **enclosing** item (the module or crate it appears
 inside) rather than the item that follows it — the opposite direction
 from `///`. It's typically placed at the very top of a file, documenting
-the module/crate as a whole:
-
-```
-//! This module implements the parser's tokenizer.
-```
+the module/crate as a whole, as in `//! This module implements the
+parser's tokenizer.`.
 
 Because it documents its *container*, `//!` (along with its block form
 [`/*! */`](inner-block-doc-comment.md)) can appear with nothing

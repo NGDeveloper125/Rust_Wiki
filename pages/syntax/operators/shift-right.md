@@ -10,11 +10,7 @@ see_also: ["<<"]
 
 ## Explanation
 
-`>>` is the right-shift operator, overloadable via `std::ops::Shr`:
-
-```
-let x = 8u8 >> 3; // 1
-```
+`>>` is the right-shift operator, overloadable via `std::ops::Shr`.
 
 For unsigned integers this is always a logical shift (zero-fill); for
 signed integers it's an arithmetic shift (sign-bit-fill), matching the

@@ -10,11 +10,7 @@ see_also: ["%="]
 
 ## Explanation
 
-`%` is the remainder operator, overloadable via `std::ops::Rem`:
-
-```
-let r = 7 % 2; // 1
-```
+`%` is the remainder operator, overloadable via `std::ops::Rem`.
 
 It's the *remainder*, not strictly modulo — for negative operands, the
 result takes the sign of the dividend (`-7 % 2 == -1`, not `1`), which

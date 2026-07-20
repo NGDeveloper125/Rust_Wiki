@@ -10,16 +10,8 @@ see_also: ["Traits", "Supertraits"]
 ## Explanation
 
 A trait method can carry a default body, used by any implementer that
-doesn't override it:
-
-```
-trait Greet {
-    fn name(&self) -> String;
-    fn greet(&self) -> String {
-        format!("Hello, {}!", self.name())
-    }
-}
-```
+doesn't override it — for example, a `Greet` trait's `greet` method could
+have a default body that calls `self.name()` internally.
 
 Here every implementer of `Greet` must define `name`, but gets `greet`
 for free unless it chooses to override it. This lets a trait provide

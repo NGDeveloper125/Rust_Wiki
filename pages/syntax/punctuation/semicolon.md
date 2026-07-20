@@ -12,13 +12,7 @@ see_also: ["{ }"]
 
 `;` terminates a statement, and — just as importantly in an
 expression-oriented language — turns what would otherwise be an
-expression into a statement that evaluates to `()`:
-
-```
-let x = 5;          // statement
-x + 1;              // expression, discarded; the statement evaluates to ()
-let y = { x + 1 };  // no `;` on `x + 1`: that expression IS the block's value
-```
+expression into a statement that evaluates to `()`.
 
 This is why leaving off the trailing semicolon on a block's last line
 means "return this value," while adding one means "run this and discard

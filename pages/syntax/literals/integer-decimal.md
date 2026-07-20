@@ -10,12 +10,8 @@ see_also: [integer-hexadecimal, integer-octal, integer-binary]
 
 ## Explanation
 
-The default, base-10 form for writing an integer literal:
-
-```
-let x = 42;
-let y = 1_000_000;
-```
+The default, base-10 form for writing an integer literal, as in `42` or
+`1_000_000`.
 
 With no suffix and no other context, Rust infers the type — defaulting to
 `i32` if nothing constrains it further. Underscores (`_`) may be placed

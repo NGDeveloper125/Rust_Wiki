@@ -13,11 +13,6 @@ see_also: ["%"]
 `%=` assigns the remainder of the left operand divided by the right,
 overloadable via `std::ops::RemAssign`.
 
-```
-let mut x = 7;
-x %= 2; // x is now 1
-```
-
 ## Basic usage example
 
 ```

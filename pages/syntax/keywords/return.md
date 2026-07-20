@@ -10,16 +10,7 @@ see_also: [fn]
 
 ## Explanation
 
-`return` exits a function immediately with a given value:
-
-```
-fn abs(x: i32) -> i32 {
-    if x < 0 {
-        return -x;
-    }
-    x
-}
-```
+`return` exits a function immediately with a given value.
 
 Because Rust is expression-oriented, `return` is rarely required for the
 *final* value of a function — the last expression in the body (with no

@@ -10,15 +10,9 @@ see_also: [float-suffixes]
 
 ## Explanation
 
-A floating-point literal requires a decimal point, an exponent, or a type
-suffix — otherwise it's parsed as an integer:
-
-```
-let a = 1.0;
-let b = 0.1;
-let c = 123.0E+2;
-let d = 2.;      // trailing decimal point alone is enough
-```
+A floating-point literal requires a decimal point (`1.0`, `0.1`), an
+exponent (`123.0E+2`), or a type suffix — otherwise it's parsed as an
+integer. A trailing decimal point alone is enough (`2.`).
 
 Without a suffix, the default type is `f64`, not `f32` — the opposite
 default from many other languages. A literal like `2.` (decimal point,

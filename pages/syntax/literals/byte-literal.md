@@ -11,11 +11,7 @@ see_also: [char-literal]
 ## Explanation
 
 A byte literal, `b'H'`, produces a `u8` — the ASCII code point of the
-character between the quotes — rather than a `char`:
-
-```
-let b: u8 = b'H'; // 72
-```
+character between the quotes — rather than a `char`.
 
 The *character* form must be ASCII (code points 0–127) — a non-ASCII
 character like `b'é'` is a compile error. To reach the rest of the

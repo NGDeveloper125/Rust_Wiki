@@ -14,17 +14,6 @@ see_also: [if]
 of a `let ... else`). It cannot appear on its own — it is always the tail
 of an `if` or `let` construct.
 
-```
-let x = 5;
-let sign = if x > 0 {
-    "positive"
-} else if x < 0 {
-    "negative"
-} else {
-    "zero"
-};
-```
-
 Chained `else if` is not special syntax — it's just an `if` expression
 nested directly inside the `else` branch, formatted without extra braces
 by convention.

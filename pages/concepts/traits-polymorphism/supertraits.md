@@ -10,18 +10,8 @@ see_also: ["Traits", "Trait bounds"]
 ## Explanation
 
 A trait can require that any implementer also implement another trait —
-its supertrait:
-
-```
-trait Named {
-    fn name(&self) -> String;
-}
-trait Greet: Named {
-    fn greet(&self) -> String {
-        format!("Hello, {}!", self.name())
-    }
-}
-```
+its supertrait. For example, a `trait Greet: Named` declaration requires
+any `Greet` implementer to also implement `Named`.
 
 Here `Greet: Named` means "you can only implement `Greet` if you've also
 implemented `Named`" — which is what lets `Greet`'s default method call

@@ -9,11 +9,8 @@ see_also: ["Structs", "Zero-sized types & PhantomData"]
 
 ## Explanation
 
-A unit struct has no fields at all:
-
-```
-struct Marker;
-```
+A unit struct has no fields at all — `struct Marker;` is a complete
+definition on its own.
 
 It carries no data — its only purpose is to *exist as a distinct type*,
 usually so it can implement a trait or serve as a marker/tag. Because it

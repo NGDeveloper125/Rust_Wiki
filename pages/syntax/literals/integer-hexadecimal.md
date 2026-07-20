@@ -10,12 +10,8 @@ see_also: [integer-decimal, integer-octal, integer-binary]
 
 ## Explanation
 
-A base-16 integer literal, prefixed with `0x`:
-
-```
-let mask = 0xFF_u8;
-let color = 0x1a2b3c;
-```
+A base-16 integer literal, prefixed with `0x`, as in `0xFF_u8` or
+`0x1a2b3c`.
 
 Digits `a`–`f` may be upper- or lower-case, and can be mixed within the
 same literal (though consistent casing is the usual style convention).

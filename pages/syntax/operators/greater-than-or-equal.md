@@ -13,10 +13,6 @@ see_also: [">"]
 `>=` is the greater-than-or-equal comparison, part of the same
 `std::cmp::PartialOrd` trait as `<`, `<=`, and `>`.
 
-```
-if a >= b { ... }
-```
-
 ## Basic usage example
 
 ```

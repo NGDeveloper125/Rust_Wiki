@@ -11,13 +11,8 @@ see_also: [line-comment]
 ## Explanation
 
 `/* ... */` comments out everything between the delimiters, including
-line breaks:
-
-```
-/* this whole
-   block is ignored */
-let x = 5;
-```
+line breaks — `/* this whole block is ignored */` works the same whether
+it stays on one line or spans several.
 
 Unlike C, Rust block comments **nest**: `/* outer /* inner */ still outer */`
 is a single, correctly-closed comment — the compiler tracks nesting depth

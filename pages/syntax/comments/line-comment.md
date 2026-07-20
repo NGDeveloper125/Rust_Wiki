@@ -12,12 +12,8 @@ see_also: [block-comment]
 
 `//` begins a comment that runs to the end of the line. It has zero
 effect on compilation — the compiler discards it entirely before parsing
-(unlike doc comments, which are collected into documentation).
-
-```
-// this line is ignored entirely
-let x = 5; // so is everything after this // on this line
-```
+(unlike doc comments, which are collected into documentation) — and it
+can either sit on its own line or trail after code on the same line.
 
 Nesting doesn't apply, since a line comment simply consumes the rest of
 the line regardless of what characters follow.

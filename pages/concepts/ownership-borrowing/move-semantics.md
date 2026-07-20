@@ -15,12 +15,6 @@ default — this is a **move**. After a move, the original binding is no
 longer valid; the compiler tracks this and rejects any later use of it as
 a compile error, not a runtime bug.
 
-```
-let a = String::from("hi");
-let b = a;      // ownership moves from a to b
-// using `a` here is a compile error: value moved
-```
-
 This is a deliberate departure from two more familiar defaults: it's not
 implicit reference/pointer semantics (as in Python, Java, JS, where
 assignment shares the same object and mutation is visible through every
@@ -40,13 +34,9 @@ by convention or discipline.
 ## Basic usage example
 
 ```
-fn consume(s: String) {
-    println!("{s}");
-} // s is dropped here, at the end of consume's scope
-
 let a = String::from("hi");
-consume(a); // <- ownership of `a` moves into the function call
-// println!("{a}"); // would fail to compile: `a` was moved
+let b = a; // <- ownership moves from `a` to `b`
+// using `a` here is a compile error: value was moved
 ```
 
 ## Best practices & deeper information

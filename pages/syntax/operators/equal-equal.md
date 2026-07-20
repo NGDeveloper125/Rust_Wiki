@@ -11,11 +11,7 @@ see_also: ["!="]
 ## Explanation
 
 `==` tests equality, overloadable via `std::cmp::PartialEq` (usually
-obtained via `#[derive(PartialEq)]` rather than hand-written):
-
-```
-if a == b { ... }
-```
+obtained via `#[derive(PartialEq)]` rather than hand-written).
 
 `PartialEq` is "partial" because equality need not be total — floating
 point `NaN != NaN`, which is why `f32`/`f64` implement `PartialEq` but not

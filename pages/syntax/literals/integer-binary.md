@@ -10,14 +10,11 @@ see_also: [integer-decimal, integer-hexadecimal, integer-octal]
 
 ## Explanation
 
-A base-2 integer literal, prefixed with `0b`:
-
-```
-let flags = 0b1010_0101u8;
-```
+A base-2 integer literal, prefixed with `0b`, as in `0b1010_0101u8`.
 
 Underscores are especially common here to group digits into readable
-nibbles/bytes, as shown above — purely cosmetic, no effect on the value.
+nibbles/bytes, as in that example — purely cosmetic, no effect on the
+value.
 
 ## Basic usage example
 

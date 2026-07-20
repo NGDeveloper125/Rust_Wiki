@@ -13,14 +13,8 @@ A type that contains itself directly — a linked-list node holding another
 node, a tree node holding child nodes of the same type — can't be
 represented as-is, because the compiler needs to know a type's exact size
 at compile time, and a type containing itself would have to be infinitely
-large to compute that.
-
-```
-enum List {
-    Cons(i32, Box<List>),
-    Nil,
-}
-```
+large to compute that: an enum like `Cons(i32, List)` would need `List`
+to already know its own size before it could compute it.
 
 Wrapping the recursive occurrence in [`Box<T>`](../ownership-borrowing/smart-pointers-box.md)
 breaks the infinite-size problem: for any sized pointee, a `Box` is one

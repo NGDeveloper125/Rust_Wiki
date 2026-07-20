@@ -15,10 +15,6 @@ alongside `<`, `>`, and `>=` — implementing `PartialOrd` (usually via
 `#[derive(PartialOrd)]`, which requires `PartialEq` as well) gives you all
 four ordering operators together, not just one.
 
-```
-if a <= b { ... }
-```
-
 ## Basic usage example
 
 ```

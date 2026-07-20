@@ -10,11 +10,7 @@ see_also: ["/="]
 
 ## Explanation
 
-`/` is arithmetic division, overloadable via `std::ops::Div`:
-
-```
-let quotient = 7 / 2; // 3 for integers — truncates toward zero
-```
+`/` is arithmetic division, overloadable via `std::ops::Div`.
 
 Integer division truncates rather than rounding; `7 / 2 == 3` and
 `-7 / 2 == -3`. Dividing an integer by zero panics unconditionally (even

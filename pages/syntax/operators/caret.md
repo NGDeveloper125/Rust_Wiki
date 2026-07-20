@@ -11,11 +11,7 @@ see_also: ["^="]
 ## Explanation
 
 `^` is bitwise exclusive OR (XOR) between integers, overloadable via
-`std::ops::BitXor`:
-
-```
-let x = 0b1010 ^ 0b0110; // 0b1100
-```
+`std::ops::BitXor`.
 
 Also commonly used with `bool` as an XOR/"exactly one of" operator, since
 `BitXor` is implemented for `bool` as well as the integer types (unlike

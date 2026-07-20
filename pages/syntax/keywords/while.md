@@ -10,14 +10,7 @@ see_also: [loop, for]
 
 ## Explanation
 
-`while` repeats a block for as long as a condition remains `true`:
-
-```
-let mut count = 0;
-while count < 10 {
-    count += 1;
-}
-```
+`while` repeats a block for as long as a condition remains `true`.
 
 Like `if`, the condition must be a plain `bool` and is not parenthesized
 by convention. Unlike `if`, a `while` loop is an expression that always

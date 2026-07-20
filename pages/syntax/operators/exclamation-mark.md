@@ -11,22 +11,12 @@ see_also: []
 ## Explanation
 
 As a prefix operator, `!` is logical NOT on `bool` and bitwise complement
-on integers, overloadable via `std::ops::Not`:
-
-```
-let done = false;
-let not_done = !done;      // bool: negation
-let flipped = !0b1010u8;   // integer: bitwise complement -> 0b11110101
-```
+on integers (e.g. `!0b1010u8` flips every bit), overloadable via
+`std::ops::Not`.
 
 After a path (like `println` or `vec`) and followed by a delimited group
 of tokens, `!` instead marks a **macro invocation** — a completely
-unrelated meaning:
-
-```
-println!("hi");
-vec![1, 2, 3];
-```
+unrelated meaning, as in `println!("hi")` or `vec![1, 2, 3]`.
 
 `ident!` is not the `Not` trait applied to `ident`; it's the macro-call
 syntax. The distinction is purely positional — a `!` following a path and

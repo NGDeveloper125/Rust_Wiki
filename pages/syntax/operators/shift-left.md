@@ -10,11 +10,7 @@ see_also: [">>"]
 
 ## Explanation
 
-`<<` is the left-shift operator, overloadable via `std::ops::Shl`:
-
-```
-let x = 1u8 << 3; // 8
-```
+`<<` is the left-shift operator, overloadable via `std::ops::Shl`.
 
 Shifting by an amount greater than or equal to the type's bit width
 panics in debug builds; when overflow checks are off (release builds),

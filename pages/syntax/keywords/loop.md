@@ -11,32 +11,11 @@ see_also: [while, break]
 ## Explanation
 
 `loop` repeats a block unconditionally, forever, until a `break` inside it
-(or its body) is reached:
-
-```
-let done = true;
-loop {
-    if done {
-        break;
-    }
-}
-```
+(or its body) is reached.
 
 Unlike `while` and `for`, `loop` **is** an expression that can produce a
 value — `break value;` exits the loop and evaluates the whole `loop` to
-`value`:
-
-```
-let mut counter = 0;
-let result = loop {
-    counter += 1;
-    if counter == 10 {
-        break counter * 2;
-    }
-};
-```
-
-This is possible precisely because the compiler can see there's no
+`value`. This is possible precisely because the compiler can see there's no
 "falling off the end without a value" case to reconcile, the way there is
 with `while`/`for` (which might run zero iterations). A `loop` with no
 `break` at all has type `!` (never) — the compiler knows control can never

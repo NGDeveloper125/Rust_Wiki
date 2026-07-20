@@ -10,12 +10,9 @@ see_also: [fn]
 
 ## Explanation
 
-`->` introduces a function's or closure's return type:
-
-```
-fn add(a: i32, b: i32) -> i32 { a + b }
-let add = |a: i32, b: i32| -> i32 { a + b };
-```
+`->` introduces a function's or closure's return type, as in
+`fn add(a: i32, b: i32) -> i32 { a + b }` or, on a closure,
+`let add = |a: i32, b: i32| -> i32 { a + b };`.
 
 On a closure, `-> Type` is optional and, unlike on `fn`, can usually be
 omitted entirely and inferred from the body — it's only required when the

@@ -13,14 +13,8 @@ see_also: [inner-line-doc-comment]
 `///` documents the item immediately **following** it, and — unlike a
 plain `//` comment — is not discarded by the compiler: it's collected as
 a `#[doc = "..."]` attribute and rendered into generated documentation
-(`cargo doc`).
-
-```
-/// Adds two numbers together.
-fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
-```
+(`cargo doc`), as in `/// Adds two numbers together.` placed directly
+above the function it describes.
 
 The content supports Markdown, and any fenced code block inside it is, by
 default, compiled and run as a **doc test** by `cargo test` — making `///`

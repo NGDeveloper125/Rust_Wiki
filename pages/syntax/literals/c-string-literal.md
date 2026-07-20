@@ -11,11 +11,7 @@ see_also: [string-literal]
 ## Explanation
 
 `c"hello"` produces a `&CStr` — a nul-terminated, C-compatible string
-reference — instead of `&str`:
-
-```
-let s: &std::ffi::CStr = c"hello";
-```
+reference — instead of `&str`.
 
 This exists specifically to make passing string constants across an FFI
 boundary to C code ergonomic: the compiler appends the terminating `\0`

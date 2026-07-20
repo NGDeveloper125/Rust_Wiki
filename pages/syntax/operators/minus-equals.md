@@ -13,11 +13,6 @@ see_also: ["-"]
 `-=` subtracts the right operand from the left in place, overloadable via
 `std::ops::SubAssign`.
 
-```
-let mut x = 5;
-x -= 2; // x is now 3
-```
-
 See [`+=`](plus-equals.md) for the general notes on compound assignment
 operators (mutable place required, potentially distinct impl from the
 non-assigning operator).

@@ -10,14 +10,8 @@ see_also: [in]
 
 ## Explanation
 
-`for` iterates over anything that implements `IntoIterator`:
-
-```
-let collection = [1, 2, 3];
-for item in collection {
-    println!("{item}");
-}
-```
+`for` iterates over anything that implements `IntoIterator`, repeatedly
+binding the loop variable to each item the iterator produces.
 
 `for item in collection` desugars to calling `.into_iter()` on
 `collection` and repeatedly calling `.next()` on the result until it

@@ -10,13 +10,9 @@ see_also: [raw-string-literal]
 
 ## Explanation
 
-A double-quoted string literal produces a `&'static str` — a borrowed
-reference to UTF-8 text baked directly into the compiled binary, not an
-owned, heap-allocated `String`:
-
-```
-let s: &str = "hello, world";
-```
+A double-quoted string literal, such as `"hello, world"`, produces a
+`&'static str` — a borrowed reference to UTF-8 text baked directly into
+the compiled binary, not an owned, heap-allocated `String`.
 
 To get an owned, growable `String`, convert explicitly: `"hello".to_string()`
 or `String::from("hello")`. The literal itself is always `&str`. Escape

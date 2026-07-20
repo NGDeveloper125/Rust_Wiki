@@ -10,16 +10,9 @@ see_also: [continue, loop]
 
 ## Explanation
 
-`break` exits the nearest enclosing loop immediately:
-
-```
-let done = true;
-loop {
-    if done {
-        break;
-    }
-}
-```
+`break` exits the nearest enclosing loop immediately, skipping any
+remaining iterations and any code after the loop's body that would
+otherwise run.
 
 Inside a `loop` (but not `while`/`for`), `break` can carry a value —
 `break value;` — which becomes the result of the whole `loop` expression.
@@ -36,9 +29,12 @@ form useful for structuring multi-step logic without a `loop` at all.
 ## Basic usage example
 
 ```
-let result = loop {
-    break 5; // <- `break` exits the loop immediately, with `5` as its value
-};
+let done = true;
+loop {
+    if done {
+        break; // <- exits the loop immediately
+    }
+}
 ```
 
 **Restriction:** `break value;` is legal inside `loop` and inside a

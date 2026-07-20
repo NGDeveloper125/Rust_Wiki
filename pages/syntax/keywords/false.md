@@ -13,10 +13,6 @@ see_also: [true]
 `false` is the boolean literal for a false value, of type `bool`. Like
 `true`, it is both a reserved keyword and a complete literal expression.
 
-```
-let done: bool = false;
-```
-
 See [`true`](true.md) for the surrounding notes on `bool` as a distinct,
 non-numeric type with no implicit conversions.
 

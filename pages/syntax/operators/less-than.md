@@ -10,11 +10,7 @@ see_also: [">"]
 
 ## Explanation
 
-`<` is the less-than comparison, overloadable via `std::cmp::PartialOrd`:
-
-```
-if a < b { ... }
-```
+`<` is the less-than comparison, overloadable via `std::cmp::PartialOrd`.
 
 `<` is also the opening delimiter for **generic parameter lists**
 (`Vec<T>`, `fn f<T>()`) — an entirely different, non-operator role. This

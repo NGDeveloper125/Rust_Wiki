@@ -10,11 +10,7 @@ see_also: [integer-decimal, integer-hexadecimal, integer-binary]
 
 ## Explanation
 
-A base-8 integer literal, prefixed with `0o`:
-
-```
-let permissions = 0o755;
-```
+A base-8 integer literal, prefixed with `0o`, as in `0o755`.
 
 Note the letter `o`, not a digit `0` — unlike C's ambiguous leading-zero
 octal notation (`0755`), Rust requires the explicit `0o` prefix, so a

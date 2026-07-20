@@ -11,11 +11,8 @@ see_also: [inner-line-doc-comment]
 ## Explanation
 
 `/*! ... */` is the block-comment equivalent of `//!` — it documents the
-enclosing module/crate rather than a following item.
-
-```
-/*! This module implements the parser's tokenizer. */
-```
+enclosing module/crate rather than a following item, as in
+`/*! This module implements the parser's tokenizer. */`.
 
 As with `/** */` vs `///`, this form is rarely used in idiomatic Rust —
 `//!` is the conventional choice — but both are equivalent to the

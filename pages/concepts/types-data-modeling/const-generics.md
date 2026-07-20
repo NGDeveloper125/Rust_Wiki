@@ -10,14 +10,9 @@ see_also: ["Generics", "Associated types"]
 ## Explanation
 
 Const generics parameterize a type by a *value*, not just another type —
-most commonly an array length:
-
-```
-struct Buffer<const N: usize> {
-    data: [u8; N],
-}
-let a: Buffer<64> = Buffer { data: [0; 64] };
-```
+most commonly an array length. For example, a
+`Buffer<const N: usize> { data: [u8; N] }` struct can be instantiated as
+`Buffer<64>`, with `N` becoming part of the type itself.
 
 Before const generics existed, array length wasn't something generic code
 could abstract over at all — `[T; N]` for different `N` were unrelated

@@ -11,12 +11,8 @@ see_also: [byte-literal]
 ## Explanation
 
 A single-quoted character literal produces a `char` — a full Unicode
-scalar value, always 4 bytes, not a single byte:
-
-```
-let c: char = 'H';
-let emoji: char = '🦀';
-```
+scalar value, always 4 bytes, not a single byte — so `'🦀'` is just as
+valid a `char` literal as `'H'`, despite spanning four bytes in UTF-8.
 
 This is a common surprise for newcomers: `char` in Rust is not "one byte"
 the way `char` is in C — it represents any Unicode scalar value

@@ -10,22 +10,14 @@ see_also: ["&&"]
 
 ## Explanation
 
-`||` is short-circuiting logical OR between two `bool` values:
+`||` is short-circuiting logical OR between two `bool` values, as in
+`if a < 0 || b < 0 { ... }` — the right operand only evaluates if the
+left is `false`. Like `&&`, `||` is not overloadable — always `bool`,
+always short-circuiting.
 
-```
-if a < 0 || b < 0 { ... }
-```
-
-The right operand only evaluates if the left is `false`. Like `&&`, `||`
-is not overloadable — always `bool`, always short-circuiting.
-
-`||` also opens and closes a **zero-argument closure**'s parameter list:
-
-```
-let f = || println!("called");
-```
-
-This is the same `|...|` closure syntax as `|x, y| x + y`, just with an
+`||` also opens and closes a **zero-argument closure**'s parameter list,
+as in `let f = || println!("called");`. This is the same `|...|` closure
+syntax as `|x, y| x + y`, just with an
 empty parameter list — the parser distinguishes the two uses by position:
 `||` with an expression on its left is lazy OR, while `||` at the start
 of an expression is a closure's (empty) parameter list.

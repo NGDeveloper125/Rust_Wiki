@@ -13,18 +13,9 @@ A trait defines a set of behavior — methods a type promises to provide —
 that any type can then implement, independent of that type's own
 definition. It's Rust's answer to "shared behavior across unrelated
 types," filling the role interfaces play in Java/C#, protocols in Swift,
-or type classes in Haskell.
-
-```
-struct Cat;
-
-trait Greet {
-    fn greet(&self) -> String;
-}
-impl Greet for Cat {
-    fn greet(&self) -> String { "meow".into() }
-}
-```
+or type classes in Haskell. For instance, a `Greet` trait declaring a
+`greet` method can be implemented for a `Cat` struct with `impl Greet for
+Cat`.
 
 Because traits are implemented separately from a type's definition (via
 `impl Trait for Type`, potentially in a completely different module or

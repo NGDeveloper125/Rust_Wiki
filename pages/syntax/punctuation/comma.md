@@ -17,15 +17,8 @@ fields (`Point { x, y }`), enum variant fields, generic parameters
 
 A trailing comma after the last element is allowed (and idiomatic in
 multi-line lists — `rustfmt` adds it automatically) in every one of these
-positions:
-
-```
-let v = vec![
-    1,
-    2,
-    3,
-];
-```
+positions, such as after the final element of a multi-line `vec![1, 2, 3]`
+literal.
 
 The one place a single trailing comma is *required*, not just allowed, is
 a one-element tuple: `(x,)` — without the comma, `(x)` is just a

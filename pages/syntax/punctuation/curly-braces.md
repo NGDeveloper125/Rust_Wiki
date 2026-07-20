@@ -11,14 +11,7 @@ see_also: [";"]
 ## Explanation
 
 `{ }` delimits a **block expression** — a sequence of statements followed
-by an optional final expression:
-
-```
-let y = {
-    let x = 1;
-    x + 1
-};
-```
+by an optional final expression.
 
 A block is itself an expression: it evaluates to its final expression (if
 it has no trailing `;`), or to `()` otherwise. Function bodies, `if`/`else`
