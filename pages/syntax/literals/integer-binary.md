@@ -10,14 +10,11 @@ see_also: [integer-decimal, integer-hexadecimal, integer-octal]
 
 ## Explanation
 
-A base-2 integer literal, prefixed with `0b`:
-
-```
-let flags = 0b1010_0101u8;
-```
+A base-2 integer literal, prefixed with `0b`, as in `0b1010_0101u8`.
 
 Underscores are especially common here to group digits into readable
-nibbles/bytes, as shown above — purely cosmetic, no effect on the value.
+nibbles/bytes, as in that example — purely cosmetic, no effect on the
+value.
 
 ## Basic usage example
 
@@ -25,8 +22,9 @@ nibbles/bytes, as shown above — purely cosmetic, no effect on the value.
 let mask = 0b0000_0001; // <- `0b` prefix marks a base-2 (binary) integer literal
 ```
 
-**Restriction:** only the digits `0` and `1` are legal after the `0b`
-prefix — anything else is a compile error.
+**Restriction:** only the *digits* `0` and `1` may appear after the `0b`
+prefix — any other digit is a compile error (though underscores and a
+type suffix like `0b1010_u8` are still allowed).
 
 ## Best practices & deeper information
 

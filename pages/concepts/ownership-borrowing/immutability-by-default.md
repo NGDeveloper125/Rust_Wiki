@@ -21,11 +21,14 @@ variable is expected to change, which makes the ones that don't stand out
 as safe to reason about without tracking their value over time.
 
 This default also interacts with the borrow checker directly: a shared
-reference (`&T`) can never be used to mutate through it, precisely
+reference (`&T`) cannot be used to mutate through it (unless the type
+opts into interior mutability — `Cell`, `RefCell`, `Mutex`, atomics — see
+[Interior mutability](interior-mutability.md)), precisely
 because immutability-by-default is the baseline the whole borrowing model
 is built on top of — mutability is the special case that needs an
 explicit `&mut` to unlock, not the other way around. This is a large part
-of why data races are ruled out at compile time: you cannot have two
+of why data races are ruled out at compile time: outside of those
+interior-mutability types, you cannot have two
 simultaneous mutable accesses to the same data without the compiler
 seeing an explicit `&mut` for it.
 

@@ -11,12 +11,8 @@ see_also: [string-literal]
 ## Explanation
 
 A raw string literal disables escape processing entirely — every
-character between the quotes is taken literally, including backslashes:
-
-```
-let path = r"C:\Users\name";
-let regex = r"\d+\.\d+";
-```
+character between the quotes is taken literally, including backslashes,
+as in `r"C:\Users\name"` or a regex pattern like `r"\d+\.\d+"`.
 
 When the string itself needs to contain a `"`, wrap it in matching `#`
 delimiters — `r#"..."#` — and use as many `#` as needed to avoid ambiguity

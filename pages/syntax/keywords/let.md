@@ -11,11 +11,7 @@ see_also: [mut, const]
 ## Explanation
 
 `let` introduces a new variable binding in the current scope. It binds a
-name to the value produced by an expression:
-
-```
-let x = 5;
-```
+name to the value produced by an expression.
 
 This is a declaration, not an assignment in the C sense — `let` always
 creates a *new* binding, even if a variable of the same name already

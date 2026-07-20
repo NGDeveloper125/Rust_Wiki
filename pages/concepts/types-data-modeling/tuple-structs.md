@@ -10,12 +10,8 @@ see_also: ["Structs", "The newtype pattern"]
 ## Explanation
 
 A tuple struct is a struct whose fields are identified by position rather
-than by name:
-
-```
-struct Point(f64, f64);
-let p = Point(1.0, 2.0);
-```
+than by name — `struct Point(f64, f64);` and a value of it, `Point(1.0, 2.0)`,
+are accessed positionally rather than by field name.
 
 It's a middle ground between a plain tuple `(f64, f64)` (no type identity
 of its own — any two `f64`s are interchangeable with it) and a full named
@@ -56,13 +52,12 @@ fn paint(color: Rgb) {
 paint(Rgb(255, 87, 34));
 ```
 
-**Why this way:** the API Guidelines' flexibility advice
-([C-GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html#functions-minimize-assumptions-about-parameters-by-using-generic-types-c-generic)
-and neighboring naming guidance) favors clarity over ceremony — once
-field meaning stops being obvious from position, switch to a named
-struct; once the goal shifts from readability to *preventing* values of
-the same underlying type from being mixed up, reach for
-[the newtype pattern](the-newtype-pattern.md) instead.
+**Why this way:** favor clarity over ceremony — a tuple struct is right
+while field meaning is obvious from position; once it stops being
+obvious, switch to a named struct; and once the goal shifts from
+readability to *preventing* values of the same underlying type from being
+mixed up, reach for [the newtype pattern](the-newtype-pattern.md)
+instead.
 
 ### Scenario: Creating a new object
 

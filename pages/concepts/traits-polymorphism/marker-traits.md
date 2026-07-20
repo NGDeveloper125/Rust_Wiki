@@ -23,14 +23,18 @@ system:
 - `Sync` marks a type as safe to access from multiple threads at once
   through a shared reference (see [Send & Sync](../concurrency-async/send-and-sync.md)).
 
-Most marker traits are auto-derived by the compiler for any type made
-entirely of parts that already have the marker — a struct of `Send`
-fields is automatically `Send` itself, with no `impl` needed. This is
-what lets the compiler enforce thread-safety rules across an entire
-program's type graph without every single type needing an explicit
-annotation; the property propagates structurally, and only types doing
-something genuinely unusual (raw pointers, certain FFI types) need to
-opt out explicitly.
+`Send` and `Sync` are *auto traits*: the compiler implements them
+automatically for any type made entirely of parts that already have the
+marker — a struct of `Send` fields is automatically `Send` itself, with
+no `impl` needed. (`Copy` and `Sized` are different: `Copy` needs an
+explicit `#[derive(Copy)]`, and `Sized` is built in.) The auto-trait
+mechanism is what lets the compiler enforce thread-safety across an
+entire program's type graph without per-type annotations; the property
+propagates structurally. A type containing a raw pointer *automatically
+loses* `Send`/`Sync` — there is no explicit opt-out on stable Rust
+(negative impls are unstable); you suppress the auto-impl by including a
+non-`Send` field (e.g. `PhantomData<*const ()>`), and a hand-written
+`unsafe impl Send` is how you opt such a type back *in*.
 
 ## Basic usage example
 
@@ -79,8 +83,9 @@ hand, that sharing it really is safe.
 ```
 struct FfiHandle(*mut u8); // raw pointer: not auto-Send
 
-// SAFETY: this handle is never dereferenced by more than one thread at a
-// time, which the caller must uphold for this impl to stay sound.
+// SAFETY: FfiHandle owns its pointer exclusively (no aliases exist), and
+// the underlying C object may be used from any one thread at a time, so
+// transferring ownership across a thread boundary is sound.
 unsafe impl Send for FfiHandle {} // <- manual, unsafe: author is vouching for thread-safety
 
 fn move_to_worker(handle: FfiHandle) {

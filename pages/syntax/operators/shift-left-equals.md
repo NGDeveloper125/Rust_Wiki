@@ -13,11 +13,6 @@ see_also: ["<<"]
 `<<=` left-shifts the left operand by the right operand's amount, in
 place, overloadable via `std::ops::ShlAssign`.
 
-```
-let mut x = 1u8;
-x <<= 3; // x is now 8
-```
-
 ## Basic usage example
 
 ```

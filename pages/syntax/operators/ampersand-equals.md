@@ -10,16 +10,11 @@ see_also: ["&"]
 
 ## Explanation
 
-`&=` assigns the bitwise AND of the left and right operands in place,
-overloadable via `std::ops::BitAndAssign`. Only the integer/bitwise sense
-of `&` has a compound-assignment form — there's no analogous compound
-form for the borrow sense of `&` (borrowing isn't a "value" that can be
-compounded like this).
-
-```
-let mut flags = 0b1111u8;
-flags &= 0b1010; // flags is now 0b1010
-```
+`&=` assigns the bitwise AND of the left and right operands in place, as
+in `flags &= 0b1010`, and is overloadable via `std::ops::BitAndAssign`.
+Only the integer/bitwise sense of `&` has a compound-assignment form —
+there's no analogous compound form for the borrow sense of `&` (borrowing
+isn't a "value" that can be compounded like this).
 
 ## Basic usage example
 
@@ -49,10 +44,12 @@ status &= !FLAG_PENDING; // <- clears the PENDING bit in place, keeping the othe
 assert_eq!(status, FLAG_ACTIVE | FLAG_ARCHIVED);
 ```
 
-**Why this way:** `flags &= !bit` is the standard clear-a-bit idiom
-documented on [`BitAndAssign`](https://doc.rust-lang.org/std/ops/trait.BitAndAssign.html) —
-see [`+=`](plus-equals.md) for the fuller treatment of compound-assignment
-operators shared across `+=`, `-=`, `*=`, and the rest of the family.
+**Why this way:** `flags &= !bit` is the standard bit-clearing idiom in
+systems code generally, built on the
+[`BitAndAssign`](https://doc.rust-lang.org/std/ops/trait.BitAndAssign.html)
+trait behind `&=` — see [`+=`](plus-equals.md) for the fuller treatment
+of compound-assignment operators shared across `+=`, `-=`, `*=`, and the
+rest of the family.
 
 ## Embedded Rust Notes
 

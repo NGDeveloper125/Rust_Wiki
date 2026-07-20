@@ -10,14 +10,10 @@ see_also: ["<"]
 
 ## Explanation
 
-`<=` is the less-than-or-equal comparison, provided by `std::ops::PartialOrd`
+`<=` is the less-than-or-equal comparison, provided by `std::cmp::PartialOrd`
 alongside `<`, `>`, and `>=` — implementing `PartialOrd` (usually via
 `#[derive(PartialOrd)]`, which requires `PartialEq` as well) gives you all
 four ordering operators together, not just one.
-
-```
-if a <= b { ... }
-```
 
 ## Basic usage example
 
@@ -52,8 +48,12 @@ fn in_safe_range(reading: &Reading) -> bool {
 
 **Why this way:** `MIN <= x && x <= MAX` keeps both bounds inclusive
 explicitly, rather than reaching for a `Range` (`MIN..MAX`, which is
-half-open) where an inclusive upper bound is actually what's intended —
-see [`<`](less-than.md) for the fuller ordering-operator treatment.
+half-open) where an inclusive upper bound is actually what's intended.
+The idiomatic form is `(MIN..=MAX).contains(&x)` — clippy's
+[`manual_range_contains`](https://rust-lang.github.io/rust-clippy/master/index.html#manual_range_contains)
+lint suggests exactly that rewrite — but the explicit `&&` chain remains
+fine when you want the bounds visible inline; see [`<`](less-than.md)
+for the fuller ordering-operator treatment.
 
 ## Embedded Rust Notes
 

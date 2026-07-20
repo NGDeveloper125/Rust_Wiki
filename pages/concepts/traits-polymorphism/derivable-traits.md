@@ -13,12 +13,9 @@ Many common traits have an obvious, mechanical implementation that can be
 generated automatically from a type's structure — comparing a struct
 field-by-field for `PartialEq`, printing every field for `Debug`, cloning
 every field for `Clone`. `#[derive(...)]` generates exactly that
-mechanical implementation, saving the boilerplate of writing it by hand:
-
-```
-#[derive(Debug, Clone, PartialEq)]
-struct Point { x: f64, y: f64 }
-```
+mechanical implementation, saving the boilerplate of writing it by hand —
+for example, `#[derive(Debug, Clone, PartialEq)]` on a `Point { x: f64, y: f64 }`
+struct generates all three implementations at once.
 
 A derive only works if every field's own type already implements the
 trait being derived — deriving `Clone` for a struct containing a
@@ -92,11 +89,11 @@ fn totals_order_correctly() {
 }
 ```
 
-**Why this way:** without `Debug`, this fails to *compile* on a mismatch,
-not just fail the test — the
+**Why this way:** without `Debug` the assertion doesn't compile at all
+(not just on a runtime mismatch), since `assert_eq!` must be able to
+print both sides on failure — the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
-notes both traits are needed so `assert_eq!` can print `left`/`right`
-when they differ.
+notes both `PartialEq` and `Debug` are needed for `assert_eq!`.
 
 ## Embedded Rust Notes
 

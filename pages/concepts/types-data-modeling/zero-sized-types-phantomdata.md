@@ -10,11 +10,13 @@ see_also: ["Unit structs", "\"Make invalid states unrepresentable\""]
 ## Explanation
 
 A zero-sized type occupies no memory at runtime at all — `size_of::<T>() == 0`
-— while still existing fully as a type at compile time. Unit structs
-(`struct Marker;`) and field-less enum variants are the most common
-naturally-occurring examples: the compiler doesn't need to store
-anything to represent a value that carries no data, since there's only
-ever one possible value of that type.
+— while still existing fully as a type at compile time. The unit type
+`()`, unit structs (`struct Marker;`), and a single-variant field-less
+enum are the most common naturally-occurring examples (a *multi*-variant
+field-less enum like `Ordering` isn't zero-sized — it still needs a
+discriminant byte): the compiler doesn't need to store anything to
+represent a value that carries no data, since there's only ever one
+possible value of that type.
 
 `PhantomData<T>` is a special zero-sized type used to tell the compiler
 "pretend this struct owns/relates to a `T`" without actually storing a
@@ -80,8 +82,8 @@ impl Connection<Open> {
 ```
 
 **Why this way:** this typestate pattern, covered in the
-[Rust Design Patterns](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
-book, moves a whole category of "used it in the wrong order" bugs from a
+[Embedded Rust Book's Typestate Programming chapter](https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html),
+moves a whole category of "used it in the wrong order" bugs from a
 runtime check to a compile error, and `PhantomData<State>` is what makes
 the state parameter free — it contributes nothing to `Connection`'s
 runtime size.

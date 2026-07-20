@@ -10,11 +10,8 @@ see_also: ["||"]
 
 ## Explanation
 
-`&&` is short-circuiting logical AND between two `bool` values:
-
-```
-if a > 0 && b > 0 { ... }
-```
+`&&` is short-circuiting logical AND between two `bool` values, as in
+`a > 0 && b > 0`.
 
 "Short-circuiting" means the right operand is only evaluated if the left
 is `true` — important when the right side has side effects or could

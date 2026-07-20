@@ -10,16 +10,8 @@ see_also: ["Traits", "Supertraits"]
 ## Explanation
 
 A trait method can carry a default body, used by any implementer that
-doesn't override it:
-
-```
-trait Greet {
-    fn name(&self) -> String;
-    fn greet(&self) -> String {
-        format!("Hello, {}!", self.name())
-    }
-}
-```
+doesn't override it — for example, a `Greet` trait's `greet` method could
+have a default body that calls `self.name()` internally.
 
 Here every implementer of `Greet` must define `name`, but gets `greet`
 for free unless it chooses to override it. This lets a trait provide
@@ -98,9 +90,11 @@ impl Plugin for Logger { // <- still compiles: on_shutdown's default covers it
 
 **Why this way:** a required method added to a public trait is a breaking
 change for every downstream implementer; a method added with a default
-body is not — the
-[API Guidelines on future-proofing](https://rust-lang.github.io/api-guidelines/future-proofing.html)
-is built around exactly this kind of forward-compatible trait evolution.
+body is usually *not* — [RFC 1105](https://rust-lang.github.io/rfcs/1105-api-evolution.html)
+classifies it as a minor change (though a name collision with an inherent
+method or another trait in scope can still cause downstream ambiguity
+errors). Designing traits so behavior can be extended this way is a core
+forward-compatibility technique.
 
 ## Embedded Rust Notes
 

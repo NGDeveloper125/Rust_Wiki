@@ -11,11 +11,7 @@ see_also: [c-string-literal]
 ## Explanation
 
 `cr"..."` (or `cr#"..."#`) combines the C-string and raw-string forms: a
-`&CStr` result with no escape processing.
-
-```
-let s: &std::ffi::CStr = cr"C:\path\to\thing";
-```
+`&CStr` result with no escape processing, as in `cr"C:\path\to\thing"`.
 
 Useful for FFI constants that both need the C-compatible nul-terminated
 representation and contain literal backslashes.
@@ -52,7 +48,8 @@ fn firmware_path() -> &'static CStr {
 **Why this way:** combining raw and C-string semantics avoids the double
 burden of escaping every backslash *and* manually appending a nul
 terminator — see [C string literal](c-string-literal.md) for the
-nul-termination behavior this form inherits unchanged.
+nul-termination behavior this form inherits unchanged. Like `c"..."`,
+`cr"..."` requires Rust 1.77+ and edition 2021 or later.
 
 ## Embedded Rust Notes
 

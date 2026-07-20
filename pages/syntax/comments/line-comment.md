@@ -12,12 +12,8 @@ see_also: [block-comment]
 
 `//` begins a comment that runs to the end of the line. It has zero
 effect on compilation — the compiler discards it entirely before parsing
-(unlike doc comments, which are collected into documentation).
-
-```
-// this line is ignored entirely
-let x = 5; // so is everything after this // on this line
-```
+(unlike doc comments, which are collected into documentation) — and it
+can either sit on its own line or trail after code on the same line.
 
 Nesting doesn't apply, since a line comment simply consumes the rest of
 the line regardless of what characters follow.
@@ -62,20 +58,27 @@ is for the next person reading the source, `///` is for the next person
 *calling* the function who may never open the source at all.
 
 ```
+pub struct ParseError;
+
 /// Parses a duration string like "5s" or "10m" into seconds.
 pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
     // AVOID: burying caller-relevant info in a // comment nobody sees
     // the trailing unit character determines the multiplier
     let (digits, unit) = input.split_at(input.len() - 1);
-    // ...
+    let n: u64 = digits.parse().map_err(|_| ParseError)?;
+    match unit {
+        "s" => Ok(n),
+        "m" => Ok(n * 60),
+        _ => Err(ParseError),
+    }
 }
 ```
 
 **Why this way:** anything the caller needs to know (accepted formats,
 error conditions, examples) belongs in a `///` doc comment — see
 [`///`](outer-line-doc-comment.md) — where `cargo doc` and IDE tooltips
-surface it; `//` is reserved for notes aimed at maintainers, per the
-[rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html).
+surface it. By universal community convention, `//` is for notes aimed at
+maintainers reading the source, since it reaches nobody else.
 
 ## Embedded Rust Notes
 

@@ -13,19 +13,12 @@ see_also: ["( )"]
 `,` separates elements in any list: function arguments (`f(a, b, c)`),
 tuple elements (`(a, b, c)`), array/`Vec` elements (`[a, b, c]`), struct
 fields (`Point { x, y }`), enum variant fields, generic parameters
-(`Vec<K, V>`), and match arms in some macro contexts.
+(`HashMap<K, V>`), and match arms in some macro contexts.
 
 A trailing comma after the last element is allowed (and idiomatic in
 multi-line lists — `rustfmt` adds it automatically) in every one of these
-positions:
-
-```
-let v = vec![
-    1,
-    2,
-    3,
-];
-```
+positions, such as after the final element of a multi-line `vec![1, 2, 3]`
+literal.
 
 The one place a single trailing comma is *required*, not just allowed, is
 a one-element tuple: `(x,)` — without the comma, `(x)` is just a
@@ -35,7 +28,7 @@ parenthesized expression, not a tuple at all.
 
 ```
 let point = (1, 2, 3);
-//            ^     ^ each `,` separates one tuple element from the next
+//            ^  ^ each `,` separates one tuple element from the next
 ```
 
 **Restriction:** in a one-element tuple, the trailing comma is

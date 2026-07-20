@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Derivable traits (Debug, Clone, PartialEq, …) &mdash; Rusty Yellow Pages</title>
+<link rel="stylesheet" href="../../assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+
+  <a class="wordmark" href="../../index.html">
+    <div class="mark">R</div>
+    <div class="name">RUSTY <span class="lo">YELLOW PAGES</span></div>
+  </a>
+
+  <div class="search" id="search">
+    <div class="search-field">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
+      <input id="search-input" type="text" placeholder="Search tokens &amp; concepts&hellip;  &nbsp;try &quot;borrow&quot;, &quot;&amp;&quot;, &quot;lifetime&quot;" autocomplete="off" spellcheck="false">
+      <span class="kbd">/</span>
+    </div>
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">
+    <span class="ic-moon" style="display:inline-flex"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+    <span class="ic-sun"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+    <span class="lbl" id="theme-label">Dark</span>
+  </button>
+</header>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="nav-section-label">Syntax</div>
+
+    <div class="nav-group" data-group="keywords">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Keywords</span><span class="g-count">15</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../syntax/keywords/break.html"><span class="tok">break</span></a>
+        <a class="nav-link" href="../../syntax/keywords/const.html"><span class="tok">const</span></a>
+        <a class="nav-link" href="../../syntax/keywords/continue.html"><span class="tok">continue</span></a>
+        <a class="nav-link" href="../../syntax/keywords/else.html"><span class="tok">else</span></a>
+        <a class="nav-link" href="../../syntax/keywords/false.html"><span class="tok">false</span></a>
+        <a class="nav-link" href="../../syntax/keywords/fn.html"><span class="tok">fn</span></a>
+        <a class="nav-link" href="../../syntax/keywords/for.html"><span class="tok">for</span></a>
+        <a class="nav-link" href="../../syntax/keywords/if.html"><span class="tok">if</span></a>
+        <a class="nav-link" href="../../syntax/keywords/in.html"><span class="tok">in</span></a>
+        <a class="nav-link" href="../../syntax/keywords/let.html"><span class="tok">let</span></a>
+        <a class="nav-link" href="../../syntax/keywords/loop.html"><span class="tok">loop</span></a>
+        <a class="nav-link" href="../../syntax/keywords/mut.html"><span class="tok">mut</span></a>
+        <a class="nav-link" href="../../syntax/keywords/return.html"><span class="tok">return</span></a>
+        <a class="nav-link" href="../../syntax/keywords/true.html"><span class="tok">true</span></a>
+        <a class="nav-link" href="../../syntax/keywords/while.html"><span class="tok">while</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="operators">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Operators & Sigils</span><span class="g-count">30</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../syntax/operators/exclamation-mark.html"><span class="tok">!</span></a>
+        <a class="nav-link" href="../../syntax/operators/not-equal.html"><span class="tok">!=</span></a>
+        <a class="nav-link" href="../../syntax/operators/percent.html"><span class="tok">%</span></a>
+        <a class="nav-link" href="../../syntax/operators/percent-equals.html"><span class="tok">%=</span></a>
+        <a class="nav-link" href="../../syntax/operators/ampersand.html"><span class="tok">&amp;</span></a>
+        <a class="nav-link" href="../../syntax/operators/ampersand-ampersand.html"><span class="tok">&amp;&amp;</span></a>
+        <a class="nav-link" href="../../syntax/operators/ampersand-equals.html"><span class="tok">&amp;=</span></a>
+        <a class="nav-link" href="../../syntax/operators/asterisk.html"><span class="tok">*</span></a>
+        <a class="nav-link" href="../../syntax/operators/asterisk-equals.html"><span class="tok">*=</span></a>
+        <a class="nav-link" href="../../syntax/operators/plus.html"><span class="tok">+</span></a>
+        <a class="nav-link" href="../../syntax/operators/plus-equals.html"><span class="tok">+=</span></a>
+        <a class="nav-link" href="../../syntax/operators/minus.html"><span class="tok">-</span></a>
+        <a class="nav-link" href="../../syntax/operators/minus-equals.html"><span class="tok">-=</span></a>
+        <a class="nav-link" href="../../syntax/operators/slash.html"><span class="tok">/</span></a>
+        <a class="nav-link" href="../../syntax/operators/slash-equals.html"><span class="tok">/=</span></a>
+        <a class="nav-link" href="../../syntax/operators/less-than.html"><span class="tok">&lt;</span></a>
+        <a class="nav-link" href="../../syntax/operators/shift-left.html"><span class="tok">&lt;&lt;</span></a>
+        <a class="nav-link" href="../../syntax/operators/shift-left-equals.html"><span class="tok">&lt;&lt;=</span></a>
+        <a class="nav-link" href="../../syntax/operators/less-than-or-equal.html"><span class="tok">&lt;=</span></a>
+        <a class="nav-link" href="../../syntax/operators/equals.html"><span class="tok">=</span></a>
+        <a class="nav-link" href="../../syntax/operators/equal-equal.html"><span class="tok">==</span></a>
+        <a class="nav-link" href="../../syntax/operators/greater-than.html"><span class="tok">&gt;</span></a>
+        <a class="nav-link" href="../../syntax/operators/greater-than-or-equal.html"><span class="tok">&gt;=</span></a>
+        <a class="nav-link" href="../../syntax/operators/shift-right.html"><span class="tok">&gt;&gt;</span></a>
+        <a class="nav-link" href="../../syntax/operators/shift-right-equals.html"><span class="tok">&gt;&gt;=</span></a>
+        <a class="nav-link" href="../../syntax/operators/caret.html"><span class="tok">^</span></a>
+        <a class="nav-link" href="../../syntax/operators/caret-equals.html"><span class="tok">^=</span></a>
+        <a class="nav-link" href="../../syntax/operators/pipe.html"><span class="tok">|</span></a>
+        <a class="nav-link" href="../../syntax/operators/pipe-equals.html"><span class="tok">|=</span></a>
+        <a class="nav-link" href="../../syntax/operators/pipe-pipe.html"><span class="tok">||</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="literals">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Literals</span><span class="g-count">17</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../syntax/literals/integer-binary.html"><span class="tok">Binary integer literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/byte-literal.html"><span class="tok">Byte literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/byte-string-literal.html"><span class="tok">Byte string literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/c-string-literal.html"><span class="tok">C string literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/char-literal.html"><span class="tok">Character literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/integer-decimal.html"><span class="tok">Decimal integer literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/digit-separator.html"><span class="tok">Digit separator (_)</span></a>
+        <a class="nav-link" href="../../syntax/literals/escape-sequences.html"><span class="tok">Escape sequences</span></a>
+        <a class="nav-link" href="../../syntax/literals/float-suffixes.html"><span class="tok">Float suffixes</span></a>
+        <a class="nav-link" href="../../syntax/literals/float-literal.html"><span class="tok">Floating-point literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/integer-hexadecimal.html"><span class="tok">Hexadecimal integer literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/integer-suffixes.html"><span class="tok">Integer suffixes</span></a>
+        <a class="nav-link" href="../../syntax/literals/integer-octal.html"><span class="tok">Octal integer literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/raw-c-string-literal.html"><span class="tok">Raw C string literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/raw-byte-string-literal.html"><span class="tok">Raw byte string literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/raw-string-literal.html"><span class="tok">Raw string literal</span></a>
+        <a class="nav-link" href="../../syntax/literals/string-literal.html"><span class="tok">String literal</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="punctuation">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Punctuation</span><span class="g-count">7</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../syntax/punctuation/parentheses.html"><span class="tok">( )</span></a>
+        <a class="nav-link" href="../../syntax/punctuation/comma.html"><span class="tok">,</span></a>
+        <a class="nav-link" href="../../syntax/punctuation/arrow.html"><span class="tok">-&gt;</span></a>
+        <a class="nav-link" href="../../syntax/punctuation/colon.html"><span class="tok">:</span></a>
+        <a class="nav-link" href="../../syntax/punctuation/semicolon.html"><span class="tok">;</span></a>
+        <a class="nav-link" href="../../syntax/punctuation/square-brackets.html"><span class="tok">[ ]</span></a>
+        <a class="nav-link" href="../../syntax/punctuation/curly-braces.html"><span class="tok">{ }</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="comments">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Comments</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../syntax/comments/block-comment.html"><span class="tok">/* */ (block comment)</span></a>
+        <a class="nav-link" href="../../syntax/comments/inner-block-doc-comment.html"><span class="tok">/*! */ (inner block doc comment)</span></a>
+        <a class="nav-link" href="../../syntax/comments/outer-block-doc-comment.html"><span class="tok">/** */ (outer block doc comment)</span></a>
+        <a class="nav-link" href="../../syntax/comments/line-comment.html"><span class="tok">// (line comment)</span></a>
+        <a class="nav-link" href="../../syntax/comments/inner-line-doc-comment.html"><span class="tok">//! (inner line doc comment)</span></a>
+        <a class="nav-link" href="../../syntax/comments/outer-line-doc-comment.html"><span class="tok">/// (outer line doc comment)</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-section-label">Concepts</div>
+
+    <div class="nav-group" data-group="ownership-borrowing">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Ownership & Borrowing</span><span class="g-count">16</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/borrowing-shared-references.html">Borrowing (shared references)</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/copy-vs-clone.html">Copy vs Clone</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/deref-coercion.html">Deref &amp; DerefMut coercion</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/immutability-by-default.html">Immutability by default</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/interior-mutability.html">Interior mutability (Cell &amp; RefCell)</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/lifetime-elision.html">Lifetime elision</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/lifetimes.html">Lifetimes</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/move-semantics.html">Move semantics</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/mutable-borrowing.html">Mutable borrowing</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/ownership.html">Ownership</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/raii-and-drop.html">RAII &amp; the Drop trait</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/shared-ownership-rc-arc.html">Shared ownership (Rc &amp; Arc)</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/smart-pointers-box.html">Smart pointers (Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/stack-vs-heap.html">Stack vs heap allocation</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/borrow-checker.html">The borrow checker</a>
+        <a class="nav-link" href="../../concepts/ownership-borrowing/weak-references.html">Weak references (Weak&lt;T&gt;)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="types-data-modeling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Types & Data Modeling</span><span class="g-count">15</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../concepts/types-data-modeling/arrays-vs-vec.html">Arrays vs Vec</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/associated-types.html">Associated types</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/const-generics.html">Const generics</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/enums-algebraic-data-types.html">Enums (algebraic data types)</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/generics.html">Generics</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/numeric-types-overflow-behavior.html">Numeric types &amp; overflow behavior</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/recursive-types-via-box.html">Recursive types (via Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/slices.html">Slices</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/structs.html">Structs</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/the-newtype-pattern.html">The newtype pattern</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/tuple-structs.html">Tuple structs</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/type-aliases.html">Type aliases</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/type-inference.html">Type inference</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/unit-structs.html">Unit structs</a>
+        <a class="nav-link" href="../../concepts/types-data-modeling/zero-sized-types-phantomdata.html">Zero-sized types &amp; PhantomData</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group open" data-group="traits-polymorphism">
+      <button class="nav-toggle" aria-expanded="true">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Traits & Polymorphism</span><span class="g-count">13</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/blanket-implementations.html">Blanket implementations</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/default-trait-methods.html">Default trait methods</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/dependency-injection-via-traits.html">Dependency injection via traits/generics</a>
+        <a class="nav-link active" href="../../concepts/traits-polymorphism/derivable-traits.html">Derivable traits (Debug, Clone, PartialEq, …)</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/marker-traits.html">Marker traits (Send, Sync, Sized, Copy)</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/operator-overloading.html">Operator overloading (std::ops traits)</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/static-dispatch-monomorphization.html">Static dispatch &amp; monomorphization</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/supertraits.html">Supertraits</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/the-orphan-rule-and-coherence.html">The orphan rule &amp; coherence</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/trait-bounds.html">Trait bounds</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.html">Trait objects &amp; dynamic dispatch (dyn Trait)</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/traits.html">Traits</a>
+        <a class="nav-link" href="../../concepts/traits-polymorphism/type-erasure-dyn-any.html">Type erasure (dyn Any &amp; downcasting)</a>
+      </div></div>
+    </div>
+
+  </aside>
+
+  <main class="content">
+    <article class="page">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../../index.html">Concepts</a><span class="sep">&rsaquo;</span>
+        <span>Traits &amp; Polymorphism</span><span class="sep">&rsaquo;</span>
+        <span style="color:var(--content-fg);font-weight:600">Derivable traits (Debug, Clone, PartialEq, …)</span>
+      </nav>
+
+      <div class="page-head">
+        <div class="title-block">
+          <h1 class="page-title">Derivable traits (Debug, Clone, PartialEq, …)<span class="kind">Concept</span></h1>
+        </div>
+        <div class="segmented" role="tablist" aria-label="Rust flavor">
+          <button id="seg-classic" class="on" role="tab" aria-selected="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+            Classic Rust
+          </button>
+          <button id="seg-embedded" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>
+            Embedded Rust
+          </button>
+        </div>
+      </div>
+
+      <div class="related">
+        
+        <div class="related-row">
+          <span class="related-label">Related syntax</span>
+          <span class="chip chip-unresolved"><span class="tok">derive</span></span>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <nav class="section-tabs" id="section-tabs">
+        <button class="tab on" data-target="explanation">Explanation</button>
+        <button class="tab" data-target="basic">Basic usage example</button>
+        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+      </nav>
+
+      <section class="doc" id="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <p>Many common traits have an obvious, mechanical implementation that can be
+generated automatically from a type's structure — comparing a struct
+field-by-field for <code>PartialEq</code>, printing every field for <code>Debug</code>, cloning
+every field for <code>Clone</code>. <code>#[derive(...)]</code> generates exactly that
+mechanical implementation, saving the boilerplate of writing it by hand —
+for example, <code>#[derive(Debug, Clone, PartialEq)]</code> on a <code>Point { x: f64, y: f64 }</code>
+struct generates all three implementations at once.</p>
+<p>A derive only works if every field's own type already implements the
+trait being derived — deriving <code>Clone</code> for a struct containing a
+non-<code>Clone</code> field is a compile error, since there'd be no way to generate
+a working implementation. This is also the mechanism behind
+<code>serde</code>'s <code>#[derive(Serialize, Deserialize)]</code> — the same
+generate-from-structure idea, extended by a third-party procedural macro
+rather than the small fixed set of derives built into the compiler
+itself, which is why the <a href="../../concepts/serialization.html">serialization</a>
+ecosystem is able to plug into ordinary struct/enum definitions with a
+single attribute rather than requiring hand-written conversion code.</p>
+
+      </section>
+
+      <section class="doc" id="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#[derive(Debug, Clone, PartialEq)] // &lt;- mechanically generates all three impls
+struct Point { x: f64, y: f64 }
+
+let a = Point { x: 1.0, y: 2.0 };
+let b = a.clone();
+println!("{:?} {}", b, a == b);
+</code></pre>
+<p><strong>Restriction:</strong> a derive only works if every field's own type already
+implements the trait being derived — a struct with a non-<code>Clone</code> field
+cannot itself derive <code>Clone</code>.</p>
+
+      </section>
+
+      <section class="doc" id="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p><code>#[derive(PartialEq)]</code> covers a plain field-by-field comparison, but a
+type with a field that shouldn't count toward equality — a cache, a
+timestamp — needs a manual <code>impl</code> instead.</p>
+<pre><code class="rust">struct Reading {
+    value: f64,
+    measured_at: u64, // shouldn't affect equality
+}
+
+impl PartialEq for Reading { // &lt;- manual: derive would also compare measured_at
+    fn eq(&amp;self, other: &amp;Self) -&gt; bool {
+        self.value == other.value
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>#[derive(...)]</code> always compares/prints/clones <em>every</em>
+field — the moment equality (or <code>Debug</code>, or <code>Clone</code>) needs to mean
+something other than "all fields, mechanically," a manual <code>impl</code> is the
+only option; the
+<a href="https://rust-lang.github.io/api-guidelines/interoperability.html">API Guidelines' C-COMMON-TRAITS</a>
+still recommends implementing the trait, just not necessarily by
+deriving it.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p><code>assert_eq!</code> requires both <code>PartialEq</code> (to compare) and <code>Debug</code> (to print
+the values in the failure message) — deriving both is what makes ordinary
+equality assertions possible in a test.</p>
+<pre><code class="rust">#[derive(Debug, PartialEq)] // &lt;- both required: PartialEq for `==`, Debug for the failure message
+struct Order { id: u32, total_cents: u32 }
+
+#[test]
+fn totals_order_correctly() {
+    let order = Order { id: 1, total_cents: 1999 };
+    assert_eq!(order, Order { id: 1, total_cents: 1999 }); // needs PartialEq + Debug on Order
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> without <code>Debug</code> the assertion doesn't compile at all
+(not just on a runtime mismatch), since <code>assert_eq!</code> must be able to
+print both sides on failure — the
+<a href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html">Rust Book's testing chapter</a>
+notes both <code>PartialEq</code> and <code>Debug</code> are needed for <code>assert_eq!</code>.</p>
+</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc" id="embedded">
+        <h2 class="section-title">Embedded Rust Notes</h2>
+        <span class="support-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Embedded support: Full
+        </span>
+        <p><strong>Full support.</strong> The built-in derives (<code>Debug</code>, <code>Clone</code>, <code>PartialEq</code>,
+etc.) all work in <code>#![no_std]</code>. Worth noting: <code>#[derive(Debug)]</code>'s
+formatting still goes through <code>core::fmt</code>, which has no built-in way to
+print anywhere on a bare-metal target — embedded code typically routes
+<code>Debug</code>/<code>Display</code> output through a crate like <code>defmt</code> (a
+<code>no_std</code>-oriented, wire-efficient logging framework) rather than
+<code>println!</code>, which requires <code>std</code>.</p>
+
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+      </section>
+
+      <div class="footer-note">
+        <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
+        <span>Targets current stable Rust &middot; edition 2021</span>
+      </div>
+
+    </article>
+  </main>
+</div>
+
+<script>window.SITE_ROOT = "../../";</script>
+<script src="../../assets/search-index.js"></script>
+<script src="../../assets/site.js"></script>
+</body>
+</html>

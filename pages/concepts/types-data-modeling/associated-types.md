@@ -10,20 +10,17 @@ see_also: ["Generics", "Traits", "The Iterator trait"]
 ## Explanation
 
 An associated type is a type placeholder attached to a trait, filled in
-by each specific implementation rather than chosen by the caller:
-
-```
-trait Iterator {
-    type Item;
-    fn next(&mut self) -> Option<Self::Item>;
-}
-```
+by each specific implementation rather than chosen by the caller — for
+instance, the standard `Iterator` trait declares `type Item;` and returns
+`Option<Self::Item>` from `next`, without fixing what `Item` actually is
+until a concrete type implements it.
 
 Every type implementing `Iterator` picks exactly one concrete `Item` type
-— `Vec<i32>`'s iterator has `Item = i32`, `HashMap<K, V>`'s has
-`Item = (K, V)` — and that choice is fixed for that implementation,
-unlike a generic type parameter, which a caller could instantiate
-differently at each use site.
+— the by-value iterator from `Vec<i32>` has `Item = i32`, and
+`HashMap<K, V>`'s has `Item = (K, V)` (the borrowing `.iter()` yields
+`&i32` and `(&K, &V)` respectively, each its own iterator type) — and that
+choice is fixed for that implementation, unlike a generic type parameter,
+which a caller could instantiate differently at each use site.
 
 The distinction matters: if `Iterator` used a generic parameter instead
 (`trait Iterator<Item> { ... }`), a single type could implement `Iterator<i32>`

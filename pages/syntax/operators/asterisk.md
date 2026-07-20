@@ -80,10 +80,10 @@ println!("calibrated: {temperature}");
 ```
 
 **Why this way:** per the [Book's references chapter](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html),
-writing `reading = ...` without the `*` would just rebind the local
-`&mut f64` parameter and never touch `temperature` in the caller —
-`*reading = ...` is what reaches through the reference to the value
-itself.
+writing `reading = ...` without the `*` is a type mismatch the compiler
+rejects (an `f64` can't be assigned to a `&mut f64` place — rustc's
+E0308 suggests adding the `*`) — `*reading = ...` is what makes the
+write go through the reference to the value itself.
 
 ## Embedded Rust Notes
 

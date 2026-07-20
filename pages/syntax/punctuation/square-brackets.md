@@ -28,7 +28,7 @@ see_also: [";"]
 The distinction between an array type `[T; N]` (size is part of the type,
 known at compile time) and a slice type `[T]` (size is not part of the
 type, checked at runtime) is a frequent point of confusion for newcomers —
-see the [Arrays vs Vec](../../concepts/arrays-vs-vec.md) concept page.
+see the [Arrays vs Vec](../../concepts/types-data-modeling/arrays-vs-vec.md) concept page.
 
 ## Basic usage example
 

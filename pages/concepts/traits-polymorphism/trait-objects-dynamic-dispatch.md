@@ -13,14 +13,10 @@ A trait object (`dyn Trait`) erases a value's concrete type, keeping only
 that it implements a given trait — and resolves which implementation's
 methods to call at runtime rather than compile time. Since its size isn't
 known at compile time, a trait object almost always appears behind a
-pointer: `&dyn Trait`, `Box<dyn Trait>`, `Rc<dyn Trait>`.
-
-```
-let shapes: Vec<Box<dyn Shape>> = vec![Box::new(Circle), Box::new(Square)];
-for s in &shapes {
-    s.area(); // resolved at runtime via a vtable
-}
-```
+pointer: `&dyn Trait`, `Box<dyn Trait>`, `Rc<dyn Trait>`. For instance, a
+`Vec<Box<dyn Shape>>` can hold `Circle`s and `Square`s side by side, and
+calling `.area()` on each element resolves to the right implementation at
+runtime via a vtable.
 
 This is what lets a single collection hold values of genuinely different
 concrete types, as long as they all implement the same trait — something

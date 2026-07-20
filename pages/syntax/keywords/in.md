@@ -10,18 +10,15 @@ see_also: [for]
 
 ## Explanation
 
-`in` binds the loop variable to the iterator source in a `for` loop:
+`in` binds the loop variable to the iterator source in a `for` loop, as in
+`for x in 0..10 { ... }`.
 
-```
-for x in 0..10 { ... }
-```
-
-Outside of `for ... in ...`, `in` has no independent meaning as an
-operator or standalone keyword — it exists solely as part of the `for`
-loop's fixed grammar (`for PATTERN in EXPR { BLOCK }`), not as a general
-membership-test operator the way `in` works in Python. Testing membership
-in a Rust collection is a method call instead
-(`collection.contains(&value)`).
+Outside of `for ... in ...`, `in` appears in only one other place: the
+restricted-visibility syntax `pub(in crate::some::path)`. In both spots
+it is part of a fixed grammar (`for PATTERN in EXPR { BLOCK }`,
+`pub(in PATH)`), never a general membership-test operator the way `in`
+works in Python. Testing membership in a Rust collection is a method
+call instead (`collection.contains(&value)`).
 
 ## Basic usage example
 
@@ -31,9 +28,10 @@ for x in 0..10 { // <- `in` binds `x` to each value produced by `0..10`
 }
 ```
 
-**Restriction:** `in` only exists as part of the fixed
-`for PATTERN in EXPR { ... }` grammar — it is not a standalone
-membership-test operator the way `in` works in Python.
+**Restriction:** `in` only exists as part of fixed grammar — the
+`for PATTERN in EXPR { ... }` loop and `pub(in path)` restricted
+visibility — it is not a standalone membership-test operator the way
+`in` works in Python.
 
 ## Best practices & deeper information
 
@@ -55,9 +53,9 @@ for (name, count) in inventory.into_iter().filter(|&(_, c)| c > 0) {
 a separate destructuring `let` inside the loop body — the
 [`Iterator::filter`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter)
 adaptor narrows what's seen before `in` ever binds it. `in` itself has no
-meaning outside this grammar — it isn't a general membership operator —
-so there's nothing further to say about it in isolation; see
-[`for`](for.md) for the loop it belongs to.
+meaning outside the `for` grammar and `pub(in path)` visibility — it
+isn't a general membership operator — so there's nothing further to say
+about it in isolation; see [`for`](for.md) for the loop it belongs to.
 
 ## Embedded Rust Notes
 

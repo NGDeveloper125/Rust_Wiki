@@ -10,12 +10,8 @@ see_also: [integer-hexadecimal, integer-octal, integer-binary]
 
 ## Explanation
 
-The default, base-10 form for writing an integer literal:
-
-```
-let x = 42;
-let y = 1_000_000;
-```
+The default, base-10 form for writing an integer literal, as in `42` or
+`1_000_000`.
 
 With no suffix and no other context, Rust infers the type — defaulting to
 `i32` if nothing constrains it further. Underscores (`_`) may be placed
@@ -49,10 +45,11 @@ assert_eq!(subtotal, Some(5997));
 ```
 
 **Why this way:** `checked_mul` turns a would-be silent overflow into an
-explicit `None` the caller must handle, which the
+explicit `None` the caller must handle — the
 [std docs for `checked_mul`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_mul)
-recommend over plain `*` whenever either operand could come from outside
-the function.
+document that `None`-on-overflow behavior. Preferring it over plain `*`
+whenever an operand could come from outside the function is the safe
+default.
 
 ### Scenario: Creating a new object
 

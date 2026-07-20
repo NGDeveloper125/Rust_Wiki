@@ -12,15 +12,9 @@ see_also: ["Trait objects & dynamic dispatch (dyn Trait)"]
 `dyn Any` is a special trait object that erases a value's concrete type
 entirely, keeping only enough information to ask "is this actually a
 `T`?" at runtime and, if so, recover a concrete reference to it —
-downcasting:
-
-```
-fn describe(value: &dyn std::any::Any) {
-    if let Some(n) = value.downcast_ref::<i32>() {
-        println!("an i32: {n}");
-    }
-}
-```
+downcasting. For instance, a function taking `&dyn Any` can check
+`value.downcast_ref::<i32>()` to test, at runtime, whether the erased
+value is actually an `i32`, recovering a concrete reference if so.
 
 This is deliberately rare in idiomatic Rust — almost all polymorphism is
 handled through ordinary trait objects or generics, where the compiler
@@ -80,6 +74,11 @@ its place only where the set of types genuinely isn't known until runtime
 — [`std::any::Any`](https://doc.rust-lang.org/std/any/trait.Any.html)
 documents `TypeId`-keyed lookups like this as the intended use, not a
 general-purpose substitute for generics or an enum.
+
+**Restriction:** `Any` only covers `'static` types — `TypeId::of::<T>()`
+requires `T: 'static`, so a type that borrows non-`'static` data can
+never be erased to `dyn Any` or downcast back. The `T: Any` bounds above
+already imply `'static`; a struct holding a `&'a str` would be rejected.
 
 ## Embedded Rust Notes
 

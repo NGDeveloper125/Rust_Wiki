@@ -14,11 +14,6 @@ see_also: ["|"]
 overloadable via `std::ops::BitOrAssign`. Commonly used to set flag bits
 in a bitmask.
 
-```
-let mut flags = 0b1000u8;
-flags |= 0b0010; // flags is now 0b1010
-```
-
 ## Basic usage example
 
 ```

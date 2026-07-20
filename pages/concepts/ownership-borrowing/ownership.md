@@ -140,10 +140,11 @@ impl RequestBuilder {
 
 **Why this way:** owned `self` signals "this call consumes and reshapes
 the value" (ideal for chained builders), `&self` signals "read-only," and
-`&mut self` signals "mutates in place without taking ownership" — the
-[API Guidelines](https://rust-lang.github.io/api-guidelines/predictability.html)
-recommend picking the receiver that matches what the method actually
-does, since callers rely on it to know whether they keep the value.
+`&mut self` signals "mutates in place without taking ownership" — pick
+the receiver that matches what the method actually does, since callers
+rely on it to know whether they keep the value; the
+[Rust Book](https://doc.rust-lang.org/book/ch05-03-method-syntax.html)
+covers the `self`/`&self`/`&mut self` semantics behind each choice.
 
 ## Embedded Rust Notes
 

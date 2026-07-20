@@ -10,11 +10,7 @@ see_also: [">"]
 
 ## Explanation
 
-`<` is the less-than comparison, overloadable via `std::ops::PartialOrd`:
-
-```
-if a < b { ... }
-```
+`<` is the less-than comparison, overloadable via `std::cmp::PartialOrd`.
 
 `<` is also the opening delimiter for **generic parameter lists**
 (`Vec<T>`, `fn f<T>()`) — an entirely different, non-operator role. This
@@ -67,8 +63,10 @@ tickets.sort_by(|a, b| {
 
 **Why this way:** [`Vec::sort_by`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.sort_by)
 gives full control over the ordering when a type doesn't derive `Ord` or
-the sort key needs custom logic; prefer `sort()`/`sort_by_key()` instead
-whenever a natural, derivable ordering already exists.
+the sort key needs custom logic (the expanded if/else comparator here is
+written out to spotlight `<` itself — `a.priority.cmp(&b.priority)` or
+`sort_by_key` is the usual shorthand); prefer `sort()`/`sort_by_key()`
+instead whenever a natural, derivable ordering already exists.
 
 ### Scenario: Validating input
 
