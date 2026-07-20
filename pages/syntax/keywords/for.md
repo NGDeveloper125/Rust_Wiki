@@ -10,13 +10,8 @@ see_also: [in]
 
 ## Explanation
 
-`for` iterates over anything that implements `IntoIterator`:
-
-```
-for item in collection {
-    println!("{item}");
-}
-```
+`for` iterates over anything that implements `IntoIterator`, repeatedly
+binding the loop variable to each item the iterator produces.
 
 `for item in collection` desugars to calling `.into_iter()` on
 `collection` and repeatedly calling `.next()` on the result until it
@@ -30,9 +25,9 @@ what's being iterated:
   implements `IntoIterator` by delegating to `.iter()`
 - `for x in &mut collection` — yields mutable references (`&mut T`)
 
-`for` is not an expression — like `while`, it always evaluates to `()` and
-cannot yield a value via `break`. It accepts a loop label the same way
-`while`/`loop` do.
+`for` is an expression, but — like `while` — it always evaluates to `()`
+and cannot yield a value via `break value;`. It accepts a loop label the
+same way `while`/`loop` do.
 
 ## Basic usage example
 
@@ -87,9 +82,9 @@ for message in rx { // <- `for` drains the receiver until the channel closes
 }
 ```
 
-**Why this way:** `Receiver` implements `Iterator`, so `for message in rx`
-blocks for the next message and stops cleanly once all senders have
-dropped — the
+**Why this way:** `Receiver` implements `IntoIterator` (for both
+`Receiver` and `&Receiver`), so `for message in rx` blocks for the next
+message and stops cleanly once all senders have dropped — the
 [Book's message-passing chapter](https://doc.rust-lang.org/book/ch16-02-message-passing.html)
 uses exactly this shape instead of a manual `loop` calling `.recv()`.
 

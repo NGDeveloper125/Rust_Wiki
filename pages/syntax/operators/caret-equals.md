@@ -14,11 +14,6 @@ see_also: ["^"]
 overloadable via `std::ops::BitXorAssign`. A classic use is toggling bits:
 `flags ^= mask` flips exactly the bits set in `mask`.
 
-```
-let mut flags = 0b1010u8;
-flags ^= 0b0110; // flags is now 0b1100
-```
-
 ## Basic usage example
 
 ```

@@ -11,12 +11,8 @@ see_also: [byte-literal]
 ## Explanation
 
 A single-quoted character literal produces a `char` — a full Unicode
-scalar value, always 4 bytes, not a single byte:
-
-```
-let c: char = 'H';
-let emoji: char = '🦀';
-```
+scalar value, always 4 bytes, not a single byte — so `'🦀'` is just as
+valid a `char` literal as `'H'`, despite spanning four bytes in UTF-8.
 
 This is a common surprise for newcomers: `char` in Rust is not "one byte"
 the way `char` is in C — it represents any Unicode scalar value
@@ -87,10 +83,11 @@ assert_ne!(len_chars, len_bytes);
 
 **Why this way:** a `char` is always a full Unicode scalar value, so
 `.chars()` is the safe way to walk text that might contain multi-byte
-characters — indexing a `String` by raw byte offset can panic if the
-offset falls inside a multi-byte character, which the
-[std `str` docs](https://doc.rust-lang.org/std/primitive.str.html#method.chars)
-call out explicitly.
+characters — a `str` can't be indexed by a single `usize` at all, and
+*slicing* it (`&s[0..n]`) panics if a bound falls inside a multi-byte
+character, as the
+[std `str` docs](https://doc.rust-lang.org/std/primitive.str.html#method.get)
+note (use `.get()` or char-based iteration instead).
 
 ## Embedded Rust Notes
 

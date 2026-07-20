@@ -13,11 +13,6 @@ see_also: [">>"]
 `>>=` right-shifts the left operand by the right operand's amount, in
 place, overloadable via `std::ops::ShrAssign`.
 
-```
-let mut x = 8u8;
-x >>= 3; // x is now 1
-```
-
 ## Basic usage example
 
 ```

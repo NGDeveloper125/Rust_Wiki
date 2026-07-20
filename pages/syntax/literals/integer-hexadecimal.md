@@ -10,12 +10,8 @@ see_also: [integer-decimal, integer-octal, integer-binary]
 
 ## Explanation
 
-A base-16 integer literal, prefixed with `0x`:
-
-```
-let mask = 0xFF_u8;
-let color = 0x1a2b3c;
-```
+A base-16 integer literal, prefixed with `0x`, as in `0xFF_u8` or
+`0x1a2b3c`.
 
 Digits `a`–`f` may be upper- or lower-case, and can be mixed within the
 same literal (though consistent casing is the usual style convention).
@@ -29,8 +25,9 @@ Underscores are allowed between digits, including immediately after the
 let addr = 0x2000; // <- `0x` prefix marks a base-16 (hexadecimal) integer literal
 ```
 
-**Restriction:** only digits `0`–`9` and letters `a`–`f`/`A`–`F` are
-legal after the `0x` prefix.
+**Restriction:** only the hex *digits* `0`–`9` and `a`–`f`/`A`–`F` may
+appear after the `0x` prefix (underscores and a type suffix like
+`0xFF_u8` are still allowed).
 
 ## Best practices & deeper information
 
@@ -53,9 +50,9 @@ let baud_bits = configure(0) & BAUD_MASK;
 ```
 
 **Why this way:** hex digits map exactly onto 4-bit groups, so a mask like
-`0x0F00` communicates "bits 8–11" directly — the convention most
-register-level code follows, per the
-[Rust Reference's integer literal grammar](https://doc.rust-lang.org/reference/tokens.html#integer-literals).
+`0x0F00` communicates "bits 8–11" directly — the readability reason
+register-level code conventionally writes masks in hex rather than
+decimal.
 
 ### Scenario: Numeric computation
 
@@ -76,8 +73,8 @@ assert!(!is_page_aligned(0x4010));
 
 **Why this way:** `0x1000` and `0x4000` are instantly recognizable as
 round, aligned values in a way `4096` and `16384` aren't — which is why
-the [std `usize` docs](https://doc.rust-lang.org/std/primitive.usize.html)
-and most systems code write addresses and alignment constants in hex.
+systems code conventionally writes addresses and alignment constants in
+hex.
 
 ## Embedded Rust Notes
 

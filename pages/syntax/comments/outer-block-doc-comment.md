@@ -12,12 +12,8 @@ see_also: [outer-line-doc-comment]
 
 `/** ... */` is the block-comment equivalent of `///` — it documents the
 item immediately following it and participates in generated documentation
-and doc tests the same way.
-
-```
-/** Adds two numbers together. */
-fn add(a: i32, b: i32) -> i32 { a + b }
-```
+and doc tests the same way, as in
+`/** Adds two numbers together. */` placed directly above a function.
 
 In practice `///` is far more idiomatic in the Rust ecosystem and is what
 `rustfmt`/community style favors; `/** */` is rarely seen in real
@@ -48,6 +44,8 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
     // <- `/** */` above documents this fn; behaves identically to `///`
     todo!()
 }
+
+pub struct ParseError;
 ```
 
 **Why this way:** `rustfmt` and community convention treat `///` as the

@@ -39,8 +39,9 @@ v.push(3.14); // <- this later use tells the compiler v: Vec<f64>
 ```
 
 **Restriction:** inference is local to a function body — parameter and
-return types must always be written explicitly, so `fn largest(items: &[T]) -> &T`
-can't have its signature worked out just from how the function is used.
+return types must always be written explicitly, so
+`fn largest<T: PartialOrd>(items: &[T]) -> &T` can't have its signature
+worked out just from how the function is used.
 
 ## Best practices & deeper information
 

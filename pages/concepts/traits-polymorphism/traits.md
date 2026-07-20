@@ -13,23 +13,16 @@ A trait defines a set of behavior — methods a type promises to provide —
 that any type can then implement, independent of that type's own
 definition. It's Rust's answer to "shared behavior across unrelated
 types," filling the role interfaces play in Java/C#, protocols in Swift,
-or type classes in Haskell.
-
-```
-trait Greet {
-    fn greet(&self) -> String;
-}
-impl Greet for Cat {
-    fn greet(&self) -> String { "meow".into() }
-}
-```
+or type classes in Haskell. For instance, a `Greet` trait declaring a
+`greet` method can be implemented for a `Cat` struct with `impl Greet for
+Cat`.
 
 Because traits are implemented separately from a type's definition (via
 `impl Trait for Type`, potentially in a completely different module or
 even a different crate than the type itself), a type can implement any
 number of unrelated traits without any of them needing to know about each
 other — this is the mechanism behind
-[decoupling](../../concepts-technique-topic-placeholder.md) code from
+[decoupling](dependency-injection-via-traits.md) code from
 concrete types: a function can depend on "anything implementing this
 trait" instead of a specific concrete type, without the trait author and
 the type author ever needing to coordinate directly.
@@ -146,8 +139,9 @@ assert!(is_expired(&FixedClock(2_000_000_000), 1_000_000_000)); // no real clock
 
 **Why this way:** depending on the trait rather than `SystemClock` directly
 means the test controls time deterministically instead of racing the real
-clock — a standard use of trait seams for testability, per the
-[Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html).
+clock — a standard use of trait seams for testability, as the
+[Rust Book's mock-object example](https://doc.rust-lang.org/book/ch15-05-interior-mutability.html#a-use-case-for-interior-mutability-mock-objects)
+illustrates with the same trait-double approach.
 
 ## Embedded Rust Notes
 

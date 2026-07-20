@@ -10,26 +10,16 @@ see_also: ["+="]
 
 ## Explanation
 
-`+` is arithmetic addition between two values of the same numeric type:
-
-```
-let sum = 1 + 2;
-```
-
-It's overloadable via `std::ops::Add` — any type can define what `+`
-means for it, which is how `String + &str` concatenation works (`Add` is
-implemented for `String`, consuming the left operand by value).
+`+` is arithmetic addition between two values of the same numeric type,
+as in `let sum = 1 + 2;`. It's overloadable via `std::ops::Add` — any
+type can define what `+` means for it, which is how `String + &str`
+concatenation works (`Add` is implemented for `String`, consuming the
+left operand by value).
 
 `+` also has a completely unrelated meaning in **trait-bound position**,
 where it combines multiple bounds/lifetimes rather than performing
-arithmetic:
-
-```
-fn f<T: Clone + Debug>(x: T) { ... }
-fn g(x: &(dyn Trait + Send)) { ... }
-```
-
-Here `+` reads as "and" — `T` must implement both `Clone` and `Debug`;
+arithmetic, as in `fn f<T: Clone + Debug>(x: T) { ... }` or
+`fn g(x: &(dyn Trait + Send)) { ... }`. Here `+` reads as "and" — `T` must implement both `Clone` and `Debug`;
 the trait object must implement `Trait` and be `Send`. This is pure
 compile-time grammar with no `Add`-trait involvement at all; don't
 confuse the two uses.

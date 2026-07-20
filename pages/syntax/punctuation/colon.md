@@ -51,10 +51,10 @@ where
 ```
 
 **Why this way:** the
-[API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html)
-and rustfmt both favor `where` once a bound list grows past one or two
-simple traits — it keeps the parameter list itself readable and puts
-every constraint in one predictable place.
+[Book's chapter on trait bounds](https://doc.rust-lang.org/book/ch10-02-traits.html#clearer-trait-bounds-with-where-clauses)
+recommends `where` once a bound list grows past one or two simple traits
+— it keeps the parameter list itself readable and puts every constraint
+in one predictable place.
 
 ### Scenario: Creating a new object
 

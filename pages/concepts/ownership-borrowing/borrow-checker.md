@@ -70,12 +70,12 @@ let cfg = Config { max_retries: 3, timeout_ms: 500 };
 
 {
     let view = &cfg; // <- borrow scoped tightly to this block
-    println!("{}", summarize(view));
-} // borrow ends here, well before any later mutation of cfg would need to happen
+    println!("{}", summarize(view)); // <- last use: the borrow ends here (NLL)
+} // well before any later mutation of cfg would need to happen
 ```
 
-**Why this way:** letting a shared borrow's scope end at its last actual
-use, rather than its last syntactic appearance, is what keeps later
+**Why this way:** letting a shared borrow end at its last use, rather
+than at the end of its enclosing scope, is what keeps later
 mutations of the same value from ever colliding with it — the
 [Rust Book](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html)
 covers this scoping behavior as the key to avoiding borrow-checker
@@ -83,35 +83,31 @@ friction, not a workaround for it.
 
 ### Scenario: Mutating through a reference
 
-Updating one field of a struct while still needing to read another is
-best done by borrowing only the field that changes, rather than taking
-`&mut self` on the whole struct for a change that only touches one part
-of it.
+Updating one field of a struct while still needing to read another works
+in a single scope because the borrow checker tracks borrows of individual
+fields separately — a mutable borrow of one field can coexist with a
+shared borrow of a different one.
 
 ```
 struct Sensor {
-    readings: Vec<f32>,
-    last_error: Option<String>,
+    readings: Vec<f64>,
+    status: String,
 }
 
-fn record(sensor: &mut Sensor, value: f32) {
-    sensor.readings.push(value); // <- mutable borrow limited to the `readings` field
-}
+let mut sensor = Sensor { readings: Vec::new(), status: "ok".into() };
 
-let mut sensor = Sensor { readings: Vec::new(), last_error: None };
-record(&mut sensor, 21.5);
-
-if let Some(err) = &sensor.last_error { // fine: no mutable borrow of `sensor` is still open
-    println!("last error: {err}");
-}
+let readings = &mut sensor.readings; // <- mutable borrow of ONE field
+let status = &sensor.status;         // <- simultaneous shared borrow of a DIFFERENT field
+readings.push(21.5);
+println!("{status}");
 ```
 
-**Why this way:** structuring code so a mutation only ever borrows the
-field it changes — instead of the whole struct — keeps borrows narrow
-enough that unrelated reads of the same value don't conflict with them;
-the
-[Rust Book](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html)
-covers disjoint borrows of separate fields as one of the standard ways to
+**Why this way:** the borrow checker tracks field-level (disjoint)
+borrows within a function body, so structuring mutation around individual
+fields rather than whole-struct `&mut self` methods avoids artificial
+conflicts; the
+[Rustonomicon](https://doc.rust-lang.org/nomicon/borrow-splitting.html)
+covers splitting borrows across separate fields as the standard way to
 keep the checker satisfied without restructuring the data itself.
 
 ## Embedded Rust Notes

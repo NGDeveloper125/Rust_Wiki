@@ -10,15 +10,9 @@ see_also: [continue, loop]
 
 ## Explanation
 
-`break` exits the nearest enclosing loop immediately:
-
-```
-loop {
-    if done {
-        break;
-    }
-}
-```
+`break` exits the nearest enclosing loop immediately, skipping any
+remaining iterations and any code after the loop's body that would
+otherwise run.
 
 Inside a `loop` (but not `while`/`for`), `break` can carry a value —
 `break value;` — which becomes the result of the whole `loop` expression.
@@ -35,14 +29,19 @@ form useful for structuring multi-step logic without a `loop` at all.
 ## Basic usage example
 
 ```
-let result = loop {
-    break 5; // <- `break` exits the loop immediately, with `5` as its value
-};
+let done = true;
+loop {
+    if done {
+        break; // <- exits the loop immediately
+    }
+}
 ```
 
-**Restriction:** `break value;` is only legal inside `loop` — `while` and
-`for` loops may run zero iterations, so `break` cannot carry a value out of
-them.
+**Restriction:** `break value;` is legal inside `loop` and inside a
+labeled block (`'a: { ... break 'a value; }`), but not in `while`/`for` —
+those loops can terminate without executing any `break` (the condition
+turns false or the iterator runs out), so a loop value would have no
+defined result.
 
 ## Best practices & deeper information
 
@@ -102,7 +101,9 @@ while let Some(cmd) = queue.pop() {
 directly than a boolean flag checked after the match, and the
 [Reference's loop expressions](https://doc.rust-lang.org/reference/expressions/loop-expr.html)
 confirm `break` is legal from any position textually inside the loop body,
-including nested inside a `match`.
+including nested inside a `match` — with two exceptions: it cannot cross
+a closure or `async` block boundary to exit an outer loop, and an
+unlabeled `break` always targets the nearest enclosing loop.
 
 ## Embedded Rust Notes
 

@@ -24,7 +24,8 @@ varies at runtime (user input, parsed data, anything built up
 incrementally), `Vec` is the only one of the two that can represent that
 at all.
 
-Both deref to a [slice](slices.md) (`&[T]`) for reading, which is why
+Both produce a [slice](slices.md) reference `&[T]` for reading — `Vec`
+via a `Deref` impl, an array via an unsized coercion — which is why
 functions that just need to *read* a sequence, regardless of its backing
 storage, conventionally take `&[T]` rather than committing to either
 `&Vec<T>` or `&[T; N]` specifically.
@@ -60,9 +61,7 @@ for reading in [21.5, 22.0, 21.8] {     // stand-in for readings arriving one at
 }
 ```
 
-**Why this way:** the
-[Rust Cookbook](https://rust-lang-nursery.github.io/rust-cookbook/)'s
-collection recipes default to `Vec` for exactly the "length depends on
+**Why this way:** `Vec` is the right default for the "length depends on
 runtime input" case — an array only works when the count really is a
 compile-time constant, like a color's three fixed channels.
 
@@ -89,9 +88,7 @@ checksum_stream(&vec![0x1, 0x2, 0x3, 0x4, 0x5]);
 header, say — saying so in the signature with `[T; N]` turns a
 wrong-length call into a compile error instead of a runtime bounds
 check; only widen to `&[T]`/`Vec<T>` once the length is truly
-caller-determined, per the API Guidelines'
-[C-GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html#functions-minimize-assumptions-about-parameters-by-using-generic-types-c-generic)
-guidance on not over- or under-committing a signature.
+caller-determined.
 
 ## Embedded Rust Notes
 

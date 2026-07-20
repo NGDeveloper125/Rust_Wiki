@@ -9,19 +9,13 @@ see_also: ["Traits"]
 
 ## Explanation
 
-Operators like `+`, `==`, `[]`, and `*` aren't special-cased into the
-language for user-defined types — they're ordinary trait methods,
-defined in `std::ops` (`Add`, `PartialEq`, `Index`, `Mul`, and so on),
-which any type can implement to give meaning to that operator for itself:
-
-```
-impl std::ops::Add for Point {
-    type Output = Point;
-    fn add(self, other: Point) -> Point {
-        Point { x: self.x + other.x, y: self.y + other.y }
-    }
-}
-```
+Operators like `+`, `[]`, and `*` aren't special-cased into the
+language for user-defined types — they're ordinary trait methods. Most
+live in `std::ops` (`Add`, `Index`, `Mul`, and so on); the comparison
+operators (`==`, `<`, …) are the exception, coming from `std::cmp`
+(`PartialEq`, `PartialOrd`). Any type can implement the relevant trait to
+give meaning to that operator for itself — for instance, implementing
+`std::ops::Add` for a `Point` struct gives meaning to `p1 + p2`.
 
 Once implemented, `p1 + p2` calls this `add` method directly — the
 operator syntax is just sugar over the trait method call, resolved at
@@ -108,11 +102,11 @@ impl Config {
 
 **Why this way:** the
 [API Guidelines' C-OVERLOAD](https://rust-lang.github.io/api-guidelines/predictability.html)
-is explicit that operators come with strong expectations — implement
-`Add` "only for an operation that bears some resemblance to addition,"
-and reach for a named method otherwise.
+is explicit that operators come with strong expectations — an operator
+should only be overloaded for an operation that genuinely resembles what
+that operator means arithmetically, and a named method used otherwise.
 
 ## Embedded Rust Notes
 
-**Full support.** All `std::ops` traits live in `core::ops` — no `std`
-dependency.
+**Full support.** The `std::ops` traits (and `std::cmp`'s comparison
+traits) live in `core::ops`/`core::cmp` — no `std` dependency.

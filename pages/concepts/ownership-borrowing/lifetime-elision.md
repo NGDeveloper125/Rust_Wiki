@@ -15,11 +15,9 @@ elision rules to infer them automatically. Roughly: each elided input
 reference gets its own lifetime; if there's exactly one input lifetime,
 it's assigned to every elided output lifetime; and if one of the inputs
 is `&self`/`&mut self`, its lifetime is assigned to the elided outputs.
-
-```
-fn first_word(s: &str) -> &str { ... } // no lifetimes written,
-                                        // but fully well-defined
-```
+For instance, `fn first_word(s: &str) -> &str` needs no lifetime written
+at all — with exactly one input reference, its lifetime is assigned to
+the elided output automatically, and the signature is fully well-defined.
 
 This exists purely for ergonomics — the underlying rule (a returned
 reference can't outlive its source) is exactly as strict whether or not

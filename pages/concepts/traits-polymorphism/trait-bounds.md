@@ -12,11 +12,9 @@ see_also: ["Traits", "Generics", "Supertraits"]
 A trait bound constrains a generic type parameter to only the types that
 implement a given trait, giving generic code exactly the guarantees it
 needs to actually do something useful with a value of an otherwise
-unknown type:
-
-```
-fn largest<T: PartialOrd>(items: &[T]) -> &T { ... }
-```
+unknown type — for example, `fn largest<T: PartialOrd>(items: &[T]) -> &T`
+constrains `T` so that `>` comparisons are allowed inside the function
+body.
 
 Without the bound, the compiler would have no basis for allowing `>` to
 be used on values of type `T` inside the function body — `T` could be

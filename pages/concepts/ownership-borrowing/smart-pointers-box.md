@@ -21,7 +21,7 @@ value whose exact size isn't known until runtime (a trait object,
 needs to know a type's size at compile time to allocate stack space for
 it — putting it behind a `Box` gives it a fixed size (a single pointer)
 regardless of what it points to. Similarly, a
-[recursive type](recursive-types-via-box.md) — a struct or enum that
+[recursive type](../types-data-modeling/recursive-types-via-box.md) — a struct or enum that
 contains itself — would need infinite size if stored inline, but a `Box`
 breaks the cycle by storing a pointer instead of the value directly.
 

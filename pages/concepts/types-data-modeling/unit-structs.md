@@ -9,11 +9,8 @@ see_also: ["Structs", "Zero-sized types & PhantomData"]
 
 ## Explanation
 
-A unit struct has no fields at all:
-
-```
-struct Marker;
-```
+A unit struct has no fields at all — `struct Marker;` is a complete
+definition on its own.
 
 It carries no data — its only purpose is to *exist as a distinct type*,
 usually so it can implement a trait or serve as a marker/tag. Because it
@@ -58,9 +55,9 @@ fn describe<S: DoorState>(_state: S) -> &'static str {
 describe(Unlocked); // <- constructing the marker value is free: zero bytes at runtime
 ```
 
-**Why this way:** this is the typestate pattern from the
-[Rust Design Patterns](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
-book — encoding state as a marker type makes illegal states impossible to
+**Why this way:** this is the typestate pattern, covered in the
+[Embedded Rust Book's Typestate Programming chapter](https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html)
+— encoding state as a marker type makes illegal states impossible to
 construct in the first place, rather than merely checked at runtime, and
 costs nothing beyond what the type system already tracks at compile time;
 see [Zero-sized types & PhantomData](zero-sized-types-phantomdata.md) for

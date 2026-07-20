@@ -16,18 +16,20 @@ explicit.
 A type that implements `Copy` is duplicated automatically, silently,
 every time it would otherwise be moved — assigning it, passing it to a
 function, anything. This is only allowed for types where duplication is
-trivial and cheap: a bitwise copy with no heap allocation, no reference
-counting, nothing that could meaningfully "go wrong" or cost more than
-copying a few machine words. Simple types like integers, floats, `bool`,
+a trivial, bitwise copy: no heap allocation, no reference counting,
+nothing that could meaningfully "go wrong". (Note that `Copy` does not
+imply *small* — a `[u8; 1_000_000]` is `Copy`, and copying it is a real
+megabyte-sized memcpy, so large arrays are the exception to "cheap".)
+Simple types like integers, floats, `bool`,
 `char`, and tuples/arrays/structs composed entirely of `Copy` types
 qualify; anything that owns a heap allocation (`String`, `Vec<T>`, `Box<T>`)
 cannot be `Copy`, because a bitwise copy of it would produce two owners of
 the same heap memory — exactly what move semantics exists to prevent.
 
-`Clone` is the explicit counterpart: calling `.clone()` produces a deep
-duplicate, however expensive that is for the type in question (allocating
-a whole new backing buffer for a `Vec`, incrementing a reference count for
-an `Rc`). Because it's a visible method call rather than something that
+`Clone` is the explicit counterpart: calling `.clone()` produces whatever
+duplication the type defines — a deep copy for `Vec` or `String`
+(allocating a whole new backing buffer), but a cheap reference-count
+increment for `Rc`/`Arc`. Because it's a visible method call rather than something that
 happens silently on assignment, `Clone` makes potentially-costly
 duplication something you can see in the code, which matters for
 reasoning about performance — a `.clone()` scattered through a hot loop is

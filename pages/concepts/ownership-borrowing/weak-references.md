@@ -22,8 +22,9 @@ at its child, and that child pointing back at its parent) would otherwise
 never reach a reference count of zero — each keeps the other alive
 forever, a memory leak reference counting can't detect or prevent on its
 own. Making one direction of such a cycle a `Weak` reference instead (very
-commonly: children hold a strong reference to a parent's data, parents
-hold only a `Weak` reference back down to children) breaks the cycle
+commonly: parents hold strong references to their children — a parent
+owns its children — while each child holds only a `Weak` reference back
+up to its parent) breaks the cycle
 while still letting either side reach the other when needed.
 
 ## Basic usage example
@@ -77,14 +78,15 @@ let child = Rc::new(Node {
 
 parent.children.borrow_mut().push(Rc::clone(&child));
 
-if let Some(p) = child.parent.borrow().upgrade() { // <- must upgrade; None if parent were already dropped
+let parent_ref = child.parent.borrow().upgrade(); // <- must upgrade; None if parent were already dropped
+if let Some(p) = parent_ref {
     println!("{}'s parent is {}", child.name, p.name);
 }
 ```
 
 **Why this way:** making only one direction of the cycle `Weak`
-(conventionally: children hold a strong reference down, the pointer back
-up to the parent is `Weak`) is what lets `parent`'s strong count reach
+(conventionally: parents hold strong references down to their children,
+the pointer back up to the parent is `Weak`) is what lets `parent`'s strong count reach
 zero and free the tree once it's no longer reachable from outside — the
 [Rust Book](https://doc.rust-lang.org/book/ch15-06-reference-cycles.html)
 walks through exactly this parent/child shape as the standard fix for

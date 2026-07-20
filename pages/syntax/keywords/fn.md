@@ -10,13 +10,7 @@ see_also: ["->"]
 
 ## Explanation
 
-`fn` declares a function:
-
-```
-fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
-```
+`fn` declares a function, giving it a name, a parameter list, and a body.
 
 Every parameter must have an explicit type; unlike closures, `fn`
 parameter and return types are never inferred from usage. Omitting the
@@ -65,7 +59,8 @@ fn largest<T: PartialOrd + Copy>(items: &[T]) -> T {
 let highest_temp = largest(&[21.5, 19.8, 23.1]);
 ```
 
-**Why this way:** a generic `fn` is monomorphized per call site, so this
+**Why this way:** a generic `fn` is monomorphized once per concrete type
+it's instantiated with (calls sharing a type `T` share one copy), so this
 costs nothing at runtime compared to writing a separate `largest_f64`,
 `largest_i32`, etc. — the
 [Book's generics chapter](https://doc.rust-lang.org/book/ch10-01-syntax.html)

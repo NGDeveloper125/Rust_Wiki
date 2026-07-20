@@ -10,12 +10,9 @@ see_also: [fn]
 
 ## Explanation
 
-`->` introduces a function's or closure's return type:
-
-```
-fn add(a: i32, b: i32) -> i32 { a + b }
-let add = |a: i32, b: i32| -> i32 { a + b };
-```
+`->` introduces a function's or closure's return type, as in
+`fn add(a: i32, b: i32) -> i32 { a + b }` or, on a closure,
+`let add = |a: i32, b: i32| -> i32 { a + b };`.
 
 On a closure, `-> Type` is optional and, unlike on `fn`, can usually be
 omitted entirely and inferred from the body — it's only required when the
@@ -79,9 +76,11 @@ pub fn config_keys() -> impl Iterator<Item = &'static str> {
 **Why this way:** returning `impl Trait` rather than a concrete iterator
 type (or a boxed trait object) keeps the return type static-dispatched
 and zero-cost while hiding an implementation detail the caller shouldn't
-depend on — recommended in the
-[API Guidelines](https://rust-lang.github.io/api-guidelines/future-proofing.html)
-for exactly this reason.
+depend on. The
+[API Guidelines' C-NEWTYPE-HIDE](https://rust-lang.github.io/api-guidelines/future-proofing.html)
+discusses the tradeoff against a newtype wrapper — `impl Trait` is the
+lighter option when callers won't need extra bounds like `Debug` on the
+returned type.
 
 ## Embedded Rust Notes
 

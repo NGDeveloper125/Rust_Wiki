@@ -12,16 +12,9 @@ see_also: [break]
 
 `continue` skips the rest of the current loop iteration's body and jumps
 straight to the next iteration's condition check (for `while`/`for`) or
-back to the top of the body (for `loop`):
-
-```
-for x in 0..10 {
-    if x % 2 == 0 {
-        continue;
-    }
-    println!("{x}"); // only odd numbers
-}
-```
+back to the top of the body (for `loop`) — for example, `continue`d inside
+a `for` loop over `0..10` whenever a value is even leaves only the odd
+ones printed.
 
 `continue` never carries a value — unlike `break`, there is no
 `continue value;` form, since "continuing" doesn't produce a result the
@@ -65,9 +58,9 @@ let average = total / count as f64;
 
 **Why this way:** pairing `continue` with a `let ... else` guard keeps the
 "happy path" of the loop body unindented — the
-[Book's control-flow chapter](https://doc.rust-lang.org/book/ch03-05-control-flow.html)
-favors this early-exit shape over wrapping the rest of the iteration in a
-nested `if`.
+[Book's `let...else` section](https://doc.rust-lang.org/book/ch06-03-if-let.html)
+frames this "stay on the happy path" shape as the reason `let...else`
+exists, over wrapping the rest of the iteration in a nested `if`.
 
 ### Scenario: Validating input
 

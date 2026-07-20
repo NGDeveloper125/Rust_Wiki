@@ -11,13 +11,8 @@ see_also: [line-comment]
 ## Explanation
 
 `/* ... */` comments out everything between the delimiters, including
-line breaks:
-
-```
-/* this whole
-   block is ignored */
-let x = 5;
-```
+line breaks — `/* this whole block is ignored */` works the same whether
+it stays on one line or spans several.
 
 Unlike C, Rust block comments **nest**: `/* outer /* inner */ still outer */`
 is a single, correctly-closed comment — the compiler tracks nesting depth
@@ -28,8 +23,8 @@ comment out a chunk of code that itself already contains a block comment.
 
 ```
 fn main() {
-    /* <- this is a block comment: everything up to the matching `*/` is ignored,
-       even across multiple lines */
+    /* <- this is a block comment: everything up to the matching
+       closing delimiter is ignored, even across multiple lines */
     let x = 5;
     /* nesting works: /* an inner comment */ doesn't end the outer one early */
     println!("{x}");
@@ -61,14 +56,18 @@ fn flaky_retry_logic() {
 }
 */
 // <- the whole block above (including its own // comments) is inert;
-//    because /* */ nests, a stray */ inside the disabled code can't
-//    accidentally close this wrapper early
+//    because /* */ nests, any *balanced* inner /* ... */ pair in the
+//    disabled code can't accidentally close this wrapper early
 
 #[test]
 fn stable_retry_logic() {
     assert_eq!(retry_with_backoff(0), Ok(()));
 }
 ```
+
+Note the limit of the nesting guarantee: an *unmatched* stray `*/` in the
+disabled code (say, inside a string literal) still closes the wrapper at
+that point — nesting only protects properly paired inner comments.
 
 **Why this way:** this is a deliberately temporary debugging aid, not a
 substitute for `#[ignore]` — once the investigation is done, either fix

@@ -10,11 +10,7 @@ see_also: [integer-decimal, integer-hexadecimal, integer-binary]
 
 ## Explanation
 
-A base-8 integer literal, prefixed with `0o`:
-
-```
-let permissions = 0o755;
-```
+A base-8 integer literal, prefixed with `0o`, as in `0o755`.
 
 Note the letter `o`, not a digit `0` — unlike C's ambiguous leading-zero
 octal notation (`0755`), Rust requires the explicit `0o` prefix, so a
@@ -27,8 +23,9 @@ misinterpreted as octal.
 let mode = 0o644; // <- `0o` prefix marks a base-8 (octal) integer literal
 ```
 
-**Restriction:** only digits `0`–`7` are legal after the `0o` prefix —
-`0o8` is a compile error.
+**Restriction:** only *digits* `0`–`7` may appear after the `0o` prefix —
+`0o8` is a compile error (underscores and a type suffix like `0o644_u16`
+are still allowed).
 
 ## Best practices & deeper information
 

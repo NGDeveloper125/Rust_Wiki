@@ -10,12 +10,8 @@ see_also: [float-literal]
 
 ## Explanation
 
-`f32` and `f64` pin a floating-point literal's type explicitly:
-
-```
-let a = 1.0f32;
-let b = 2.5_f64;
-```
+`f32` and `f64` pin a floating-point literal's type explicitly, written
+directly after the digits, as in `1.0f32` or `2.5_f64`.
 
 `f64` is the default when no suffix and no other context pins the type —
 it has more precision than `f32` at the cost of double the memory, and is

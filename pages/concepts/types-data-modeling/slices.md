@@ -58,8 +58,8 @@ fn average(readings: &[f64]) -> f64 { // <- &[f64] accepts a Vec, an array, or a
 let today: Vec<f64> = vec![21.5, 22.0, 21.8];
 let fixed: [f64; 3] = [19.0, 19.5, 20.1];
 
-average(&today);  // Vec derefs to &[f64]
-average(&fixed);  // array derefs to &[f64] too -- same function, no duplication
+average(&today);  // Vec coerces to &[f64] via Deref
+average(&fixed);  // array coerces to &[f64] via an unsized coercion -- same function, no duplication
 ```
 
 **Why this way:** the API Guidelines'

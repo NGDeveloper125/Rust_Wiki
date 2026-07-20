@@ -23,7 +23,9 @@ compile-time-known number (with plain ownership, always exactly one) to a
 runtime-tracked count — a controlled, opt-in relaxation of the ownership
 model rather than an abandonment of it: the value is still always
 eventually dropped deterministically, just at a point determined by
-reference count reaching zero rather than a single scope ending.
+reference count reaching zero rather than a single scope ending — unless
+a reference cycle keeps the count from ever reaching zero (see
+[Weak references](weak-references.md)).
 
 `Rc<T>`/`Arc<T>` grant only shared (`&T`-style) access to the inner value
 by default — they solve "who owns this" but not "how do I mutate it,"
@@ -118,4 +120,8 @@ and reach for `heapless` fixed-capacity structures or static
 (`'static`) references shared via borrowing instead of runtime reference
 counting. When a project *does* set up a global allocator (common on
 larger microcontrollers running an RTOS), `Rc`/`Arc` work exactly as on a
-hosted target.
+hosted target — with one extra caveat for `Arc`: it also requires atomic
+pointer-width compare-and-swap support (`target_has_atomic = "ptr"`). On
+CAS-less targets like `thumbv6m` (Cortex-M0), `Arc` is unavailable and
+the `portable-atomic-util` crate is the usual workaround; `Rc` is
+unaffected.

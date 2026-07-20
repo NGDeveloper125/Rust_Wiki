@@ -11,19 +11,13 @@ see_also: [";"]
 ## Explanation
 
 `{ }` delimits a **block expression** — a sequence of statements followed
-by an optional final expression:
-
-```
-let y = {
-    let x = 1;
-    x + 1
-};
-```
+by an optional final expression.
 
 A block is itself an expression: it evaluates to its final expression (if
 it has no trailing `;`), or to `()` otherwise. Function bodies, `if`/`else`
-arms, loop bodies, and match arms are all block expressions under the
-hood, which is exactly why `if`/`match` can produce values.
+arms, and loop bodies are all block expressions under the hood, which is
+exactly why `if` can produce a value. (A `match` arm's body is any
+expression — a block is just one option there.)
 
 `{ }` is reused for a completely different purpose in `Type { field: value, ... }`
 — a **struct literal** — where it delimits field initializers rather than
@@ -65,24 +59,27 @@ observe.
 
 ### Scenario: Branching on data (pattern matching)
 
-Every `match` arm's body is itself a block expression — `{ }` is what
-lets an arm run several statements before producing its value, while a
-short arm can skip the braces entirely.
+A `match` arm's body is any expression — wrapping it in `{ }` turns it
+into a block expression, which is what lets an arm run several statements
+before producing its value, while a short arm skips the braces entirely.
 
 ```
+enum Status { Ok, Error(u16) }
+
+let status = Status::Error(503);
 let description = match status {
     Status::Ok => "ready",
     Status::Error(code) => { // <- `{` opens a multi-statement arm body
-        log::warn!("request failed with code {code}");
+        eprintln!("request failed with code {code}");
         "failed"
     } // <- `}` closes it; "failed" is this arm's value
 };
 ```
 
-**Why this way:** because every arm is a block expression, all arms must
-produce the same type — this is what lets `match` be used as an
-expression assigned directly to a binding, rather than requiring a
-separate mutable variable set inside each arm.
+**Why this way:** `match` is itself an expression with a single type, so
+every arm — braced block or bare expression — must produce that same
+type. That's what lets `match` be assigned directly to a binding, rather
+than requiring a separate mutable variable set inside each arm.
 
 ## Embedded Rust Notes
 

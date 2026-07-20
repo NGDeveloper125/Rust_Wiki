@@ -10,13 +10,9 @@ see_also: ["Trait bounds", "Traits", "Generics as type classes"]
 ## Explanation
 
 A blanket implementation implements a trait for every type that satisfies
-some bound, all at once, rather than one type at a time:
-
-```
-impl<T: Display> ToString for T {
-    // every Display type gets ToString for free
-}
-```
+some bound, all at once, rather than one type at a time — for instance,
+`impl<T: Display> ToString for T` gives every `Display` type `ToString`
+for free, in a single `impl` block.
 
 This is how, for example, every type implementing `Display` automatically
 gets `.to_string()` in the standard library — the blanket impl covers the

@@ -10,20 +10,15 @@ see_also: [integer-decimal]
 
 ## Explanation
 
-An underscore may be placed anywhere between digits in a numeric literal
-purely to improve readability — it carries no meaning and does not affect
-the value:
+An underscore may be placed almost anywhere within a numeric literal
+purely to improve readability, as in `1_000_000` or `0b1010_0101_u8` — it
+carries no meaning and does not affect the value.
 
-```
-let million = 1_000_000;
-let mask = 0b1010_0101_u8;
-```
-
-It may also appear directly between the digits and a type suffix
-(`1_000_i64`). The only place it's disallowed is inside a tuple index
-(`t.0`, not `t.0_0`) and before the first digit of the number itself —
-`_1` is parsed as an identifier, not a numeric literal starting with an
-underscore.
+It's permitted between digits, immediately after a base prefix
+(`0x_00FF`), trailing (`10_`), before a type suffix (`1_000_i64`), and in
+an exponent. It cannot begin the literal — `_1` lexes as an identifier,
+not a number — and it cannot sit immediately after the decimal point of
+a float: `1._5` is parsed as field access on `1.`, not a digit separator.
 
 ## Basic usage example
 
@@ -32,8 +27,9 @@ let value = 10_000;
 //            ^ digit separator: purely cosmetic, does not affect the value
 ```
 
-**Restriction:** an underscore can't be the very first character of the
-literal — `_1_000` is parsed as an identifier, not a numeric literal.
+**Restriction:** an underscore can't begin the literal (`_1_000` is an
+identifier) or follow a float's decimal point directly (`1._5` is field
+access, not a separator).
 
 ## Best practices & deeper information
 

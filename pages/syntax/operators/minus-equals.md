@@ -13,11 +13,6 @@ see_also: ["-"]
 `-=` subtracts the right operand from the left in place, overloadable via
 `std::ops::SubAssign`.
 
-```
-let mut x = 5;
-x -= 2; // x is now 3
-```
-
 See [`+=`](plus-equals.md) for the general notes on compound assignment
 operators (mutable place required, potentially distinct impl from the
 non-assigning operator).
@@ -41,19 +36,19 @@ use of `-=` — validate first, then update the field in place.
 
 ```
 struct Account {
-    balance: f64,
+    balance: i64, // cents
 }
 
-fn withdraw(account: &mut Account, amount: f64) -> Result<(), &'static str> {
-    if amount > account.balance {
+fn withdraw(account: &mut Account, cents: i64) -> Result<(), &'static str> {
+    if cents > account.balance {
         return Err("insufficient funds");
     }
-    account.balance -= amount; // <- subtracts `amount` from the balance in place
+    account.balance -= cents; // <- subtracts `cents` from the balance in place
     Ok(())
 }
 ```
 
-**Why this way:** checking the invariant (`amount > balance`) before the
+**Why this way:** checking the invariant (`cents > balance`) before the
 `-=` keeps the balance from ever going negative, and updating in place
 through `&mut` avoids a separate read-modify-write statement — see
 [`+=`](plus-equals.md) for the compound-assignment notes shared across

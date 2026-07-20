@@ -14,29 +14,21 @@ see_also: [if]
 of a `let ... else`). It cannot appear on its own — it is always the tail
 of an `if` or `let` construct.
 
-```
-if x > 0 {
-    "positive"
-} else if x < 0 {
-    "negative"
-} else {
-    "zero"
-}
-```
-
 Chained `else if` is not special syntax — it's just an `if` expression
 nested directly inside the `else` branch, formatted without extra braces
 by convention.
 
 In `let PATTERN = expr else { ... };` (let-else), the `else` block runs
 only when the pattern fails to match, and that block is required to
-diverge — it must `return`, `break`, `continue`, or `panic!`, since control
+diverge — it must `return`, `break`, `continue`, `panic!`, or otherwise
+produce type `!` (e.g. `std::process::exit`), since control
 flow cannot continue past it without the pattern's bindings having been
 established.
 
 ## Basic usage example
 
 ```
+let x = 5;
 if x > 0 {
     println!("positive");
 } else {

@@ -11,11 +11,7 @@ see_also: [string-literal]
 ## Explanation
 
 `c"hello"` produces a `&CStr` — a nul-terminated, C-compatible string
-reference — instead of `&str`:
-
-```
-let s: &std::ffi::CStr = c"hello";
-```
+reference — instead of `&str`.
 
 This exists specifically to make passing string constants across an FFI
 boundary to C code ergonomic: the compiler appends the terminating `\0`
@@ -56,10 +52,10 @@ fn device_name() -> &'static CStr {
 
 **Why this way:** a `c"..."` literal produces its nul-terminated bytes at
 compile time, so a fixed constant like this never needs the fallible,
-allocating `CString::new(...).unwrap()` path at runtime — the
-[std docs for `CStr`](https://doc.rust-lang.org/std/ffi/struct.CStr.html)
-describe the literal as the direct replacement for that pattern whenever
-the content is known ahead of time.
+allocating `CString::new(...).unwrap()` path at runtime — it hands back a
+`&'static CStr` directly (see the
+[std docs for `CStr`](https://doc.rust-lang.org/std/ffi/struct.CStr.html)).
+Note `c"..."` literals require Rust 1.77+ and edition 2021 or later.
 
 ## Embedded Rust Notes
 

@@ -12,13 +12,9 @@ see_also: ["Traits", "Trait bounds", "Trait objects & dynamic dispatch (dyn Trai
 Without a class hierarchy or a dependency-injection framework, Rust
 achieves the same decoupling goal — code depending on an abstraction
 rather than a concrete implementation — through trait bounds and trait
-objects directly:
-
-```
-fn run(logger: &impl Logger) { logger.log("started"); }
-// or, if the concrete type must vary at runtime:
-fn run(logger: &dyn Logger) { logger.log("started"); }
-```
+objects directly: a function can accept `&impl Logger` for a
+statically-resolved dependency, or `&dyn Logger` if the concrete type
+must vary at runtime.
 
 `run` depends only on "something implementing `Logger`" — a test can pass
 in a mock implementation, production code can pass in a real one, and
@@ -109,7 +105,7 @@ fn returns_known_user_name() {
 **Why this way:** because handler code only ever calls through
 `UserStore`, this test never starts a server or talks to a real database
 — the
-[Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
+[Rust Book's mock-object example](https://doc.rust-lang.org/book/ch15-05-interior-mutability.html#a-use-case-for-interior-mutability-mock-objects)
 and the wider DI pattern both rely on the trait boundary being the only
 thing production and test code have in common.
 

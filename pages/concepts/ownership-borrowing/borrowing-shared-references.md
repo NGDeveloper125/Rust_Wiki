@@ -22,7 +22,9 @@ access to it.
 
 Any number of shared references to the same value can exist
 simultaneously — this is safe precisely because a shared reference cannot
-mutate through it (see [Immutability by default](immutability-by-default.md)).
+mutate through it (unless the type uses
+[interior mutability](interior-mutability.md); see also
+[Immutability by default](immutability-by-default.md)).
 The tradeoff for that safety is a lifetime constraint: a reference can
 never outlive the value it points to, which the compiler verifies
 statically (see [The borrow checker](borrow-checker.md) and
@@ -41,7 +43,8 @@ println!("{s}"); // s is still usable: borrowing never took ownership
 ```
 
 **Restriction:** a shared reference only permits reading — mutating
-through it, or mutating the original value while any shared reference to
+through it (unless the type uses interior mutability), or mutating the
+original value while any shared reference to
 it is still alive, is rejected at compile time.
 
 ## Best practices & deeper information

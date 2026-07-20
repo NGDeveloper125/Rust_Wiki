@@ -10,11 +10,10 @@ see_also: ["Trait bounds", "Static dispatch & monomorphization", "Const generics
 ## Explanation
 
 Generics let a type or function be written once and used with many
-different concrete types, without duplicating the code for each one:
-
-```
-fn largest<T: PartialOrd>(items: &[T]) -> &T { ... }
-```
+different concrete types, without duplicating the code for each one — a
+function like `fn largest<T: PartialOrd>(items: &[T]) -> &T` works for any
+type `T` that satisfies the bound, instead of needing a separate copy per
+concrete type.
 
 Here `T` stands for "some type, to be determined at each call site,"
 constrained by a [trait bound](../traits-polymorphism/trait-bounds.md)

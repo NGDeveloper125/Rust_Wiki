@@ -10,12 +10,8 @@ see_also: ["Tuple structs", "Type aliases", "The orphan rule & coherence"]
 ## Explanation
 
 The newtype pattern wraps an existing type in a single-field tuple struct
-to give it a distinct identity:
-
-```
-struct Meters(f64);
-struct Seconds(f64);
-```
+to give it a distinct identity — `struct Meters(f64);` and
+`struct Seconds(f64);` are a typical pair.
 
 Even though both wrap `f64`, `Meters` and `Seconds` are different types
 to the compiler — passing a `Seconds` value where `Meters` is expected is
@@ -104,7 +100,7 @@ let raw: u64 = id.into();    // <- unwrap
 ```
 
 **Why this way:** the API Guidelines'
-[C-CONV](https://rust-lang.github.io/api-guidelines/interoperability.html#conversions-use-the-standard-traits-from-asref-asmut-c-conv)
+[C-CONV-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html#conversions-use-the-standard-traits-from-asref-asmut-c-conv)
 recommend the standard `From`/`Into` traits over one-off conversion
 methods — doing so lets the newtype interoperate with any API already
 written against `Into`, for free.

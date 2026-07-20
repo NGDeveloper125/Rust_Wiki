@@ -10,11 +10,8 @@ see_also: [static]
 
 ## Explanation
 
-`const` declares a compile-time constant:
-
-```
-const MAX_POINTS: u32 = 100_000;
-```
+`const` declares a compile-time constant, as in
+`const MAX_POINTS: u32 = 100_000;`.
 
 A `const` must have an explicit type annotation (unlike `let`, type
 inference alone is not enough) and its value must be computable entirely

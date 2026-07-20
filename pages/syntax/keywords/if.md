@@ -10,27 +10,18 @@ see_also: [else, match]
 
 ## Explanation
 
-`if` evaluates a boolean condition and branches accordingly:
-
-```
-if x > 0 {
-    println!("positive");
-}
-```
-
-The condition must be a `bool` — Rust has no implicit truthiness
-conversion from integers, pointers, or `Option`, unlike C or Python.
-Parentheses around the condition are not required (and are conventionally
-omitted); the braces around each branch's body are mandatory, even for a
-single statement.
+`if` evaluates a boolean condition and branches accordingly. The condition
+must be a `bool` — Rust has no implicit truthiness conversion from
+integers, pointers, or `Option`, unlike C or Python. Parentheses around
+the condition are not required (and are conventionally omitted); the
+braces around each branch's body are mandatory, even for a single
+statement.
 
 Critically, `if` is an **expression**, not just a statement: an
 `if`/`else` chain where every branch is a single expression (no trailing
-semicolon) produces a value, and all branches must produce the same type:
-
-```
-let msg = if x > 0 { "positive" } else { "non-positive" };
-```
+semicolon) produces a value, and all branches must produce the same
+type — for example, `if x > 0 { "positive" } else { "non-positive" }`
+evaluates to a `&str`.
 
 An `if` with no matching `else` always has type `()`, since the "value"
 when the condition is false must exist and match the other branch's type.
@@ -42,6 +33,7 @@ testing a `bool`.
 ## Basic usage example
 
 ```
+let x = 5;
 if x > 0 { // <- `if` branches on a boolean condition
     println!("positive");
 }
@@ -117,7 +109,7 @@ fn log_reading(reading: &Reading) {
 
 **Why this way:** `if let` is exactly for the case where only one pattern
 needs handling and the rest can be ignored — the
-[Book's section on `if let`](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+[Book's section on `if let`](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 recommends it over `match` precisely to avoid writing a wildcard `_` arm
 that does nothing.
 

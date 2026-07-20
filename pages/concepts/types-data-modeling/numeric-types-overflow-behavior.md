@@ -15,12 +15,15 @@ no single generic "number" type and no implicit widening between
 different integer types (adding a `u8` and a `u32` directly is a compile
 error; an explicit `as` cast or `.into()` conversion is required).
 
-Overflow behavior is deliberately different between build profiles: in a
-debug build, an operation that overflows its type's range (`255u8 + 1`)
-panics immediately, surfacing the bug during development. In a release
-build, the same operation instead **wraps** silently (`255u8 + 1 == 0`)
-for performance reasons — checking every arithmetic operation at runtime
-in optimized code would cost real, measurable overhead. Where either
+Overflow behavior is deliberately governed by the `overflow-checks`
+compile setting (on by default in debug builds, off in release): when an
+operation on *runtime* values overflows its type's range — say `a + b`
+where `a` is already `255u8` — a checked build panics immediately,
+surfacing the bug during development, while a release build instead
+**wraps** silently (`255u8` + `1` becomes `0`) to avoid the runtime cost
+of checking every operation. (A *constant* overflow the compiler can see
+at compile time, like the literal `255u8 + 1`, is rejected outright as a
+compile error regardless of profile.) Where either
 behavior isn't good enough — you need guaranteed, defined behavior
 regardless of build profile — explicit methods make the choice visible in
 the code itself: `checked_add` (returns `None` on overflow),

@@ -10,12 +10,8 @@ see_also: ["!="]
 
 ## Explanation
 
-`==` tests equality, overloadable via `std::ops::PartialEq` (usually
-obtained via `#[derive(PartialEq)]` rather than hand-written):
-
-```
-if a == b { ... }
-```
+`==` tests equality, overloadable via `std::cmp::PartialEq` (usually
+obtained via `#[derive(PartialEq)]` rather than hand-written).
 
 `PartialEq` is "partial" because equality need not be total — floating
 point `NaN != NaN`, which is why `f32`/`f64` implement `PartialEq` but not
@@ -32,9 +28,10 @@ let b = 5;
 let same = a == b; // <- `==` compares `a` and `b` for equality
 ```
 
-**Restriction:** `==` can't be chained — `a == b == c` doesn't compile,
-since the `bool` result of `a == b` doesn't implement `PartialEq<T>` for
-an arbitrary `T`.
+**Restriction:** `==` can't be chained — `a == b == c` doesn't compile.
+Rust's grammar rejects chained comparison operators outright (rustc
+reports "comparison operators cannot be chained" and suggests
+`a == b && b == c`); the expression never even reaches trait resolution.
 
 ## Best practices & deeper information
 

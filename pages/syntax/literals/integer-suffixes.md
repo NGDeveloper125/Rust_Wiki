@@ -12,19 +12,15 @@ see_also: [integer-decimal]
 
 A type suffix pins an integer literal's type explicitly, written directly
 after the digits with no space: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`,
-`u64`, `i64`, `u128`, `i128`, `usize`, `isize`.
-
-```
-let a = 255u8;
-let b = 10_i64;
-```
+`u64`, `i64`, `u128`, `i128`, `usize`, `isize` — for example `255u8` or
+`10_i64`.
 
 An underscore may appear between the digits and the suffix purely for
 readability (`10_i64` and `10i64` are identical). Without a suffix, the
 compiler infers the type from context — how the value is used, what it's
 assigned to, what function receives it — and only falls back to `i32` if
 nothing else constrains it. `usize`/`isize` are pointer-sized (their width
-depends on the target platplatform) and are the required type for array
+depends on the target platform) and are the required type for array
 indices and lengths.
 
 ## Basic usage example

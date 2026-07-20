@@ -15,10 +15,6 @@ simultaneously a keyword (reserved, cannot be used as an identifier) and
 a literal expression — the only value of its kind is itself, unlike
 numeric literals which have many possible values.
 
-```
-let done: bool = true;
-```
-
 `bool` in Rust is a distinct one-byte type, not an alias for an integer —
 there's no implicit conversion between `bool` and `i32`/`u8`/etc. in
 either direction (an explicit `as` cast is required: `true as i32 == 1`).

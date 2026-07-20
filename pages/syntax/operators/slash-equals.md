@@ -13,11 +13,6 @@ see_also: ["/"]
 `/=` divides the left operand by the right in place, overloadable via
 `std::ops::DivAssign`.
 
-```
-let mut x = 7;
-x /= 2; // x is now 3 (integer truncation, same as `/`)
-```
-
 ## Basic usage example
 
 ```

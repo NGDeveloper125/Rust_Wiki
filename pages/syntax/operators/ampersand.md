@@ -19,7 +19,9 @@ see_also: ["*", "&mut"]
    page — the syntax angle is just: `&` creates a reference, `*`
    (see [`*`](asterisk.md)) follows one back to its target.
 2. **Binary: bitwise AND.** `a & b` between two integers, overloadable via
-   `std::ops::BitAnd`. Also appears in trait-bound-adjacent contexts as
+   `std::ops::BitAnd` (`BitAnd` is also implemented for `bool`, making
+   `a & b` a non-short-circuiting logical AND — relevant when choosing
+   between `&&` and `&`). Also appears in trait-bound-adjacent contexts as
    part of `&` reference types combined with lifetimes: `&'a mut T`.
 
 `&mut expr` / `&mut Type` is the mutable-borrow counterpart, but it is
@@ -27,10 +29,9 @@ its own two-keyword combination rather than a separate single token —
 see [`mut`](../keywords/mut.md).
 
 `&&` is a distinct token (see [`&&`](ampersand-ampersand.md)), not two
-`&` read together, though `&&expr` (a reference to a reference) is valid
-and does get lexed as `&` `&` `expr` in that specific position — a rare
-case where the lexer has to pick between the `&&`-token and two
-`&`-tokens based on what follows.
+`&` read together, though `&&expr` (a reference to a reference) is valid —
+the lexer still produces the single `&&` token there, and it's the
+*parser* that splits it into two `&`s when it appears in borrow position.
 
 ## Basic usage example
 

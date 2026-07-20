@@ -31,9 +31,10 @@ Knowing which one a value lives on matters for two very different
 reasons: performance (stack allocation and deallocation cost is
 effectively zero; heap allocation goes through an allocator and costs
 real, measurable time), and what's possible at all (a
-[recursive type](recursive-types-via-box.md) or a
+[recursive type](../types-data-modeling/recursive-types-via-box.md) or a
 [trait object](../traits-polymorphism/trait-objects-dynamic-dispatch.md)
-*requires* heap indirection, because their size isn't knowable at compile
+*requires* indirection — a pointer of some kind (`Box`, `Rc`, or a plain
+reference) — because their size isn't knowable at compile
 time the way a stack allocation requires).
 
 ## Basic usage example
@@ -60,14 +61,15 @@ struct Board {
 enum GameState {
     Menu,
     Loading(u8),
-    Playing(Box<Board>), // <- PREFER: heap-allocated; GameState's size is one pointer, not 4 KiB, even for `Menu`
+    Playing(Box<Board>), // <- PREFER: heap-allocated; GameState's size is two words instead of ~4 KiB, even for `Menu`
 }
 
 let state = GameState::Playing(Box::new(Board { cells: [[0; 64]; 64] }));
 ```
 
 **Why this way:** an enum's stack size is the size of its largest
-variant — inlining a large `Board` directly would force `Menu` and
+variant (plus a tag, unless niche optimization absorbs it) — inlining a
+large `Board` directly would force `Menu` and
 `Loading` to reserve the same 4 KiB on the stack even though they never
 use it. Boxing the large variant is the standard fix, covered in the
 [Rust Book](https://doc.rust-lang.org/book/ch15-01-box.html) as one of
