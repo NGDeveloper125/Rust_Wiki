@@ -14,12 +14,14 @@ As a prefix operator, `!` is logical NOT on `bool` and bitwise complement
 on integers, overloadable via `std::ops::Not`:
 
 ```
+let done = false;
 let not_done = !done;      // bool: negation
 let flipped = !0b1010u8;   // integer: bitwise complement -> 0b11110101
 ```
 
-Immediately after an identifier or path with no space, `!` instead marks a
-**macro invocation** — a completely unrelated meaning:
+After a path (like `println` or `vec`) and followed by a delimited group
+of tokens, `!` instead marks a **macro invocation** — a completely
+unrelated meaning:
 
 ```
 println!("hi");
@@ -27,8 +29,10 @@ vec![1, 2, 3];
 ```
 
 `ident!` is not the `Not` trait applied to `ident`; it's the macro-call
-syntax, and the parser distinguishes it purely by the identifier
-immediately preceding the `!` with no space or operator between them.
+syntax. The distinction is purely positional — a `!` following a path and
+followed by a `(...)`/`[...]`/`{...}` group is a macro invocation, while
+a `!` starting an expression is prefix negation (whitespace doesn't
+matter: `println ! ("hi")` compiles fine).
 
 `!` alone (no operand, in type position) is also the **never type**
 (`fn diverges() -> !`) — the type of an expression that never produces a
@@ -68,9 +72,9 @@ fn load(config: &Config) {
 }
 ```
 
-**Why this way:** the early-return/early-panic style is favored by the
-[Rust Design Patterns' idioms](https://rust-unofficial.github.io/patterns/idioms.html)
-over deeply nesting the success path inside a positive `if`, and `!`
+**Why this way:** the early-return/early-panic style — guard clauses
+that reject bad input up front instead of deeply nesting the success
+path inside a positive `if` — is widely accepted practice, and `!`
 combined with a guard clause is the idiomatic way to write it.
 
 ## Embedded Rust Notes

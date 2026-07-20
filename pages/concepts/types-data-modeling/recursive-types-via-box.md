@@ -23,11 +23,12 @@ enum List {
 ```
 
 Wrapping the recursive occurrence in [`Box<T>`](../ownership-borrowing/smart-pointers-box.md)
-breaks the infinite-size problem: a `Box` is always exactly one
-pointer-sized value regardless of what it points to, so `List` above has
-a fixed, computable size (an enum discriminant plus the larger of its
-variants, one of which is just a pointer) even though it logically
-contains an unbounded chain of itself. This is the standard, idiomatic
+breaks the infinite-size problem: for any sized pointee, a `Box` is one
+pointer-sized value regardless of what it points to (a trait object or
+slice makes it a two-word fat pointer, but `Box<List>` here points to a
+sized `List`), so `List` above has a fixed, computable size (an enum
+discriminant plus the larger of its variants, one of which is just a
+pointer) even though it logically contains an unbounded chain of itself. This is the standard, idiomatic
 way to write linked lists, trees, and other self-referential data
 structures in Rust — the indirection through the heap is exactly what
 makes the recursion possible to represent at all.
@@ -55,8 +56,9 @@ iterative form instead.
 ### Scenario: Branching on data (pattern matching)
 
 Matching directly on a `Box`-recursive enum reads no differently than
-matching any other enum — the compiler auto-derefs through the `Box` at
-each step of the recursion.
+matching any other enum — each arm binds `rest: &Box<List>`, and the
+recursive `sum(rest)` call deref-coerces the `&Box<List>` to `&List` at
+each step.
 
 ```
 enum List {

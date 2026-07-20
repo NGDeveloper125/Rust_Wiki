@@ -65,9 +65,9 @@ let average = total / count as f64;
 
 **Why this way:** pairing `continue` with a `let ... else` guard keeps the
 "happy path" of the loop body unindented — the
-[Book's control-flow chapter](https://doc.rust-lang.org/book/ch03-05-control-flow.html)
-favors this early-exit shape over wrapping the rest of the iteration in a
-nested `if`.
+[Book's `let...else` section](https://doc.rust-lang.org/book/ch06-03-if-let.html)
+frames this "stay on the happy path" shape as the reason `let...else`
+exists, over wrapping the rest of the iteration in a nested `if`.
 
 ### Scenario: Validating input
 

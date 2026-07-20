@@ -13,11 +13,15 @@ The orphan rule says you may only implement a trait for a type if either
 the trait or the type is defined in your own crate. You cannot, from a
 third crate, implement a foreign trait (say, `std`'s `Display`) for a
 foreign type (say, `Vec<T>`) — both are "orphans" to your crate, and the
-rule forbids it.
+rule forbids it. (More precisely, since RFC 2451: an impl is also allowed
+when one of your local types appears as a generic parameter of the
+foreign trait — `impl PartialEq<Meters> for f64` is legal — and
+`#[fundamental]` types like `&T` and `Box<T>` are "looked through" when
+locality is judged, so `impl ForeignTrait for Box<LocalType>` is allowed.)
 
 This exists to guarantee **coherence**: for any given `(Trait, Type)`
-pair, there is exactly one implementation in the entire program, ever,
-with no possibility of two different crates each providing a conflicting
+pair, there is at most one implementation in the entire program, with no
+possibility of two different crates each providing a conflicting
 one. Without this guarantee, adding a dependency could silently change
 which implementation of a trait gets used somewhere else in your
 program, or the compiler could face a genuine ambiguity it has no
@@ -71,8 +75,9 @@ println!("{}", Readings(vec![1.0, 2.5, 3.75]));
 **Why this way:** the newtype costs one wrapper type in exchange for full
 freedom to implement anything on it — the
 [Rust Design Patterns book](https://rust-unofficial.github.io/patterns/patterns/behavioural/newtype.html)
-documents this as the standard route around the orphan rule, rather than
-forking or vendoring the foreign crate.
+documents the newtype pattern, and wrapping a foreign type in a local one
+is the standard route around the orphan rule, rather than forking or
+vendoring the foreign crate.
 
 ### Scenario: Converting between types
 

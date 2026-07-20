@@ -28,7 +28,9 @@ let x = 8u8 >> 3; // <- `>>` shifts the bits of `8u8` right by 3
 ```
 
 **Restriction:** as with `<<`, shifting by an amount greater than or
-equal to the type's bit width panics in debug builds.
+equal to the type's bit width panics in debug builds; with overflow
+checks off, the shift amount is masked to the bit width (defined
+behavior, but usually not what you meant).
 
 ## Best practices & deeper information
 
@@ -51,9 +53,8 @@ assert_eq!(flags, 0b0011);
 
 **Why this way:** shifting before masking (or masking before shifting,
 for a low field) is the standard field-extraction idiom for packed data —
-the [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/literals.html)
-bitwise-operator examples use the same shift-then-mask shape for
-unpacking multi-field bytes.
+[Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/literals.html)
+shows the basic shift and mask operators these idioms build on.
 
 ## Embedded Rust Notes
 

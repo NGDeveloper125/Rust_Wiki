@@ -24,9 +24,11 @@ see_also: [","]
 - **Function call / tuple-struct or enum-variant construction:**
   `f(a, b)`, `Point(1, 2)`, `Some(x)`.
 
-Which meaning applies is determined entirely by what (if anything)
-immediately precedes the `(` — an identifier/path means a call or
-construction; nothing (or an operator) means grouping or a tuple.
+Which meaning applies depends on position and content: `(` directly
+after any expression (a name, a call's result, an indexed element) is a
+call or construction; `(` starting an expression is grouping or a tuple —
+and between those two, the presence of a comma inside is what makes it a
+tuple.
 
 ## Basic usage example
 
@@ -71,8 +73,9 @@ enum Shape {
     Rectangle(f64, f64),
 }
 
+let shape = Shape::Circle(2.0); // <- `( )` constructs the variant...
 let area = match shape {
-    Shape::Circle(r) => std::f64::consts::PI * r * r, // <- `( )` destructures the variant's payload
+    Shape::Circle(r) => std::f64::consts::PI * r * r, // <- ...and `( )` destructures it again here
     Shape::Rectangle(w, h) => w * h,
 };
 ```

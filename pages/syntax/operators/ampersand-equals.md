@@ -49,10 +49,12 @@ status &= !FLAG_PENDING; // <- clears the PENDING bit in place, keeping the othe
 assert_eq!(status, FLAG_ACTIVE | FLAG_ARCHIVED);
 ```
 
-**Why this way:** `flags &= !bit` is the standard clear-a-bit idiom
-documented on [`BitAndAssign`](https://doc.rust-lang.org/std/ops/trait.BitAndAssign.html) —
-see [`+=`](plus-equals.md) for the fuller treatment of compound-assignment
-operators shared across `+=`, `-=`, `*=`, and the rest of the family.
+**Why this way:** `flags &= !bit` is the standard bit-clearing idiom in
+systems code generally, built on the
+[`BitAndAssign`](https://doc.rust-lang.org/std/ops/trait.BitAndAssign.html)
+trait behind `&=` — see [`+=`](plus-equals.md) for the fuller treatment
+of compound-assignment operators shared across `+=`, `-=`, `*=`, and the
+rest of the family.
 
 ## Embedded Rust Notes
 

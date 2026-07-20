@@ -52,7 +52,8 @@ fn firmware_path() -> &'static CStr {
 **Why this way:** combining raw and C-string semantics avoids the double
 burden of escaping every backslash *and* manually appending a nul
 terminator — see [C string literal](c-string-literal.md) for the
-nul-termination behavior this form inherits unchanged.
+nul-termination behavior this form inherits unchanged. Like `c"..."`,
+`cr"..."` requires Rust 1.77+ and edition 2021 or later.
 
 ## Embedded Rust Notes
 

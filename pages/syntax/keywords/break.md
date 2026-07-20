@@ -13,6 +13,7 @@ see_also: [continue, loop]
 `break` exits the nearest enclosing loop immediately:
 
 ```
+let done = true;
 loop {
     if done {
         break;
@@ -40,9 +41,11 @@ let result = loop {
 };
 ```
 
-**Restriction:** `break value;` is only legal inside `loop` — `while` and
-`for` loops may run zero iterations, so `break` cannot carry a value out of
-them.
+**Restriction:** `break value;` is legal inside `loop` and inside a
+labeled block (`'a: { ... break 'a value; }`), but not in `while`/`for` —
+those loops can terminate without executing any `break` (the condition
+turns false or the iterator runs out), so a loop value would have no
+defined result.
 
 ## Best practices & deeper information
 
@@ -102,7 +105,9 @@ while let Some(cmd) = queue.pop() {
 directly than a boolean flag checked after the match, and the
 [Reference's loop expressions](https://doc.rust-lang.org/reference/expressions/loop-expr.html)
 confirm `break` is legal from any position textually inside the loop body,
-including nested inside a `match`.
+including nested inside a `match` — with two exceptions: it cannot cross
+a closure or `async` block boundary to exit an outer loop, and an
+unlabeled `break` always targets the nearest enclosing loop.
 
 ## Embedded Rust Notes
 

@@ -19,9 +19,11 @@ the module/crate as a whole:
 //! This module implements the parser's tokenizer.
 ```
 
-Because it documents its *container*, `//!` is the only doc-comment form
-that can appear with nothing syntactically after it at all (e.g. at the
-top of `lib.rs`/`main.rs`, documenting the whole crate).
+Because it documents its *container*, `//!` (along with its block form
+[`/*! */`](inner-block-doc-comment.md)) can appear with nothing
+syntactically after it at all (e.g. at the top of `lib.rs`/`main.rs`,
+documenting the whole crate) — something no *outer* doc-comment form
+can do.
 
 ## Basic usage example
 
@@ -49,13 +51,15 @@ docs are reached.
 //! # my_crate
 //!
 //! A small library for parsing human-readable duration strings like
-//! `"5s"` or `"10m"` into a [`std::time::Duration`].
+//! `"5s"` or `"10m"` into whole seconds.
 // <- this `//!` block documents the crate itself; `cargo doc` renders it
 //    as the top-level page for my_crate
 
 pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
     todo!()
 }
+
+pub struct ParseError;
 ```
 
 **Why this way:** `cargo doc` uses the crate-root `//!` block as the
@@ -73,18 +77,20 @@ on every item inside.
 //! Fixed-capacity ring buffer.
 //!
 //! All indices are taken modulo the buffer's capacity; capacity must be
-//! a power of two, enforced by [`RingBuffer::new`].
+//! a power of two, enforced by the constructor.
 // <- states the module-wide invariant once, instead of on every method
 
-pub struct RingBuffer<T> { /* ... */ }
+pub struct RingBuffer<T> {
+    items: Vec<T>,
+    head: usize,
+}
 ```
 
 **Why this way:** stating an invariant at the module level (`//!`) rather
 than duplicating it across every method's `///` comment keeps the
-guarantee in exactly one place — the
-[API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html)
-favor documenting an invariant where it's enforced, not everywhere it's
-relied upon.
+guarantee in exactly one place — when the invariant changes, there's one
+paragraph to update instead of a scattered set of near-copies that will
+inevitably drift apart.
 
 ## Embedded Rust Notes
 

@@ -61,9 +61,9 @@ assert_eq!(checking.balance, 13_250);
 
 **Why this way:** a `&mut self` method that uses `+=` on its own field
 keeps the mutation local and auditable — the alternative of returning a
-new `Account` on every deposit would work but adds allocation and
-ceremony for a value type that's meant to change over its lifetime, per
-the mutability guidance in [the Book](https://doc.rust-lang.org/book/ch05-03-method-syntax.html).
+new `Account` on every deposit would work but adds ceremony for a value
+type that's meant to change over its lifetime. The `&mut self` method
+syntax itself is covered in [the Book](https://doc.rust-lang.org/book/ch05-03-method-syntax.html).
 
 ### Scenario: Working with collections
 

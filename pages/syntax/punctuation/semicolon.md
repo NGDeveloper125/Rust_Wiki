@@ -15,9 +15,9 @@ expression-oriented language — turns what would otherwise be an
 expression into a statement that evaluates to `()`:
 
 ```
-let x = 5;      // statement
-x + 1;          // expression, discarded, statement evaluates to ()
-x + 1           // expression, this IS the value (no semicolon)
+let x = 5;          // statement
+x + 1;              // expression, discarded; the statement evaluates to ()
+let y = { x + 1 };  // no `;` on `x + 1`: that expression IS the block's value
 ```
 
 This is why leaving off the trailing semicolon on a block's last line
@@ -56,6 +56,15 @@ final, successful value must not have one — mixing this up inside a
 above describes, and it's easy to hit in a longer function.
 
 ```
+struct Config { raw: String }
+enum ConfigError { Empty, Io(std::io::Error) }
+impl From<std::io::Error> for ConfigError {
+    fn from(e: std::io::Error) -> Self { ConfigError::Io(e) }
+}
+fn parse_config(text: &str) -> Result<Config, ConfigError> {
+    Ok(Config { raw: text.to_string() })
+}
+
 fn load_config(path: &str) -> Result<Config, ConfigError> {
     let text = std::fs::read_to_string(path)?; // <- `;` ends this statement
     if text.is_empty() {
@@ -66,12 +75,11 @@ fn load_config(path: &str) -> Result<Config, ConfigError> {
 }
 ```
 
-**Why this way:** `clippy` specifically watches for this class of mistake
-via lints like
-[`unit_arg`](https://rust-lang.github.io/rust-clippy/master/#unit_arg) —
-but the more reliable habit is to read a function's last line and ask
-"is this a statement or the return value?" before deciding whether it
-needs a `;`.
+**Why this way:** the compiler catches this mistake as a type mismatch
+(`expected Result<Config, ConfigError>, found ()`) pointing at the
+function body — but the more reliable habit is to read a function's last
+line and ask "is this a statement or the return value?" before deciding
+whether it needs a `;`.
 
 ### Scenario: Working with collections
 

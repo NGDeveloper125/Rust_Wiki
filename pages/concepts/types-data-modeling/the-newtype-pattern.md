@@ -104,7 +104,7 @@ let raw: u64 = id.into();    // <- unwrap
 ```
 
 **Why this way:** the API Guidelines'
-[C-CONV](https://rust-lang.github.io/api-guidelines/interoperability.html#conversions-use-the-standard-traits-from-asref-asmut-c-conv)
+[C-CONV-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html#conversions-use-the-standard-traits-from-asref-asmut-c-conv)
 recommend the standard `From`/`Into` traits over one-off conversion
 methods — doing so lets the newtype interoperate with any API already
 written against `Into`, for free.

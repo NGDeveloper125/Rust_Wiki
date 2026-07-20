@@ -66,11 +66,11 @@ struct SensorId(u32);
 
 impl Eq for SensorId {} // only allowed because SensorId already implements PartialEq
 
-fn all_present<T: Eq>(ids: &[T], target: &T) -> bool { // <- Eq usable here because SensorId satisfies it
+fn has_target<T: Eq>(ids: &[T], target: &T) -> bool { // <- Eq usable here because SensorId satisfies it
     ids.contains(target)
 }
 
-all_present(&[SensorId(1), SensorId(2)], &SensorId(2));
+has_target(&[SensorId(1), SensorId(2)], &SensorId(2));
 ```
 
 **Why this way:** `Eq` adds no methods of its own — it only asserts that
@@ -105,10 +105,10 @@ report(&DiskAlert);
 ```
 
 **Why this way:** writing `fn report<T: Reportable + Named>` would be
-redundant — the
-[Rust Book](https://doc.rust-lang.org/book/ch10-02-traits.html) treats a
-supertrait bound as already implying its own bound is satisfied wherever
-the sub-trait's bound is required.
+redundant — a supertrait bound is elaborated, so `T: Reportable` already
+implies `T: Named` wherever it's required, as the
+[Rust Reference's section on supertraits](https://doc.rust-lang.org/reference/items/traits.html#supertraits)
+describes.
 
 ## Embedded Rust Notes
 

@@ -16,10 +16,12 @@ see_also: [">>"]
 let x = 1u8 << 3; // 8
 ```
 
-Shifting by an amount greater than or equal to the type's bit width is a
-panic in debug builds (and unspecified/masked behavior to guard against in
-release — check `checked_shl`/`wrapping_shl` for defined behavior at the
-boundary). `<<` on integers is a pure bit-shift, unrelated to C++'s
+Shifting by an amount greater than or equal to the type's bit width
+panics in debug builds; when overflow checks are off (release builds),
+Rust guarantees the shift amount is masked to the type's bit width —
+defined behavior, never UB, though rarely what you meant (use
+`checked_shl`/`wrapping_shl` to make the boundary case explicit). `<<` on
+integers is a pure bit-shift, unrelated to C++'s
 overload of `<<` for stream output — Rust uses `{}`/`write!` and the
 `Display`/`Debug` traits for formatting instead.
 
@@ -30,8 +32,10 @@ let x = 1u8 << 3; // <- `<<` shifts the bits of `1u8` left by 3
 ```
 
 **Restriction:** shifting by an amount greater than or equal to the
-type's bit width panics in debug builds; use `checked_shl`/`wrapping_shl`
-for defined behavior at the boundary.
+type's bit width panics in debug builds; with overflow checks off, the
+shift amount is masked to the bit width (defined, but usually not what
+you meant) — use `checked_shl`/`wrapping_shl` to make the boundary case
+explicit.
 
 ## Best practices & deeper information
 

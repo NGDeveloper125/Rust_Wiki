@@ -17,9 +17,11 @@ a fixed-size array of bytes — rather than a `&str`:
 let bytes: &[u8; 5] = b"hello";
 ```
 
-Like a byte literal, only ASCII content is allowed (no arbitrary Unicode
-escapes beyond ASCII/byte escapes). Useful for binary protocol constants
-or magic-number byte sequences where you specifically want raw bytes, not
+Like a byte literal, the *character* content must be ASCII — but `\xHH`
+byte escapes reach the full `0x00`–`0xFF` range (`b"\x89PNG"` is legal,
+with byte `0x89` = 137). What you can't write directly is a non-ASCII
+*character* like `b"café"`. Useful for binary protocol constants or
+magic-number byte sequences where you specifically want raw bytes, not
 validated UTF-8 text.
 
 ## Basic usage example
@@ -28,8 +30,9 @@ validated UTF-8 text.
 let magic: &[u8; 3] = b"GIF"; // <- byte string literal: produces `&[u8; N]`, not `&str`
 ```
 
-**Restriction:** only ASCII content is allowed — a byte string can't
-contain arbitrary Unicode the way a normal string literal can.
+**Restriction:** *character* content must be ASCII (`b"café"` is an
+error), but `\xHH` escapes reach any byte `0x00`–`0xFF` — which is how a
+byte string still expresses non-ASCII bytes like `b"\xFF"`.
 
 ## Best practices & deeper information
 
@@ -70,10 +73,9 @@ fn parse_gzip_header(data: &[u8]) -> Result<(), &'static str> {
 
 **Why this way:** validating the signature bytes before doing any real
 parsing work turns a malformed-input case into one obviously-correct
-check, instead of discovering the mismatch deep inside a
-partially-completed parse — the validate-at-the-boundary principle
-[Effective Rust](https://effective-rust.com/) argues for throughout its
-guidance on robust APIs.
+check up front, instead of discovering the mismatch deep inside a
+partially-completed parse — rejecting bad input at the boundary keeps the
+rest of the parser working only with data it has already vetted.
 
 ## Embedded Rust Notes
 

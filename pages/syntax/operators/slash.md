@@ -51,10 +51,10 @@ let average_ms_f = total_ms as f64 / sample_count as f64; // 301.25, precise
 ```
 
 **Why this way:** casting to a float before dividing is the standard fix
-when truncation would silently discard a meaningful fraction — the
-[standard library docs on integer types](https://doc.rust-lang.org/std/primitive.i32.html#method.checked_div)
-are explicit that integer `/` always rounds toward zero, never to the
-nearest value.
+when truncation would silently discard a meaningful fraction — integer
+`/` always rounds toward zero, never to the nearest value, a contrast the
+[`div_euclid` docs](https://doc.rust-lang.org/std/primitive.i32.html#method.div_euclid)
+spell out against Euclidean division.
 
 ### Scenario: Handling and propagating errors
 
@@ -72,11 +72,12 @@ assert_eq!(average(100, 0), None); // no panic: an empty batch is a normal case
 ```
 
 **Why this way:** `checked_div` makes the zero-divisor case an explicit
-branch instead of an unconditional panic, which the
+branch instead of an unconditional panic — the
 [standard library docs](https://doc.rust-lang.org/std/primitive.i32.html#method.checked_div)
-recommend whenever the divisor comes from data the function doesn't
-fully control (as opposed to a compile-time-known nonzero constant,
-where bare `/` is fine).
+document that it returns `None` on a zero divisor. Reaching for it
+whenever the divisor comes from data the function doesn't fully control
+(as opposed to a compile-time-known nonzero constant, where bare `/` is
+fine) is this wiki's recommendation.
 
 ## Embedded Rust Notes
 

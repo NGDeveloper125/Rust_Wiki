@@ -16,8 +16,9 @@ method defined on `T` directly on the smart pointer (`my_box.method()`
 instead of `(*my_box).method()`), because the compiler automatically
 inserts as many derefs as needed to find a matching method.
 
-This coercion is what makes `Box<T>`, `Rc<T>`, `String` (which derefs to
-`&str`), and `Vec<T>` (which derefs to `&[T]`) feel ergonomic to use day
+This coercion is what makes `Box<T>`, `Rc<T>`, `String` (whose
+`Deref::Target` is `str`, so `&String` coerces to `&str`), and `Vec<T>`
+(whose target is `[T]`, so `&Vec<T>` coerces to `&[T]`) feel ergonomic to use day
 to day — you rarely need to think about the wrapper layer at all, because
 method calls, and reference coercions in function-argument position, see
 straight through it to the underlying type.
@@ -64,9 +65,9 @@ greet("Grace"); // a string literal is already &str; no coercion needed
 coercion covers that direction for free) plus string literals and other
 `&str`-producing sources, so it's strictly the more widely callable
 parameter type — the
-[API Guidelines](https://rust-lang.github.io/api-guidelines/flexibility.html#functions-minimize-assumptions-about-parameters-by-using-generic-types-c-generic)
-recommend accepting the most general borrowed form a function can, and
-`&str` over `&String` is the canonical example.
+[Rust Book](https://doc.rust-lang.org/book/ch04-03-slices.html#string-slices-as-parameters)
+recommends `&str` over `&String` as the more general parameter type for
+exactly this reason.
 
 ### Scenario: Writing generic code
 
@@ -88,7 +89,7 @@ println!("{}", shout(String::from("also quiet")));
 **Why this way:** writing generic code against `AsRef<str>` lets one
 function serve owned strings, borrowed slices, and smart-pointer-wrapped
 strings without the caller manually unwrapping anything — the
-[API Guidelines](https://rust-lang.github.io/api-guidelines/interoperability.html#c-generic)
+[API Guidelines](https://rust-lang.github.io/api-guidelines/flexibility.html#functions-minimize-assumptions-about-parameters-by-using-generics-c-generic)
 recommend this for functions that only need read access to string-like
 data.
 

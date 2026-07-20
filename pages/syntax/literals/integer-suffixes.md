@@ -24,7 +24,7 @@ readability (`10_i64` and `10i64` are identical). Without a suffix, the
 compiler infers the type from context — how the value is used, what it's
 assigned to, what function receives it — and only falls back to `i32` if
 nothing else constrains it. `usize`/`isize` are pointer-sized (their width
-depends on the target platplatform) and are the required type for array
+depends on the target platform) and are the required type for array
 indices and lengths.
 
 ## Basic usage example

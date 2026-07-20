@@ -60,7 +60,7 @@ including an early `return`.
 
 ```
 struct LogSession {
-    file: std::fs::File,
+    file: std::io::BufWriter<std::fs::File>, // <- BufWriter buffers in userspace, so flushing is meaningful
 }
 
 impl Drop for LogSession {
@@ -70,14 +70,13 @@ impl Drop for LogSession {
     }
 }
 
-fn write_entries(session: &LogSession, entries: &[&str]) -> std::io::Result<()> {
+fn write_entries(session: &mut LogSession, entries: &[&str]) -> std::io::Result<()> {
     use std::io::Write;
-    let mut file = &session.file;
     for e in entries {
         if e.is_empty() {
-            return Ok(()); // <- session still gets flushed: Drop runs when it goes out of scope
+            return Ok(()); // <- only the borrow of session ends here; Drop (and the flush) fires at the end of the owning scope
         }
-        writeln!(file, "{e}")?;
+        writeln!(session.file, "{e}")?;
     }
     Ok(())
 }
@@ -97,7 +96,7 @@ returns early or panics before calling `.commit()`, `Drop` rolls the
 transaction back automatically instead of leaving it half-applied.
 
 ```
-// [dependencies] sqlx = "0.8", tokio = { version = "1", features = ["full"] }
+// [dependencies] sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }, tokio = { version = "1", features = ["full"] }
 use sqlx::PgPool;
 
 async fn transfer_funds(pool: &PgPool, from: i64, to: i64, cents: i64) -> sqlx::Result<()> {

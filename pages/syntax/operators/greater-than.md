@@ -10,17 +10,16 @@ see_also: ["<"]
 
 ## Explanation
 
-`>` is the greater-than comparison, overloadable via `std::ops::PartialOrd`.
+`>` is the greater-than comparison, overloadable via `std::cmp::PartialOrd`.
 
 ```
 if a > b { ... }
 ```
 
 Like `<`, `>` doubles as the **closing** delimiter for a generic parameter
-list (`Vec<T>`), which is the more common source of parser-ambiguity
-complaints — nested generics like `Vec<Vec<T>>` used to require a space
-before Rust's parser was taught to split `>>` into two closing angle
-brackets itself (no space needed in modern Rust).
+list (`Vec<T>`) — for nested generics like `Vec<Vec<T>>`, the parser
+splits the `>>` token into two closing angle brackets itself, so no space
+is needed between them.
 
 ## Basic usage example
 
@@ -57,11 +56,13 @@ let largest = orders.iter().reduce(|a, b| if b.total > a.total { b } else { a })
 println!("{:?}", largest.map(|o| o.id));
 ```
 
-**Why this way:** the [std iterator docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.reduce)
-show `reduce`/`fold` with a manual comparison as the way to find an
-extreme value over types without a total order; see [`<`](less-than.md)
-for sorting the same kind of data with a comparator instead of just
-finding one extreme.
+**Why this way:** a `reduce`/`fold` with a manual `>` comparison is one
+way to find an extreme value over types without a total order; the
+standard tools for floats are
+`max_by(|a, b| a.total.partial_cmp(&b.total).unwrap())` or
+`f64::total_cmp` as the comparator. See [`<`](less-than.md) for sorting
+the same kind of data with a comparator instead of just finding one
+extreme.
 
 ## Embedded Rust Notes
 

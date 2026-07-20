@@ -98,9 +98,11 @@ impl Plugin for Logger { // <- still compiles: on_shutdown's default covers it
 
 **Why this way:** a required method added to a public trait is a breaking
 change for every downstream implementer; a method added with a default
-body is not — the
-[API Guidelines on future-proofing](https://rust-lang.github.io/api-guidelines/future-proofing.html)
-is built around exactly this kind of forward-compatible trait evolution.
+body is usually *not* — [RFC 1105](https://rust-lang.github.io/rfcs/1105-api-evolution.html)
+classifies it as a minor change (though a name collision with an inherent
+method or another trait in scope can still cause downstream ambiguity
+errors). Designing traits so behavior can be extended this way is a core
+forward-compatibility technique.
 
 ## Embedded Rust Notes
 

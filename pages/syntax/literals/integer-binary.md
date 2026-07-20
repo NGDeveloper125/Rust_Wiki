@@ -25,8 +25,9 @@ nibbles/bytes, as shown above — purely cosmetic, no effect on the value.
 let mask = 0b0000_0001; // <- `0b` prefix marks a base-2 (binary) integer literal
 ```
 
-**Restriction:** only the digits `0` and `1` are legal after the `0b`
-prefix — anything else is a compile error.
+**Restriction:** only the *digits* `0` and `1` may appear after the `0b`
+prefix — any other digit is a compile error (though underscores and a
+type suffix like `0b1010_u8` are still allowed).
 
 ## Best practices & deeper information
 

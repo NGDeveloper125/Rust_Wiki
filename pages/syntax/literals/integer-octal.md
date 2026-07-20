@@ -27,8 +27,9 @@ misinterpreted as octal.
 let mode = 0o644; // <- `0o` prefix marks a base-8 (octal) integer literal
 ```
 
-**Restriction:** only digits `0`–`7` are legal after the `0o` prefix —
-`0o8` is a compile error.
+**Restriction:** only *digits* `0`–`7` may appear after the `0o` prefix —
+`0o8` is a compile error (underscores and a type suffix like `0o644_u16`
+are still allowed).
 
 ## Best practices & deeper information
 

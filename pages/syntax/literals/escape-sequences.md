@@ -17,12 +17,13 @@ introduces an escape sequence:
 - **Common ASCII escapes:** `\n` (newline), `\r` (carriage return),
   `\t` (tab), `\\` (backslash), `\0` (null)
 - **Numeric byte escape:** `\xNN` — two hex digits; in a `char`/`str`
-  context restricted to `\x00`–`\x7F` (7-bit, since a byte escape above
-  that isn't a valid standalone Unicode scalar), but a full 8-bit
+  context restricted to `\x00`–`\x7F` (7-bit — `\x` denotes a raw byte,
+  and values `≥ 0x80` would be ambiguous between a byte and a code point,
+  so Rust requires `\u{...}` there instead), but a full 8-bit
   `\x00`–`\xFF` in a `b'...'`/`b"..."` byte context
 - **Unicode escape:** `\u{7FFF}` — up to six hex digits in braces,
-  representing any Unicode scalar value; only legal in `char`/`str`
-  contexts, not in byte literals
+  representing any Unicode scalar value; legal in `char`/`str` and
+  `c"..."` contexts, but not in byte literals
 - **Line-continuation escape:** a backslash immediately followed by a
   newline strips the newline and any leading whitespace on the next line,
   letting a long string literal be wrapped across source lines without
@@ -58,9 +59,9 @@ print!("{}", format_receipt("widget", 3, 499));
 ```
 
 **Why this way:** embedding `\n`/`\t` inside one literal keeps the
-template readable as "the shape of the output" in one place, which the
-[std string docs](https://doc.rust-lang.org/std/string/index.html) treat
-as the normal way to write a short template like this.
+template readable as "the shape of the output" in one place, rather than
+splicing separate pieces together — the escapes are resolved once, at
+compile time, into the exact bytes the string holds.
 
 ### Scenario: Serializing and deserializing
 
@@ -73,9 +74,10 @@ any JSON text.
 // resolved by rustc at compile time -- it is not the same thing as JSON's escape.
 let heart: char = '\u{2764}'; // <- Rust escape sequence: braced hex, resolved when this file compiles
 
-// JSON escapes the same code point as `❤` -- four hex digits, no braces --
+// JSON escapes the same code point as `❤` -- exactly four hex digits, no braces --
 // and that escaping is *data*, checked by a JSON parser at runtime, not by rustc.
-let json_fragment = r#"{"symbol": "❤"}"#; // raw string: the `❤` here is JSON syntax, untouched by Rust
+// The raw string below holds that JSON text verbatim; rustc never interprets the `❤`.
+let json_fragment = r#"{"symbol": "❤"}"#; // <- `❤` here is JSON syntax, untouched by Rust
 ```
 
 **Why this way:** Rust's escape rules and JSON's string-escape rules

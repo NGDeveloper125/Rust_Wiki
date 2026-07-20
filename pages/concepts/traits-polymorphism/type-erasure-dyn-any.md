@@ -81,6 +81,11 @@ its place only where the set of types genuinely isn't known until runtime
 documents `TypeId`-keyed lookups like this as the intended use, not a
 general-purpose substitute for generics or an enum.
 
+**Restriction:** `Any` only covers `'static` types — `TypeId::of::<T>()`
+requires `T: 'static`, so a type that borrows non-`'static` data can
+never be erased to `dyn Any` or downcast back. The `T: Any` bounds above
+already imply `'static`; a struct holding a `&'a str` would be rejected.
+
 ## Embedded Rust Notes
 
 **Full support.** `Any` and `downcast_ref` live in `core::any` — no

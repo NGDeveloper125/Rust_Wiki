@@ -45,11 +45,11 @@ let check = checksum(&packet);
 println!("checksum: {check:#04x}");
 ```
 
-**Why this way:** the self-cancelling property of XOR is documented on
-[`BitXor`](https://doc.rust-lang.org/std/ops/trait.BitXor.html), and it's
-exactly why `^` (rather than `&`/`|`) is the natural choice whenever
-"combine, and let duplicates cancel" is the goal, as with simple
-checksums or toggle masks.
+**Why this way:** XOR is mathematically self-cancelling (`x ^ y ^ y ==
+x`), and that property is exactly why `^` (rather than `&`/`|`) — the
+operator behind the [`BitXor`](https://doc.rust-lang.org/std/ops/trait.BitXor.html)
+trait — is the natural choice whenever "combine, and let duplicates
+cancel" is the goal, as with simple checksums or toggle masks.
 
 ## Embedded Rust Notes
 

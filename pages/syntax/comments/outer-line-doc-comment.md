@@ -25,8 +25,10 @@ fn add(a: i32, b: i32) -> i32 {
 The content supports Markdown, and any fenced code block inside it is, by
 default, compiled and run as a **doc test** by `cargo test` — making `///`
 double as both documentation and an executable example in one place.
-`///` must appear directly before the item it documents; a blank line or
-unrelated code between them breaks the association.
+`///` attaches to the item that follows it; intervening code or another
+item breaks the association (blank lines alone don't — a doc comment
+desugars to an outer `#[doc = "..."]` attribute, and whitespace between
+an attribute and its item is insignificant).
 
 ## Basic usage example
 
@@ -38,8 +40,9 @@ fn add(a: i32, b: i32) -> i32 {
 }
 ```
 
-**Restriction:** `///` must sit directly above the item it documents —
-no blank line or unrelated code in between — or the association is lost.
+**Restriction:** `///` documents the next item that follows it — any
+unrelated code or another item in between redirects (or breaks) the
+association. Blank lines alone are harmless.
 
 ## Best practices & deeper information
 
@@ -60,6 +63,8 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
     // <- everything above is `///`; it documents this fn, not the body below
     todo!()
 }
+
+pub struct ParseError;
 ```
 
 **Why this way:** the summary-then-detail shape and the `# Errors`
@@ -71,8 +76,9 @@ explicitly, not buried in prose.
 
 ### Scenario: Testing
 
-Any fenced code block inside a `///` comment is compiled and executed as
-a **doc test** by `cargo test` — making the documentation double as a
+By default, a fenced code block inside a `///` comment on a library item
+is compiled and executed as a **doc test** by `cargo test` (annotations
+like `no_run` or `ignore` opt out) — making the documentation double as a
 regression test that fails loudly if the example ever stops compiling or
 returns something different.
 

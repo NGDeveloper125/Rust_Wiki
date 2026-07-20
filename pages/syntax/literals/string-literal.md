@@ -49,9 +49,9 @@ assert_eq!(msg, "sensor \"temp-01\" reported 21.5");
 
 **Why this way:** captured-identifier syntax (`{sensor_id}`) keeps the
 template and its values together instead of separated into positional
-arguments, which the
-[std `format!` docs](https://doc.rust-lang.org/std/fmt/index.html)
-recommend once a template has more than one or two placeholders.
+arguments — the inline-capture form is documented in the
+[std `std::fmt` docs](https://doc.rust-lang.org/std/fmt/index.html) and
+reads best once a template has more than a placeholder or two.
 
 ### Scenario: Designing a public API
 
@@ -76,9 +76,9 @@ let b = greet_owned("guest".to_string());   // caller must allocate just to sati
 
 **Why this way:** accepting `&str` instead of `String` lets a caller pass
 a literal with zero allocation while still accepting an owned `String`
-where one already exists — preferring borrowed types in function
-signatures is a rule [Effective Rust](https://effective-rust.com/) covers
-under its API-design guidance.
+where one already exists — the
+[Book's "String Slices as Parameters"](https://doc.rust-lang.org/book/ch04-03-slices.html#string-slices-as-parameters)
+makes exactly this argument for preferring `&str` in a signature.
 
 ### Scenario: Handling and propagating errors
 

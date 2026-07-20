@@ -11,7 +11,7 @@ see_also: [">"]
 ## Explanation
 
 `>=` is the greater-than-or-equal comparison, part of the same
-`std::ops::PartialOrd` trait as `<`, `<=`, and `>`.
+`std::cmp::PartialOrd` trait as `<`, `<=`, and `>`.
 
 ```
 if a >= b { ... }

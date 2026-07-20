@@ -26,13 +26,14 @@ let f = || println!("called");
 ```
 
 This is the same `|...|` closure syntax as `|x, y| x + y`, just with an
-empty parameter list — the parser distinguishes the two uses by context,
-since a bare `||` in expression position where a value (not a boolean
-condition) is expected can only be a closure.
+empty parameter list — the parser distinguishes the two uses by position:
+`||` with an expression on its left is lazy OR, while `||` at the start
+of an expression is a closure's (empty) parameter list.
 
 ## Basic usage example
 
 ```
+let a = 150;
 let out_of_range = a < 0 || a > 100; // <- `||` short-circuiting logical OR
 ```
 
@@ -69,10 +70,12 @@ bail out via `?` before an operation that would otherwise panic or return
 an `Err`, such as indexing into a possibly-too-short buffer.
 
 ```
+const HEADER_MARKER: u8 = 0x00;
+
 fn read_header(buf: &[u8]) -> Result<u16, &'static str> {
-    if buf.is_empty() || buf.len() < 2 {
+    if buf.len() < 2 || buf[0] != HEADER_MARKER {
         // <- `||`: either condition alone is enough to reject `buf`
-        return Err("buffer too short to contain a header");
+        return Err("missing or malformed header");
     }
     Ok(u16::from_be_bytes([buf[0], buf[1]]))
 }
@@ -82,8 +85,10 @@ assert_eq!(read_header(&[0x00, 0x2A]), Ok(42));
 ```
 
 **Why this way:** checking both failure conditions up front with `||`
-turns a potential panic (indexing `buf[1]` on a one-byte slice) into a
-handled `Err`, in line with the fail-fast validation style the
+turns a potential panic (indexing into a too-short slice) into a handled
+`Err` — and short-circuiting means `buf[0]` on the right is only ever
+evaluated once the length check on the left has passed, in line with the
+fail-fast validation style the
 [Book](https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html)
 recommends for recoverable input errors.
 

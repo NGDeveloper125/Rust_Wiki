@@ -13,7 +13,8 @@ see_also: ["||"]
 `|` has three unrelated meanings depending on context:
 
 1. **Binary: bitwise OR** between integers, overloadable via
-   `std::ops::BitOr`: `a | b`.
+   `std::ops::BitOr`: `a | b` (`BitOr` is also implemented for `bool`,
+   making `a | b` a non-short-circuiting logical OR).
 2. **Pattern alternatives:** `Some(1) | Some(2) => ...` inside a `match`
    arm (or any refutable pattern position) — "matches if any of these
    patterns match." Entirely unrelated to bitwise OR; no `BitOr` impl is

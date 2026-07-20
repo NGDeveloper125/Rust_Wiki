@@ -79,15 +79,17 @@ An object with invariants to protect exposes a `&mut self` method rather
 than a public field a caller could set to any value directly.
 
 ```
-struct Order { total: f64, shipped: bool }
+struct Order { total_cents: u64, shipped: bool }
 
-fn mark_shipped(order: &mut Order) {
-    // <- `&mut` lets `mark_shipped` mutate the caller's `Order` in place
-    order.shipped = true;
+impl Order {
+    fn mark_shipped(&mut self) {
+        // <- `&mut self` lets the method mutate the receiver in place
+        self.shipped = true;
+    }
 }
 
-let mut order = Order { total: 42.0, shipped: false }; // <- `mut` needed: `order` is mutated below
-mark_shipped(&mut order);
+let mut order = Order { total_cents: 4200, shipped: false }; // <- `mut` needed: `order` is mutated below
+order.mark_shipped();
 ```
 
 **Why this way:** routing mutation through a method rather than a public

@@ -22,9 +22,10 @@ let d = 2.;      // trailing decimal point alone is enough
 
 Without a suffix, the default type is `f64`, not `f32` — the opposite
 default from many other languages. A literal like `2.` (decimal point,
-no digits after) is legal but `2.method()` is ambiguous with method-call
-syntax, so a space or parentheses (`2. .abs()` or `(2.).abs()`) is
-sometimes required to disambiguate.
+no digits after) is legal on its own, but a method can't be called on it
+directly — `2.abs()`, `(2.).abs()`, and `2. .abs()` all fail as an
+ambiguous numeric type. To call a method, use a fully written, suffixed
+literal instead: `2.0_f64.abs()`.
 
 ## Basic usage example
 
@@ -32,9 +33,9 @@ sometimes required to disambiguate.
 let temp = 36.6; // <- float literal: the decimal point makes this an `f64` by default
 ```
 
-**Restriction:** a bare trailing-dot literal like `2.` is ambiguous with
-method-call syntax immediately after — `2.abs()` requires a space or
-parentheses (`2 .abs()` / `(2.).abs()`) to parse as intended.
+**Restriction:** you can't call a method on a bare `2.` — `2.abs()`,
+`2 .abs()`, and `(2.).abs()` all fail as an ambiguous numeric type. Write
+a suffixed literal like `2.0_f64.abs()` when a method call is needed.
 
 ## Best practices & deeper information
 
@@ -62,7 +63,7 @@ Float equality is unreliable, so validating a measurement against a
 target uses a small tolerance instead of `==`.
 
 ```
-const EPSILON: f64 = 1e-9; // <- float literal: exponent form, a tiny comparison tolerance
+const EPSILON: f64 = 1e-6; // <- float literal: exponent form, a tiny comparison tolerance
 
 fn is_close_to_target(measured: f64, target: f64) -> bool {
     (measured - target).abs() < EPSILON

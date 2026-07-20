@@ -49,10 +49,11 @@ assert_eq!(subtotal, Some(5997));
 ```
 
 **Why this way:** `checked_mul` turns a would-be silent overflow into an
-explicit `None` the caller must handle, which the
+explicit `None` the caller must handle — the
 [std docs for `checked_mul`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_mul)
-recommend over plain `*` whenever either operand could come from outside
-the function.
+document that `None`-on-overflow behavior. Preferring it over plain `*`
+whenever an operand could come from outside the function is the safe
+default.
 
 ### Scenario: Creating a new object
 

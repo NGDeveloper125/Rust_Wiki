@@ -13,6 +13,7 @@ see_also: [else, match]
 `if` evaluates a boolean condition and branches accordingly:
 
 ```
+let x = 5;
 if x > 0 {
     println!("positive");
 }
@@ -29,6 +30,7 @@ Critically, `if` is an **expression**, not just a statement: an
 semicolon) produces a value, and all branches must produce the same type:
 
 ```
+let x = 5;
 let msg = if x > 0 { "positive" } else { "non-positive" };
 ```
 
@@ -42,6 +44,7 @@ testing a `bool`.
 ## Basic usage example
 
 ```
+let x = 5;
 if x > 0 { // <- `if` branches on a boolean condition
     println!("positive");
 }
@@ -117,7 +120,7 @@ fn log_reading(reading: &Reading) {
 
 **Why this way:** `if let` is exactly for the case where only one pattern
 needs handling and the rest can be ignored — the
-[Book's section on `if let`](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+[Book's section on `if let`](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 recommends it over `match` precisely to avoid writing a wildcard `_` arm
 that does nothing.
 

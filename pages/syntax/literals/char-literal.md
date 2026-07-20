@@ -87,10 +87,11 @@ assert_ne!(len_chars, len_bytes);
 
 **Why this way:** a `char` is always a full Unicode scalar value, so
 `.chars()` is the safe way to walk text that might contain multi-byte
-characters — indexing a `String` by raw byte offset can panic if the
-offset falls inside a multi-byte character, which the
-[std `str` docs](https://doc.rust-lang.org/std/primitive.str.html#method.chars)
-call out explicitly.
+characters — a `str` can't be indexed by a single `usize` at all, and
+*slicing* it (`&s[0..n]`) panics if a bound falls inside a multi-byte
+character, as the
+[std `str` docs](https://doc.rust-lang.org/std/primitive.str.html#method.get)
+note (use `.get()` or char-based iteration instead).
 
 ## Embedded Rust Notes
 

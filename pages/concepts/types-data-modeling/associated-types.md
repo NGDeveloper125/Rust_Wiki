@@ -20,10 +20,11 @@ trait Iterator {
 ```
 
 Every type implementing `Iterator` picks exactly one concrete `Item` type
-— `Vec<i32>`'s iterator has `Item = i32`, `HashMap<K, V>`'s has
-`Item = (K, V)` — and that choice is fixed for that implementation,
-unlike a generic type parameter, which a caller could instantiate
-differently at each use site.
+— the by-value iterator from `Vec<i32>` has `Item = i32`, and
+`HashMap<K, V>`'s has `Item = (K, V)` (the borrowing `.iter()` yields
+`&i32` and `(&K, &V)` respectively, each its own iterator type) — and that
+choice is fixed for that implementation, unlike a generic type parameter,
+which a caller could instantiate differently at each use site.
 
 The distinction matters: if `Iterator` used a generic parameter instead
 (`trait Iterator<Item> { ... }`), a single type could implement `Iterator<i32>`

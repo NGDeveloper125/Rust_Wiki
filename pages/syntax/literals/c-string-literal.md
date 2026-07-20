@@ -56,10 +56,10 @@ fn device_name() -> &'static CStr {
 
 **Why this way:** a `c"..."` literal produces its nul-terminated bytes at
 compile time, so a fixed constant like this never needs the fallible,
-allocating `CString::new(...).unwrap()` path at runtime — the
-[std docs for `CStr`](https://doc.rust-lang.org/std/ffi/struct.CStr.html)
-describe the literal as the direct replacement for that pattern whenever
-the content is known ahead of time.
+allocating `CString::new(...).unwrap()` path at runtime — it hands back a
+`&'static CStr` directly (see the
+[std docs for `CStr`](https://doc.rust-lang.org/std/ffi/struct.CStr.html)).
+Note `c"..."` literals require Rust 1.77+ and edition 2021 or later.
 
 ## Embedded Rust Notes
 

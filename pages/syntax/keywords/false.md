@@ -50,12 +50,11 @@ impl Default for FeatureFlags {
 ```
 
 **Why this way:** defaulting risky or unfinished behavior to `false`
-means a missing configuration value fails closed rather than open, which
-the
-[API Guidelines' trait-implementation conventions](https://rust-lang.github.io/api-guidelines/predictability.html)
-support by recommending types eagerly implement `Default` with a safe
-baseline. See [`true`](true.md) for the fuller treatment of `bool`
-literals.
+means a missing configuration value fails closed rather than open. Making
+that the `Default` also lines up with the API Guidelines'
+[C-COMMON-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits),
+which recommends types eagerly implement `Default`. See [`true`](true.md)
+for the fuller treatment of `bool` literals.
 
 ## Embedded Rust Notes
 

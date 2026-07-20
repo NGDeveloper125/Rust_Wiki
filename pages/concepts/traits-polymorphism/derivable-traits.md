@@ -92,11 +92,11 @@ fn totals_order_correctly() {
 }
 ```
 
-**Why this way:** without `Debug`, this fails to *compile* on a mismatch,
-not just fail the test — the
+**Why this way:** without `Debug` the assertion doesn't compile at all
+(not just on a runtime mismatch), since `assert_eq!` must be able to
+print both sides on failure — the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
-notes both traits are needed so `assert_eq!` can print `left`/`right`
-when they differ.
+notes both `PartialEq` and `Debug` are needed for `assert_eq!`.
 
 ## Embedded Rust Notes
 

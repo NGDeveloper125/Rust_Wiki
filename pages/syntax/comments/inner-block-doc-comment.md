@@ -50,6 +50,8 @@ A small library for parsing duration strings. */
 pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
     todo!()
 }
+
+pub struct ParseError;
 ```
 
 **Why this way:** see [`//!`](inner-line-doc-comment.md) for the full

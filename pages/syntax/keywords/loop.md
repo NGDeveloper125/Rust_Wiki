@@ -14,6 +14,7 @@ see_also: [while, break]
 (or its body) is reached:
 
 ```
+let done = true;
 loop {
     if done {
         break;
@@ -26,6 +27,7 @@ value — `break value;` exits the loop and evaluates the whole `loop` to
 `value`:
 
 ```
+let mut counter = 0;
 let result = loop {
     counter += 1;
     if counter == 10 {
@@ -56,32 +58,41 @@ let result = loop { // <- `loop` repeats the block forever until a `break`
 
 ### Scenario: Multi-threading
 
-A worker thread that services jobs from a channel for its entire
-lifetime is the classic use for `loop`: it has no natural boolean
-condition to test, only an event (the channel closing) that ends it.
+A worker thread that services jobs from a channel but also needs to do
+periodic housekeeping between jobs is a classic use for `loop` plus
+`match`: there is no natural boolean condition to test, only distinct
+events — a job arriving, a quiet period, the channel closing.
 
 ```
 use std::sync::mpsc;
 use std::thread;
+use std::time::Duration;
 
 fn spawn_worker(rx: mpsc::Receiver<String>) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         loop {
             // <- `loop` is the worker's unconditional service loop
-            match rx.recv() {
+            match rx.recv_timeout(Duration::from_millis(100)) {
                 Ok(job) => println!("processing {job}"),
-                Err(_) => break, // channel closed, all senders dropped
+                Err(mpsc::RecvTimeoutError::Timeout) => {
+                    println!("no work yet -- heartbeat / housekeeping");
+                }
+                Err(mpsc::RecvTimeoutError::Disconnected) => break, // channel closed, all senders dropped
             }
         }
     })
 }
 ```
 
-**Why this way:** a `loop` with no `break` has type `!`, and here the only
-exit is the channel closing — this shape is exactly what the
-[Book's threads chapter](https://doc.rust-lang.org/book/ch16-01-threads.html)
-uses for a long-lived thread that runs until its work source is gone,
-rather than a `while` needing an artificial condition to test.
+**Why this way:** `recv_timeout` gives the loop three genuinely distinct
+events — a job, a timeout for housekeeping, and channel shutdown — which
+no single `while` condition (or `for job in rx`) can express; the only
+exit is the channel closing. This extends the channel-receiving patterns
+in the
+[Book's message-passing chapter](https://doc.rust-lang.org/book/ch16-02-message-passing.html);
+note that when the only cases are "got a job" and "channel closed",
+prefer `for job in rx` — Clippy's `while_let_loop` lint flags the plain
+`loop`/`recv`/`match` version of that.
 
 ### Scenario: Message passing between threads
 
@@ -95,6 +106,13 @@ use std::time::Duration;
 use std::thread;
 
 let (tx, rx) = mpsc::channel::<u32>();
+
+thread::spawn(move || {
+    for reading in [17, 18, 19] {
+        tx.send(reading).unwrap();
+        thread::sleep(Duration::from_millis(20));
+    }
+}); // `tx` drops here, so the loop below eventually sees `Disconnected`
 
 loop {
     // <- `loop` polls the channel repeatedly instead of blocking on `recv`

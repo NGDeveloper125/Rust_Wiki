@@ -13,7 +13,7 @@ see_also: ["( )"]
 `,` separates elements in any list: function arguments (`f(a, b, c)`),
 tuple elements (`(a, b, c)`), array/`Vec` elements (`[a, b, c]`), struct
 fields (`Point { x, y }`), enum variant fields, generic parameters
-(`Vec<K, V>`), and match arms in some macro contexts.
+(`HashMap<K, V>`), and match arms in some macro contexts.
 
 A trailing comma after the last element is allowed (and idiomatic in
 multi-line lists — `rustfmt` adds it automatically) in every one of these
@@ -35,7 +35,7 @@ parenthesized expression, not a tuple at all.
 
 ```
 let point = (1, 2, 3);
-//            ^     ^ each `,` separates one tuple element from the next
+//            ^  ^ each `,` separates one tuple element from the next
 ```
 
 **Restriction:** in a one-element tuple, the trailing comma is

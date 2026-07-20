@@ -48,6 +48,8 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
     // <- `/** */` above documents this fn; behaves identically to `///`
     todo!()
 }
+
+pub struct ParseError;
 ```
 
 **Why this way:** `rustfmt` and community convention treat `///` as the

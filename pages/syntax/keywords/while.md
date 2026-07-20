@@ -13,18 +13,19 @@ see_also: [loop, for]
 `while` repeats a block for as long as a condition remains `true`:
 
 ```
+let mut count = 0;
 while count < 10 {
     count += 1;
 }
 ```
 
 Like `if`, the condition must be a plain `bool` and is not parenthesized
-by convention. Unlike `if`, `while` is **not** an expression — it always
-evaluates to `()` and cannot be used to produce a value, because the loop
-body may run zero times, leaving no meaningful value to yield (contrast
-with `loop`, which can `break` with a value precisely because it's
-guaranteed to run its body evaluation at least once before exiting via
-`break`).
+by convention. Unlike `if`, a `while` loop is an expression that always
+evaluates to `()` — it cannot produce a value via `break value;`, because
+the loop can end without any `break` ever running (the condition simply
+turns false), which would leave the loop with no defined result (contrast
+with `loop`, which can `break` with a value precisely because a `break`
+is its only way to exit normally).
 
 `while let PATTERN = expr { ... }` is a related but distinct form: it
 loops for as long as `expr` continues to match `PATTERN`, re-evaluating
@@ -44,9 +45,10 @@ while count < 10 { // <- repeats the block while the condition is `true`
 }
 ```
 
-**Restriction:** `while` is not an expression — it always evaluates to
-`()` and cannot produce a value via `break`, unlike `loop`, since the body
-may run zero times.
+**Restriction:** a `while` loop always evaluates to `()` and cannot
+produce a value via `break value;`, unlike `loop` — the loop can end
+without any `break` running (the condition turns false), so there would
+be no value to yield.
 
 ## Best practices & deeper information
 
@@ -75,28 +77,30 @@ queue is momentarily empty — contrast with `for message in rx` (see
 
 ### Scenario: Validating input
 
-Retrying against a sequence of candidate values until one parses
-successfully is a `while let Some(...)` loop pulling the next candidate
+Retrying against a work queue of candidate values until one parses
+successfully is a `while let Some(...)` loop popping the next candidate
 each iteration.
 
 ```
-let mut lines = vec!["abc".to_string(), "".to_string(), "42".to_string()].into_iter();
+let mut pending = vec!["abc".to_string(), "".to_string(), "42".to_string()];
 let mut valid_port = None;
 
-while let Some(line) = lines.next() {
-    // <- keeps pulling candidates until one parses or the source is exhausted
-    if let Ok(port) = line.trim().parse::<u16>() {
+while let Some(entry) = pending.pop() {
+    // <- keeps pulling candidates until one parses or the queue is empty
+    if let Ok(port) = entry.trim().parse::<u16>() {
         valid_port = Some(port);
         break;
     }
 }
 ```
 
-**Why this way:** `while let Some(...) = iterator.next()` is the general
-shape for "keep trying until the source runs out or a condition is met" —
-the
-[Reference's predicate-pattern loops](https://doc.rust-lang.org/reference/expressions/loop-expr.html#predicate-pattern-loops)
-section defines exactly this semantics for `while let`.
+**Why this way:** `while let Some(...) = queue.pop()` is the general
+shape for "keep trying until the source runs out or a condition is met"
+when the source isn't an iterator (over an iterator, a `for` loop is the
+idiomatic form — Clippy's `while_let_on_iterator` lint suggests exactly
+that rewrite) — the
+[Reference's loop expressions](https://doc.rust-lang.org/reference/expressions/loop-expr.html)
+page defines exactly this semantics for `while let`.
 
 ## Embedded Rust Notes
 

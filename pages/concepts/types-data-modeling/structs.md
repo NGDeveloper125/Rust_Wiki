@@ -82,7 +82,7 @@ fields by name, so the type that models the domain object is also what
 the query returns — no manual `row.get("column")` calls to keep in sync.
 
 ```
-// [dependencies] sqlx = "0.8", tokio = { version = "1", features = ["full"] }
+// [dependencies] sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }, tokio = { version = "1", features = ["full"] }
 #[derive(sqlx::FromRow)] // <- maps each returned row's columns onto this struct's fields
 struct Order {
     id: i64,
