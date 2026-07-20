@@ -24,7 +24,7 @@ a working implementation. This is also the mechanism behind
 `serde`'s `#[derive(Serialize, Deserialize)]` — the same
 generate-from-structure idea, extended by a third-party procedural macro
 rather than the small fixed set of derives built into the compiler
-itself, which is why the [serialization](../../concepts/serialization.md)
+itself, which is why the [serialization](../testing-tooling/serialization-serde.md)
 ecosystem is able to plug into ordinary struct/enum definitions with a
 single attribute rather than requiring hand-written conversion code.
 
