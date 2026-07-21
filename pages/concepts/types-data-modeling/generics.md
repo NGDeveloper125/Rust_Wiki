@@ -3,7 +3,7 @@ title: "Generics"
 area: "Types & Data Modeling"
 embedded_support: full
 groups: ["Types & Data Modeling", "Writing Generic & Reusable Code", "Polymorphism", "Generic Programming"]
-related_syntax: ["<...>"]
+related_syntax: ["<", ">"]
 see_also: ["Trait bounds", "Static dispatch & monomorphization", "Const generics"]
 ---
 

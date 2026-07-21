@@ -3,7 +3,7 @@ title: "Lifetimes"
 area: "Ownership & Borrowing"
 embedded_support: full
 groups: ["Ownership & Borrowing", "Lifetime Management", "Unique to Rust"]
-related_syntax: ["'ident", "&"]
+related_syntax: ["'a", "&"]
 see_also: ["The borrow checker", "Lifetime elision", "Borrowing (shared references)"]
 ---
 

@@ -3,7 +3,7 @@ title: "let"
 kind: keyword
 embedded_support: full
 groups: [Basics]
-related_concepts: [Ownership, Immutability by default, Pattern Matching]
+related_concepts: [Ownership, Immutability by default, Destructuring]
 related_syntax: [mut, const, static, if, else]
 see_also: [mut, const]
 ---

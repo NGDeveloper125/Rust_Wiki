@@ -84,14 +84,29 @@ pub fn group_order(section: Section) -> &'static [(&'static str, &'static str)] 
         Section::Syntax => &[
             ("keywords", "Keywords"),
             ("operators", "Operators & Sigils"),
+            ("lifetimes", "Lifetimes"),
             ("literals", "Literals"),
             ("punctuation", "Punctuation"),
             ("comments", "Comments"),
+            ("attributes", "Attributes"),
+            ("macros", "Macros"),
         ],
         Section::Concepts => &[
             ("ownership-borrowing", "Ownership & Borrowing"),
             ("types-data-modeling", "Types & Data Modeling"),
             ("traits-polymorphism", "Traits & Polymorphism"),
+            ("functions-closures", "Functions & Closures"),
+            ("iterators", "Iterators"),
+            ("error-handling", "Error Handling"),
+            ("pattern-matching", "Pattern Matching"),
+            ("modules-crates-visibility", "Modules, Crates & Visibility"),
+            ("concurrency-async", "Concurrency & Async"),
+            ("memory-unsafe", "Memory & Unsafe"),
+            ("macros-metaprogramming", "Macros & Metaprogramming"),
+            ("collections-strings", "Collections & Strings"),
+            ("testing-tooling", "Testing & Tooling"),
+            ("design-patterns-idioms", "Design Patterns & Idioms"),
+            ("philosophy-principles", "Rust Philosophy & Design Principles"),
         ],
     }
 }
@@ -102,4 +117,71 @@ pub fn group_label(section: Section, subgroup: &str) -> String {
         .find(|(k, _)| *k == subgroup)
         .map(|(_, v)| v.to_string())
         .unwrap_or_else(|| title_case(subgroup))
+}
+
+/// For folders large/mixed enough to benefit from a second nesting level in
+/// the sidebar, the ordered list of sub-group names to bucket pages into.
+/// A page's bucket is its first `groups` frontmatter entry; buckets not
+/// listed here (or pages with no `groups` at all) fall into a trailing
+/// "Other" bucket instead of being dropped. Folders not covered here render
+/// as a single flat list, same as before this existed.
+pub fn subgroup_order(section: Section, folder: &str) -> Option<&'static [&'static str]> {
+    match (section, folder) {
+        (Section::Syntax, "keywords") => Some(&[
+            "Basics",
+            "Control Flow",
+            "Ownership & Borrowing",
+            "Types & Data Structures",
+            "Traits & Polymorphism",
+            "Modules & Visibility",
+            "Concurrency & Async",
+            "Memory & Unsafe",
+            "Macros",
+            "Reserved Keywords",
+        ]),
+        (Section::Syntax, "operators") => Some(&[
+            "Arithmetic",
+            "Comparison",
+            "Logical",
+            "Bitwise",
+            "Assignment",
+            "Ownership & Borrowing",
+            "Types & Data Structures",
+            "Modules & Visibility",
+            "Error Handling",
+        ]),
+        (Section::Syntax, "attributes") => Some(&[
+            "Core Syntax",
+            "Conditional Compilation",
+            "Testing",
+            "Lints & Diagnostics",
+            "Documentation",
+            "Traits & Derives",
+            "Macros",
+            "Types & Layout",
+            "Modules & Visibility",
+            "FFI & Linkage",
+            "No-std & Embedded Runtime",
+            "Compiler Hints & Limits",
+        ]),
+        (Section::Syntax, "macros") => Some(&[
+            "Macro Definition Syntax",
+            "Output & Formatting",
+            "Collections",
+            "Errors & Assertions",
+            "Compile-time Introspection",
+        ]),
+        (Section::Concepts, "design-patterns-idioms") => Some(&[
+            "Design Patterns",
+            "Idioms",
+            "Anti-patterns",
+        ]),
+        _ => None,
+    }
+}
+
+/// A page's sidebar sub-bucket within its folder: its first `groups` entry,
+/// or "Other" if it has none. See `subgroup_order`.
+pub fn nav_bucket(front: &FrontMatter) -> &str {
+    front.groups.first().map(|s| s.as_str()).unwrap_or("Other")
 }

@@ -2,7 +2,7 @@
 title: "||"
 kind: operator
 embedded_support: full
-groups: [Basics, "Functions & Closures"]
+groups: [Logical, Basics, "Functions & Closures"]
 related_concepts: []
 related_syntax: ["&&", "|"]
 see_also: ["&&"]

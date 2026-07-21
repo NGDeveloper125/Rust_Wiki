@@ -2,7 +2,7 @@
 title: "for"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: ["The Iterator trait", "IntoIterator (iter/iter_mut/into_iter)"]
 related_syntax: [in, while, loop]
 see_also: [in]

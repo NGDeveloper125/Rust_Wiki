@@ -4,7 +4,7 @@ kind: punctuation
 embedded_support: full
 groups: [Basics, "Functions & Closures"]
 related_concepts: [Functions, Closures & capturing]
-related_syntax: [fn, "|...| closures"]
+related_syntax: [fn, "|"]
 see_also: [fn]
 ---
 

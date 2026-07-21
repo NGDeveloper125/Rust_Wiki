@@ -2,7 +2,7 @@
 title: "<<="
 kind: operator
 embedded_support: full
-groups: [Basics]
+groups: [Bitwise, Basics]
 related_concepts: [Operator overloading]
 related_syntax: ["<<"]
 see_also: ["<<"]

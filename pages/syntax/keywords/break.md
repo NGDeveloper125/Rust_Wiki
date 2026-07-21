@@ -2,7 +2,7 @@
 title: "break"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: [Expression-oriented language]
 related_syntax: [loop, while, for, continue]
 see_also: [continue, loop]

@@ -2,7 +2,7 @@
 title: "+"
 kind: operator
 embedded_support: full
-groups: [Basics, "Traits & Polymorphism"]
+groups: [Arithmetic, Basics, "Traits & Polymorphism"]
 related_concepts: [Operator overloading]
 related_syntax: ["+="]
 see_also: ["+="]

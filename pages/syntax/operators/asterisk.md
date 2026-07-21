@@ -2,7 +2,7 @@
 title: "*"
 kind: operator
 embedded_support: full
-groups: [Basics, "Ownership & Borrowing", "Memory & Unsafe / FFI"]
+groups: [Arithmetic, Basics, "Ownership & Borrowing", "Memory & Unsafe / FFI"]
 related_concepts: [Operator overloading, "Deref & DerefMut coercion", "Smart pointers (Box<T>)"]
 related_syntax: ["*=", "&"]
 see_also: ["&", "*="]

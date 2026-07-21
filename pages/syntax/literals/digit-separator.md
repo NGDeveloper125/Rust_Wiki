@@ -20,6 +20,11 @@ an exponent. It cannot begin the literal — `_1` lexes as an identifier,
 not a number — and it cannot sit immediately after the decimal point of
 a float: `1._5` is parsed as field access on `1.`, not a digit separator.
 
+**Not to be confused with:** the wildcard pattern
+[`_`](../punctuation/underscore.md) — same character, but a completely
+unrelated token whenever it appears outside a numeric literal (a match
+arm, a discarded binding, an unused parameter).
+
 ## Basic usage example
 
 ```

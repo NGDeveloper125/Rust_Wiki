@@ -2,7 +2,7 @@
 title: "!"
 kind: operator
 embedded_support: full
-groups: [Basics, "Macros & Metaprogramming"]
+groups: [Logical, Basics, "Macros & Metaprogramming"]
 related_concepts: [Operator overloading]
 related_syntax: ["!="]
 see_also: []
@@ -72,7 +72,7 @@ combined with a guard clause is the idiomatic way to write it.
 **Full support.** `Not` lives in `core::ops`; macro invocation and the
 never type `!` are core grammar — none of this depends on `std`. Note
 that `panic!()` itself behaves differently under `#![no_std]` (see the
-[panic! macro](../macros/panic.md) and
-[Panic & unwinding](../../concepts/panic-and-unwinding.md) pages) — it
+[panic! macro](../macros/panic-macro.md) and
+[Panic & unwinding](../../concepts/error-handling/panic-and-unwinding.md) pages) — it
 still expands via this same `!` syntax, but requires a `#[panic_handler]`
 function since there's no default one without `std`.
