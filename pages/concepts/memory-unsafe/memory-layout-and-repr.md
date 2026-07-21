@@ -154,13 +154,112 @@ newtype ABI-compatible with its single field, which the
 specifies precisely so wrapper types keep their compile-time safety
 benefits without adding an FFI-visible layout difference.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `repr` is core-language and works identically without
-`std` — embedded code depends on it constantly for memory-mapped
-peripheral structs (`#[repr(C)]` register blocks matching a
-manufacturer's datasheet layout byte-for-byte) and for packed bitfield
-representations of protocol frames. `#[repr(packed)]` in particular shows
-up more in embedded contexts than hosted ones, since removing all padding
-to match a wire format is far more often worth the unaligned-access cost
-on a microcontroller than on a desktop CPU.
+The mechanics of *how* `#[repr(C)]`, `#[repr(transparent)]`, and
+`#[repr(packed)]` change a type's layout are covered in full on the
+[`#[repr(...)]` syntax page](../../syntax/attributes/repr.md)'s embedded
+section, including the `svd2rust`-generated register-block pattern; this
+page's job is the broader design point those mechanics serve. A
+microcontroller's peripherals are a fixed memory map handed down by the
+manufacturer's datasheet (and often an SVD file): `MODER` at offset
+`0x00` from the GPIO block's base address, `OTYPER` at `0x04`, `IDR` at
+`0x10`, and so on, with no say in the matter for the software reading
+them. A Rust struct meant to overlay that block is a claim about
+physical reality — "byte N of this struct is register X" — and that
+claim is only true if the struct's actual field order, size, and padding
+line up with the hardware's offsets exactly.
+
+This is precisely what the default `repr(Rust)` cannot promise: the
+compiler is explicitly free to reorder a struct's fields or change
+padding between compiler versions, because for an ordinary in-memory
+struct that freedom is a pure win (smaller size, better cache behavior)
+with nothing external depending on the specific arrangement. A
+register-block struct is the opposite case — something external (the
+silicon) already fixed the arrangement, so the struct has to match it
+instead of the other way around, and `#[repr(C)]`'s promise (declaration
+order, only C-style alignment padding) is what makes "field order in the
+source" and "offset in the datasheet" the same fact instead of two facts
+that happen to agree by luck. Getting this wrong doesn't produce a type
+error: a register block with one field reordered still compiles and
+still runs, it just silently reads and writes the *wrong register* at
+every affected offset, which is exactly the kind of hardware-adjacent
+[undefined-behavior boundary](the-undefined-behavior-boundary.md)
+mismatch that's expensive to debug because nothing about the Rust code
+looks wrong in isolation.
+
+## Basic usage example (Embedded)
+
+```
+#[repr(C)] // <- mandatory: pins field order/offsets to the datasheet's memory map
+pub struct GpioBlock {
+    moder: u32,  // offset 0x00
+    otyper: u32, // offset 0x04
+    idr: u32,    // offset 0x08
+}
+
+const GPIOA: *mut GpioBlock = 0x4002_0000 as *mut GpioBlock;
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A peripheral driver exposes typed, safe methods over a `#[repr(C)]`
+register block; the struct's layout is the load-bearing contract the
+whole driver depends on, so it's declared once and never touched by
+callers directly.
+
+```
+#[repr(C)] // <- field order/offsets must match the UART's datasheet layout exactly
+pub struct UartRegisters {
+    sr: u32,  // status register, offset 0x00
+    dr: u32,  // data register, offset 0x04
+    brr: u32, // baud rate register, offset 0x08
+}
+
+pub struct Uart {
+    regs: *mut UartRegisters,
+}
+
+impl Uart {
+    pub fn is_data_ready(&self) -> bool {
+        unsafe {
+            // SAFETY: `regs` points at a real, always-mapped UART block.
+            (core::ptr::read_volatile(&raw const (*self.regs).sr) & 0x1) != 0
+        }
+    }
+}
+```
+
+**Why this way:** every method on `Uart` trusts that `sr`/`dr`/`brr` sit
+at offsets `0x00`/`0x04`/`0x08` because `#[repr(C)]` guarantees it —
+dropping the attribute would leave the compiler free to reorder these
+three `u32` fields, and `is_data_ready` would silently read whichever
+register the compiler happened to place first instead of the status
+register.
+
+### Scenario: Bit manipulation and flags
+
+Datasheets frequently leave gaps in a peripheral's memory map — reserved
+words between two real registers — and a register-block struct has to
+model the gap explicitly or every field after it lands at the wrong
+offset.
+
+```
+#[repr(C)]
+pub struct AdcRegisters {
+    cr: u32,          // offset 0x00: control register
+    _reserved: u32,   // <- offset 0x04 is reserved on this chip; must still occupy the slot
+    dr: u32,          // offset 0x08: data register — wrong offset entirely without the gap above
+}
+```
+
+**Why this way:** `#[repr(C)]` only guarantees C-style padding for
+alignment, not for a vendor-defined "reserved" gap that has nothing to
+do with alignment — the [Rust
+Reference](https://doc.rust-lang.org/reference/type-layout.html#the-c-representation)
+documents `repr(C)` as laying fields out in declaration order with no
+reordering, so an explicit placeholder field is the correct, portable
+way to reserve the space rather than relying on incidental alignment
+padding to happen to be the right size.

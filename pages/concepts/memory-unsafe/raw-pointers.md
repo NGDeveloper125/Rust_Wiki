@@ -165,12 +165,147 @@ itself, which is the "contain unsafety in small modules" idiom from the
 [Rustonomicon](https://doc.rust-lang.org/nomicon/working-with-unsafe.html)
 — every external caller only ever sees the safe `write_byte` API.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Raw pointers are core-language and are, if anything,
-*more* central in embedded code than hosted code: a memory-mapped
-peripheral register is accessed as a raw pointer to a fixed address
-(`0x4000_0000 as *mut u32`), and volatile reads/writes to hardware go
-through `core::ptr::read_volatile`/`write_volatile` rather than an
-ordinary dereference, since the compiler must not reorder or elide
-accesses to hardware state the way it safely could for plain memory.
+Raw pointers are, if anything, more central in embedded code than
+anywhere else in the language: a memory-mapped peripheral register has
+no safe Rust type of its own — from the compiler's point of view it's
+just an address the vendor's datasheet assigns meaning to, and a raw
+pointer (`*const u32`/`*mut u32` at, say, `0x4001_0800`) is the only
+vocabulary for talking about it directly. Dereferencing that pointer
+still needs `unsafe`, exactly as on the classic page, but a *plain*
+dereference is the wrong tool even inside the `unsafe` block: `*ptr` and
+`*ptr = value` are ordinary memory operations as far as the optimizer is
+concerned, and the optimizer is free to reorder them, merge repeated
+reads into one, or delete a write it decides is never observed — all
+transformations that are perfectly sound for RAM but silently wrong for
+a hardware register, where a write can trigger a physical side effect
+(an enable bit, a DMA kickoff) and a read can consume a value that will
+never be seen again (a UART data register, an event flag that
+self-clears on read). `core::ptr::read_volatile`/`write_volatile` (or
+the equivalent methods on the raw pointer itself) tell the compiler that
+this specific access must happen, exactly once, at exactly this point in
+program order — never elided, never reordered past another volatile
+access, never coalesced with a neighbor. See [The undefined-behavior
+boundary](the-undefined-behavior-boundary.md) for what goes wrong when
+that guarantee is skipped.
+
+The other embedded-specific wrinkle is how the pointer itself gets
+built. A single hard-coded address cast straight to `*mut u32` is the
+simplest form and common for a one-off register; a whole peripheral is
+more often modeled as a `#[repr(C)]` struct overlaying its register
+block (see [Memory layout & repr](memory-layout-and-repr.md)), with a
+raw pointer to the struct's base address and field access reaching each
+register at its correct offset. Either way,
+[`unsafe`](../../syntax/keywords/unsafe.md) is what a raw peripheral
+pointer forces at the point of use, and [`&raw const`/`&raw
+mut`](../../syntax/operators/raw-borrow.md) is the tool for taking a
+pointer to one field of that struct (or to a `static mut` shared with an
+interrupt handler) without asserting a reference to the whole thing is
+momentarily exclusive.
+
+## Basic usage example (Embedded)
+
+```
+const GPIOA_IDR: *const u32 = 0x4001_0800 as *const u32; // <- fixed peripheral register address, from the datasheet
+
+fn read_port_a() -> u32 {
+    unsafe {
+        // SAFETY: GPIOA_IDR is a valid, always-mapped peripheral register
+        // on this chip; a plain volatile read has no aliasing concerns.
+        core::ptr::read_volatile(GPIOA_IDR) // <- volatile: the optimizer must not cache or elide this read
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Bit manipulation and flags
+
+Setting one bit of a GPIO output register without disturbing its
+neighbors is a read-modify-write through a raw pointer — every step
+needs `unsafe`, and every access needs to be volatile or the compiler is
+free to fold the read and write together.
+
+```
+const GPIOA_ODR: *mut u32 = 0x4001_0814 as *mut u32; // <- output data register
+
+fn set_pin5_high() {
+    unsafe {
+        // SAFETY: GPIOA_ODR is a valid, word-aligned peripheral register;
+        // read-modify-write is the documented way to flip one bit.
+        let current = core::ptr::read_volatile(GPIOA_ODR); // <- must observe the register's real current state
+        core::ptr::write_volatile(GPIOA_ODR, current | (1 << 5)); // <- must actually reach hardware, not get optimized away
+    }
+}
+```
+
+**Why this way:** a non-volatile `*GPIOA_ODR` read/write pair is legal
+Rust but unsound firmware — nothing stops the optimizer from proving the
+read is "redundant" with a previous one and reusing a stale value, which
+silently drops bits other code set on the same register; the [Rust
+embedded book](https://docs.rust-embedded.org/book/start/registers.html)
+documents `read_volatile`/`write_volatile` as mandatory for exactly this
+reason.
+
+### Scenario: Designing a public API
+
+A GPIO peripheral's raw base address should never leak past the module
+that owns it — a safe wrapper takes the address once, and every caller
+afterward only sees typed, safe methods.
+
+```
+pub struct GpioA {
+    base: *mut u32,
+}
+
+impl GpioA {
+    /// # Safety
+    /// Caller must guarantee no other `GpioA` exists for this peripheral.
+    pub unsafe fn new(base_address: usize) -> Self {
+        Self { base: base_address as *mut u32 }
+    }
+
+    pub fn set_pin_high(&self, pin: u8) {
+        unsafe {
+            // SAFETY: `self.base` was validated as the peripheral's real
+            // address when this GpioA was constructed.
+            let odr = self.base.add(0x14 / 4); // <- pointer arithmetic to the ODR register's offset
+            let current = core::ptr::read_volatile(odr);
+            core::ptr::write_volatile(odr, current | (1 << pin));
+        }
+    }
+}
+```
+
+**Why this way:** keeping `base` private and the constructor `unsafe`
+while every method afterward is safe is the "thin unsafe core, safe
+API" idiom applied to hardware — application code calls
+`gpio.set_pin_high(5)` and never touches a raw pointer or an address
+literal itself.
+
+### Scenario: Crossing an FFI boundary
+
+A DMA controller is programmed by writing a raw source address into one
+of its registers — the address itself is a `*const u8` converted to the
+integer the peripheral's register expects, not a value the DMA hardware
+understands as a Rust type.
+
+```
+const DMA_SRC_ADDR_REG: *mut u32 = 0x4002_6000 as *mut u32;
+
+fn start_transfer(buffer: &[u8]) {
+    let src_addr = buffer.as_ptr() as u32; // <- raw pointer collapsed to the integer the DMA register stores
+    unsafe {
+        // SAFETY: `buffer` outlives the DMA transfer this starts, and the
+        // DMA controller is idle before this write per the caller's contract.
+        core::ptr::write_volatile(DMA_SRC_ADDR_REG, src_addr);
+    }
+}
+```
+
+**Why this way:** the DMA peripheral has no concept of a Rust slice or
+reference — only a raw address — so `as_ptr()` followed by an integer
+cast is the same "give the foreign side a plain address" idiom as any
+FFI boundary, just with a hardware block instead of a C function on the
+other end.
