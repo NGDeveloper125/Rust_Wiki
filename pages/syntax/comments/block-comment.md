@@ -75,6 +75,36 @@ the test or mark it properly with `#[ignore = "reason"]` so it still
 shows up (as skipped) in `cargo test` output instead of silently
 vanishing from the codebase.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure lexical construct — no `std` dependency.
+`/* ... */` is unchanged in embedded Rust: a lexical construct fully
+stripped before compilation, so it costs nothing on a target with no
+`std`, no heap, and no OS. Its nesting property is genuinely useful in
+firmware work, where large chunks of register-twiddling or interrupt
+setup code get commented out wholesale while bringing up new hardware.
+
+## Usage examples (Embedded)
+
+### Disabling an interrupt handler during bring-up
+
+Commenting out a whole `#[interrupt]` handler while debugging a board's
+power sequencing is exactly the case `/* */`'s nesting protects — the
+handler body already has its own `/* */`-free `//` comments, but if it
+contained a block comment of its own, nesting would still keep this outer
+one intact.
+
+```
+#![no_std]
+#![no_main]
+
+/*
+#[interrupt]
+fn TIM2() {
+    // clear the update interrupt flag before returning, or this fires forever
+    clear_tim2_update_flag();
+    tick_count::increment();
+}
+*/
+// <- TIM2 handler disabled while bringing up the new board's timer config;
+//    re-enable once TIM2's prescaler is confirmed against the datasheet
+```

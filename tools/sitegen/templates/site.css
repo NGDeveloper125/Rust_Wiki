@@ -429,29 +429,34 @@
   }
   .rationale strong { color: var(--content-fg); }
 
-  /* embedded notes */
-  section#embedded {
-    border: 1px solid var(--content-border); border-radius: var(--radius-lg);
-    padding: 4px 24px 24px; margin-top: 40px;
-    transition: border-color .3s var(--ease), box-shadow .3s var(--ease), background .3s var(--ease);
-  }
+  /* classic / embedded parallel content: only one flavor visible at a time */
+  .flavor-embedded { display: none; }
+  body.embedded .flavor-classic { display: none; }
+  body.embedded .flavor-embedded { display: block; animation: embFade .25s var(--ease); }
+  @keyframes embFade { from { opacity: 0; } to { opacity: 1; } }
+
   .support-badge {
-    display: inline-flex; align-items: center; gap: 7px; margin: 12px 0 4px;
+    display: inline-flex; align-items: center; gap: 7px; margin: 0 0 18px;
     font-size: 12px; font-weight: 700; letter-spacing: .04em;
     padding: 5px 12px; border-radius: 999px;
     background: rgba(46,160,120,.16); color: #4fd0a0; border: 1px solid rgba(79,208,160,.4);
   }
+  .support-badge.level-none { background: rgba(200,80,80,.16); color: #e08080; border-color: rgba(224,128,128,.4); }
+  .support-badge.level-partial { background: rgba(200,160,40,.16); color: #e0b850; border-color: rgba(224,184,80,.4); }
   :root[data-theme="light"] .support-badge { background: #dff5ec; color: #0a7a52; border-color: #8fd8bd; }
-  /* embedded emphasis */
-  body.embedded section#embedded {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(245,197,24,.22), var(--shadow-card);
-    background: color-mix(in srgb, var(--content-bg-2) 82%, var(--accent) 18%);
-    animation: embPulse .5s var(--ease);
+  :root[data-theme="light"] .support-badge.level-none { background: #fbe4e4; color: #a02f2f; border-color: #e8b4b4; }
+  :root[data-theme="light"] .support-badge.level-partial { background: #faf0d8; color: #8a6512; border-color: #e6cf94; }
+
+  /* embedded_support: none — single short "not supported" note instead of parallel sections */
+  .unsupported-note {
+    border: 1px solid var(--content-border); border-radius: var(--radius-lg);
+    padding: 20px 24px; margin-top: 8px;
+    background: var(--content-bg-2);
   }
-  @keyframes embPulse { from { box-shadow: 0 0 0 0 rgba(245,197,24,0); } }
-  .emb-hint { display: none; font-size: 13px; color: var(--content-fg-dim); margin-top: 10px; font-style: italic; }
-  body.embedded .emb-hint { display: block; }
+
+  /* section-tabs are meaningless on a none-support page's embedded view (single block, no tabs) */
+  .section-tabs.no-embedded-tabs { display: none; }
+  body:not(.embedded) .section-tabs.no-embedded-tabs { display: flex; }
 
   .footer-note { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--content-border-soft); font-size: 13px; color: var(--content-fg-dim); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 

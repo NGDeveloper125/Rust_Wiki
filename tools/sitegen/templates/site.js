@@ -44,40 +44,50 @@
       segClassic.classList.toggle('on', !embedded);
       segEmbedded.setAttribute('aria-selected', embedded ? 'true' : 'false');
       segClassic.setAttribute('aria-selected', embedded ? 'false' : 'true');
-      if (embedded) document.getElementById('embedded').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var article = document.querySelector('article.page');
+      if (article) article.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     segClassic.addEventListener('click', function () { setFlavor(false); });
     segEmbedded.addEventListener('click', function () { setFlavor(true); });
   }
 
   /* ---------- STICKY SECTION-TABS BAR ---------- */
+  // Classic and embedded each render their own full set of sections
+  // (`.flavor-classic` / `.flavor-embedded`), sharing tab labels via a
+  // `data-tab` attribute. Only one flavor is visible (display) at a time,
+  // so a tab click/scroll-spy just needs to operate on whichever copy of
+  // a `data-tab` is currently visible.
   var tabsBar = document.getElementById('section-tabs');
   if (tabsBar) {
     var tabs = Array.prototype.slice.call(tabsBar.querySelectorAll('.tab'));
-    var tabSections = tabs
-      .map(function (t) { return document.getElementById(t.dataset.target); })
-      .filter(Boolean);
+    var allTabSections = Array.prototype.slice.call(document.querySelectorAll('[data-tab]'));
+
+    function visibleSection(target) {
+      return allTabSections.filter(function (s) {
+        return s.dataset.tab === target && s.offsetParent !== null;
+      })[0];
+    }
 
     tabs.forEach(function (t) {
       t.addEventListener('click', function () {
-        var el = document.getElementById(t.dataset.target);
+        var el = visibleSection(t.dataset.target);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
 
-    function setActiveTab(id) {
-      tabs.forEach(function (t) { t.classList.toggle('on', t.dataset.target === id); });
+    function setActiveTab(target) {
+      tabs.forEach(function (t) { t.classList.toggle('on', t.dataset.target === target); });
     }
 
-    if ('IntersectionObserver' in window && tabSections.length) {
+    if ('IntersectionObserver' in window && allTabSections.length) {
       var topOffset = (document.querySelector('.topbar') || {}).offsetHeight || 56;
       var tabsOffset = tabsBar.offsetHeight || 46;
       var spy = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
-          if (entry.isIntersecting) setActiveTab(entry.target.id);
+          if (entry.isIntersecting) setActiveTab(entry.target.dataset.tab);
         });
       }, { rootMargin: '-' + (topOffset + tabsOffset + 1) + 'px 0px -70% 0px', threshold: 0 });
-      tabSections.forEach(function (s) { spy.observe(s); });
+      allTabSections.forEach(function (s) { spy.observe(s); });
     }
   }
 

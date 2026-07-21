@@ -80,7 +80,45 @@ error conditions, examples) belongs in a `///` doc comment — see
 surface it. By universal community convention, `//` is for notes aimed at
 maintainers reading the source, since it reaches nobody else.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure lexical construct, discarded before compilation —
-no `std` dependency.
+`//` works identically in embedded Rust: it is a lexical construct the
+compiler strips before parsing, so it has no dependency on `std` and no
+cost on a target with no OS at all. In firmware, `//` is where the
+non-obvious hardware facts live — the ones a register name or a HAL call
+can't say on its own, like *why* a delay value or bit pattern is what it
+is.
+
+## Usage examples (Embedded)
+
+### Documenting a register access
+
+A raw register write is only meaningful with the datasheet fact that
+justifies it — the kind of context that belongs beside the code, not in a
+public API doc.
+
+```
+#![no_std]
+
+const GPIOA_BASE: u32 = 0x4001_0800;
+const ODR_OFFSET: u32 = 0x14;
+
+unsafe fn set_pin_5(gpioa: *mut u32) {
+    // <- datasheet ref: RM0090 §8.4.6 — ODR bit 5 drives PA5 output high
+    let odr = gpioa.byte_add(ODR_OFFSET as usize);
+    odr.write_volatile(odr.read_volatile() | (1 << 5));
+}
+```
+
+### Explaining a timing constant
+
+```
+// the sensor's datasheet requires >= 2ms after power-on before the first
+// read; 5ms is used here for margin against clock-source startup jitter
+const POWER_ON_DELAY_MS: u32 = 5;
+```
+
+`//` carries exactly the same weight here as in hosted code — a note for
+the next firmware engineer, never emitted into the compiled binary — but
+in embedded code that next reader is more often cross-referencing a
+datasheet than reading API docs, so the comment tends to cite one.

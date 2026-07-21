@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>///</code> documents the item immediately <strong>following</strong> it, and — unlike a
 plain <code>//</code> comment — is not discarded by the compiler: it's collected as
@@ -968,7 +969,7 @@ an attribute and its item is insignificant).</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1055,21 +1056,72 @@ item in the same doc set.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>#[doc = "..."]</code> generation works identically in
-<code>#![no_std]</code>. One practical note: doc tests still compile and run on the
-<strong>host</strong> toolchain by default, not on the target microcontroller — fine
-for documenting pure logic, but an example that needs real hardware
-typically has to be written as plain (non-tested) text instead.</p>
+        <p><code>///</code> documents the following item identically under <code>#![no_std]</code> —
+<code>#[doc = "..."]</code> generation is a host-side, compile-time step with no
+dependency on the target having <code>std</code>, a heap, or an OS. The one thing
+that <em>does</em> change in embedded code is doc tests: by default they compile
+and <strong>execute on the host</strong>, not on the microcontroller the crate targets
+— fine for a pure parsing function, but a doc test that calls into real
+registers has no hardware to run against and needs to opt out of
+execution.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Documenting a HAL function's safety contract</h3>
+            <p>Embedded APIs lean on <code>///</code>'s <code># Safety</code>/<code># Errors</code> conventions even more
+than hosted code, since the failure mode of an undocumented precondition
+is often silent hardware misbehavior rather than a caught error.</p>
+<pre><code class="rust">/// Sets GPIOA pin 5 high.
+///
+/// # Safety
+///
+/// Must not be called before `clocks::init()` — GPIOA is unclocked until
+/// then and writes are silently ignored, not rejected.
+pub unsafe fn set_pin_5_high() {
+    // &lt;- everything above is `///`; documents this fn's precondition, not its body
+    // ...
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Writing a doc test that can't run on the host</h3>
+            <pre><code class="rust">/// Reads the current tick count since boot.
+///
+/// ```no_run
+/// // &lt;- `no_run`: this compiles under `cargo test` but doesn't execute —
+/// //    the host has no XYZ-100 timer peripheral to read from
+/// let ticks = my_crate::tick_count::now();
+/// assert!(ticks &gt; 0);
+/// ```
+pub fn now() -&gt; u64 {
+    todo!()
+}
+</code></pre>
+<p>Per the
+<a href="https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#attributes">rustdoc book</a>,
+<code>no_run</code> is exactly the tool for this: it still catches the example going
+stale at compile time (a signature change breaks the build) without
+requiring the doc test's host process to actually own the peripheral the
+real code depends on.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

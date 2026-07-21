@@ -89,7 +89,52 @@ guarantee in exactly one place — when the invariant changes, there's one
 paragraph to update instead of a scattered set of near-copies that will
 inevitably drift apart.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Same as [`///`](outer-line-doc-comment.md) — no `std`
-dependency, same host-vs-target doc test caveat.
+`//!` works identically under `#![no_std]` — doc generation is a
+compile-time, host-side process that never touches the target. In an
+embedded crate, the crate-root `//!` block is the natural place to state
+the assumptions a HAL or driver crate depends on (clock source and speed,
+which pins are safe to touch before `clocks::init()`, whether an API is
+interrupt-safe) — the kind of fact that would otherwise be scattered
+across every module that relies on it.
+
+## Usage examples (Embedded)
+
+### Stating a crate's hardware assumptions once
+
+```
+//! Peripheral access crate for the XYZ-100 microcontroller.
+//!
+//! Assumes a 16 MHz external crystal; call `clocks::init()` before
+//! touching any other peripheral, or reads return unspecified values.
+// <- crate-root `//!` states the one assumption every user of this crate must know
+
+pub mod clocks;
+pub mod gpio;
+```
+
+**Restriction:** same as hosted Rust — `//!` documents whatever module it
+appears inside, so this block belongs at the top of `lib.rs` (or the
+module it describes), not scattered near individual peripheral functions.
+
+### Documenting a module's interrupt-safety contract
+
+```
+//! SPI driver for the onboard flash chip.
+//!
+//! None of these functions are interrupt-safe: calling `flash::read()`
+//! from an interrupt handler while the main loop holds the bus will
+//! corrupt the transfer. Disable interrupts around any call made outside
+//! `main`, or route flash access through a critical section.
+// <- states an invariant that's easy to violate and hard to debug once violated
+
+pub fn read(address: u32, buf: &mut [u8]) {
+    // ...
+}
+```
+
+Doc tests inside a `//!` block still compile and run on the **host**
+toolchain, not the target microcontroller — fine for pure logic, but any
+example that touches real registers needs `no_run` (compiles, doesn't
+execute) since the host has no XYZ-100 peripherals to run it against.
