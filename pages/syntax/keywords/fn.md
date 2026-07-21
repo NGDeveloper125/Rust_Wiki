@@ -2,7 +2,7 @@
 title: "fn"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: [Basics, "Functions & Closures"]
 related_concepts: [Functions, Closures & capturing, Higher-order functions]
 related_syntax: ["->", "|...| closures"]
 see_also: ["->"]
