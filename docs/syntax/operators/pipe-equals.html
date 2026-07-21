@@ -1001,13 +1001,39 @@ already meaningfully set — the same in-place-mutation reasoning as
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>|=</code> is the read-modify-write idiom for setting one or more bits in a
+register while leaving the rest alone, and it's arguably the single
+most common register operation in embedded Rust: enabling a
+peripheral's clock in a clock-control register, setting a
+configuration bit in a control register, or marking one flag in a
+software status word are all <code>reg |= BIT</code>. Some microcontrollers
+additionally expose a dedicated atomic "set" register (STM32's GPIO
+<code>BSRR</code>, for instance) specifically so a single bit can be set without a
+read-modify-write race against an interrupt handler touching the same
+port; where a peripheral doesn't offer that, <code>|=</code> on the plain data
+register is the fallback, and is fine as long as nothing else can
+preempt the read and the write.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Enabling a peripheral clock before configuring it</h3>
+            <pre><code class="rust">const RCC_APB1ENR: *mut u32 = 0x4002_1840 as *mut u32; // RCC APB1 clock-enable register
+const USART2EN: u32 = 1 &lt;&lt; 17;
+
+fn enable_usart2_clock() {
+    unsafe {
+        let mut enr = core::ptr::read_volatile(RCC_APB1ENR);
+        enr |= USART2EN; // &lt;- sets only the USART2 clock-enable bit
+        core::ptr::write_volatile(RCC_APB1ENR, enr);
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

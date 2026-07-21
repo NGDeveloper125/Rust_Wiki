@@ -1000,13 +1000,34 @@ it every time — the same in-place rationale as
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>&gt;&gt;=</code> is the mirror image of <code>&lt;&lt;=</code> for a bit-banged serial
+<em>transmitter</em>: rather than assembling an incoming byte one sampled bit
+at a time, the code starts with a complete byte and shifts it right
+once per clock, reading off the current low bit (with <code>&amp;</code>) to drive an
+output pin before discarding it and bringing the next bit into
+position.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Bit-banging a byte out over a software serial line, LSB first</h3>
+            <pre><code class="rust">fn set_output_pin(_high: bool) {
+    // in real firmware this drives a GPIO pin high or low
+}
+
+fn bitbang_send_byte(mut data: u8) {
+    for _ in 0..8 {
+        set_output_pin(data &amp; 1 != 0); // send the current low bit
+        data &gt;&gt;= 1; // &lt;- `&gt;&gt;=` discards the bit just sent, brings the next one into position
+        // toggle_clock_pin();
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>
