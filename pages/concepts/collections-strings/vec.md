@@ -11,7 +11,7 @@ see_also: ["Arrays vs Vec", "Slices", "HashMap & HashSet", "BTreeMap & BTreeSet"
 
 `Vec<T>` is Rust's growable array: a contiguous, heap-allocated buffer of
 `T` that can gain and lose elements at runtime. Unlike a fixed-size array
-(see [Arrays vs Vec](arrays-vs-vec.md) for that comparison), a `Vec`
+(see [Arrays vs Vec](../types-data-modeling/arrays-vs-vec.md) for that comparison), a `Vec`
 tracks two numbers alongside its buffer pointer — a `len` (how many
 elements are actually in use) and a `capacity` (how much backing storage
 is currently allocated). Pushing an element only needs a fresh allocation
@@ -31,7 +31,7 @@ averaged over a long run of pushes is constant. Calling
 estimable — skips the repeated reallocate-and-copy cycle entirely.
 
 A `Vec<T>` derefs to `&[T]`, so everything that works on a
-[slice](slices.md) — indexing, iteration, `.len()`, `.iter()` — works on
+[slice](../types-data-modeling/slices.md) — indexing, iteration, `.len()`, `.iter()` — works on
 a `Vec` without any extra ceremony; a `Vec` is best thought of as an
 owning, growable slice plus the bookkeeping needed to grow it. That's
 also why so much of the standard library — `String` for text (see

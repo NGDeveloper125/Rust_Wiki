@@ -38,7 +38,7 @@ Capturing by value with `move` is required whenever the closure must
 outlive the scope it was written in — most commonly when it's handed to
 a spawned thread, since the closure's environment has to keep existing
 after the current stack frame returns (see
-[Move semantics](move-semantics.md) for why a moved value can no longer
+[Move semantics](../ownership-borrowing/move-semantics.md) for why a moved value can no longer
 be used from its original binding). A closure that captures nothing at
 all needs no environment, and so it coerces automatically to a plain
 [function pointer](function-pointers.md).

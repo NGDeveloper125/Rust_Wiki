@@ -36,7 +36,7 @@ result, which forces an allocation in between for no reason.
 
 Adaptors like `map` and `filter` take a closure describing the per-item
 transformation or condition — see
-[Closures & capturing](closures-and-capturing.md) for how those closures
+[Closures & capturing](../functions-closures/closures-and-capturing.md) for how those closures
 capture their environment. Because an adaptor chain by itself does
 nothing observable, forgetting to attach a consumer (or a `for` loop) at
 the end of one is a common source of "why didn't this run?" bugs; the

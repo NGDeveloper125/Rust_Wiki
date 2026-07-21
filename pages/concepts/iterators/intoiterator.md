@@ -22,9 +22,9 @@ Three forms exist because there are three different ways to access data:
 `iter_mut()` mutably borrows it and yields exclusive references (`&mut
 T`), and `into_iter()` takes ownership and yields owned values (`T`).
 This mirrors exactly the choice between
-[borrowing](borrowing-shared-references.md),
-[mutable borrowing](mutable-borrowing.md), and
-[moving](move-semantics.md) that comes up everywhere else in Rust —
+[borrowing](../ownership-borrowing/borrowing-shared-references.md),
+[mutable borrowing](../ownership-borrowing/mutable-borrowing.md), and
+[moving](../ownership-borrowing/move-semantics.md) that comes up everywhere else in Rust —
 `iter`/`iter_mut` are conventionally inherent methods a collection
 provides, while `into_iter()` comes from implementing `IntoIterator` for
 the collection itself, and separately for `&Collection` and `&mut
