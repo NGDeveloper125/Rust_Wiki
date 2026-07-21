@@ -1119,19 +1119,151 @@ undiagnosed data race.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>On bare metal there's usually no OS and no <code>std::thread::spawn</code>, so it's
+tempting to think "fearless concurrency" simply doesn't apply — but almost
+every microcontroller program is concurrent in the sense that actually
+matters here: an interrupt handler can preempt <code>fn main</code>'s loop at any
+instruction boundary, run to completion, and hand control back, and from
+the compiler's point of view that's a second concurrent context every bit
+as real as a second OS thread. Any state touched by both <code>main</code> and a
+<code>#[interrupt]</code> handler is exactly the shared-mutable-data situation
+<code>Send</code>/<code>Sync</code> and the borrow checker exist to police — the guarantee
+"fearless concurrency" describes for threads is the same guarantee,
+applied to the main-loop/ISR boundary instead. The mechanics of <em>why</em> —
+<code>Send</code>/<code>Sync</code> as compile-time-checked marker traits, <code>critical-section</code>'s
+<code>Mutex</code> as the no-OS analog of <code>std::sync::Mutex</code> — are covered in full on
+<a href="../concurrency-async/send-and-sync.md">Send &amp; Sync</a>; this page won't
+repeat that ground, only the reframing.</p>
+<p>Async executors built for embedded, like <code>embassy</code>, add a third kind of
+concurrent context: cooperatively-scheduled tasks that can be preempted at
+<code>.await</code> points. The same <code>Send</code> bound the classic explanation described
+for <code>std</code>'s async runtimes applies again here — anything a task captures
+across an <code>.await</code>, or moves into <code>spawner.spawn(...)</code>, is checked at
+compile time the same way.</p>
+<p>The honest edges carry over unchanged, too, and if anything matter more on
+a microcontroller. The type system still can't catch a logic race, and it
+still can't catch a new failure mode specific to this context: holding a
+<code>critical-section</code> too long doesn't corrupt data, but it does delay every
+interrupt for as long as the section is held, which on a real-time target
+can itself blow a timing deadline. That's a genuine embedded-specific
+tradeoff the compiler has no opinion on — keeping critical sections short
+is a discipline the type system doesn't enforce, exactly the way it
+doesn't enforce deadlock-freedom on a hosted target.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::cell::Cell;
+use critical_section::Mutex;
+
+static BUTTON_PRESSED: Mutex&lt;Cell&lt;bool&gt;&gt; = Mutex::new(Cell::new(false)); // &lt;- Sync only because Cell&lt;bool&gt; is Send
+
+#[interrupt]
+fn EXTI0() { // &lt;- second concurrent context: can preempt `main` at any instruction boundary
+    critical_section::with(|cs| BUTTON_PRESSED.borrow(cs).set(true));
+}
+
+fn main() -&gt; ! {
+    loop {
+        if critical_section::with(|cs| BUTTON_PRESSED.borrow(cs).get()) {
+            // ... handle the button press
+        }
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing state across threads</h3>
+            <p>A motor controller's target speed is written by a UART-receive interrupt
+and read every tick by the main control loop — reshaping it through a
+<code>critical-section</code> mutex is what turns "shared mutable state touched from
+two contexts" from a potential race into something the compiler has
+actually checked.</p>
+<pre><code class="rust">use core::cell::Cell;
+use critical_section::Mutex;
+
+static TARGET_RPM: Mutex&lt;Cell&lt;u16&gt;&gt; = Mutex::new(Cell::new(0)); // &lt;- static requires TARGET_RPM: Sync, checked at compile time
+
+#[interrupt]
+fn USART1() { // &lt;- runs as a second concurrent context alongside `main`
+    let new_target = read_rpm_from_uart_frame();
+    critical_section::with(|cs| TARGET_RPM.borrow(cs).set(new_target));
+}
+
+fn control_loop_tick() {
+    let target = critical_section::with(|cs| TARGET_RPM.borrow(cs).get());
+    drive_motor_towards(target);
+}
+
+fn read_rpm_from_uart_frame() -&gt; u16 { 1200 }
+fn drive_motor_towards(_rpm: u16) {}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a bare <code>static mut TARGET_RPM: u16</code> would compile but
+gives the compiler nothing to check — reading and writing it from two
+contexts is undefined behavior the moment they overlap; wrapping it in
+<code>critical-section</code>'s <code>Mutex</code> makes the type genuinely <code>Sync</code> and forces
+every access through a section with interrupts disabled, the mechanism
+<a href="../concurrency-async/send-and-sync.md">Send &amp; Sync</a> covers in depth for
+exactly this main-loop/ISR pairing.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Async tasks</h3>
+            <p>An <code>embassy</code> executor running a sensor-polling task alongside a
+button-watching task needs the same "won't compile if it isn't safe to
+hand to the executor" guarantee async code gets on a hosted target — the
+risk profile is identical, just running cooperatively on one core instead
+of preemptively across OS threads.</p>
+<pre><code class="rust">use embassy_executor::Spawner;
+use embassy_sync::mutex::Mutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+
+static LATEST_READING: Mutex&lt;CriticalSectionRawMutex, u16&gt; = Mutex::new(0);
+
+#[embassy_executor::task]
+async fn poll_sensor() {
+    loop {
+        let reading = read_sensor().await;
+        *LATEST_READING.lock().await = reading; // &lt;- checked Send at this .await, same as a spawned std task
+    }
+}
+
+#[embassy_executor::task]
+async fn report_reading() {
+    loop {
+        let reading = *LATEST_READING.lock().await;
+        // ... transmit `reading`
+    }
+}
+
+async fn read_sensor() -&gt; u16 { 0 }
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>embassy</code>'s executor requires spawned futures to be
+<code>'static</code> and the values they move across an <code>.await</code> to be <code>Send</code>, so a
+task that captured non-thread-safe state without going through a shared,
+lock-protected type would fail to compile rather than corrupt
+<code>LATEST_READING</code> under task preemption — the same compile-time check the
+classic explanation describes for <code>tokio</code>, applied to a single-core
+cooperative executor instead of an OS-backed one.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

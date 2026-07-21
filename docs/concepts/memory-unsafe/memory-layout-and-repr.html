@@ -1120,19 +1120,124 @@ benefits without adding an FFI-visible layout difference.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The mechanics of <em>how</em> <code>#[repr(C)]</code>, <code>#[repr(transparent)]</code>, and
+<code>#[repr(packed)]</code> change a type's layout are covered in full on the
+<a href="../../syntax/attributes/repr.md"><code>#[repr(...)]</code> syntax page</a>'s embedded
+section, including the <code>svd2rust</code>-generated register-block pattern; this
+page's job is the broader design point those mechanics serve. A
+microcontroller's peripherals are a fixed memory map handed down by the
+manufacturer's datasheet (and often an SVD file): <code>MODER</code> at offset
+<code>0x00</code> from the GPIO block's base address, <code>OTYPER</code> at <code>0x04</code>, <code>IDR</code> at
+<code>0x10</code>, and so on, with no say in the matter for the software reading
+them. A Rust struct meant to overlay that block is a claim about
+physical reality — "byte N of this struct is register X" — and that
+claim is only true if the struct's actual field order, size, and padding
+line up with the hardware's offsets exactly.</p>
+<p>This is precisely what the default <code>repr(Rust)</code> cannot promise: the
+compiler is explicitly free to reorder a struct's fields or change
+padding between compiler versions, because for an ordinary in-memory
+struct that freedom is a pure win (smaller size, better cache behavior)
+with nothing external depending on the specific arrangement. A
+register-block struct is the opposite case — something external (the
+silicon) already fixed the arrangement, so the struct has to match it
+instead of the other way around, and <code>#[repr(C)]</code>'s promise (declaration
+order, only C-style alignment padding) is what makes "field order in the
+source" and "offset in the datasheet" the same fact instead of two facts
+that happen to agree by luck. Getting this wrong doesn't produce a type
+error: a register block with one field reordered still compiles and
+still runs, it just silently reads and writes the <em>wrong register</em> at
+every affected offset, which is exactly the kind of hardware-adjacent
+<a href="the-undefined-behavior-boundary.md">undefined-behavior boundary</a>
+mismatch that's expensive to debug because nothing about the Rust code
+looks wrong in isolation.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">#[repr(C)] // &lt;- mandatory: pins field order/offsets to the datasheet's memory map
+pub struct GpioBlock {
+    moder: u32,  // offset 0x00
+    otyper: u32, // offset 0x04
+    idr: u32,    // offset 0x08
+}
+
+const GPIOA: *mut GpioBlock = 0x4002_0000 as *mut GpioBlock;
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A peripheral driver exposes typed, safe methods over a <code>#[repr(C)]</code>
+register block; the struct's layout is the load-bearing contract the
+whole driver depends on, so it's declared once and never touched by
+callers directly.</p>
+<pre><code class="rust">#[repr(C)] // &lt;- field order/offsets must match the UART's datasheet layout exactly
+pub struct UartRegisters {
+    sr: u32,  // status register, offset 0x00
+    dr: u32,  // data register, offset 0x04
+    brr: u32, // baud rate register, offset 0x08
+}
+
+pub struct Uart {
+    regs: *mut UartRegisters,
+}
+
+impl Uart {
+    pub fn is_data_ready(&amp;self) -&gt; bool {
+        unsafe {
+            // SAFETY: `regs` points at a real, always-mapped UART block.
+            (core::ptr::read_volatile(&amp;raw const (*self.regs).sr) &amp; 0x1) != 0
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> every method on <code>Uart</code> trusts that <code>sr</code>/<code>dr</code>/<code>brr</code> sit
+at offsets <code>0x00</code>/<code>0x04</code>/<code>0x08</code> because <code>#[repr(C)]</code> guarantees it —
+dropping the attribute would leave the compiler free to reorder these
+three <code>u32</code> fields, and <code>is_data_ready</code> would silently read whichever
+register the compiler happened to place first instead of the status
+register.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>Datasheets frequently leave gaps in a peripheral's memory map — reserved
+words between two real registers — and a register-block struct has to
+model the gap explicitly or every field after it lands at the wrong
+offset.</p>
+<pre><code class="rust">#[repr(C)]
+pub struct AdcRegisters {
+    cr: u32,          // offset 0x00: control register
+    _reserved: u32,   // &lt;- offset 0x04 is reserved on this chip; must still occupy the slot
+    dr: u32,          // offset 0x08: data register — wrong offset entirely without the gap above
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>#[repr(C)]</code> only guarantees C-style padding for
+alignment, not for a vendor-defined "reserved" gap that has nothing to
+do with alignment — the <a href="https://doc.rust-lang.org/reference/type-layout.html#the-c-representation">Rust
+Reference</a>
+documents <code>repr(C)</code> as laying fields out in declaration order with no
+reordering, so an explicit placeholder field is the correct, portable
+way to reserve the space rather than relying on incidental alignment
+padding to happen to be the right size.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

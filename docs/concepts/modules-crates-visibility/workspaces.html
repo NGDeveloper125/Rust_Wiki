@@ -1047,19 +1047,74 @@ publishing anything or losing single-repository convenience.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The workspace mechanism itself is unchanged; the concrete, common
+embedded pattern is splitting the PAC, the HAL, and one or more
+board-specific/application crates into workspace members so they're
+developed, versioned, and locked together in one repository — a
+<code>svd2rust</code>-generated PAC changes rarely, the HAL depends on it by path,
+and an application crate (or several, one per board variant) depends on
+the HAL, all resolved against one shared <code>Cargo.lock</code>. Beyond that one
+point — the PAC/HAL/application split itself — there isn't much else
+genuinely different about workspaces for embedded projects: <code>-p</code>
+targeting, path dependencies, and the shared-lockfile behavior all work
+exactly as described above for any workspace.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust"># Cargo.toml (workspace root)
+[workspace]
+members = [
+    "pac",     # &lt;- svd2rust-generated peripheral access crate
+    "hal",     # &lt;- safe wrapper over the PAC
+    "app",     # &lt;- firmware application crate
+]
+
+# hal/Cargo.toml
+[dependencies]
+pac = { path = "../pac" }   # &lt;- workspace member depended on by local path
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Layering a firmware workspace</h3>
+            <p>A team building firmware for one microcontroller family wants the PAC,
+the HAL built on it, and the application logic developed and versioned
+together in one repository, without publishing the PAC or HAL to
+crates.io just to let the application depend on them.</p>
+<pre><code class="rust"># Cargo.toml (workspace root)
+[workspace]
+resolver = "2"
+members = [
+    "pac",      # &lt;- register access, regenerated from the chip's SVD file when it changes
+    "hal",      # &lt;- safe driver API built on the PAC
+    "app",      # &lt;- application firmware
+]
+
+# app/Cargo.toml
+[dependencies]
+hal = { path = "../hal" }   # &lt;- depends on the HAL by path, not a published version
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a shared <code>Cargo.lock</code> across <code>pac</code>, <code>hal</code>, and <code>app</code>
+guarantees the application always builds against the exact HAL and PAC
+versions it was developed against, and path dependencies mean the
+PAC/HAL don't need an independent crates.io release just to support one
+in-repo application — the same "keep it in one repository until
+publishing is actually needed" convenience the classic Explanation
+describes generally, applied here to a firmware crate stack.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

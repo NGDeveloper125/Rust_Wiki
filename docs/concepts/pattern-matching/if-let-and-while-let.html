@@ -1104,19 +1104,109 @@ gives for preferring <code>if let</code> over a full <code>match</code>.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>if let</code> and <code>while let</code> are core-language and allocator-free, compiling
+to the same code a hand-written <code>match</code> would — nothing about the forms
+themselves changes under <code>#![no_std]</code>. What does change is how often
+they're reached for: embedded main loops spend a lot of their time
+polling and draining, and both forms exist to make exactly that
+idiomatic. <code>if let Some(byte) = uart.read()</code> checks a peripheral for one
+newly available byte and does nothing when there isn't one, without a
+<code>None =&gt; {}</code> arm repeated on every single loop tick. <code>while let Some(item) = ring_buffer.pop()</code> drains a fixed-capacity queue — typically
+filled from an interrupt handler — down to empty in a tight loop, with
+the pattern failing to match doubling as the loop's own exit condition
+instead of a separately tracked count.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use heapless::Deque;
+
+struct Uart;
+
+impl Uart {
+    fn read(&amp;mut self) -&gt; Option&lt;u8&gt; {
+        None // no byte available yet
+    }
+}
+
+let mut uart = Uart;
+if let Some(byte) = uart.read() { // &lt;- runs only when a byte actually arrived
+    let _ = byte;
+}
+
+let mut ring_buffer: Deque&lt;u8, 8&gt; = Deque::new();
+ring_buffer.push_back(0xA5).ok();
+
+while let Some(item) = ring_buffer.pop_front() { // &lt;- drains the buffer until it reports empty
+    let _ = item;
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A main loop polls a UART peripheral once per iteration for a newly
+arrived byte; only the "a byte arrived" case has anything to do, so
+<code>if let</code> replaces a <code>match</code> that would otherwise carry an empty <code>None</code>
+arm on every single iteration.</p>
+<pre><code class="rust">struct Uart;
+
+impl Uart {
+    fn read(&amp;mut self) -&gt; Option&lt;u8&gt; {
+        None // placeholder: no byte available this tick
+    }
+}
+
+fn poll_uart(uart: &amp;mut Uart) {
+    if let Some(byte) = uart.read() { // &lt;- only the Some case has anything to do, every loop tick
+        let _ = byte; // hand off to the protocol parser
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a bare register poll returns "nothing yet" far more
+often than "a byte arrived," so writing out a <code>None =&gt; {}</code> arm on every
+iteration would be pure noise; <code>if let</code> says directly that only one
+shape matters here, the same reasoning the
+<a href="https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html">Rust Book</a>
+gives for preferring it over a full <code>match</code>.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>An interrupt handler pushes incoming samples into a fixed-capacity ring
+buffer; the main loop drains it completely each pass with <code>while let</code>,
+so the loop's own exit condition is the buffer reporting empty rather
+than a separately tracked count.</p>
+<pre><code class="rust">use heapless::Deque;
+
+fn drain(buffer: &amp;mut Deque&lt;u16, 32&gt;) {
+    while let Some(sample) = buffer.pop_front() { // &lt;- loops until pop_front() returns None
+        let _ = sample; // hand off to the processing pipeline
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the buffer running dry is exactly the signal that this
+pass is done, so <code>while let</code> doubles as both extraction and the loop's
+termination condition — the same "the pattern failing is the exit"
+idiom the classic page uses for draining an <code>mpsc::Receiver</code>.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

@@ -1101,19 +1101,104 @@ uses throughout.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Modules are a purely compile-time organizational construct with no
+runtime representation, so the mechanism is unchanged under
+<code>#![no_std]</code>. The typical structure is worth grounding concretely: a HAL
+crate's <code>lib.rs</code> commonly declares one module per peripheral family —
+<code>gpio</code>, <code>spi</code>, <code>i2c</code>, <code>uart</code> — mirroring the chip's own peripheral set,
+each module wrapping that peripheral's register block in a small,
+focused API before the crate re-exports a curated set of types drawn
+from each of them.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">// hal/src/lib.rs
+mod gpio;   // &lt;- src/gpio.rs: general-purpose I/O pins
+mod spi;    // &lt;- src/spi.rs: SPI peripheral driver
+mod i2c;    // &lt;- src/i2c.rs: I2C peripheral driver
+mod uart;   // &lt;- src/uart.rs: UART peripheral driver
+
+pub use gpio::Pin;
+pub use spi::Spi;
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL crate's peripheral modules (<code>gpio</code>, <code>spi</code>, <code>i2c</code>, <code>uart</code>) each keep
+their own register-level details private, and the crate root curates one
+flat, public set of types drawn from all of them.</p>
+<pre><code class="rust">// hal/src/lib.rs
+mod gpio;  // &lt;- private module: internal register layout stays hidden
+mod spi;
+mod i2c;
+mod uart;
+
+pub use gpio::Pin;    // &lt;- curated re-export: callers use `hal::Pin`, never `hal::gpio::Pin`
+pub use spi::Spi;
+pub use i2c::I2c;
+pub use uart::Uart;
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> re-exporting a flat set of driver types from the crate
+root, rather than making callers dig into <code>hal::gpio::Pin</code>, keeps the
+HAL's internal peripheral-module layout free to change as chip variants
+are added, the same curation the
+<a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">API Guidelines' future-proofing chapter</a>
+recommends generally.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A HAL's <code>i2c</code> module mixes register-twiddling logic with pure
+protocol-encoding logic (building the byte sequence for a given
+command); splitting the pure part into its own function lets it be
+unit-tested on the host, without any real I2C bus involved.</p>
+<pre><code class="rust">// hal/src/i2c.rs
+pub fn encode_write_command(register: u8, value: u8) -&gt; [u8; 2] {  // &lt;- pure logic: no register access
+    [register, value]
+}
+
+pub fn write_register(&amp;mut self, register: u8, value: u8) {  // &lt;- touches real hardware, not unit-tested here
+    let bytes = encode_write_command(register, value);
+    // ... unsafe register/bus write using `bytes`
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encodes_register_and_value_as_two_bytes() {
+        assert_eq!(encode_write_command(0x6B, 0x00), [0x6B, 0x00]);
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> unit tests for a <code>#![no_std]</code> crate still compile and
+run for the host by default (<code>cargo test</code> targets the host unless
+configured otherwise), so isolating protocol/encoding logic from actual
+register access into its own module-level function is what makes that
+logic testable at all without hardware in the loop, an approach the
+<a href="https://docs.rust-embedded.org/book/">Embedded Rust Book</a> recommends
+for driver crates.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

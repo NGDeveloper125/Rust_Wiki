@@ -1121,19 +1121,117 @@ notes for any equality assertion, serde-derived types included.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>serde</code>'s traits and its <code>derive</code> macro don't themselves need <code>std</code> — the
+crate builds with <code>default-features = false</code> to drop the parts of its
+API that assume an allocator, leaving <code>Serialize</code>/<code>Deserialize</code> and the
+derive fully usable in a <code>#![no_std]</code> crate. What typically doesn't carry
+over is the format crates most tutorials reach for: <code>serde_json</code> and
+<code>toml</code> both produce <code>String</code>/<code>Vec</code>-shaped output, so they need at least
+<code>alloc</code>, and in practice assume a hosted environment with plenty of heap.</p>
+<p>The embedded-world answer is <code>postcard</code> — a binary serde data format
+designed specifically for resource-constrained targets: compact (no
+field names or JSON punctuation on the wire, just the encoded values),
+and able to serialize into a fixed-size buffer without requiring a heap
+allocator for that direction. (Its exact allocator requirements differ a
+little by API used and by version, so check <code>postcard</code>'s own
+documentation for the specifics that matter for a given target rather
+than assuming every corner of it is allocator-free.) The same
+<code>#[derive(Serialize, Deserialize)]</code> written for <code>serde_json</code> on a hosted
+config struct works unchanged with <code>postcard</code> on a <code>#![no_std]</code> firmware
+— it's the format crate underneath, not the derive, that changes.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }, postcard = "1"
+#![no_std]
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)] // &lt;- same derive as the hosted example; the format crate below is what differs
+struct SensorReading {
+    id: u32,
+    millivolts: u16,
+}
+
+fn encode(reading: &amp;SensorReading, buf: &amp;mut [u8]) -&gt; usize {
+    let used = postcard::to_slice(reading, buf).unwrap(); // &lt;- serializes into a caller-provided buffer, no heap needed
+    used.len()
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Serializing and deserializing</h3>
+            <p>A sensor node needs to send a compact reading over a low-bandwidth radio
+link — <code>postcard</code> serializes straight into a fixed-size, statically
+sized buffer, with no allocation and no wire overhead spent on field
+names the way a JSON payload would carry.</p>
+<pre><code class="rust">// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }, postcard = "1"
+#![no_std]
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+struct SensorReading {
+    id: u8,
+    celsius_tenths: i16,
+}
+
+fn build_packet(reading: &amp;SensorReading) -&gt; [u8; 16] {
+    let mut buf = [0u8; 16]; // &lt;- fixed-size, stack-allocated: no heap involved
+    let used = postcard::to_slice(reading, &amp;mut buf).unwrap(); // &lt;- postcard: the no_std-friendly wire format
+    let len = used.len();
+    buf[..len].try_into().unwrap_or(buf)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a radio packet has a hard size ceiling and no
+allocator to spare, so a format that serializes into a caller-owned
+buffer without needing <code>alloc</code> fits directly, whereas <code>serde_json</code> would
+need heap-backed <code>String</code>/<code>Vec</code> output just to produce the bytes to
+send; <code>postcard</code>'s own documentation positions it specifically for this
+resource-constrained niche.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A config struct shared between firmware and a desktop configuration tool
+should use field types that compile on both sides — a plain <code>serde</code>
+derive over primitives and fixed-size arrays works unchanged in a
+<code>#![no_std]</code> build and a hosted one, without special-casing either
+target.</p>
+<pre><code class="rust">// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }
+#![no_std]
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct DeviceConfig {
+    pub sample_rate_hz: u16,
+    pub channel_mask: u8, // &lt;- plain primitives: no String/Vec, so this compiles under no_std as-is
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> choosing allocator-free field types up front means the
+same struct definition, and the same derive, serializes with <code>postcard</code>
+on the firmware side and with <code>serde_json</code> on a desktop configuration
+tool without maintaining two parallel type definitions — <code>serde</code>'s
+<code>default-features = false</code> mode is exactly what keeps that single
+definition available to the <code>no_std</code> side of that pairing.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

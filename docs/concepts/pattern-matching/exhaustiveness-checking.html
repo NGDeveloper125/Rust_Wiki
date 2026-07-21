@@ -1098,19 +1098,123 @@ bump.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Exhaustiveness checking is a compile-time-only guarantee: zero runtime
+cost, no allocator dependency, identical proof obligation under
+<code>#![no_std]</code> as anywhere else. What changes is how much that guarantee
+is worth. Hosted code that forgets a case usually still fails loudly —
+an unhandled <code>enum</code> variant that slips past <code>match</code> would show up as a
+crash with a backtrace, filed as a bug, seen by a user. A microcontroller
+decoding a hardware status register or a peripheral's discrete power-mode
+enum has none of that safety net: no user watching the console, often no
+crash reporting at all, sometimes not even a way to reboot itself
+cleanly. An unhandled hardware state there doesn't announce itself — it's
+a silent hang, a motor left running, or state that quietly drifts wrong
+until someone notices the physical symptom. Exhaustiveness checking
+turns that entire failure mode into a compile error, before the firmware
+image is ever flashed to a device that may run unattended for years.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">enum PowerMode {
+    Active,
+    Idle,
+    Standby,
+    Shutdown,
+}
+
+fn duty_cycle_percent(mode: &amp;PowerMode) -&gt; u8 {
+    match mode { // &lt;- every PowerMode variant must appear, or this fails to compile
+        PowerMode::Active =&gt; 100,
+        PowerMode::Idle =&gt; 40,
+        PowerMode::Standby =&gt; 5,
+        PowerMode::Shutdown =&gt; 0,
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A motor controller's fault register decodes into a fixed set of fault
+codes; matching exhaustively guarantees the firmware image flashed to a
+fleet of unattended devices can't ship with a fault code silently
+ignored — there's no crash report to surface the gap later.</p>
+<pre><code class="rust">enum MotorFault {
+    OverCurrent,
+    OverTemperature,
+    StallDetected,
+    EncoderFault,
+}
+
+fn shutdown_required(fault: &amp;MotorFault) -&gt; bool {
+    match fault { // &lt;- exhaustive: a new fault code added later fails every match like this until handled
+        MotorFault::OverCurrent =&gt; true,
+        MotorFault::OverTemperature =&gt; true,
+        MotorFault::StallDetected =&gt; false,
+        MotorFault::EncoderFault =&gt; true,
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> on a device nobody is watching, an unhandled fault
+code isn't a visible crash to file a bug against — it's a motor that
+keeps running, or a controller that silently hangs, with no diagnostic
+trail at all; forcing the match to name every defined <code>MotorFault</code>
+variant stands in for the bug report a hosted program would eventually
+get, per the same exhaustiveness guarantee the
+<a href="https://doc.rust-lang.org/book/ch06-02-match.html#matches-are-exhaustive">Rust Book</a>
+documents.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A hardware-abstraction-layer crate's <code>ChipStatus</code> enum models every
+status bit the current silicon revision defines; marking it
+<code>#[non_exhaustive]</code> lets a later chip revision add a status the HAL
+didn't anticipate without breaking every firmware project's exhaustive
+match against the old release.</p>
+<pre><code class="rust">#[non_exhaustive] // &lt;- a future silicon revision may define new status bits this HAL release doesn't know
+pub enum ChipStatus {
+    Ready,
+    Calibrating,
+    ThermalThrottle,
+}
+
+// in firmware built against this HAL:
+fn led_pattern(status: &amp;ChipStatus) -&gt; u8 {
+    match status {
+        ChipStatus::Ready =&gt; 0b0001,
+        ChipStatus::Calibrating =&gt; 0b0010,
+        ChipStatus::ThermalThrottle =&gt; 0b0100,
+        _ =&gt; 0b1111, // &lt;- required by #[non_exhaustive]; a status this HAL version doesn't recognize yet
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> without <code>#[non_exhaustive]</code>, a HAL adding a status bit
+for a newer chip stepping would break every downstream firmware's
+exhaustive match on a minor version bump; the
+<a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">API Guidelines' section on future-proofing</a>
+recommends it for exactly this kind of enum a crate expects to grow —
+doubly so for hardware-tracking enums, where new silicon revisions are a
+certainty rather than a maybe.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

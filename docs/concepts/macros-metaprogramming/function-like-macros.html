@@ -1085,19 +1085,110 @@ shorten.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A function-like macro's <code>#[proc_macro]</code> function runs on the host at
+compile time exactly like any other procedural macro (see <a href="procedural-macros.md">Procedural
+macros</a>) — it never touches the target, and only
+the <code>TokenStream</code> it returns has to be ordinary, already-<code>no_std</code>-
+compatible Rust for the embedded build to succeed; the macro's own
+implementation is free to use full <code>std</code> regardless of what the
+consuming crate targets. Where this shape earns its crate-splitting cost
+in embedded code is compile-time validation of values that would
+otherwise only be checked once flashed to hardware: a peripheral base
+address that must land on a word boundary, a CAN identifier that must
+fit inside 11 bits, a checksum byte that must match a computed value —
+anything a fixed set of <code>macro_rules!</code> arms can't reject by pattern shape
+alone, because rejecting it requires actually computing something. The
+pattern generalized as <code>singleton!</code> in crates like <code>cortex-m</code> is a
+related but distinct use: rather than validating a literal, it's a
+function-like macro that expands to a static paired with take-once
+semantics at runtime, so a <code>'static mut</code> reference can be handed out
+safely exactly once — a shape that's awkward to write by hand for every
+buffer that needs it, and that a macro can generate uniformly instead.
+As with <code>vec!</code>/<code>format!</code> (see <a href="../../syntax/macros/vec-macro.md"><code>vec!</code></a>
+and <a href="../../syntax/macros/write-macros.md"><code>write!</code>/<code>writeln!</code></a>), the one
+caveat worth designing around deliberately is whether the macro's
+expansion assumes a heap: a function-like macro that expands to a <code>Vec</code>
+or <code>String</code> literal inherits the same <code>alloc</code>-plus-allocator requirement
+those macros document, while one that expands to a fixed-size array or a
+<code>heapless</code> type avoids that requirement entirely.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use proc_macro::TokenStream;
+
+#[proc_macro] // &lt;- ordinary std-using Rust: compiled for, and run on, the host — never the target
+pub fn reg_addr(input: TokenStream) -&gt; TokenStream {
+    let text = input.to_string();
+    let value = usize::from_str_radix(text.trim_start_matches("0x"), 16).unwrap();
+    assert!(value % 4 == 0, "peripheral base address must be 4-byte aligned"); // &lt;- fails the build, not the flash
+    text.parse().unwrap()
+}
+</code></pre>
+<p>and the consuming, <code>#![no_std]</code> firmware crate that invokes it:</p>
+<pre><code class="rust">// Cargo.toml: regkit = { path = "../regkit" }
+use regkit::reg_addr;
+
+const GPIOA_BASE: usize = reg_addr!(0x4800_0000); // &lt;- misalignment would fail to compile, long before any flashing
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A CAN bus driver accepts identifiers as compile-time literals; a
+function-like macro rejects any literal that doesn't fit the 11-bit
+standard identifier range before the firmware ever runs, instead of
+silently truncating it at runtime.</p>
+<pre><code class="rust">// crate "cankit" defines `can_id` as a #[proc_macro]
+use cankit::can_id;
+
+const HEARTBEAT_ID: u16 = can_id!(0x7FF); // &lt;- rejected at compile time if it doesn't fit 11 bits
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a plain <code>u16</code> constant would accept and silently mask
+any out-of-range value, turning a protocol violation into a bug that
+only shows up on the bus — <a href="https://effective-rust.com/">Effective Rust</a>
+cites exactly this kind of compile-time validation of a domain-specific
+literal as the strongest case for a function-like macro over a plain
+constant.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A calibration table needs to be macro-generated from a short list of
+readings, but expanding it into a <code>Vec</code> would drag <code>alloc</code> and a
+<code>#[global_allocator]</code> into every crate that just wants a handful of
+constants.</p>
+<pre><code class="rust">// crate "calkit" defines `lookup_table` as a #[proc_macro]
+use calkit::lookup_table;
+
+// AVOID: expanding to `vec![...]` would require `alloc` + a #[global_allocator] just to hold constants
+// PREFER: expanding to a plain array needs neither, and the table lives in .rodata
+const GAIN_CURVE: [u16; 4] = lookup_table!(100, 205, 410, 820); // &lt;- macro-generated, but an ordinary const array
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the same <code>alloc</code>-vs-heapless design choice documented
+for <a href="../../syntax/macros/vec-macro.md"><code>vec!</code></a> and
+<a href="../../syntax/macros/write-macros.md"><code>write!</code></a> applies to any macro a
+crate author writes, not just the standard library's — expanding to a
+fixed-size array sidesteps the allocator requirement altogether rather
+than merely offering a <code>heapless</code> alternative alongside it.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

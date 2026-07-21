@@ -136,13 +136,112 @@ conventions still apply — the macro only removes the copy-pasted
 `#[test] fn ... { assert_eq!(...) }` scaffolding around each case, not
 the tests themselves.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `macro_rules!` is a pure compile-time construct — it
-produces ordinary Rust code before the compiler ever reaches code
-generation, so it works identically with `#![no_std]` and costs nothing
-at runtime. It's also heavily used *in* the embedded ecosystem itself:
-crates like `embedded-hal` implementations and `heapless` lean on
-`macro_rules!` to generate repetitive register, pin, and peripheral
-definitions (one macro invocation per GPIO pin or timer instance) rather
-than hand-writing dozens of nearly identical impls.
+Everything about `macro_rules!` matching and expansion happens purely at
+compile time, before the compiler has generated any code at all, so it
+behaves identically in a `#![no_std]` binary and a hosted one — there is
+no runtime component to a declarative macro on any target. What changes
+in embedded code isn't the mechanism but how often reaching for it is the
+right call: peripheral and register access is one of the most repetitive
+corners of embedded Rust, with dozens of GPIO pins, UART instances, or
+timer channels that each need a near-identical accessor function or
+wrapper `impl`, differing only in a base address, bit position, or type
+name. Hand-writing each one invites the exact class of bug a compiler
+can't catch on its own — a copy-pasted accessor that reads the wrong
+register because the address wasn't updated — while a single
+`macro_rules!` definition expanded once per peripheral guarantees every
+instance has the same shape by construction. This is precisely the
+technique tools like `svd2rust` are built around: generating an entire
+chip's register-access API from its hardware description by expanding
+one macro-shaped code generator once per register, rather than by hand.
+
+The token-level mechanics of writing such a macro — capturing names and
+addresses as metavariables, repeating a template over a list of pins —
+are covered on the syntax pages for [`$ident`](../../syntax/macros/metavariable.md),
+[`$ident:kind`](../../syntax/macros/fragment-specifier.md), and
+[`$(...)…`](../../syntax/macros/repetition.md). This page is about the
+design decision sitting above those mechanics: reaching for `macro_rules!`
+specifically, ahead of a proc-macro or hand-written code, whenever the
+pattern is "many near-identical items differing only in a few
+substituted tokens" — which describes an unusually large fraction of
+register- and peripheral-facing embedded code.
+
+## Basic usage example (Embedded)
+
+```
+macro_rules! gpio_output_pin { // <- one macro definition stands in for many hand-written pin wrappers
+    ($name:ident, $bit:expr) => {
+        struct $name;
+        impl $name {
+            fn set_high(&self, odr: &mut u32) {
+                *odr |= 1 << $bit;
+            }
+        }
+    };
+}
+
+gpio_output_pin!(Pa5, 5); // <- expands into a full `Pa5` type with its own `set_high`
+gpio_output_pin!(Pa6, 6);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Bit manipulation and flags
+
+A driver needs a `set`/`clear` pair of bit-level accessors for every GPIO
+pin on a port, each pin differing only in which bit of the output-data
+register it touches.
+
+```
+macro_rules! gpio_bit { // <- generates one set/clear pair per pin, differing only in $bit
+    ($set_fn:ident, $clear_fn:ident, $bit:expr) => {
+        fn $set_fn(odr: &mut u32) {
+            *odr |= 1 << $bit; // <- $bit is the only thing that changes between pins
+        }
+        fn $clear_fn(odr: &mut u32) {
+            *odr &= !(1 << $bit);
+        }
+    };
+}
+
+gpio_bit!(set_pa5, clear_pa5, 5);
+gpio_bit!(set_pa6, clear_pa6, 6);
+```
+
+**Why this way:** writing the mask/shift logic once and substituting only
+the bit position keeps every pin's accessor byte-for-byte identical in
+shape, which is what makes a copy-paste-introduced wrong bit position
+impossible rather than merely unlikely — the same discipline the [Rust
+Embedded Book's registers chapter](https://docs.rust-embedded.org/book/start/registers.html)
+describes for register access, whether written by hand or generated.
+
+### Scenario: Designing a public API
+
+A small HAL exposes a consistent constructor-plus-accessor shape for
+several peripheral instances (UART1, UART2, UART3) sitting at different
+base addresses; the macro is the single source of truth for that shape.
+
+```
+macro_rules! uart_peripheral { // <- one definition; the API shape can't drift between instances
+    ($ty:ident, $base:expr) => {
+        pub struct $ty;
+        impl $ty {
+            pub fn new() -> Self { $ty }
+            pub fn status(&self) -> u32 {
+                unsafe { core::ptr::read_volatile(($base + 0x00) as *const u32) }
+            }
+        }
+    };
+}
+
+uart_peripheral!(Uart1, 0x4001_3800);
+uart_peripheral!(Uart2, 0x4000_4400);
+```
+
+**Why this way:** expanding every instance from one macro guarantees
+`Uart1::new().status()` and `Uart2::new().status()` share the exact same
+method surface, which matters more in a public HAL crate than in
+application code — [Effective Rust](https://effective-rust.com/)
+recommends a macro precisely when the alternative is several hand-written
+impls that must be kept in lockstep.

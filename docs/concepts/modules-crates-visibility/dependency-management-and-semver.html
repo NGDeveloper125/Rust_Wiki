@@ -1045,19 +1045,56 @@ default way to grow a stable crate's public surface.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Semver and <code>Cargo.lock</code> work identically on an embedded target; the
+genuinely embedded-specific concern is that <code>#![no_std]</code> compatibility
+becomes a hard dependency-selection filter, not just a preference. A
+crate that transitively pulls in <code>std</code> — even through one dependency
+three levels down — simply fails to compile for a bare-metal target like
+<code>thumbv7em-none-eabihf</code>, since there's no OS underneath to provide it.
+This makes checking whether a candidate crate (and everything it depends
+on) supports <code>#![no_std]</code>, usually via an opt-out <code>std</code> Cargo feature,
+part of picking a dependency at all, not just of tuning it afterward.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">[dependencies]
+heapless = { version = "0.8", default-features = false }  # &lt;- no_std-compatible fixed-capacity collections
+serde = { version = "1", default-features = false }        # &lt;- opts out of serde's default `std` feature
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Selecting a dependency for a `#![no_std]` crate</h3>
+            <p>A firmware crate needs a JSON-like serialization story, and <code>serde</code> is
+the obvious candidate — but pulling it in with its defaults would
+silently drag in <code>std</code> and break the bare-metal build.</p>
+<pre><code class="rust">// AVOID: default features enabled — pulls in `std`, won't compile for thumbv7em-none-eabihf
+serde = "1"
+
+// PREFER: opts out of the default `std` feature; serde derive still works under `#![no_std]`
+serde = { version = "1", default-features = false }
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>serde</code>'s <code>std</code> feature is on by default because most
+of its users are hosted; disabling it and checking a candidate crate's
+docs for <code>no_std</code> support before adding the dependency avoids
+discovering a hard compile failure only after the code depending on it
+is already written, which the
+<a href="https://docs.rust-embedded.org/book/">Embedded Rust Book</a> calls out as
+a routine first check for any candidate crate.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

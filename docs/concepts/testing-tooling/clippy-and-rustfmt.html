@@ -1088,19 +1088,108 @@ sensor or scientific code.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Clippy and rustfmt run identically regardless of target. Both operate on
+source code — rustfmt reformats source text directly, and clippy lints
+against the compiler's parsed representation of it (roughly, the same
+stage <code>rustc</code> itself analyzes) — rather than on anything produced by
+codegen or linking. Cross-compiling to <code>thumbv7em-none-eabihf</code> instead of
+the host triple doesn't change what either tool sees: <code>cargo clippy --target thumbv7em-none-eabihf</code> and <code>cargo fmt</code> run the same lints and
+apply the same formatting rules they would on any hosted crate, with no
+embedded-specific behavior in either tool.</p>
+<p>What does shift is which of clippy's existing, general-purpose lints
+carry more weight in firmware. Nothing about <code>#![no_std]</code> adds
+embedded-specific lints, but restriction-group lints like
+<code>clippy::unwrap_used</code>, <code>clippy::indexing_slicing</code>, and
+<code>clippy::arithmetic_side_effects</code> — all of which flag places a panic
+could occur — are worth enabling more readily on a target where a panic
+often means an abort-and-reset with no attached terminal to report it,
+rather than a caught unwind a hosted process can log and recover from.
+That's a difference in which lints a project chooses to turn on, not a
+difference in what the tools themselves do.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">#![no_std]
+#![warn(clippy::arithmetic_side_effects)] // &lt;- an ordinary clippy lint; runs the same under any --target
+
+pub fn scale_reading(raw: u16, factor: u16) -&gt; u16 {
+    raw.saturating_mul(factor) // &lt;- avoids the panic-on-overflow arithmetic the lint flags
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Numeric computation</h3>
+            <p>A calibration calculation on sensor data uses plain arithmetic that could
+overflow; <code>clippy::arithmetic_side_effects</code> flags it the same way it
+would in any hosted crate, but the consequence of leaving it unfixed is
+more severe on a target where an overflow panic resets the device rather
+than getting caught by a supervising process.</p>
+<pre><code class="rust">#![no_std]
+#![warn(clippy::arithmetic_side_effects)]
+
+// AVOID: an overflowing add here panics, and on target that means a reset, not a caught error
+fn calibrate_avoid(raw: u16, offset: u16) -&gt; u16 {
+    raw + offset // &lt;- clippy::arithmetic_side_effects flags this
+}
+
+// PREFER: overflow is handled explicitly instead of panicking
+fn calibrate(raw: u16, offset: u16) -&gt; u16 {
+    raw.saturating_add(offset)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the lint itself is not embedded-specific — it fires
+identically on a hosted crate — but a panic from unchecked arithmetic is
+markedly more expensive on a target with no unwind-catching supervisor
+to report it, which is a reason to enable this ordinarily-opt-in
+restriction lint more readily in firmware; see
+<a href="https://rust-lang.github.io/rust-clippy/master/#arithmetic_side_effects"><code>clippy::arithmetic_side_effects</code></a>
+in the clippy lint list.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>A peripheral-init routine that panics via <code>.unwrap()</code> on a hardware
+failure leaves a firmware author with only a reset to recover from;
+<code>clippy::unwrap_used</code> flags this exactly as it would in hosted code,
+pushing the driver toward a <code>Result</code>-returning constructor instead.</p>
+<pre><code class="rust">#![no_std]
+#![warn(clippy::unwrap_used)]
+
+// AVOID: any I2C failure here panics the whole firmware
+fn init_sensor_avoid(i2c: &amp;mut impl embedded_hal::i2c::I2c) {
+    i2c.write(0x76, &amp;[0x00]).unwrap(); // &lt;- clippy::unwrap_used flags this in library code
+}
+
+// PREFER: the caller decides how to handle an init failure
+fn init_sensor(i2c: &amp;mut impl embedded_hal::i2c::I2c) -&gt; Result&lt;(), embedded_hal::i2c::ErrorKind&gt; {
+    i2c.write(0x76, &amp;[0x00]).map_err(|_| embedded_hal::i2c::ErrorKind::Other)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the lint is the same one described in this page's
+classic "Designing a public API" scenario above, unchanged for an
+embedded target — but returning <code>Result</code> matters even more in firmware,
+where a caller may want to retry a transient bus error rather than let a
+panic-triggered reset discard in-progress state.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

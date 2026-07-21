@@ -138,12 +138,121 @@ ordinary `#[test]` the harness discovers on its own, matching the
 — the attribute only removes the copy-pasted case-by-case boilerplate,
 not the tests themselves.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** An attribute-like macro runs entirely at compile time
-and produces ordinary Rust code, so it has no runtime cost of its own —
-support depends only on whether the code it generates is `no_std`-
-friendly. The embedded ecosystem relies on this heavily: `cortex-m-rt`'s
-`#[entry]` is a real-world attribute-like macro that rewrites an
-ordinary `fn main() -> !` into the exact form the reset handler expects,
-with no `std` runtime involved anywhere in that expansion.
+An attribute-like macro's transformation happens entirely on the host
+during compilation, the same host/target split every procedural macro
+follows (see [Procedural macros](procedural-macros.md)) — but embedded
+Rust leans on this specific macro kind for something genuinely
+load-bearing: turning an ordinary function or module into the exact code
+the hardware's startup and interrupt-dispatch conventions require.
+`cortex-m-rt`'s `#[entry]` rewrites a plain `fn main() -> !` into the
+function the reset handler actually calls, enforcing at compile time
+that there is exactly one entry point and that it never returns;
+`#[interrupt]` does the analogous rewrite for a specific interrupt
+vector, wiring the annotated function into the vector table under the
+compiler's control rather than the programmer's. RTIC's `#[app]` goes
+further still, expanding an entire annotated module into the scheduling,
+resource-locking (`#[shared]`/`#[local]`), and task-dispatch code an RTIC
+application runs on — code that would be substantial, error-prone
+boilerplate to hand-write per project. In every case the expansion is
+ordinary, already-`no_std`-compatible Rust; nothing about the macro
+itself needs a heap or `std`, and the transformation is exactly as total
+as the classic Explanation describes — return the wrong tokens and the
+annotated function or module simply isn't there anymore, which is why
+these crates test their macro output carefully rather than trusting it
+by inspection alone.
+
+## Basic usage example (Embedded)
+
+```
+#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry;
+
+#[entry] // <- rewrites this function into the shape the reset handler calls; enforces exactly one entry point
+fn main() -> ! {
+    loop {}
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A firmware project with several interrupt-driven tasks and shared state
+uses RTIC's `#[app]` to get resource-locking and scheduling generated
+from a declarative module, instead of hand-writing a critical-section-
+guarded dispatcher.
+
+```
+#[rtic::app(device = pac)] // <- expands this whole module into scheduling + resource-locking code
+mod app {
+    #[shared]
+    struct Shared {
+        counter: u32,
+    }
+
+    #[local]
+    struct Local {}
+
+    #[init]
+    fn init(_cx: init::Context) -> (Shared, Local) {
+        (Shared { counter: 0 }, Local {})
+    }
+
+    #[task(binds = TIM2, shared = [counter])]
+    fn on_timer(mut cx: on_timer::Context) {
+        cx.shared.counter.lock(|c| *c += 1); // <- lock/scheduling code is macro-generated, not hand-written
+    }
+}
+```
+
+**Why this way:** the critical-section-guarded dispatcher this expands
+into is exactly the code the [RTIC book](https://rtic.rs/) argues is
+harder to get right, and harder to review, by hand than the declarative
+`#[shared]`/`#[task]` module the macro expands from — the attribute
+macro's job is precisely to keep that generated dispatcher consistent as
+tasks and resources are added.
+
+### Scenario: Testing
+
+An `#[entry]`-annotated function is awkward to unit test directly — it
+never returns and assumes real hardware — so firmware logic is kept in
+ordinary functions the macro-generated entry point calls into.
+
+```
+#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry;
+
+fn compute_next_state(count: u32) -> u32 { // <- plain function: testable with ordinary #[test] on the host
+    count.wrapping_add(1)
+}
+
+#[entry] // <- stays a thin wrapper; the logic worth testing lives outside it
+fn main() -> ! {
+    let mut count = 0;
+    loop {
+        count = compute_next_state(count);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::compute_next_state;
+
+    #[test]
+    fn wraps_on_overflow() {
+        assert_eq!(compute_next_state(u32::MAX), 0);
+    }
+}
+```
+
+**Why this way:** the attribute macro's rewritten entry point only ever
+runs on target hardware, so the
+[Rust Book's testing guidance](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
+can only reach it if the logic worth checking is factored into plain
+functions the host's own test harness can call directly.

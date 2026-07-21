@@ -1081,19 +1081,126 @@ ecosystem standardized on a third-party crate for this instead.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p>Both host benchmarking paths above measure the wrong CPU entirely for
+embedded work: <code>#[bench]</code> and <code>criterion</code> time how fast code runs on the
+<em>development machine</em>, which has a different instruction set, clock
+speed, cache hierarchy, and memory system than a microcontroller. A
+number from <code>cargo bench</code> says nothing about how long a routine takes on
+the actual target — it isn't a rough approximation that's merely less
+precise, it's measuring a genuinely different piece of silicon, so it
+isn't meaningful for target-hardware timing at all.</p>
+<p>Real embedded timing measurement instead reads the target's own notion
+of elapsed time. The most common approach uses the Cortex-M <code>DWT</code> (Data
+Watchpoint and Trace) unit's cycle counter, accessed via the <code>cortex-m</code>
+crate: enable it once, read the cycle count immediately before and after
+the code of interest, and the difference is an exact, on-target cycle
+count — including real effects a host benchmark could never see, like
+flash wait states or bus contention. Where even more ground truth is
+needed — end-to-end latency including interrupt response time, or
+comparing against an external event — the classic technique is toggling
+a GPIO pin high just before the code runs and low just after, then
+measuring the pulse width with a logic analyzer or oscilloscope
+externally. Neither technique gives <code>criterion</code>'s statistical rigor out
+of the box, but both measure the thing that actually matters for
+firmware: real time on the real chip.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use cortex_m::peripheral::DWT;
+
+fn sum_of_squares(n: u32) -&gt; u32 {
+    (1..=n).map(|x| x * x).sum()
+}
+
+fn measure(dwt: &amp;mut DWT) {
+    let start = dwt.cyccnt.read(); // &lt;- on-target cycle count before
+    let total = sum_of_squares(1_000);
+    let elapsed_cycles = dwt.cyccnt.read().wrapping_sub(start); // &lt;- exact cycles spent on the target CPU
+    defmt::info!("total={}, took {} cycles", total, elapsed_cycles);
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Numeric computation</h3>
+            <p>Comparing two candidate implementations of a hot numeric routine only
+means something for a firmware's actual performance budget if the timing
+comes from the target chip itself, not the development host.</p>
+<pre><code class="rust">use cortex_m::peripheral::DWT;
+
+fn sum_iterator(values: &amp;[i32]) -&gt; i32 {
+    values.iter().sum() // &lt;- candidate A
+}
+
+fn sum_manual_loop(values: &amp;[i32]) -&gt; i32 {
+    let mut total = 0;
+    for &amp;v in values { // &lt;- candidate B
+        total += v;
+    }
+    total
+}
+
+fn compare(dwt: &amp;mut DWT, readings: &amp;[i32]) {
+    let start = dwt.cyccnt.read();
+    let a = sum_iterator(readings);
+    let cycles_a = dwt.cyccnt.read().wrapping_sub(start); // &lt;- on-target cycle count, candidate A
+
+    let start = dwt.cyccnt.read();
+    let b = sum_manual_loop(readings);
+    let cycles_b = dwt.cyccnt.read().wrapping_sub(start); // &lt;- on-target cycle count, candidate B
+
+    defmt::assert_eq!(a, b);
+    defmt::info!("iterator: {} cycles, manual loop: {} cycles", cycles_a, cycles_b);
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the two candidates can rank differently on the target's
+Cortex-M core than on a desktop CPU — different pipeline depth, no
+speculative execution, flash wait states on every fetch — so a decision
+that rides on which is actually faster in the shipping firmware has to be
+measured with the <code>DWT</code> cycle counter on real hardware, not with
+<code>std::time::Instant</code> on the host.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A routine's execution time sometimes needs to be verified against an
+external, ground-truth clock — end-to-end latency from an interrupt
+firing to a response being ready, say — which a cycle counter inside the
+same chip can't independently confirm.</p>
+<pre><code class="rust">use embedded_hal::digital::OutputPin;
+
+fn handle_sensor_interrupt(trigger_pin: &amp;mut impl OutputPin, adc_sample: impl FnOnce() -&gt; u16) -&gt; u16 {
+    trigger_pin.set_high().ok(); // &lt;- pulse starts: visible on a logic analyzer/oscilloscope
+    let sample = adc_sample();
+    trigger_pin.set_low().ok(); // &lt;- pulse ends: the width between edges is the measured duration
+    sample
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> toggling a spare GPIO pin around the code under test
+gives an external instrument a hardware-level timestamp pair that's
+independent of the CPU whose timing is being measured, which is the
+standard way to validate interrupt-to-response latency or confirm a
+<code>DWT</code>-based measurement against ground truth when the stakes (a real-time
+deadline) justify the extra test rig.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

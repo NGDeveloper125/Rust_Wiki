@@ -1040,19 +1040,102 @@ doc comments.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Cargo's own job — reading a manifest, resolving dependencies, invoking
+<code>rustc</code> — doesn't change for an embedded target; there is no separate
+"embedded Cargo." What's genuinely different is the layer of tooling and
+configuration embedded projects add around that same Cargo. A
+<code>.cargo/config.toml</code> typically pins a default <code>--target</code> (a target
+triple like <code>thumbv7em-none-eabihf</code> for a Cortex-M chip) so <code>cargo build</code>/<code>cargo run</code> cross-compile without repeating <code>--target</code> on every
+invocation, and it can also set a <code>runner</code> — a command Cargo hands the
+built binary to, such as <code>probe-rs run</code> to flash and run it on a physical
+debug probe, or <code>qemu-system-arm</code> to run it in emulation — so <code>cargo run</code>
+does something meaningful even though the host machine can't execute
+Cortex-M machine code directly. <code>Cargo.toml</code> itself also carries more
+weight on an embedded target: <code>[profile.release]</code> settings that are
+merely nice-to-have on a desktop binary — <code>panic = "abort"</code> to drop
+unwinding machinery entirely, <code>lto = true</code> for cross-crate inlining,
+<code>opt-level = "s"</code> to optimize for code size instead of speed — routinely
+decide whether a firmware image fits in the target's flash at all.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust"># .cargo/config.toml
+[build]
+target = "thumbv7em-none-eabihf"   # &lt;- default cross-compilation target triple
+
+[target.thumbv7em-none-eabihf]
+runner = "probe-rs run --chip STM32F411CEUx"   # &lt;- flashes and runs the built binary on real hardware
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Targeting a microcontroller from Cargo.toml</h3>
+            <p>A firmware crate needs every <code>cargo build</code>/<code>cargo run</code> to cross-compile
+for its Cortex-M target and, on <code>cargo run</code>, actually get onto the
+board, without every teammate typing <code>--target</code> and a flashing command
+by hand.</p>
+<pre><code class="rust"># .cargo/config.toml
+[build]
+target = "thumbv7em-none-eabihf"        # &lt;- fixes the target triple for this crate
+
+[target.thumbv7em-none-eabihf]
+runner = "probe-rs run --chip STM32F411CEUx"  # &lt;- `cargo run` flashes + runs via a debug probe
+
+# Cargo.toml
+[package]
+name = "blinky"
+edition = "2024"
+
+[dependencies]
+cortex-m-rt = "0.7"
+panic-halt = "0.2"
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> committing the target and runner to
+<code>.cargo/config.toml</code> (checked into the repo) rather than each
+developer's shell profile means <code>cargo run</code> reproduces the same
+flash-and-run behavior on every machine, the setup the
+<a href="https://probe.rs/docs/tools/cargo-embed/">probe-rs documentation</a>
+itself recommends for a firmware crate.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Shrinking a release build for constrained flash</h3>
+            <p>A Cortex-M0's flash is measured in tens of kilobytes, so a
+debug-profile-sized binary — with unwinding tables and speed-optimized
+code — routinely doesn't fit; the release profile has to be tuned for
+size, not just turned on.</p>
+<pre><code class="rust"># Cargo.toml
+[profile.release]
+panic = "abort"     # &lt;- drops unwinding machinery entirely; panics just halt
+lto = true           # &lt;- cross-crate inlining shrinks the final image
+opt-level = "s"      # &lt;- optimize for size rather than speed
+codegen-units = 1    # &lt;- trades build time for better size optimization
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>panic = "abort"</code> alone commonly removes several
+kilobytes of unwinding tables that a <code>#![no_std]</code> binary has no use for,
+and the
+<a href="https://docs.rust-embedded.org/book/">Embedded Rust Book's optimization guidance</a>
+treats <code>opt-level = "s"</code>/<code>"z"</code> plus LTO as the standard first move when a
+release build doesn't fit in flash.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

@@ -1078,19 +1078,103 @@ description of guards as the place for logic a pattern can't express.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Match guards work identically under <code>#![no_std]</code> — same core-language
+mechanism, same generated comparison code, no allocator or runtime
+involvement. They're the natural way to classify a raw sensor or
+register reading into a range-based category, because the categories
+are numeric bands over a single scalar rather than distinct shapes a
+plain pattern could tell apart on its own: a guard like <code>n if n &gt; THRESHOLD</code> states "in this band" directly, where the pattern alone only
+sees "some integer." The same caveat carries over unchanged too: guards
+sit outside exhaustiveness checking, so a set of threshold guards over a
+sensor's full reading range still needs a final catch-all arm, and it's
+on the firmware author to confirm that catch-all is actually correct
+rather than a silently-missed band of readings.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">fn classify(reading_mv: i32) -&gt; &amp;'static str {
+    match reading_mv {
+        n if n &gt; 3000 =&gt; "over-voltage", // &lt;- guard: same pattern shape (any i32), extra condition on its value
+        n if n &lt; 500 =&gt; "under-voltage",
+        _ =&gt; "nominal",
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A temperature sensor's raw ADC reading needs to be classified into
+idle/warning/critical bands to decide whether to throttle a heater;
+every arm matches the same shape (an <code>i32</code>), so guards are what actually
+distinguish the bands.</p>
+<pre><code class="rust">fn thermal_state(adc_counts: i32) -&gt; &amp;'static str {
+    match adc_counts {
+        n if n &gt; 3800 =&gt; "critical", // &lt;- guard tests the band, pattern alone can't
+        n if n &gt; 3000 =&gt; "warning",
+        _ =&gt; "nominal",
+    }
+}
+
+let state = thermal_state(3550);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a bare <code>i32</code> pattern can't express "above this
+threshold," so a guard is the correct tool rather than inventing enum
+variants for bands that don't otherwise exist in the hardware's own
+model — the
+<a href="https://doc.rust-lang.org/reference/expressions/match-expr.html#match-guards">Rust Reference on match guards</a>
+documents guards as arbitrary boolean expressions evaluated after the
+pattern matches, which is exactly what a threshold check is.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>A motor driver only allows a high-current mode request when the
+requested current exceeds a threshold and a hardware safety interlock is
+confirmed closed; the two fields together decide whether the arm
+applies, which neither field's pattern alone can express.</p>
+<pre><code class="rust">struct DriveRequest {
+    requested_ma: u16,
+    interlock_closed: bool,
+}
+
+fn mode_for(request: &amp;DriveRequest) -&gt; &amp;'static str {
+    match request {
+        DriveRequest { requested_ma, interlock_closed }
+            if *requested_ma &gt; 2000 &amp;&amp; *interlock_closed =&gt; "high-current", // &lt;- guard checks both fields together
+        DriveRequest { interlock_closed, .. } if !*interlock_closed =&gt; "locked-out",
+        _ =&gt; "standard",
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the high-current mode is genuinely gated on both
+fields together, not on either field's shape alone, so a guard keeps
+that safety condition readable as a single condition rather than
+encoding "current above X AND interlock closed" as extra enum variants
+that would only exist to dodge the guard — matching the
+<a href="https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html#extra-conditionals-with-match-guards">Rust Book's</a>
+description of guards as the place for logic a pattern can't express,
+doubly relevant when the condition is a safety interlock rather than a
+UI nicety.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>
