@@ -954,8 +954,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -999,24 +998,18 @@ in expression position, never in a type.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::collections::HashMap; // &lt;- `::` walks `std` -&gt; `collections` -&gt; `HashMap`
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Walking a module path to reach an associated function</h3>
+            <pre><code class="rust">use std::collections::HashMap; // &lt;- `::` walks `std` -&gt; `collections` -&gt; `HashMap`
 
 let scores: HashMap&lt;&amp;str, u32&gt; = HashMap::new(); // &lt;- `::` here reaches `HashMap`'s associated fn `new`
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A public function parsing a numeric value out of a string has no other
 type context to infer from, so the call needs turbofish to say which
@@ -1027,21 +1020,16 @@ type <code>parse</code> should target.</p>
     println!("{}", n * 2);
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>parse</code>'s return type is generic over
+<p><code>parse</code>'s return type is generic over
 <a href="https://doc.rust-lang.org/std/str/trait.FromStr.html"><code>FromStr</code></a> and
 isn't determined by any argument, so without either a type annotation on
 <code>n</code> or turbofish on the call itself, the compiler has nothing to infer
 the target type from — turbofish is the idiomatic choice here because it
 keeps the type visible right at the call site instead of on a separate
 binding.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Writing generic code</h3>
             <p>A generic function bound by a trait uses a fully qualified path to call
 that trait's method specifically, even though the type also has an
@@ -1071,12 +1059,11 @@ fn trait_area&lt;T: Shape&gt;(shape: &amp;T) -&gt; f64 {
     // &lt;- `::` here follows a qualified path, forcing `Shape`'s `area`, not any inherent method
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>&lt;T as Shape&gt;::area(shape)</code> is unambiguous regardless of
+<p><code>&lt;T as Shape&gt;::area(shape)</code> is unambiguous regardless of
 what inherent methods <code>T</code> might also have, which matters in generic code
 where the concrete type behind <code>T</code> — and therefore its full method set —
 isn't known when <code>trait_area</code> is written, only that it implements <code>Shape</code>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1092,7 +1079,7 @@ associated-item lookup, and turbofish are all resolved before code
 generation, with no <code>std</code> dependency either way. <code>core</code>/<code>alloc</code> paths use
 exactly the same <code>::</code> syntax as <code>std</code> paths.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

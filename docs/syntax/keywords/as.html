@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -983,9 +982,12 @@ on the <a href="../../syntax/keywords/use.html"><code>use</code></a> page.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let count: u32 = 10;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Casting between numeric types</h3>
+            <pre><code class="rust">let count: u32 = 10;
 let total: i64 = count as i64; // &lt;- `as` widens u32 to i64 explicitly
 </code></pre>
 <p><strong>Restriction:</strong> <code>as</code> performs a lossy conversion silently when narrowing
@@ -993,17 +995,8 @@ let total: i64 = count as i64; // &lt;- `as` widens u32 to i64 explicitly
 call site; reach for <code>u8::try_from(1000i32)</code> instead whenever the value
 might not fit and the caller needs to detect that.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Numeric computation</h3>
             <p>Averaging integer readings requires converting at least one operand to a
 floating-point type before dividing, since Rust never converts between
@@ -1014,20 +1007,15 @@ let total: u32 = readings.iter().sum();
 let average = total as f64 / readings.len() as f64; // &lt;- both operands cast to f64 before dividing
 println!("average heart rate: {average:.1}");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>total / readings.len()</code> wouldn't compile at all —
+<p><code>total / readings.len()</code> wouldn't compile at all —
 <code>u32</code> divided by <code>usize</code> is a type mismatch — and even if the types
 matched, integer division would silently truncate the result; casting
 both sides to <code>f64</code> first is the direct way to get a fractional average,
 rather than routing through a fallible <code>TryFrom</code> for a conversion that
 can't actually fail here.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>Casting a fieldless enum variant to its integer discriminant with <code>as</code> is
 the standard way to turn a typed value back into the raw byte a register
@@ -1043,14 +1031,13 @@ fn to_register_byte(status: LinkStatus) -&gt; u8 {
     status as u8 // &lt;- `as` reads the enum's discriminant directly, given `#[repr(u8)]` fixes its width
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>as</code> is the only way to go from a fieldless enum back
+<p><code>as</code> is the only way to go from a fieldless enum back
 to its discriminant value — there's no method for it — and pairing it
 with an explicit <code>#[repr(u8)]</code> (see <a href="../../syntax/attributes/repr.html"><code>#[repr(...)]</code></a>)
 guarantees the byte <code>as</code> produces matches the width the register or
 protocol actually expects, rather than whatever discriminant size the
 compiler would otherwise pick.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1066,7 +1053,7 @@ identical truncation/saturation rules under <code>#![no_std]</code> — <code>as
 register-width integer types and their signed/unsigned counterparts is a
 routine part of embedded register manipulation.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

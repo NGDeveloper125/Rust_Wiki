@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1009,25 +1008,19 @@ a rare need, mostly internal to <code>rustc</code>'s own build.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[unsafe(no_mangle)] // &lt;- keeps this exact name in the compiled binary's symbol table
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Exporting a function under its exact, unmangled name</h3>
+            <pre><code class="rust">#[unsafe(no_mangle)] // &lt;- keeps this exact name in the compiled binary's symbol table
 pub extern "C" fn add_i32(a: i32, b: i32) -&gt; i32 {
     a + b
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>A telemetry library exposes one function to C callers and links against a
 vendor-supplied compression library whose header declares a function
@@ -1047,8 +1040,7 @@ pub extern "C" fn report_batch(data: *const u8, len: usize) -&gt; i32 {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>#[link(name = "...")]</code> on the <code>extern</code> block and
+<p><code>#[link(name = "...")]</code> on the <code>extern</code> block and
 <code>#[link_name]</code> on the individual item are the two separate knobs FFI code
 needs — one names the library, the other renames a single symbol inside
 it — while <code>#[unsafe(no_mangle)]</code> on the Rust-side export is required or
@@ -1056,7 +1048,7 @@ the compiler's mangled name would make <code>report_batch</code> unfindable by a
 C caller; the <a href="https://doc.rust-lang.org/nomicon/ffi.html">Rustonomicon's FFI chapter</a>
 and the <a href="https://doc.rust-lang.org/reference/linkage.html">Rust Reference on linkage</a>
 cover this combination as the standard shape for a two-way FFI boundary.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1076,7 +1068,7 @@ embedded HAL crates link against vendor C SDKs. See
 for how these attributes fit into the broader FFI picture in <code>#![no_std]</code>
 firmware.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

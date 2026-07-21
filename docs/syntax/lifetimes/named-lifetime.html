@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -996,9 +995,12 @@ code sticks to short conventional names like <code>'a</code>, <code>'b</code>, o
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Excerpt&lt;'a&gt; {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Declaring a lifetime parameter on a struct</h3>
+            <pre><code class="rust">struct Excerpt&lt;'a&gt; {
     text: &amp;'a str, // &lt;- `'a` here is the same lifetime declared on the struct
 }
 
@@ -1007,17 +1009,8 @@ let excerpt = Excerpt { text: &amp;novel[0..17] };
 println!("{}", excerpt.text);
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>A type that stores a borrowed slice, rather than owning its data, has to
 name a lifetime parameter so the compiler can tie the struct's own validity
@@ -1037,20 +1030,15 @@ let history = vec!["startup ok".to_string(), "connected".to_string()];
 let viewer = LogViewer { entries: &amp;history }; // &lt;- the borrow's lifetime becomes `'a` for this `viewer`
 println!("{:?}", viewer.latest());
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a struct holding a reference must name a lifetime
+<p>A struct holding a reference must name a lifetime
 parameter tying the struct's own validity to the data it borrows from, so
 the compiler can reject any attempt to use <code>viewer</code> after <code>history</code> goes
 away — the
 <a href="https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html">Book's lifetime chapter</a>
 covers this as the reason reference-holding structs need <code>'a</code> at all.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Writing generic code</h3>
             <p>Choosing between a possibly-present override and an always-present
 fallback needs an explicit outlives bound so the compiler knows the
@@ -1072,19 +1060,14 @@ let result;
     println!("{result}");
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without the <code>'f: 'p</code> bound, the compiler has no reason to
+<p>Without the <code>'f: 'p</code> bound, the compiler has no reason to
 believe a <code>&amp;'f str</code> is valid anywhere a <code>&amp;'p str</code> is expected — the
 <a href="https://doc.rust-lang.org/reference/trait-bounds.html#lifetime-bounds">Rust Reference's lifetime-bounds section</a>
 documents <code>'a: 'b</code> as exactly this kind of outlives constraint between two
 declared lifetime parameters.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Searching a two-dimensional collection for a target value needs to break
 out of both the outer and inner loop at once — a loop label, written with
@@ -1109,13 +1092,12 @@ let mut found = None;
 
 println!("{found:?}");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> an unlabeled <code>break</code> only ever exits the innermost loop —
+<p>An unlabeled <code>break</code> only ever exits the innermost loop —
 the <a href="https://doc.rust-lang.org/reference/expressions/loop-expr.html#labelled-block-expressions">Rust Reference's labelled block/loop section</a>
 documents loop labels as the standard way to target an outer loop
 explicitly instead of restructuring the search with a found-flag and extra
 checks.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1130,7 +1112,7 @@ checks.</p>
 core-language constructs erased before codegen — identical behavior in
 <code>#![no_std]</code>, with no allocator or runtime footprint either way.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

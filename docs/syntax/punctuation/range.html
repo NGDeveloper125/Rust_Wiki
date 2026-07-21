@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,24 +986,18 @@ new code — <code>..=</code> is its direct, and only, replacement.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">for i in 0..5 { // &lt;- `..` exclusive range: yields 0, 1, 2, 3, 4
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Iterating over an exclusive range</h3>
+            <pre><code class="rust">for i in 0..5 { // &lt;- `..` exclusive range: yields 0, 1, 2, 3, 4
     println!("{i}");
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Averaging a fixed-size window of recent sensor readings needs a slice of
 exactly that window — an exclusive range expression is the index that
@@ -1018,19 +1011,14 @@ picks it out.</p>
 let readings = [21.0, 21.4, 21.6, 22.1, 21.9];
 println!("{:.2}", moving_average(&amp;readings, 1, 3));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>start..end</code> reads as "from <code>start</code>, up to but not
+<p><code>start..end</code> reads as "from <code>start</code>, up to but not
 including <code>end</code>," matching how <code>slice.len()</code> and index arithmetic already
 work in Rust — the
 <a href="https://doc.rust-lang.org/std/primitive.slice.html">std docs on slice indexing</a>
 use this same half-open convention throughout the standard library.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>Summarizing a list of scores needs different handling for an empty list, a
 single score, and everything else — <code>..</code> in a slice pattern matches "the
@@ -1048,19 +1036,14 @@ rest," however many elements that turns out to be.</p>
 
 println!("{}", summarize(&amp;[92, 87, 95]));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a slice pattern with <code>..</code> is exhaustive over "any
+<p>A slice pattern with <code>..</code> is exhaustive over "any
 length ≥ 1" in one arm, instead of writing out a separate arm per possible
 length — the
 <a href="https://doc.rust-lang.org/reference/patterns.html#slice-patterns">Rust Reference on slice patterns</a>
 documents <code>..</code> as matching zero or more elements at that position.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Numeric computation</h3>
             <p>Assigning a letter grade from a numeric score is a direct fit for
 inclusive range patterns, since a grade boundary (100) belongs to the band
@@ -1076,13 +1059,12 @@ below it, not the one above.</p>
 
 println!("{}", letter_grade(90));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> writing <code>90..=100</code> states the boundary directly, where a
+<p>Writing <code>90..=100</code> states the boundary directly, where a
 bare <code>90..101</code> (or two overlapping-looking <code>90..100</code> arms) would leave a
 reader to double-check whether the endpoint is included — the
 <a href="https://doc.rust-lang.org/reference/patterns.html#range-patterns">Rust Reference on range patterns</a>
 requires <code>..=</code>, not <code>..</code>, for exactly this inclusive case.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1099,7 +1081,7 @@ simple counter and comparison. Common for walking a fixed set of register
 indices or classifying a raw ADC value into a named band via range
 patterns, with no runtime cost beyond the comparisons themselves.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

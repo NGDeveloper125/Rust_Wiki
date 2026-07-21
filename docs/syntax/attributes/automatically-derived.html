@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -979,9 +978,12 @@ can emit <code>#[automatically_derived]</code> on its own generated code too.</p
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[derive(Debug)] // &lt;- the compiler attaches #[automatically_derived] to the impl this generates
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Recognizing the compiler-generated attribute in expanded output</h3>
+            <pre><code class="rust">#[derive(Debug)] // &lt;- the compiler attaches #[automatically_derived] to the impl this generates
 struct Point { x: f64, y: f64 }
 
 // roughly what `cargo expand` shows was generated (never written by hand):
@@ -989,17 +991,8 @@ struct Point { x: f64, y: f64 }
 // impl std::fmt::Debug for Point { ... }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A crate that ships its own <code>#[proc_macro_derive]</code>, mimicking the
 compiler's built-in derives, should tag its own generated <code>impl</code> blocks
@@ -1016,14 +1009,13 @@ let expanded = quote::quote! {
     }
 };
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without the attribute, a lint has no way to
+<p>Without the attribute, a lint has no way to
 distinguish a custom derive's generated code from something a human
 typed by hand, and may flag it with suggestions that don't apply to
 generated code — emitting <code>#[automatically_derived]</code> is how a
 third-party derive macro opts into the same tooling treatment the
 compiler's built-in derives already get.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1039,7 +1031,7 @@ runtime representation and no <code>std</code> dependency — it appears identic
 on derive-generated impls in <code>#![no_std]</code> crates, including third-party
 <code>no_std</code>-oriented derives like <code>defmt</code>'s <code>#[derive(Format)]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

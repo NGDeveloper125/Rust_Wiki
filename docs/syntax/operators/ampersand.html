@@ -952,8 +952,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -982,23 +981,17 @@ the lexer still produces the single <code>&amp;&amp;</code> token there, and it'
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let x = 5;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Creating a shared reference</h3>
+            <pre><code class="rust">let x = 5;
 let r = &amp;x; // &lt;- `&amp;` borrows `x`, producing a shared reference `&amp;i32`
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>Several parts of a program often need to read the same value without any
 of them taking ownership of it — <code>&amp;</code> lets each function borrow it
@@ -1022,18 +1015,13 @@ if is_valid(&amp;config) {
     println!("ready");
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> because <code>&amp;T</code> is read-only, any number of shared borrows
+<p>Because <code>&amp;T</code> is read-only, any number of shared borrows
 can coexist safely — per <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">the Book's borrowing chapter</a>,
 this is what lets Rust share data across a program without cloning it
 just to satisfy the borrow checker.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Multi-threading</h3>
             <p><code>std::thread::scope</code> lets spawned threads borrow data from the enclosing
 stack frame with plain <code>&amp;</code>, instead of requiring <code>Arc</code> and <code>move</code>,
@@ -1052,18 +1040,13 @@ std::thread::scope(|s| {
     });
 });
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <a href="https://doc.rust-lang.org/std/thread/fn.scope.html"><code>std::thread::scope</code></a>
+<p><a href="https://doc.rust-lang.org/std/thread/fn.scope.html"><code>std::thread::scope</code></a>
 statically proves the spawned threads can't outlive <code>readings</code>, so the
 compiler accepts a plain <code>&amp;</code> borrow here where a non-scoped <code>thread::spawn</code>
 would demand <code>'static</code> data (typically via <code>Arc</code>).</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A function that only needs to read its argument should accept <code>&amp;T</code>
 rather than an owned <code>T</code> — taking ownership needlessly forces every
@@ -1083,12 +1066,11 @@ fn total_items_owned(order: Order) -&gt; usize {
     order.items.len()
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the <a href="https://rust-lang.github.io/api-guidelines/flexibility.html">API Guidelines' flexibility guidance</a>
+<p>The <a href="https://rust-lang.github.io/api-guidelines/flexibility.html">API Guidelines' flexibility guidance</a>
 recommends borrowing over owning in function signatures whenever the
 function doesn't need to store or consume the value, since it's strictly
 less restrictive for every caller.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1104,7 +1086,7 @@ constantly for peripheral/driver references; <code>BitAnd</code> lives in
 <code>core::ops</code> and register-mask manipulation (<code>status &amp; FLAG_BIT</code>) is one
 of the most common operations in register-level embedded code.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

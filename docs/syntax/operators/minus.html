@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -969,26 +968,20 @@ lint.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let diff = 10 - 3; // &lt;- binary `-` subtracts the right operand
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Subtracting two numbers</h3>
+            <pre><code class="rust">let diff = 10 - 3; // &lt;- binary `-` subtracts the right operand
 </code></pre>
 <p><strong>Restriction:</strong> subtracting runtime values past a type's minimum panics
 in debug builds; release builds wrap instead, unless you use a checked
 method like <code>checked_sub</code>. A constant expression like <code>0u8 - 1</code> is a
 compile error instead (deny-by-default <code>arithmetic_overflow</code> lint).</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Numeric computation</h3>
             <p>A sensor reading's delta from a setpoint is a common place binary <code>-</code>
 shows up — and a good spot to reach for <code>checked_sub</code> instead of the bare
@@ -1003,19 +996,14 @@ fn safe_battery_drop(before: u8, after: u8) -&gt; Option&lt;u8&gt; {
 
 let delta = temperature_delta(20, 17); // -3: three degrees below setpoint
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> signed deltas (<code>i32</code>, not <code>u32</code>) let "below setpoint"
+<p>Signed deltas (<code>i32</code>, not <code>u32</code>) let "below setpoint"
 be a negative number instead of an underflow; for unsigned subtraction
 where the operands' order isn't guaranteed, <code>checked_sub</code> turns a
 potential panic into an <code>Option</code> the caller must handle, per the
 <a href="https://doc.rust-lang.org/std/primitive.u8.html#method.checked_sub">standard library docs</a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Computing pairwise differences between consecutive elements — e.g. the
 gaps between successive sensor readings — is a natural fit for
@@ -1029,13 +1017,12 @@ let deltas: Vec&lt;f64&gt; = readings
 
 assert_eq!(deltas, vec![2.5, -1.5, 2.5]);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>windows(2)</code> avoids manually indexing with <code>i</code> and
+<p><code>windows(2)</code> avoids manually indexing with <code>i</code> and
 <code>i - 1</code> (an off-by-one hazard), letting <code>-</code> do the actual subtraction
 while the iterator adapter handles bounds — see the
 <a href="https://doc.rust-lang.org/std/primitive.slice.html#method.windows">standard library docs</a>
 for the general <code>windows</code> pattern over any fixed-size grouping.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1048,7 +1035,7 @@ for the general <code>windows</code> pattern over any fixed-size grouping.</p>
         </span>
         <p><strong>Full support.</strong> <code>Sub</code>/<code>Neg</code> live in <code>core::ops</code> — no <code>std</code> dependency.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

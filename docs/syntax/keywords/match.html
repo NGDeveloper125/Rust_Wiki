@@ -954,8 +954,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -999,9 +998,12 @@ final expression.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">enum Direction { North, South, East, West }
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Matching on an enum's variants</h3>
+            <pre><code class="rust">enum Direction { North, South, East, West }
 
 let heading = Direction::East;
 
@@ -1018,17 +1020,8 @@ println!("{degrees}");
 covered by some arm's pattern, or this fails to compile — see
 <a href="../../concepts/pattern-matching/exhaustiveness-checking.html">exhaustiveness checking</a>.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>A thermostat's incoming command needs to both identify its shape and, for
 the temperature-setting command, confirm the requested value is in a
@@ -1051,19 +1044,14 @@ fn describe(cmd: &amp;ThermostatCommand) -&gt; String {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> combining <code>|</code> for variants that share behavior and <code>@</code>
+<p>Combining <code>|</code> for variants that share behavior and <code>@</code>
 for variants that need both a shape check and the underlying value keeps
 the dispatch in one <code>match</code> rather than a chain of separate <code>if</code>s — the
 <a href="https://doc.rust-lang.org/reference/expressions/match-expr.html">Rust Reference on match expressions</a>
 documents both as first-class parts of an arm's pattern, not add-on sugar.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Classifying a sensor reading string needs different messages for a
 parse failure versus a suspiciously cold (but valid) reading — a guard
@@ -1079,20 +1067,15 @@ distinguishes the second case from the general success case.</p>
 
 println!("{}", classify_reading("-4.5"));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> matching on the <code>Result</code> directly, with a guard for the
+<p>Matching on the <code>Result</code> directly, with a guard for the
 one <code>Ok</code> sub-case that needs different handling, avoids re-parsing or a
 second <code>if</code> after the match — the
 <a href="https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html#extra-conditionals-with-match-guards">Rust Book</a>
 covers guards as exactly this kind of value-dependent refinement on an
 already-matched pattern.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Routing a delivery by distance needs every possible <code>u32</code> value handled,
 not just the bands anyone thought of in advance — the exhaustiveness
@@ -1106,14 +1089,13 @@ requirement is what forces a catch-all here.</p>
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> because <code>0..=1000</code> doesn't come close to covering every
+<p>Because <code>0..=1000</code> doesn't come close to covering every
 <code>u32</code>, the compiler refuses to compile this without a final wildcard —
 the same exhaustiveness rule that requires every enum variant to appear
 also requires numeric patterns to visibly account for every value in
 range, per the
 <a href="https://doc.rust-lang.org/reference/expressions/match-expr.html#match-expressions">Rust Reference on exhaustiveness</a>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1130,7 +1112,7 @@ standard way to decode a protocol byte or peripheral status register into
 one of several known shapes, with the compiler guaranteeing every expected
 bit pattern is handled.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -977,26 +976,20 @@ in the first place.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[used] // &lt;- keeps this static in the binary even though nothing in Rust reads it
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Keeping a linker-section static from being stripped</h3>
+            <pre><code class="rust">#[used] // &lt;- keeps this static in the binary even though nothing in Rust reads it
 #[unsafe(link_section = ".init_array")]
 static INIT_ENTRY: extern "C" fn() = init;
 
 extern "C" fn init() {}
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>A microcontroller's linker script expects a table of function pointers at
 a fixed section so a boot ROM can find and call them; nothing in the Rust
@@ -1010,14 +1003,13 @@ unsafe extern "C" fn reset_handler() -&gt; ! {
     loop {}
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the linker script, not any Rust code, is what reads
+<p>The linker script, not any Rust code, is what reads
 <code>RESET_HANDLER</code> by address, so from the compiler's reachability analysis
 this static has zero readers and would otherwise be eliminated — the
 <a href="https://doc.rust-lang.org/reference/abi.html#the-used-attribute">Rust Reference on the <code>used</code> attribute</a>
 documents exactly this "referenced only outside the compiler's view" case
 as its purpose.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1036,7 +1028,7 @@ probe), so they need <code>#[used]</code> to survive dead-code elimination. It h
 essentially no use case in hosted <code>std</code> binaries, where nothing outside
 the program's own object files typically inspects statics by raw address.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

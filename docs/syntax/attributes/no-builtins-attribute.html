@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -980,23 +979,17 @@ needs to reach for <code>#![no_builtins]</code> itself.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std]
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Disabling implicit libc-builtin substitution</h3>
+            <pre><code class="rust">#![no_std]
 #![no_builtins] // &lt;- forbids the compiler from silently assuming a libc-provided memcpy/memset exist
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A minimal kernel crate provides its own low-level memory primitives
 rather than linking against any C runtime — <code>#![no_builtins]</code> guarantees
@@ -1019,8 +1012,7 @@ pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, n: usize) -&gt; *
     dest
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>#![no_builtins]</code>, the compiler may still lower
+<p>Without <code>#![no_builtins]</code>, the compiler may still lower
 some Rust code into a call to <code>memcpy</code> even though this crate defines its
 own — in an environment with no C runtime, an unexpected implicit call
 to a symbol nothing provides is a link failure at best; the
@@ -1029,7 +1021,7 @@ and kernel-development guides (e.g. the
 <a href="https://os.phil-opp.com/freestanding-rust-binary/">Writing an OS in Rust</a> series)
 document <code>#![no_builtins]</code> as part of the freestanding-binary checklist
 alongside <code>#![no_std]</code>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1047,7 +1039,7 @@ application-level <code>#![no_std]</code> firmware, which typically links agains
 <code>compiler_builtins</code>-provided implementation of these routines without
 ever needing <code>#![no_builtins]</code> itself.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

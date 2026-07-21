@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -991,9 +990,12 @@ sits.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let result: Result&lt;i32, String&gt; = Err("disk full".to_string());
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Using `_` as a match catch-all</h3>
+            <pre><code class="rust">let result: Result&lt;i32, String&gt; = Err("disk full".to_string());
 
 match result {
     Ok(value) =&gt; println!("got {value}"),
@@ -1001,17 +1003,8 @@ match result {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Not every discarded <code>Result</code> is the same: a best-effort cleanup can safely
 ignore its outcome, but a genuinely important operation should never be
@@ -1034,20 +1027,15 @@ fn process_order(order_id: u32) -&gt; Result&lt;(), String&gt; {
     if order_id == 0 { Err("invalid order id".to_string()) } else { Ok(()) }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>let _ = ...</code> is Clippy's documented way to intentionally
+<p><code>let _ = ...</code> is Clippy's documented way to intentionally
 silence the
 <a href="https://rust-lang.github.io/rust-clippy/master/#unused_must_use"><code>unused_must_use</code></a>
 lint on a <code>Result</code> you've decided not to check — using it on a value whose
 failure genuinely matters just hides the bug instead of fixing it, which is
 why <code>submit_order_avoid</code> above is a defect, not a stylistic choice.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>A process exit code only has a handful of well-known meanings; every other
 value still needs somewhere to go.</p>
@@ -1062,12 +1050,11 @@ value still needs somewhere to go.</p>
 
 println!("{}", describe_exit_code(127));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>i32</code> has far more values than any list of literals could
+<p><code>i32</code> has far more values than any list of literals could
 enumerate, so a <code>_</code> catch-all is the only way this compiles at all — the
 <a href="https://doc.rust-lang.org/reference/expressions/match-expr.html#match-expressions">Rust Reference on exhaustiveness</a>
 requires every value of the scrutinee's type to be covered by some arm.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1083,7 +1070,7 @@ with zero runtime cost. Frequently used as a <code>match</code> catch-all when
 decoding a fixed-width register value where only a handful of bit patterns
 are meaningful and the rest should be handled uniformly.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

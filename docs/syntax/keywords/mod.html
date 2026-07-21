@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -979,9 +978,12 @@ writing <code>mod</code> itself.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">mod shapes {                            // &lt;- `mod` opens an inline module
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Declaring an inline module</h3>
+            <pre><code class="rust">mod shapes {                            // &lt;- `mod` opens an inline module
     pub struct Circle { pub radius: f64 }
 
     pub fn area(circle: &amp;Circle) -&gt; f64 {
@@ -993,17 +995,8 @@ let unit_circle = shapes::Circle { radius: 1.0 };
 println!("{}", shapes::area(&amp;unit_circle));
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A small metrics library keeps its aggregation and reporting logic in
 separate files, loaded with <code>mod name;</code>, while re-exporting a short,
@@ -1039,21 +1032,16 @@ impl ConsoleExporter {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the two <code>mod name;</code> declarations keep <code>aggregator</code> and
+<p>The two <code>mod name;</code> declarations keep <code>aggregator</code> and
 <code>exporter</code> as separate files mirroring the module tree on disk, while the
 <code>pub use</code> re-exports mean callers depend on <code>crate::Counter</code> and
 <code>crate::ConsoleExporter</code> rather than on knowing the internal file layout —
 the curation the
 <a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">API Guidelines' future-proofing chapter</a>
 recommends for a stable public surface.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p>A unit test module uses the <em>inline</em> form of <code>mod</code> — <code>mod name { ... }</code> —
 rather than a separate file, since the tests live right alongside the code
@@ -1072,13 +1060,12 @@ mod tests {                     // &lt;- `mod` here is inline (`mod name { ... }
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> an inline <code>mod tests { ... }</code> compiled only under
+<p>An inline <code>mod tests { ... }</code> compiled only under
 <code>#[cfg(test)]</code> keeps the tests next to the code they cover instead of in a
 separate file, the layout the
 <a href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html">Rust Book's testing chapter</a>
 uses throughout.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1093,7 +1080,7 @@ uses throughout.</p>
 with no runtime representation, so both forms work identically in a
 <code>#![no_std]</code> crate — there's no allocator or OS dependency either way.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

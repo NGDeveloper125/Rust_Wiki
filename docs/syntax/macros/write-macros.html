@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -982,9 +981,12 @@ other fallible I/O call is handled.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::fmt::Write as _;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Writing formatted text into a String</h3>
+            <pre><code class="rust">use std::fmt::Write as _;
 
 fn build_summary(item_count: u32, total: f64) -&gt; String {
     let mut summary = String::new();
@@ -995,18 +997,9 @@ fn build_summary(item_count: u32, total: f64) -&gt; String {
 let summary = build_summary(3, 47.5);
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
-            <h3 class="scenario-title">Working with text</h3>
+            <h3 class="scenario-title">Implementing Display by writing into a Formatter</h3>
             <p>A custom <code>Display</code> impl for a duration-like type formats its value piece
 by piece using <code>write!</code>, avoiding an intermediate allocation just to
 combine the pieces.</p>
@@ -1025,21 +1018,16 @@ impl fmt::Display for Elapsed {
 let elapsed = Elapsed { seconds: 125 };
 println!("{elapsed}"); // 2m 05s
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/fmt/trait.Display.html">std fmt docs</a>
 show writing directly into the <code>&amp;mut Formatter</code> that <code>Display::fmt</code> is
 handed as the idiomatic implementation shape; building an intermediate
 <code>String</code> with <code>format!</code> just to immediately write it out again is an
 unnecessary allocation on every call.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
-            <h3 class="scenario-title">Working with text</h3>
+            <h3 class="scenario-title">Appending log lines to a file</h3>
             <p>Appending log lines to an open file propagates the <code>io::Write</code> <code>Result</code>
 with <code>?</code> rather than unwrapping it, since the destination is a real OS
 resource whose writes can genuinely fail.</p>
@@ -1051,15 +1039,14 @@ fn log_reading(file: &amp;mut File, sensor_id: u32, value: f64) -&gt; io::Result
     Ok(())
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> an <code>io::Write</code> destination can genuinely fail (disk
+<p>An <code>io::Write</code> destination can genuinely fail (disk
 full, broken pipe), so production code propagates the <code>Result</code> with <code>?</code>
 the same way any other fallible I/O call is handled — the
 <a href="https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html">Book's error-handling chapter</a>
 treats unwrapping a fallible I/O result as acceptable only in throwaway
 code, unlike the <code>fmt::Write</code>-into-a-<code>String</code> case above where
 <code>.unwrap()</code> is standard practice.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1080,7 +1067,7 @@ replacement for <code>println!</code>/<code>format!</code> in <code>#![no_std]</
 same macro call at the source level, but which trait the destination
 implements decides which of these applies.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

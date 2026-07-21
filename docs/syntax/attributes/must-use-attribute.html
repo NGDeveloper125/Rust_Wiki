@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -983,9 +982,12 @@ itself.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[must_use] // &lt;- warns if the caller doesn't do anything with the returned value
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Warning when a computed result is silently discarded</h3>
+            <pre><code class="rust">#[must_use] // &lt;- warns if the caller doesn't do anything with the returned value
 fn discount_applied(price_cents: u32, percent_off: u8) -&gt; u32 {
     price_cents - (price_cents * percent_off as u32 / 100)
 }
@@ -996,17 +998,8 @@ fn main() {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A builder's setter methods each return <code>Self</code> to enable chaining — if a
 caller calls one and discards the result instead of continuing the chain,
@@ -1036,8 +1029,7 @@ fn build_request() -&gt; RequestBuilder {
     RequestBuilder::new().timeout_ms(5000)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>#[must_use]</code> on the type means every method that
+<p><code>#[must_use]</code> on the type means every method that
 returns <code>RequestBuilder</code> — not just <code>new</code>, every chained setter too — is
 covered by one attribute, so discarding any link in the chain is flagged;
 the custom message clarifies specifically <em>why</em> discarding it is
@@ -1045,13 +1037,9 @@ suspicious (a builder call is never mutating something in place), matching
 how the standard library documents its own
 <a href="https://doc.rust-lang.org/std/result/enum.Result.html"><code>#[must_use]</code> conventions</a>
 on <code>Result</code> and iterator adapters.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>A function returning <code>Result</code> should let that <code>Result</code>'s own
 <code>#[must_use]</code> do its job — deliberately discarding one specific,
@@ -1066,14 +1054,13 @@ fn shut_down() {
     let _ = write_audit_log("shutting down"); // &lt;- deliberate: a failed audit log shouldn't block shutdown
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>let _ = ...</code> is Clippy's documented way to intentionally
+<p><code>let _ = ...</code> is Clippy's documented way to intentionally
 silence the
 <a href="https://rust-lang.github.io/rust-clippy/master/#unused_must_use"><code>unused_must_use</code></a>
 lint at one specific, reviewed call site — see <a href="../../syntax/punctuation/underscore.html"><code>_</code></a>
 for why this differs from a bare statement, which doesn't reliably
 suppress the warning at all.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1091,7 +1078,7 @@ particularly in embedded code where an ignored peripheral-write error
 (say, an I2C transaction that silently failed) can be far harder to debug
 after the fact than on a hosted system with more visible failure modes.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

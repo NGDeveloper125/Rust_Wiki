@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -982,9 +981,12 @@ page rather than repeated here.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Point { x: f64, y: f64 }
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Field access, tuple indexing, and method chaining</h3>
+            <pre><code class="rust">struct Point { x: f64, y: f64 }
 
 let p = Point { x: 1.0, y: 2.0 };
 println!("{}", p.x);       // &lt;- `.` here is field access
@@ -996,17 +998,8 @@ let text = "  Hello  ";
 println!("{}", text.trim().to_lowercase()); // &lt;- `.` chains two method calls left to right
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Creating a new object</h3>
             <p>A builder's methods each take and return <code>Self</code>, so <code>.</code> chains them into
 one expression that reads as a sequence of configuration steps ending in
@@ -1030,23 +1023,18 @@ impl RequestBuilder {
 let request = RequestBuilder::new("https://api.example.com")
     .timeout_ms(2000); // &lt;- `.` chains onto the value the previous call returned
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> each builder method returning <code>Self</code> is what makes
+<p>Each builder method returning <code>Self</code> is what makes
 chaining with <code>.</code> possible at all — the
 <a href="https://rust-unofficial.github.io/patterns/patterns/creational/builder.html">Rust Design Patterns book</a>
-covers this shape as the idiomatic way to assemble a many-field value
+covers this shape as a way to assemble a many-field value
 step by step, without needing a temporary mutable variable at the call
 site.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
-            <p>Reaching for <code>.0</code>/<code>.1</code> instead of a full destructuring pattern is the
-right call when only one field of a tuple or tuple struct is needed —
+            <p>Reaching for <code>.0</code>/<code>.1</code> instead of a full destructuring pattern works well
+when only one field of a tuple or tuple struct is needed —
 matching every field just to discard most of them adds ceremony a
 positional dot access avoids.</p>
 <pre><code class="rust">struct Rgb(u8, u8, u8);
@@ -1062,13 +1050,12 @@ fn describe(color: &amp;Rgb) -&gt; String {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>.0</code> is the more direct choice whenever the rest of the
-tuple genuinely isn't needed at that call site; reach for a <code>match</code>/<code>let</code>
-pattern instead the moment more than one field is being pulled out,
-since naming each field there reads more clearly than a run of numbered
+<p><code>.0</code> is the more direct choice whenever the rest of the
+tuple genuinely isn't needed at that call site, while a <code>match</code>/<code>let</code>
+pattern reads more clearly once more than one field is being pulled out,
+since naming each field there beats a run of numbered
 dot accesses.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1084,7 +1071,7 @@ core-language grammar with no <code>std</code> dependency — used identically t
 address peripheral register fields and driver state on an embedded
 target.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

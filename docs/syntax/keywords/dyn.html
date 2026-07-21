@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -984,9 +983,12 @@ for the broader idea <code>dyn</code> is one instance of.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait Shape {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Boxing a concrete type as a trait object</h3>
+            <pre><code class="rust">trait Shape {
     fn area(&amp;self) -&gt; f64;
 }
 struct Circle;
@@ -998,17 +1000,8 @@ let shape: Box&lt;dyn Shape&gt; = Box::new(Circle); // &lt;- `dyn Shape` erases 
 println!("{}", shape.area());
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Runtime polymorphism</h3>
             <p>A notification system that dispatches to whichever channels are
 configured at startup needs one collection that can hold genuinely
@@ -1041,19 +1034,14 @@ fn notify_all(message: &amp;str, channels: &amp;[Box&lt;dyn Channel&gt;]) { // &
 let channels: Vec&lt;Box&lt;dyn Channel&gt;&gt; = vec![Box::new(EmailChannel), Box::new(SmsChannel)];
 notify_all("order shipped", &amp;channels);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the exact mix of channels is only known once
+<p>The exact mix of channels is only known once
 configuration is read at startup, ruling out a fixed enum or generic
 function — the canonical case
 <a href="../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.html">Trait objects &amp; dynamic dispatch</a>
 covers in depth, including the vtable mechanism <code>dyn</code> triggers.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A hot path that dispatches through a trait on every call, but only ever
 needs a reference to a value already living on the stack, can use
@@ -1076,13 +1064,12 @@ fn run(logger: &amp;dyn Logger) { // &lt;- `&amp;dyn Logger`: no Box, no heap al
 let console = ConsoleLogger;
 run(&amp;console);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>dyn</code> only requires the fat pointer (data + vtable) that
+<p><code>dyn</code> only requires the fat pointer (data + vtable) that
 <code>&amp;</code>/<code>&amp;mut</code> already provide — <code>Box</code> is a separate, additional decision
 about ownership and heap placement, as
 <a href="../../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.html">On-stack dynamic dispatch</a>
 explains in full.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1100,7 +1087,7 @@ see
 <a href="../../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.html">On-stack dynamic dispatch</a>
 for the allocator-free equivalent used throughout embedded Rust.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -990,9 +989,12 @@ recommend.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[diagnostic::on_unimplemented(
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Customizing the error message for an unimplemented trait</h3>
+            <pre><code class="rust">#[diagnostic::on_unimplemented(
     message = "`{Self}` cannot be rendered to the screen",
     label = "missing `Renderable` implementation"
 )]
@@ -1001,17 +1003,8 @@ trait Renderable {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A UI framework's core trait is implemented by many types across an
 application; a plain, generic trait-bound error doesn't tell a newcomer
@@ -1042,8 +1035,7 @@ fn build_layout() {
     // add_to_layout(42); // would show the custom message above instead of a generic trait-bound error
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a generic "the trait bound <code>i32: Widget</code> is not
+<p>A generic "the trait bound <code>i32: Widget</code> is not
 satisfied" tells a reader <em>that</em> something is wrong but not <em>what to do</em>
 about it, whereas a message written in the framework's own terms points
 directly at the fix; the
@@ -1051,13 +1043,9 @@ directly at the fix; the
 documents this attribute as intended for exactly this kind of
 domain-specific guidance on commonly-hit trait bounds, following the same
 pattern the standard library uses on <code>Iterator</code> and the <code>Fn</code> traits.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Implementing traits</h3>
             <p>A serialization trait has both specific, hand-written impls for certain
 types and a broad blanket impl covering anything convertible through
@@ -1075,8 +1063,7 @@ impl&lt;T: std::fmt::Display&gt; ToWireFormat for T {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>do_not_recommend</code>, a compiler error involving
+<p>Without <code>do_not_recommend</code>, a compiler error involving
 some type that implements neither <code>Display</code> nor <code>ToWireFormat</code> directly
 could suggest "implement <code>ToWireFormat</code>" by pointing at this blanket impl,
 which is technically accurate but unhelpful — the underlying gap is
@@ -1084,7 +1071,7 @@ which is technically accurate but unhelpful — the underlying gap is
 <a href="https://doc.rust-lang.org/reference/attributes/diagnostics.html#the-diagnosticdo_not_recommend-attribute">Rust Reference</a>
 documents this exact "blanket impl technically applies but isn't the
 useful thing to suggest" scenario as its intended use.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1101,7 +1088,7 @@ metadata with zero runtime footprint, so they behave identically in
 crate's public API benefits from a custom <code>on_unimplemented</code> message the
 same way any hosted crate's trait would.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

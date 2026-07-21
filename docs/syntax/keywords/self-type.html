@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,9 +986,12 @@ would need to be found and updated at every occurrence.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Client { host: String }
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Using `Self` as a constructor's return type</h3>
+            <pre><code class="rust">struct Client { host: String }
 
 impl Client {
     fn new(host: &amp;str) -&gt; Self { // &lt;- `Self` means `Client` here, without repeating the name
@@ -998,17 +1000,8 @@ impl Client {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Creating a new object</h3>
             <p>A constructor's return type is conventionally written <code>Self</code>, not the
 type's own name repeated — the two are identical here, but only one of
@@ -1025,19 +1018,14 @@ impl Configuration {
 
 let config = Configuration::new(10);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://rust-lang.github.io/api-guidelines/predictability.html#constructors-are-static-inherent-methods-c-ctor">API Guidelines' C-CTOR</a>
 examples consistently use <code>Self</code> for a constructor's return type — if
 <code>Configuration</code> is ever renamed, every <code>Self</code>-typed signature and
 <code>Self { ... }</code> literal keeps compiling unchanged.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A trait method that must return "whatever type is implementing this
 trait" can only be expressed with <code>Self</code> — writing a concrete type name
@@ -1060,13 +1048,12 @@ impl Buildable for Queue {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> writing <code>fn empty() -&gt; Playlist</code> directly inside the
+<p>Writing <code>fn empty() -&gt; Playlist</code> directly inside the
 <code>trait Buildable</code> declaration wouldn't type-check for <code>Queue</code>'s
 implementation at all — <code>Self</code> is the only way to express "return the
 implementer's own type" in a trait signature, which is what lets a single
 trait definition serve unrelated concrete types.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1082,7 +1069,7 @@ runtime representation of its own — no <code>std</code>/allocator dependency, 
 used identically in <code>#![no_std]</code> trait and impl blocks such as
 <code>embedded-hal</code> driver constructors.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -975,23 +974,17 @@ version number into itself without hand-maintaining it in two places.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">const VERSION: &amp;str = env!("CARGO_PKG_VERSION");          // &lt;- fails the build if this var is somehow unset
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reading a crate's version and an optional build tag</h3>
+            <pre><code class="rust">const VERSION: &amp;str = env!("CARGO_PKG_VERSION");          // &lt;- fails the build if this var is somehow unset
 const BUILD_TAG: Option&lt;&amp;str&gt; = option_env!("BUILD_TAG"); // &lt;- None if unset, instead of failing the build
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A CLI tool's <code>--version</code> flag prints the crate's own version, embedded at
 compile time from <code>Cargo.toml</code> rather than hand-maintained as a separate
@@ -1009,20 +1002,15 @@ fn handle_args(args: &amp;[String]) {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> sourcing the version string from <code>CARGO_PKG_VERSION</code>
+<p>Sourcing the version string from <code>CARGO_PKG_VERSION</code>
 instead of a separately hand-written constant means <code>Cargo.toml</code>'s
 <code>version</code> field stays the single source of truth — the
 <a href="https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates">Cargo book</a>
 documents these variables specifically so crates don't have to duplicate
 their own metadata.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>A build optionally embeds a license key at compile time via a build-time
 environment variable; when it's absent, the binary falls back to a
@@ -1036,14 +1024,13 @@ fn license_status() -&gt; &amp;'static str {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/macro.option_env.html">std docs</a> draw the
 line here — a genuinely optional build-time value should use
 <code>option_env!</code> rather than <code>env!</code>, since <code>env!</code> turns a missing variable
 into a hard compile failure, which is the wrong behavior for something
 that has a sensible fallback.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1061,7 +1048,7 @@ has no runtime dependency on <code>std</code> or an OS, so they work identically
 just as commonly used to embed a firmware image's version string in
 embedded builds as in hosted ones.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

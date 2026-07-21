@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -982,9 +981,12 @@ the surrounding shape, e.g. <code>Reading { value: v @ 0.0..=100.0, .. }</code>.
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let reading = 42;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Binding a name while matching a range pattern</h3>
+            <pre><code class="rust">let reading = 42;
 
 match reading {
     n @ 1..=50 =&gt; println!("band A: {n}"), // &lt;- `@` binds `n` to the value while checking the range
@@ -993,17 +995,8 @@ match reading {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>Classifying an engine's RPM into a warning band still needs the exact
 reading for the log message — <code>@</code> keeps both the classification and the
@@ -1028,20 +1021,15 @@ fn classify(rpm: u32) -&gt; (EngineState, String) {
 
 println!("{}", classify(6200).1);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>@</code>, reporting the exact rpm in the warning
+<p>Without <code>@</code>, reporting the exact rpm in the warning
 message would need a second lookup or a re-derivation of the value the
 pattern already had in hand — the
 <a href="https://doc.rust-lang.org/reference/patterns.html#identifier-patterns">Rust Reference on identifier patterns</a>
 documents <code>@</code> as exactly this: binding a name to a value a sub-pattern has
 already matched.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Rejecting an out-of-range port still needs to say which value was invalid
 — <code>@</code> retains the checked value so it can flow straight into the <code>Ok</code>
@@ -1053,13 +1041,12 @@ result without a second read.</p>
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the alternative — matching <code>1..=65535</code> with no binding,
+<p>The alternative — matching <code>1..=65535</code> with no binding,
 then re-reading <code>candidate</code> inside the arm — works but discards the
 guarantee the pattern already established; binding with <code>@</code> makes the
 "this value, already checked" relationship explicit at the type level, not
 just by convention.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1075,7 +1062,7 @@ fit for classifying an ADC reading or register value into a named band
 while keeping the raw value on hand for logging or telemetry, in one
 <code>match</code> arm instead of a lookup followed by a separate range check.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">
