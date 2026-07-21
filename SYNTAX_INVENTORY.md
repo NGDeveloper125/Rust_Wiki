@@ -102,261 +102,261 @@ Everything needed before any of the deeper concepts make sense.
 ## 2. Ownership & Borrowing
 
 ### Keywords
-- [ ] `move` — force closure to take ownership *(primary; also Concurrency/Closures — cross-link)*
-- [ ] `ref` — bind by reference in a pattern
+- [x] `move` — force closure to take ownership *(primary; also Concurrency/Closures — cross-link)*
+- [x] `ref` — bind by reference in a pattern
 
 ### Lifetimes
-- [ ] `'ident` — named lifetime / loop label
-- [ ] `'static` — the static lifetime (weak keyword)
-- [ ] `'a: 'b` — lifetime outlives bound
-- [ ] `'r#keyword` — raw lifetime (2021+ edition)
+- [x] `'ident` — named lifetime / loop label
+- [x] `'static` — the static lifetime (weak keyword)
+- [x] `'a: 'b` — lifetime outlives bound
+- [x] `'r#keyword` — raw lifetime (2021+ edition)
 
 ### Operators & Sigils
-- [ ] `&` — shared borrow / reference type
-- [ ] `&mut` — mutable borrow / reference type
-- [ ] `*` — dereference *(cross-link from Basics)*
-- [ ] `&raw const` — raw borrow (weak keyword `raw`)
-- [ ] `&raw mut` — raw mutable borrow
+- [x] `&` — shared borrow / reference type
+- [x] `&mut` — mutable borrow / reference type
+- [x] `*` — dereference *(cross-link from Basics)*
+- [x] `&raw const` — raw borrow (weak keyword `raw`)
+- [x] `&raw mut` — raw mutable borrow
 
 ---
 
 ## 3. Types & Data Structures
 
 ### Keywords
-- [ ] `struct` — struct declaration
-- [ ] `enum` — enum declaration
-- [ ] `union` — union declaration (context keyword)
-- [ ] `type` — type alias
-- [ ] `as` — type casting
+- [x] `struct` — struct declaration
+- [x] `enum` — enum declaration
+- [x] `union` — union declaration (context keyword)
+- [x] `type` — type alias
+- [x] `as` — type casting
 
 ### Operators & Sigils
-- [ ] `::` — path/namespace separator *(primary here or Modules — pick one; heavily cross-linked either way)*
-- [ ] `<...>` — generic type parameters
-- [ ] `::<...>` — turbofish (generics in expression position)
-- [ ] `.` — field access
-- [ ] `.0` / `.1` — tuple indexing
-- [ ] `[...]` — array literal / type
-- [ ] `[T; N]` — fixed-size array type/literal
-- [ ] `expr[expr]` — indexing (`Index`/`IndexMut`)
-- [ ] `expr[..]`, `expr[a..]`, `expr[..b]`, `expr[a..b]` — slicing
-- [ ] `()` — unit type/value, tuple type/expression
-- [ ] `for<'a> type` — higher-ranked trait bounds (also Traits)
-- [ ] `type<ident=type>` — associated-type binding
+- [x] `::` — path/namespace separator *(primary here or Modules — pick one; heavily cross-linked either way)*
+- [x] `<...>` — generic type parameters
+- [x] `::<...>` — turbofish (generics in expression position)
+- [x] `.` — field access
+- [x] `.0` / `.1` — tuple indexing
+- [x] `[...]` — array literal / type
+- [x] `[T; N]` — fixed-size array type/literal
+- [x] `expr[expr]` — indexing (`Index`/`IndexMut`)
+- [x] `expr[..]`, `expr[a..]`, `expr[..b]`, `expr[a..b]` — slicing
+- [x] `()` — unit type/value, tuple type/expression
+- [x] `for<'a> type` — higher-ranked trait bounds (also Traits)
+- [x] `type<ident=type>` — associated-type binding
 
 ### Attributes
-- [ ] `#[repr(...)]` — control type layout
-- [ ] `#[non_exhaustive]` — allow future fields/variants
+- [x] `#[repr(...)]` — control type layout
+- [x] `#[non_exhaustive]` — allow future fields/variants
 
 ---
 
 ## 4. Traits & Polymorphism
 
 ### Keywords
-- [ ] `trait` — trait declaration
-- [ ] `impl` — implementation block
-- [ ] `dyn` — dynamic trait object
-- [ ] `where` — trait-bound clause
-- [ ] `Self` — current type
-- [ ] `self` — current instance (receiver)
+- [x] `trait` — trait declaration
+- [x] `impl` — implementation block
+- [x] `dyn` — dynamic trait object
+- [x] `where` — trait-bound clause
+- [x] `Self` — current type
+- [x] `self` — current instance (receiver)
 
 ### Operators & Sigils
-- [ ] `:` — trait bound constraint (`T: U`)
-- [ ] `+` — compound trait bound (`Trait + Trait`, `'a + Trait`) *(cross-link from Basics)*
-- [ ] `?Sized` — relax implicit `Sized` bound
-- [ ] `for<'a> type` — HRTB *(cross-link from Types)*
+- [x] `:` — trait bound constraint (`T: U`)
+- [x] `+` — compound trait bound (`Trait + Trait`, `'a + Trait`) *(cross-link from Basics)*
+- [x] `?Sized` — relax implicit `Sized` bound
+- [x] `for<'a> type` — HRTB *(cross-link from Types)*
 
 ### Attributes
-- [ ] `#[derive(...)]` — automatic trait impl generation
-- [ ] `#[automatically_derived]` — marker on derive-generated impls
+- [x] `#[derive(...)]` — automatic trait impl generation
+- [x] `#[automatically_derived]` — marker on derive-generated impls
 
 ---
 
 ## 5. Functions & Closures
 
 ### Keywords
-- [ ] `fn` *(cross-link from Basics)*
-- [ ] `move` *(cross-link from Ownership)*
+- [x] `fn` *(cross-link from Basics)*
+- [x] `move` *(cross-link from Ownership)*
 
 ### Operators & Sigils
-- [ ] `->` — return type *(cross-link from Basics)*
-- [ ] `|args| expr` — closure syntax
-- [ ] `||` — zero-argument closure form *(cross-link/disambiguation note vs. logical OR)*
+- [x] `->` — return type *(cross-link from Basics)*
+- [x] `|args| expr` — closure syntax
+- [x] `||` — zero-argument closure form *(cross-link/disambiguation note vs. logical OR)*
 
 ---
 
 ## 6. Control Flow & Pattern Matching
 
 ### Keywords
-- [ ] `match` — pattern-match expression
-- [ ] `if let` — conditional pattern match
-- [ ] `while let` — loop while pattern matches
-- [ ] `let else` — refutable let with diverging else
+- [x] `match` — pattern-match expression
+- [x] `if let` — conditional pattern match
+- [x] `while let` — loop while pattern matches
+- [x] `let else` — refutable let with diverging else
 
 ### Operators & Sigils
-- [ ] `|` — pattern alternatives (`pat | pat`) *(distinct page from bitwise `|`, cross-linked)*
-- [ ] `@` — pattern binding (`ident @ pat`)
-- [ ] `..` — rest-of-pattern / range
-- [ ] `..=` — inclusive range pattern/expression
-- [ ] `...` — deprecated inclusive range pattern (historical note)
-- [ ] `_` — wildcard pattern
-- [ ] `=>` — match arm separator
+- [x] `|` — pattern alternatives (`pat | pat`) *(distinct page from bitwise `|`, cross-linked)*
+- [x] `@` — pattern binding (`ident @ pat`)
+- [x] `..` — rest-of-pattern / range
+- [x] `..=` — inclusive range pattern/expression
+- [x] `...` — deprecated inclusive range pattern (historical note)
+- [x] `_` — wildcard pattern
+- [x] `=>` — match arm separator
 
 ---
 
 ## 7. Error Handling
 
 ### Operators & Sigils
-- [ ] `?` — error propagation operator
+- [x] `?` — error propagation operator
 
 ### Related macros *(pages live in §11, cross-linked here)*
-- [ ] `panic!`
+- [x] `panic!`
 
 ---
 
 ## 8. Modules, Crates & Visibility
 
 ### Keywords
-- [ ] `mod` — module declaration
-- [ ] `use` — import declaration
-- [ ] `pub` — public visibility (incl. `pub(crate)`, `pub(super)`, `pub(in path)` forms)
-- [ ] `crate` — crate root
-- [ ] `self` — current module (in paths) *(cross-link from Traits, different sense)*
-- [ ] `super` — parent module
-- [ ] `extern crate` — extern crate declaration (2018+ largely implicit; still valid)
+- [x] `mod` — module declaration
+- [x] `use` — import declaration
+- [x] `pub` — public visibility (incl. `pub(crate)`, `pub(super)`, `pub(in path)` forms)
+- [x] `crate` — crate root
+- [x] `self` — current module (in paths) *(cross-link from Traits, different sense)*
+- [x] `super` — parent module
+- [x] `extern crate` — extern crate declaration (2018+ largely implicit; still valid)
 
 ### Operators & Sigils
-- [ ] `::` *(cross-link from Types, or primary here — pick one)*
-- [ ] `as` — import renaming (`use foo as bar`) *(cross-link from Types)*
+- [x] `::` *(cross-link from Types, or primary here — pick one)*
+- [x] `as` — import renaming (`use foo as bar`) *(cross-link from Types)*
 
 ### Attributes
-- [ ] `#[path = "..."]` — explicit module file path
+- [x] `#[path = "..."]` — explicit module file path
 
 ---
 
 ## 9. Concurrency & Async
 
 ### Keywords
-- [ ] `async` — asynchronous function/block
-- [ ] `await` — await an async result
-- [ ] `move` *(cross-link from Ownership — async blocks/closures)*
+- [x] `async` — asynchronous function/block
+- [x] `await` — await an async result
+- [x] `move` *(cross-link from Ownership — async blocks/closures)*
 
 ---
 
 ## 10. Memory & Unsafe / FFI
 
 ### Keywords
-- [ ] `unsafe` — unsafe code block/fn/trait
-- [ ] `extern` — external function/ABI block
-- [ ] `static` — static item / static storage duration
-- [ ] `union` *(cross-link from Types)*
-- [ ] `safe` — marks a safe fn/static inside an `extern` block (weak keyword)
+- [x] `unsafe` — unsafe code block/fn/trait
+- [x] `extern` — external function/ABI block
+- [x] `static` — static item / static storage duration
+- [x] `union` *(cross-link from Types)*
+- [x] `safe` — marks a safe fn/static inside an `extern` block (weak keyword)
 
 ### Operators & Sigils
-- [ ] `*const T` — raw immutable pointer type
-- [ ] `*mut T` — raw mutable pointer type
-- [ ] `&raw const` / `&raw mut` *(cross-link from Ownership)*
+- [x] `*const T` — raw immutable pointer type
+- [x] `*mut T` — raw mutable pointer type
+- [x] `&raw const` / `&raw mut` *(cross-link from Ownership)*
 
 ### Attributes
-- [ ] `#[no_mangle]`
-- [ ] `#[link(...)]`
-- [ ] `#[link_name = "..."]`
-- [ ] `#[link_ordinal(...)]`
-- [ ] `#[link_section = "..."]`
-- [ ] `#[no_link]`
-- [ ] `#[export_name = "..."]`
-- [ ] `#[used]`
-- [ ] `#[crate_type = "..."]`
-- [ ] `#[crate_name = "..."]`
-- [ ] `#[no_main]`
-- [ ] `#[naked]`
-- [ ] `#[no_builtins]`
-- [ ] `#[target_feature(...)]`
-- [ ] `#[instruction_set(...)]`
-- [ ] `#[panic_handler]`
-- [ ] `#[global_allocator]`
-- [ ] `#[windows_subsystem = "..."]`
-- [ ] `#[no_std]`
-- [ ] `#[no_implicit_prelude]`
-- [ ] `#[cold]`
-- [ ] `#[track_caller]`
+- [x] `#[no_mangle]`
+- [x] `#[link(...)]`
+- [x] `#[link_name = "..."]`
+- [x] `#[link_ordinal(...)]`
+- [x] `#[link_section = "..."]`
+- [x] `#[no_link]`
+- [x] `#[export_name = "..."]`
+- [x] `#[used]`
+- [x] `#[crate_type = "..."]`
+- [x] `#[crate_name = "..."]`
+- [x] `#[no_main]`
+- [x] `#[naked]`
+- [x] `#[no_builtins]`
+- [x] `#[target_feature(...)]`
+- [x] `#[instruction_set(...)]`
+- [x] `#[panic_handler]`
+- [x] `#[global_allocator]`
+- [x] `#[windows_subsystem = "..."]`
+- [x] `#[no_std]`
+- [x] `#[no_implicit_prelude]`
+- [x] `#[cold]`
+- [x] `#[track_caller]`
 
 ---
 
 ## 11. Macros & Metaprogramming
 
 ### Keywords
-- [ ] `macro_rules` — declarative macro definition (weak keyword)
-- [ ] `macro` — reserved for future macro 2.0 syntax
+- [x] `macro_rules` — declarative macro definition (weak keyword)
+- [x] `macro` — reserved for future macro 2.0 syntax
 
 ### Operators & Sigils
-- [ ] `!` — macro invocation marker (`ident!(...)`) *(cross-link from Basics)*
-- [ ] `ident!(...)` / `ident!{...}` / `ident![...]` — the three invocation delimiter forms
-- [ ] `$ident` — macro substitution variable
-- [ ] `$ident:kind` — macro metavariable with fragment specifier
-- [ ] `$(...)…` — macro repetition
+- [x] `!` — macro invocation marker (`ident!(...)`) *(cross-link from Basics)*
+- [x] `ident!(...)` / `ident!{...}` / `ident![...]` — the three invocation delimiter forms
+- [x] `$ident` — macro substitution variable
+- [x] `$ident:kind` — macro metavariable with fragment specifier
+- [x] `$(...)…` — macro repetition
 
 ### Attributes
-- [ ] `#[macro_export]`
-- [ ] `#[macro_use]`
-- [ ] `#[proc_macro]`
-- [ ] `#[proc_macro_derive(...)]`
-- [ ] `#[proc_macro_attribute]`
+- [x] `#[macro_export]`
+- [x] `#[macro_use]`
+- [x] `#[proc_macro]`
+- [x] `#[proc_macro_derive(...)]`
+- [x] `#[proc_macro_attribute]`
 
 ### Standard macros (worth their own pages even though library, not language, items)
-- [ ] `println!` / `print!` / `eprintln!` / `eprint!`
-- [ ] `format!`
-- [ ] `vec!`
-- [ ] `panic!` *(cross-linked to Error Handling)*
-- [ ] `assert!` / `assert_eq!` / `assert_ne!`
-- [ ] `todo!` / `unimplemented!` / `unreachable!`
-- [ ] `matches!`
-- [ ] `write!` / `writeln!`
-- [ ] `cfg!`
-- [ ] `include!` / `include_str!` / `include_bytes!`
-- [ ] `env!` / `option_env!`
-- [ ] `concat!` / `stringify!` / `line!` / `column!` / `file!` / `module_path!`
+- [x] `println!` / `print!` / `eprintln!` / `eprint!`
+- [x] `format!`
+- [x] `vec!`
+- [x] `panic!` *(cross-linked to Error Handling)*
+- [x] `assert!` / `assert_eq!` / `assert_ne!`
+- [x] `todo!` / `unimplemented!` / `unreachable!`
+- [x] `matches!`
+- [x] `write!` / `writeln!`
+- [x] `cfg!`
+- [x] `include!` / `include_str!` / `include_bytes!`
+- [x] `env!` / `option_env!`
+- [x] `concat!` / `stringify!` / `line!` / `column!` / `file!` / `module_path!`
 
 ---
 
 ## 12. Attributes (core syntax + remaining categories)
 
 ### Core syntax
-- [ ] `#[meta]` — outer attribute
-- [ ] `#![meta]` — inner attribute
+- [x] `#[meta]` — outer attribute
+- [x] `#![meta]` — inner attribute
 
 ### Conditional compilation
-- [ ] `#[cfg(...)]`
-- [ ] `#[cfg_attr(...)]`
+- [x] `#[cfg(...)]`
+- [x] `#[cfg_attr(...)]`
 
 ### Testing
-- [ ] `#[test]`
-- [ ] `#[ignore]`
-- [ ] `#[should_panic]`
+- [x] `#[test]`
+- [x] `#[ignore]`
+- [x] `#[should_panic]`
 
 ### Diagnostics
-- [ ] `#[allow(...)]`
-- [ ] `#[expect(...)]`
-- [ ] `#[warn(...)]`
-- [ ] `#[deny(...)]`
-- [ ] `#[forbid(...)]`
-- [ ] `#[deprecated]`
-- [ ] `#[must_use]`
-- [ ] `#[diagnostic::on_unimplemented]`
-- [ ] `#[diagnostic::do_not_recommend]`
+- [x] `#[allow(...)]`
+- [x] `#[expect(...)]`
+- [x] `#[warn(...)]`
+- [x] `#[deny(...)]`
+- [x] `#[forbid(...)]`
+- [x] `#[deprecated]`
+- [x] `#[must_use]`
+- [x] `#[diagnostic::on_unimplemented]`
+- [x] `#[diagnostic::do_not_recommend]`
 
 ### Documentation
-- [ ] `#[doc = "..."]` (and its relation to `///`/`//!`)
+- [x] `#[doc = "..."]` (and its relation to `///`/`//!`)
 
 ### Limits
-- [ ] `#[recursion_limit = "N"]`
-- [ ] `#[type_length_limit = "N"]`
+- [x] `#[recursion_limit = "N"]`
+- [x] `#[type_length_limit = "N"]`
 
 ### Features
-- [ ] `#[feature(...)]`
+- [x] `#[feature(...)]`
 
 ### Debugger
-- [ ] `#[debugger_visualizer(...)]`
-- [ ] `#[collapse_debuginfo]`
+- [x] `#[debugger_visualizer(...)]`
+- [x] `#[collapse_debuginfo]`
 
 *(`derive`/`automatically_derived` → §4 Traits; `repr`/`non_exhaustive` → §3 Types;
 `path` → §8 Modules; FFI/codegen attributes → §10 Memory & Unsafe; macro attributes
@@ -370,19 +370,19 @@ Not usable yet, but still syntax elements per §4.1 ("nothing is too small to ge
 its own page") — these get short stub pages explaining *why* they're reserved
 and what they're expected to become.
 
-- [ ] `abstract`
-- [ ] `become`
-- [ ] `box`
-- [ ] `do`
-- [ ] `final`
-- [ ] `gen` — reserved 2024 edition (generator functions)
-- [ ] `override`
-- [ ] `priv`
-- [ ] `try` — reserved 2018 edition (`try`/catch-style blocks)
-- [ ] `typeof`
-- [ ] `unsized`
-- [ ] `virtual`
-- [ ] `yield`
+- [x] `abstract`
+- [x] `become`
+- [x] `box`
+- [x] `do`
+- [x] `final`
+- [x] `gen` — reserved 2024 edition (generator functions)
+- [x] `override`
+- [x] `priv`
+- [x] `try` — reserved 2018 edition (`try`/catch-style blocks)
+- [x] `typeof`
+- [x] `unsized`
+- [x] `virtual`
+- [x] `yield`
 
 ---
 
@@ -391,9 +391,9 @@ and what they're expected to become.
 Not individual tokens so much as reserved *patterns* — worth a single "Reserved
 syntax & edition gotchas" page rather than one page each:
 
-- [ ] Reserved prefixes (2021+): `ident#`, `ident'` (except `b'`), `ident"..."`
+- [x] Reserved prefixes (2021+): `ident#`, `ident'` (except `b'`), `ident"..."`
       (except `b"` `c"` `r"` `br"` `cr"`), `'ident#`
-- [ ] Reserved string guards (2024+): `#"string"`, `##`
+- [x] Reserved string guards (2024+): `#"string"`, `##`
 
 ---
 
