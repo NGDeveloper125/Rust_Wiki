@@ -209,10 +209,122 @@ the
 [API Guidelines' conversions section](https://rust-lang.github.io/api-guidelines/interoperability.html)
 recommends `FromStr` for exactly this kind of textual parsing API.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `?` desugars to plain `match` plus `From::from` on
-`core::result::Result` and `core::option::Option`, so it works
-identically in `#![no_std]` with no runtime cost and no allocator
-requirement — the enclosing function's return type just needs to stay
-compatible, exactly as on hosted targets.
+On bare metal there's no OS-level try/catch to fall back on even in
+spirit — no unwinding runtime underneath most `#![no_std]` builds (see
+[Panic & unwinding](panic-and-unwinding.md)), so `panic!` is reserved for
+conditions the firmware truly cannot continue past, and `?`-based
+`Result` chains become the only realistic way to propagate an ordinary,
+expected failure — a bus that didn't ACK, a sensor that timed out — back
+up to a caller who can actually decide what to do about it: retry, fall
+back to a cached value, or escalate to a fault state. The
+[`?` syntax page's embedded section](../../syntax/operators/question-mark.md)
+covers the mechanics — same desugaring, same zero-cost `core::result`/
+`core::option` operands, no allocator involved — this page is about *why*
+that shape fits embedded code particularly well: a driver function built
+from several dependent hardware transactions (power on a sensor, wait for
+a ready bit, read the result) reads as a flat sequence of `?`-suffixed
+calls, each one exiting immediately the moment a step the rest of the
+sequence depends on fails, with no `match` boilerplate at each line and,
+critically, no hidden path where a step's failure is silently read as its
+success.
+
+## Basic usage example (Embedded)
+
+```
+use embedded_hal::i2c::I2c;
+
+#[derive(Debug)]
+struct SensorError;
+
+fn configure(i2c: &mut impl I2c, addr: u8) -> Result<(), SensorError> {
+    i2c.write(addr, &[0x20, 0x01]).map_err(|_| SensorError) // <- enable the sensor
+}
+
+fn read_value(i2c: &mut impl I2c, addr: u8) -> Result<u16, SensorError> {
+    let mut buf = [0u8; 2];
+    i2c.write_read(addr, &[0x28], &mut buf).map_err(|_| SensorError)?;
+    Ok(u16::from_be_bytes(buf))
+}
+
+fn read_configured_value(i2c: &mut impl I2c, addr: u8) -> Result<u16, SensorError> {
+    configure(i2c, addr)?; // <- exits immediately if enabling the sensor fails
+    read_value(i2c, addr)  // <- last expression: its own Result is returned as-is
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Handling and propagating errors
+
+Reading a calibrated sensor value chains three independent hardware
+steps — waking the sensor, waiting for it to report ready, then reading
+the result — and `?` exits at the first one that fails instead of reading
+a result from a sensor that was never actually ready.
+
+```
+use embedded_hal::i2c::I2c;
+
+#[derive(Debug)]
+enum SensorError {
+    Bus,
+    NotReady,
+}
+
+fn wake(i2c: &mut impl I2c, addr: u8) -> Result<(), SensorError> {
+    i2c.write(addr, &[0x10, 0x01]).map_err(|_| SensorError::Bus) // <- power-on command
+}
+
+fn wait_ready(i2c: &mut impl I2c, addr: u8) -> Result<(), SensorError> {
+    let mut status = [0u8; 1];
+    i2c.write_read(addr, &[0x00], &mut status).map_err(|_| SensorError::Bus)?;
+    if status[0] & 0x01 == 0 {
+        return Err(SensorError::NotReady);
+    }
+    Ok(())
+}
+
+fn read_measurement(i2c: &mut impl I2c, addr: u8) -> Result<u16, SensorError> {
+    wake(i2c, addr)?;       // <- exits here if the power-on write fails
+    wait_ready(i2c, addr)?; // <- exits here if the status read fails, or the sensor isn't ready yet
+    let mut buf = [0u8; 2];
+    i2c.write_read(addr, &[0x28], &mut buf).map_err(|_| SensorError::Bus)?;
+    Ok(u16::from_be_bytes(buf))
+}
+```
+
+**Why this way:** each `?` stops the sequence the instant a step the rest
+depends on fails, so `read_measurement` can never reach the final register
+read after a wake or readiness step actually failed — the same fail-fast
+shape the classic page's `load_max_connections` example gives a
+config-loading pipeline, applied here to a hardware transaction sequence
+instead of file I/O.
+
+### Scenario: Validating input
+
+Reading a device's operating mode out of a small on-flash config block
+rejects a missing field before it's used, using `?` on
+`Option::ok_or` exactly as the classic page does for a signup form — just
+with the form replaced by a byte read out of flash.
+
+```
+struct DeviceConfig<'a> {
+    mode_byte: Option<&'a u8>,
+}
+
+#[derive(Debug)]
+struct ConfigError(&'static str);
+
+fn read_mode(config: &DeviceConfig) -> Result<u8, ConfigError> {
+    let mode = config.mode_byte
+        .ok_or(ConfigError("mode byte missing from config block"))?; // <- exits early if the field was never written
+    Ok(*mode)
+}
+```
+
+**Why this way:** `?` on `ok_or`/`ok_or_else` gives `Option` the same
+fail-fast propagation shape `?` gives `Result`, so a config reader for a
+flash-backed struct reads as flat checks instead of nested `if let`s — the
+same idiom as the classic page's `validate` example, applied to firmware
+config instead of a signup form.

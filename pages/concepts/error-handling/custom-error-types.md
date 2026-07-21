@@ -169,12 +169,125 @@ sensor fault) instead of pattern-matching a string, which
 [Effective Rust](https://effective-rust.com/) recommends over
 stringly-typed errors for anything beyond a throwaway script.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A custom error enum is just an enum plus trait impls —
-core-language, no allocator required by the type itself. Since Rust 1.81
-stabilized `core::error::Error`, even a `#![no_std]` crate can implement
-the real `Error` trait directly; using `thiserror` there additionally
-requires disabling its default `std` feature, since the crate's `std`
-support assumes an allocator and the full `Error` trait location present
-on hosted targets.
+A hand-written, no_std-compatible error enum is the standard way a HAL or
+driver crate reports failure — the same "one variant per distinct failure
+mode" design from the classic Explanation applies unchanged, since an enum
+plus trait impls is core-language and needs no allocator. What's genuinely
+different is the tooling around it: `thiserror` and `anyhow`, the classic
+page's default crate picks, are built with `std` in mind and generally
+aren't reached for inside `#![no_std]` code. Some crates do use
+`thiserror`'s `std`-feature-disabled mode where the version in use supports
+it, but that's worth checking per crate rather than assuming works
+everywhere. The idiomatic no_std substitute most driver crates reach for
+instead is a small hand-written enum deriving `Debug`, optionally paired
+with a manual `Display` and [`Error`](the-error-trait.md) impl written by
+hand — exactly the manual mechanism [The Error trait](the-error-trait.md)
+walks through, just without a derive macro generating the boilerplate.
+
+## Basic usage example (Embedded)
+
+```
+#[derive(Debug)]
+enum SensorError {
+    Bus,           // <- one variant per distinct failure mode, no thiserror involved
+    NotResponding,
+}
+
+fn read(addr: u8) -> Result<u8, SensorError> {
+    if addr == 0 {
+        return Err(SensorError::NotResponding);
+    }
+    Ok(0x42)
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Handling and propagating errors
+
+An IMU driver collapses any underlying I2C bus error into one variant via
+a hand-written `From` impl, so `?` can still convert automatically even
+without `thiserror`'s `#[from]` to generate it.
+
+```
+use embedded_hal::i2c::{I2c, Error as I2cErrorTrait};
+
+#[derive(Debug)]
+enum ImuError {
+    Bus,
+    BadWhoAmI(u8),
+}
+
+impl<E: I2cErrorTrait> From<E> for ImuError {
+    fn from(_e: E) -> Self {
+        ImuError::Bus // <- hand-written From, standing in for thiserror's #[from] in a no_std crate
+    }
+}
+
+fn init(i2c: &mut impl I2c, addr: u8) -> Result<(), ImuError> {
+    let mut who_am_i = [0u8; 1];
+    i2c.write_read(addr, &[0x0F], &mut who_am_i)?; // <- `?` converts any bus error via the impl above
+    if who_am_i[0] != 0x68 {
+        return Err(ImuError::BadWhoAmI(who_am_i[0]));
+    }
+    Ok(())
+}
+```
+
+**Why this way:** without `thiserror` available, the `From` impl has to be
+written by hand, but it's the same mechanism the derive would otherwise
+generate — see [`?`](the-question-mark-operator.md) and
+[The Error trait](the-error-trait.md) for the underlying pattern.
+
+### Scenario: Designing a public API
+
+A published driver crate marks its public error enum `#[non_exhaustive]`,
+since a later release may add a new fault code (say, for a new sensor
+revision) without that being a breaking change for downstream `match`
+statements — the same reasoning as the classic page, and still fully
+available since `#[non_exhaustive]` is a core-language attribute.
+
+```
+#[derive(Debug)]
+#[non_exhaustive] // <- a later release can add a variant (e.g. a new fault code) without a breaking change
+pub enum DriverError {
+    Bus,
+    Timeout,
+}
+```
+
+**Why this way:** without it, adding a variant to a public driver error enum
+breaks every downstream `match` on the next release, per the
+[API Guidelines' future-proofing section](https://rust-lang.github.io/api-guidelines/future-proofing.html) —
+exactly as relevant to a `#![no_std]` driver crate as to a hosted one.
+
+### Scenario: Validating input
+
+Decoding a configuration register's mode field distinguishes a genuine bus
+failure from a merely unrecognized (but successfully read) encoding, since
+only one of those means "something is actually broken."
+
+```
+#[derive(Debug, PartialEq)]
+enum ConfigError {
+    Bus,
+    UnknownMode(u8),
+}
+
+fn decode_mode(bits: u8) -> Result<u8, ConfigError> {
+    match bits & 0b11 {
+        0b00 | 0b01 => Ok(bits & 0b11),
+        other => Err(ConfigError::UnknownMode(other)), // <- distinct from Bus: the read succeeded, the value just isn't valid
+    }
+}
+
+assert_eq!(decode_mode(0b11), Err(ConfigError::UnknownMode(0b11)));
+```
+
+**Why this way:** a caller might reasonably retry on `Bus` (a transient
+fault) but not on `UnknownMode` (retrying won't fix a firmware/hardware
+mismatch) — that decision is only possible if the two failure modes are
+kept distinguishable, the same argument the classic page makes generally
+for one variant per failure mode.
