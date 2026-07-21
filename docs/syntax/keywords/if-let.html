@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -995,9 +994,12 @@ less common than using it purely for its side effects.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">enum ConfigValue {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Chaining if let / else if let / else</h3>
+            <pre><code class="rust">enum ConfigValue {
     Number(i64),
     Text(String),
     Missing,
@@ -1016,17 +1018,8 @@ if let ConfigValue::Number(n) = &amp;value {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>A network frame handler needs different handling for a data payload versus
 a close frame, with anything else treated as a keepalive — <code>if let</code>/
@@ -1049,19 +1042,14 @@ fn describe(frame: &amp;Frame) -&gt; String {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> each pattern is tried in order until one matches, which
+<p>Each pattern is tried in order until one matches, which
 reads as "which of these shapes is it" without the ceremony of a <code>match</code>'s
 arms for a case this small — the
 <a href="https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html">Rust Book</a>
 introduces <code>if let</code> for exactly this "only some shapes need code" situation.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Reporting a metrics data point is best-effort: the caller only wants to log
 a failure, not stop the program over it — <code>if let Err(...)</code> isolates just
@@ -1073,19 +1061,14 @@ that one case.</p>
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> when the success case genuinely needs no follow-up, <code>if let Err(...)</code> avoids writing an <code>Ok(()) =&gt; {}</code> arm that would say nothing —
+<p>When the success case genuinely needs no follow-up, <code>if let Err(...)</code> avoids writing an <code>Ok(()) =&gt; {}</code> arm that would say nothing —
 the same "only one shape matters here" reasoning the
 <a href="https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html">Rust Book</a>
 gives for preferring <code>if let</code> over a full <code>match</code> when only one outcome
 needs handling.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Looking up a product's stock count only has something useful to say when
 the SKU is known — <code>if let Some(...)</code> handles the found case, with <code>else</code>
@@ -1101,11 +1084,10 @@ fn describe_stock(inventory: &amp;HashMap&lt;String, u32&gt;, sku: &amp;str) -&g
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>HashMap::get</code> returns <code>Option&lt;&amp;V&gt;</code> specifically so a
+<p><code>HashMap::get</code> returns <code>Option&lt;&amp;V&gt;</code> specifically so a
 missing key is an ordinary value to match on rather than a panic — <code>if let</code>/<code>else</code> gives both outcomes (found, not found) a place to go without
 the extra <code>None =&gt; ...</code> arm a full <code>match</code> would need here.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1121,7 +1103,7 @@ to the same code a hand-written <code>match</code> would. Commonly used to check
 <code>Option</code> a peripheral read function returns without the ceremony of a full
 <code>match</code> when only the <code>Some</code> case needs a reaction.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

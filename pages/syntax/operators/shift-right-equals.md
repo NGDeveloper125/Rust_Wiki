@@ -13,16 +13,16 @@ see_also: [">>"]
 `>>=` right-shifts the left operand by the right operand's amount, in
 place, overloadable via `std::ops::ShrAssign`.
 
-## Basic usage example
+## Usage examples
+
+### Right-shifting a value in place
 
 ```
 let mut x = 8u8;
 x >>= 3; // <- `>>=` right-shifts `x` in place
 ```
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Unpacking a byte's fields one at a time by repeatedly consuming its
 lowest bits is a natural use of `>>=` — each pass shifts the next field
@@ -40,7 +40,7 @@ let field_c = packed & 0b111;
 assert_eq!((field_a, field_b, field_c), (0b10, 0b101, 0b101));
 ```
 
-**Why this way:** mutating `packed` in place with `>>=` as each field is
+Mutating `packed` in place with `>>=` as each field is
 consumed avoids tracking a separate shift-amount variable and re-deriving
 it every time — the same in-place rationale as
 [`+=`](plus-equals.md), here specialized to `ShrAssign`.

@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1008,9 +1007,12 @@ can be passed around without knowing the pointee's own size.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn parse_port(raw: &amp;str) -&gt; Result&lt;u16, std::num::ParseIntError&gt; {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Propagating a parse error out of a function</h3>
+            <pre><code class="rust">fn parse_port(raw: &amp;str) -&gt; Result&lt;u16, std::num::ParseIntError&gt; {
     let port: u16 = raw.trim().parse()?; // &lt;- unwraps to u16 on Ok, returns Err early otherwise
     Ok(port)
 }
@@ -1019,17 +1021,8 @@ can be passed around without knowing the pointee's own size.</p>
 <code>Result</code>; moving the same line into a function returning <code>()</code> is a
 compile error, not a warning — see Explanation above.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Loading a calibration offset from disk can fail two independent ways —
 the file might be missing, or its contents might not parse — and <code>?</code>
@@ -1052,20 +1045,15 @@ fn load_calibration_offset(path: &amp;str) -&gt; Result&lt;f64, Box&lt;dyn std::
 //     println!("offset file: {contents}");
 // }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>?</code>'s legality is a purely syntactic property of the
+<p><code>?</code>'s legality is a purely syntactic property of the
 enclosing function's declared return type, not of any particular branch
 it's written inside, per the
 <a href="https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator">Rust Reference's operator-expression chapter</a> —
 changing <code>log_calibration_offset</code>'s signature is the only fix, commenting
 around the call is not.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Writing generic code</h3>
             <p>A logging helper that accepts anything displayable shouldn't force
 callers to hand it an already-<code>Sized</code> value — bounding its parameter with
@@ -1098,13 +1086,12 @@ fn describe&lt;T: ?Sized + Sensor&gt;(sensor: &amp;T) -&gt; f64 { // &lt;- also 
 let boxed: Box&lt;dyn Sensor&gt; = Box::new(Thermometer);
 describe(&amp;*boxed);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> leaving the implicit <code>Sized</code> bound in place would
+<p>Leaving the implicit <code>Sized</code> bound in place would
 reject both <code>log_reading("sensor-07")</code> and <code>describe(&amp;*boxed)</code> at the
 type-check stage, since <code>str</code> and <code>dyn Sensor</code> have no compile-time-known
 size — <code>?Sized</code> is how a generic function opts into accepting them, per
 the <a href="https://doc.rust-lang.org/reference/dynamically-sized-types.html">Rust Reference's dynamically sized types chapter</a>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1122,7 +1109,7 @@ no allocator or runtime involved. <code>?Sized</code> is a purely compile-time
 relaxation of a trait bound with no runtime dependency at all — both are
 exactly as available on a microcontroller target as on a hosted one.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

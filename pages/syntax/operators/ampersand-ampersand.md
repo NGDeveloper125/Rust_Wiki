@@ -19,7 +19,9 @@ panic (`x.is_some() && x.unwrap() > 0`). Unlike `&`, `&&` is **not**
 overloadable — it only ever works on `bool` and always short-circuits;
 there's no trait to implement to change its behavior for a custom type.
 
-## Basic usage example
+## Usage examples
+
+### Short-circuiting two conditions
 
 ```
 let a = 3;
@@ -31,9 +33,7 @@ let both_positive = a > 0 && b > 0; // <- `&&` short-circuits: `b > 0` only runs
 overloaded for custom types — unlike `&`, there is no trait to implement
 to change its behavior.
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 Chaining several guard conditions with `&&` reads as one sentence and
 short-circuits before any check that would panic on data the earlier
@@ -52,7 +52,7 @@ fn is_valid(form: &SignupForm) -> bool {
 }
 ```
 
-**Why this way:** ordering the cheap, panic-free checks first and letting
+Ordering the cheap, panic-free checks first and letting
 `&&` short-circuit means the `unwrap()` on the first character never runs
 against an empty string — see [`||`](pipe-pipe.md) for the OR counterpart,
 used when any single condition failing should reject the input.

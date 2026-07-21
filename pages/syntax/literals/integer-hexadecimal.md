@@ -19,7 +19,9 @@ Underscores are allowed between digits, including immediately after the
 `0x` prefix. Like all integer literals, an optional type suffix
 (`0xffu8`) can pin the type directly.
 
-## Basic usage example
+## Usage examples
+
+### Declaring a memory address
 
 ```
 let addr = 0x2000; // <- `0x` prefix marks a base-16 (hexadecimal) integer literal
@@ -29,9 +31,7 @@ let addr = 0x2000; // <- `0x` prefix marks a base-16 (hexadecimal) integer liter
 appear after the `0x` prefix (underscores and a type suffix like
 `0xFF_u8` are still allowed).
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Hex groups bits into 4-bit nibbles, so a multi-bit register mask reads as
 "which nibble, which bits" at a glance — far harder to see in decimal.
@@ -49,12 +49,12 @@ fn configure(control: u32) -> u32 {
 let baud_bits = configure(0) & BAUD_MASK;
 ```
 
-**Why this way:** hex digits map exactly onto 4-bit groups, so a mask like
+Hex digits map exactly onto 4-bit groups, so a mask like
 `0x0F00` communicates "bits 8–11" directly — the readability reason
 register-level code conventionally writes masks in hex rather than
 decimal.
 
-### Scenario: Numeric computation
+### Numeric computation
 
 Power-of-two sizes and addresses read as recognizable patterns in hex in
 a way their decimal equivalents don't, which matters for anything doing
@@ -71,7 +71,7 @@ assert!(is_page_aligned(0x4000));
 assert!(!is_page_aligned(0x4010));
 ```
 
-**Why this way:** `0x1000` and `0x4000` are instantly recognizable as
+`0x1000` and `0x4000` are instantly recognizable as
 round, aligned values in a way `4096` and `16384` aren't — which is why
 systems code conventionally writes addresses and alignment constants in
 hex.

@@ -25,7 +25,9 @@ loop.
 Like other loops, `loop` accepts a label (`'a: loop { ... }`) so nested
 `break`/`continue` can target a specific enclosing loop.
 
-## Basic usage example
+## Usage examples
+
+### Producing a value from a loop with `break`
 
 ```
 let result = loop { // <- `loop` repeats the block forever until a `break`
@@ -33,9 +35,7 @@ let result = loop { // <- `loop` repeats the block forever until a `break`
 };
 ```
 
-## Best practices & deeper information
-
-### Scenario: Multi-threading
+### Multi-threading
 
 A worker thread that services jobs from a channel but also needs to do
 periodic housekeeping between jobs is a classic use for `loop` plus
@@ -63,17 +63,17 @@ fn spawn_worker(rx: mpsc::Receiver<String>) -> thread::JoinHandle<()> {
 }
 ```
 
-**Why this way:** `recv_timeout` gives the loop three genuinely distinct
+`recv_timeout` gives the loop three genuinely distinct
 events — a job, a timeout for housekeeping, and channel shutdown — which
 no single `while` condition (or `for job in rx`) can express; the only
 exit is the channel closing. This extends the channel-receiving patterns
 in the
 [Book's message-passing chapter](https://doc.rust-lang.org/book/ch16-02-message-passing.html);
 note that when the only cases are "got a job" and "channel closed",
-prefer `for job in rx` — Clippy's `while_let_loop` lint flags the plain
-`loop`/`recv`/`match` version of that.
+`for job in rx` is preferred — Clippy's `while_let_loop` lint flags the
+plain `loop`/`recv`/`match` version of that.
 
-### Scenario: Message passing between threads
+### Message passing between threads
 
 Polling a channel without blocking the thread — instead of calling the
 blocking `.recv()` — pairs `loop` with `try_recv`'s two distinct error
@@ -103,7 +103,7 @@ loop {
 }
 ```
 
-**Why this way:** [`Receiver::try_recv`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv)
+[`Receiver::try_recv`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv)
 distinguishes "empty for now" from "disconnected," which a blocking
 `recv()` inside `loop` can't do — the sleep keeps this from becoming a
 busy-spin that pegs a CPU core while waiting.

@@ -40,7 +40,9 @@ type, requires touching nothing inside a body that used `Self` — the
 placeholder resolves fresh every time, whereas a hardcoded type name
 would need to be found and updated at every occurrence.
 
-## Basic usage example
+## Usage examples
+
+### Using `Self` as a constructor's return type
 
 ```
 struct Client { host: String }
@@ -52,9 +54,7 @@ impl Client {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Creating a new object
+### Creating a new object
 
 A constructor's return type is conventionally written `Self`, not the
 type's own name repeated — the two are identical here, but only one of
@@ -74,13 +74,13 @@ impl Configuration {
 let config = Configuration::new(10);
 ```
 
-**Why this way:** the
+The
 [API Guidelines' C-CTOR](https://rust-lang.github.io/api-guidelines/predictability.html#constructors-are-static-inherent-methods-c-ctor)
 examples consistently use `Self` for a constructor's return type — if
 `Configuration` is ever renamed, every `Self`-typed signature and
 `Self { ... }` literal keeps compiling unchanged.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A trait method that must return "whatever type is implementing this
 trait" can only be expressed with `Self` — writing a concrete type name
@@ -106,7 +106,7 @@ impl Buildable for Queue {
 }
 ```
 
-**Why this way:** writing `fn empty() -> Playlist` directly inside the
+Writing `fn empty() -> Playlist` directly inside the
 `trait Buildable` declaration wouldn't type-check for `Queue`'s
 implementation at all — `Self` is the only way to express "return the
 implementer's own type" in a trait signature, which is what lets a single

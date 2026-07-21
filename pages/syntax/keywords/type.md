@@ -44,7 +44,9 @@ per trait implementation) is covered on the
 [Associated types](../../concepts/types-data-modeling/associated-types.md)
 concept pages; this page covers only the two declaration grammars.
 
-## Basic usage example
+## Usage examples
+
+### Type alias vs. associated type syntax
 
 ```
 type Kilometers = f64; // <- alias form: `=` and `;`, no trait involved
@@ -55,9 +57,7 @@ trait Container {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A crate's own `Result` alias, generic over just the success type, keeps
 every fallible function's signature from having to spell out the
@@ -74,14 +74,14 @@ pub fn load_port(raw: &str) -> Result<u16> { // <- reads far better than Result<
 }
 ```
 
-**Why this way:** this is one of the most common uses of the alias form
+This is one of the most common uses of the alias form
 of `type` in real crates — every public fallible function shares one
 `Result<T>` alias instead of repeating the crate's error type at every
 call site, a pattern the
 [std library itself uses](https://doc.rust-lang.org/std/io/type.Result.html)
 for `std::io::Result<T>`.
 
-### Scenario: Writing generic code
+### Writing generic code
 
 A trait whose method has exactly one correct return type per
 implementer declares that type as an associated type with `type`, rather
@@ -103,7 +103,7 @@ impl Parser for IntParser {
 }
 ```
 
-**Why this way:** writing `Self::Output` in the trait's signature instead
+Writing `Self::Output` in the trait's signature instead
 of a second generic parameter keeps `fn parse(&self, input: &str) ->
 Self::Output` free of a type parameter that was never the caller's to
 choose — see

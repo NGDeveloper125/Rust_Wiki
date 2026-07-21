@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -984,9 +983,12 @@ inside a transcriber repetition whose depth matches how it was captured.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">macro_rules! sum_all {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Matching and re-emitting zero or more repetitions</h3>
+            <pre><code class="rust">macro_rules! sum_all {
     ($($n:expr),*) =&gt; { // &lt;- `*`: matches zero or more comma-separated expressions
         0 $(+ $n)* // &lt;- re-emits each captured $n, prefixed with `+`, once per repetition
     };
@@ -995,17 +997,8 @@ inside a transcriber repetition whose depth matches how it was captured.</p>
 let total = sum_all!(1, 2, 3); // &lt;- expands to 0 + 1 + 2 + 3
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>A batch-construction macro needs to accept any number of comma-separated
 readings, including an optional trailing comma — exactly the shape std's
@@ -1018,15 +1011,14 @@ own <code>vec!</code> is implemented with internally.</p>
 
 let batch = reading_batch!(21.4, 19.8, 23.1,); // &lt;- trailing comma accepted thanks to the `?` repetition
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> std's own <code>vec!</code> macro is implemented with this exact
+<p>std's own <code>vec!</code> macro is implemented with this exact
 <code>$($x:expr),* $(,)?</code> shape, which is why both <code>vec![1, 2, 3]</code> and
 <code>vec![1, 2, 3,]</code> compile — see the
 <a href="https://doc.rust-lang.org/std/macro.vec.html">standard library's <code>vec!</code> documentation</a>
 for the macro this pattern mirrors; a custom variadic constructor macro
 copies the same shape so it tolerates trailing commas the same way
 callers already expect from <code>vec!</code>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1045,7 +1037,7 @@ identical <code>impl</code> per GPIO pin or timer instance from a single
 <code>$($pin:ident),*</code>-style macro call is far less error-prone than
 hand-writing dozens of copies.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

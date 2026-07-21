@@ -22,16 +22,16 @@ empty parameter list — the parser distinguishes the two uses by position:
 `||` with an expression on its left is lazy OR, while `||` at the start
 of an expression is a closure's (empty) parameter list.
 
-## Basic usage example
+## Usage examples
+
+### Short-circuiting logical OR between two conditions
 
 ```
 let a = 150;
 let out_of_range = a < 0 || a > 100; // <- `||` short-circuiting logical OR
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 Rejecting a request that's either empty or over a configured limit reads
 naturally as an `||` of two independent conditions, with short-circuiting
@@ -49,13 +49,13 @@ assert!(reject(&[]));
 assert!(!reject(&[1, 2, 3]));
 ```
 
-**Why this way:** ordering the cheaper, more-likely-true check first
+Ordering the cheaper, more-likely-true check first
 lets short-circuiting skip the second check entirely on the common path,
 which the [Rust Reference](https://doc.rust-lang.org/reference/expressions/operator-expr.html#lazy-boolean-operators)
 documents as guaranteed evaluation order, not just an optimization detail
 to rely on incidentally.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Guarding a fallible operation behind an `||` check lets the guard clause
 bail out via `?` before an operation that would otherwise panic or return
@@ -76,7 +76,7 @@ assert!(read_header(&[0x01]).is_err());
 assert_eq!(read_header(&[0x00, 0x2A]), Ok(42));
 ```
 
-**Why this way:** checking both failure conditions up front with `||`
+Checking both failure conditions up front with `||`
 turns a potential panic (indexing into a too-short slice) into a handled
 `Err` — and short-circuiting means `buf[0]` on the right is only ever
 evaluated once the length check on the left has passed, in line with the

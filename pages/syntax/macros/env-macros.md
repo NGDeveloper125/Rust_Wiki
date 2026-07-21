@@ -35,16 +35,16 @@ others, all populated straight from `Cargo.toml` —
 `env!("CARGO_PKG_VERSION")` is the standard way to embed a crate's own
 version number into itself without hand-maintaining it in two places.
 
-## Basic usage example
+## Usage examples
+
+### Reading a crate's version and an optional build tag
 
 ```
 const VERSION: &str = env!("CARGO_PKG_VERSION");          // <- fails the build if this var is somehow unset
 const BUILD_TAG: Option<&str> = option_env!("BUILD_TAG"); // <- None if unset, instead of failing the build
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A CLI tool's `--version` flag prints the crate's own version, embedded at
 compile time from `Cargo.toml` rather than hand-maintained as a separate
@@ -65,14 +65,14 @@ fn handle_args(args: &[String]) {
 }
 ```
 
-**Why this way:** sourcing the version string from `CARGO_PKG_VERSION`
+Sourcing the version string from `CARGO_PKG_VERSION`
 instead of a separately hand-written constant means `Cargo.toml`'s
 `version` field stays the single source of truth — the
 [Cargo book](https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates)
 documents these variables specifically so crates don't have to duplicate
 their own metadata.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 A build optionally embeds a license key at compile time via a build-time
 environment variable; when it's absent, the binary falls back to a
@@ -89,7 +89,7 @@ fn license_status() -> &'static str {
 }
 ```
 
-**Why this way:** the
+The
 [std docs](https://doc.rust-lang.org/std/macro.option_env.html) draw the
 line here — a genuinely optional build-time value should use
 `option_env!` rather than `env!`, since `env!` turns a missing variable

@@ -42,16 +42,16 @@ invocation itself, [`#[track_caller]`](../attributes/track-caller-attribute.md)
 plus `std::panic::Location::caller()` is the runtime equivalent used by
 `unwrap()` and similar methods to report where they were called from.
 
-## Basic usage example
+## Usage examples
+
+### Capturing source text and concatenating literals
 
 ```
 let expr_text = stringify!(1 + 2);            // <- "1 + 2", the source text, not the evaluated "3"
 let banner = concat!("build ", "v", "1.0.3"); // <- joined into one &'static str at compile time
 ```
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 A small custom assertion macro reports the failed condition's own source
 text using `stringify!`, the same technique the standard `assert!` macro
@@ -75,14 +75,14 @@ let order = Order { total: -5 };
 check_positive!(order.total); // panics: "expected order.total to be positive, got -5"
 ```
 
-**Why this way:** reporting the expression's own source text
+Reporting the expression's own source text
 (`"order.total"`) rather than a hand-written label keeps the message
 accurate automatically as the macro is reused at different call sites —
 the same trick the
 [std docs](https://doc.rust-lang.org/std/macro.stringify.html) describe
 `assert!` itself as relying on for its default panic message.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A lightweight logging macro tags every log line with its own source
 location, using `file!()`/`line!()`/`module_path!()` rather than
@@ -104,7 +104,7 @@ fn process_order(order_id: u64) {
 }
 ```
 
-**Why this way:** baking the call site into the macro itself means every
+Baking the call site into the macro itself means every
 call site gets accurate location info for free without the caller having
 to supply it — the same underlying technique logging crates in the
 ecosystem build their own logging macros on top of, per the

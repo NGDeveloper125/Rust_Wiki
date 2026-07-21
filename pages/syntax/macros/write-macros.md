@@ -38,7 +38,9 @@ failure (a full disk, a broken pipe, a closed socket), and production
 code should propagate it with `?` rather than unwrap, exactly the way any
 other fallible I/O call is handled.
 
-## Basic usage example
+## Usage examples
+
+### Writing formatted text into a String
 
 ```
 use std::fmt::Write as _;
@@ -52,9 +54,7 @@ fn build_summary(item_count: u32, total: f64) -> String {
 let summary = build_summary(3, 47.5);
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Implementing Display by writing into a Formatter
 
 A custom `Display` impl for a duration-like type formats its value piece
 by piece using `write!`, avoiding an intermediate allocation just to
@@ -77,14 +77,14 @@ let elapsed = Elapsed { seconds: 125 };
 println!("{elapsed}"); // 2m 05s
 ```
 
-**Why this way:** the
+The
 [std fmt docs](https://doc.rust-lang.org/std/fmt/trait.Display.html)
 show writing directly into the `&mut Formatter` that `Display::fmt` is
 handed as the idiomatic implementation shape; building an intermediate
 `String` with `format!` just to immediately write it out again is an
 unnecessary allocation on every call.
 
-### Scenario: Working with text
+### Appending log lines to a file
 
 Appending log lines to an open file propagates the `io::Write` `Result`
 with `?` rather than unwrapping it, since the destination is a real OS
@@ -100,7 +100,7 @@ fn log_reading(file: &mut File, sensor_id: u32, value: f64) -> io::Result<()> {
 }
 ```
 
-**Why this way:** an `io::Write` destination can genuinely fail (disk
+An `io::Write` destination can genuinely fail (disk
 full, broken pipe), so production code propagates the `Result` with `?`
 the same way any other fallible I/O call is handled — the
 [Book's error-handling chapter](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html)

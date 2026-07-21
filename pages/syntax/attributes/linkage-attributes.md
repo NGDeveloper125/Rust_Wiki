@@ -66,7 +66,9 @@ name (some legacy Windows system libraries). `#[no_link]` marks an
 resolution without actually linking the crate's compiled output in —
 a rare need, mostly internal to `rustc`'s own build.
 
-## Basic usage example
+## Usage examples
+
+### Exporting a function under its exact, unmangled name
 
 ```
 #[unsafe(no_mangle)] // <- keeps this exact name in the compiled binary's symbol table
@@ -75,9 +77,7 @@ pub extern "C" fn add_i32(a: i32, b: i32) -> i32 {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A telemetry library exposes one function to C callers and links against a
 vendor-supplied compression library whose header declares a function
@@ -100,7 +100,7 @@ pub extern "C" fn report_batch(data: *const u8, len: usize) -> i32 {
 }
 ```
 
-**Why this way:** `#[link(name = "...")]` on the `extern` block and
+`#[link(name = "...")]` on the `extern` block and
 `#[link_name]` on the individual item are the two separate knobs FFI code
 needs — one names the library, the other renames a single symbol inside
 it — while `#[unsafe(no_mangle)]` on the Rust-side export is required or

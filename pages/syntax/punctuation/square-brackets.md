@@ -30,7 +30,9 @@ known at compile time) and a slice type `[T]` (size is not part of the
 type, checked at runtime) is a frequent point of confusion for newcomers —
 see the [Arrays vs Vec](../../concepts/types-data-modeling/arrays-vs-vec.md) concept page.
 
-## Basic usage example
+## Usage examples
+
+### Declaring array types, indexing, and slicing
 
 ```
 let arr: [i32; 3] = [1, 2, 3]; // <- `[i32; 3]` is the type, `[1, 2, 3]` the literal
@@ -42,9 +44,7 @@ let slice: &[i32] = &arr[1..3]; // <- `[1..3]` here is slicing
 index/range is out of bounds — there is no `Option`-returning `[]` form
 (use `.get()` for that instead).
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 `.get(i)` returns `Option<&T>` instead of panicking, which makes it the
 right default for indices that aren't already known to be in bounds —
@@ -64,14 +64,14 @@ match scores.get(5) {
 }
 ```
 
-**Why this way:** `[]` indexing is appropriate when an out-of-range index
+`[]` indexing is appropriate when an out-of-range index
 means the program's own logic is broken (a genuine bug, worth a panic);
 `.get()` is appropriate whenever the index could legitimately be
 out-of-range because of external input — the
 [std docs for slice indexing](https://doc.rust-lang.org/std/primitive.slice.html#method.get)
-make this the documented alternative specifically to avoid the panic.
+document this as the alternative specifically to avoid the panic.
 
-### Scenario: Sharing data with multiple references
+### Sharing data with multiple references
 
 Slicing with `[ ]` doesn't copy — `&arr[1..3]` borrows a view into the
 original array/`Vec`, so several slices of the same data can coexist
@@ -85,7 +85,7 @@ let tail = &data[2..];  // <- borrows the rest; both slices borrow `data` at onc
 println!("{head:?} {tail:?}"); // fine: both are read-only shared borrows
 ```
 
-**Why this way:** because a slice is just a `(pointer, length)` view, not
+Because a slice is just a `(pointer, length)` view, not
 an allocation, splitting data into overlapping or adjacent read-only
 views via `[ ]` is effectively free — no cloning needed, unlike languages
 where a "slice" implies a copy.

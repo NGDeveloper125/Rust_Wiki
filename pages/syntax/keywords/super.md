@@ -25,7 +25,9 @@ flattened, or that the referenced item would read more clearly reached
 with an explicit [`use`](use.md) or a `crate::`-rooted path instead; it's
 a style note, not a hard rule.
 
-## Basic usage example
+## Usage examples
+
+### Reaching a parent module's function with `super::`
 
 ```
 fn shared_helper() -> u32 { 7 }
@@ -37,9 +39,7 @@ mod util {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A `discounts` submodule reaches a private helper defined in its parent
 `pricing` module via `super::`, without that helper ever needing to be
@@ -60,7 +60,7 @@ pub mod pricing {
 }
 ```
 
-**Why this way:** because `discounts` is a descendant of `pricing`, it
+Because `discounts` is a descendant of `pricing`, it
 already has access to `pricing`'s private items — see
 [Visibility & privacy](../../concepts/modules-crates-visibility/visibility-and-privacy.md)
 for why that descendant access exists — so `super::` is simply how that

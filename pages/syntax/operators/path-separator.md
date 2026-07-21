@@ -51,7 +51,9 @@ Outside of expression position — a type annotation, a `fn` signature, an
 positions can only mean generics, which is why turbofish is needed only
 in expression position, never in a type.
 
-## Basic usage example
+## Usage examples
+
+### Walking a module path to reach an associated function
 
 ```
 use std::collections::HashMap; // <- `::` walks `std` -> `collections` -> `HashMap`
@@ -59,9 +61,7 @@ use std::collections::HashMap; // <- `::` walks `std` -> `collections` -> `HashM
 let scores: HashMap<&str, u32> = HashMap::new(); // <- `::` here reaches `HashMap`'s associated fn `new`
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A public function parsing a numeric value out of a string has no other
 type context to infer from, so the call needs turbofish to say which
@@ -75,7 +75,7 @@ pub fn print_doubled(raw: &str) {
 }
 ```
 
-**Why this way:** `parse`'s return type is generic over
+`parse`'s return type is generic over
 [`FromStr`](https://doc.rust-lang.org/std/str/trait.FromStr.html) and
 isn't determined by any argument, so without either a type annotation on
 `n` or turbofish on the call itself, the compiler has nothing to infer
@@ -83,7 +83,7 @@ the target type from — turbofish is the idiomatic choice here because it
 keeps the type visible right at the call site instead of on a separate
 binding.
 
-### Scenario: Writing generic code
+### Writing generic code
 
 A generic function bound by a trait uses a fully qualified path to call
 that trait's method specifically, even though the type also has an
@@ -116,7 +116,7 @@ fn trait_area<T: Shape>(shape: &T) -> f64 {
 }
 ```
 
-**Why this way:** `<T as Shape>::area(shape)` is unambiguous regardless of
+`<T as Shape>::area(shape)` is unambiguous regardless of
 what inherent methods `T` might also have, which matters in generic code
 where the concrete type behind `T` — and therefore its full method set —
 isn't known when `trait_area` is written, only that it implements `Shape`.

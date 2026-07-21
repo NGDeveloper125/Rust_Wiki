@@ -24,15 +24,15 @@ the trait object must implement `Trait` and be `Send`. This is pure
 compile-time grammar with no `Add`-trait involvement at all; don't
 confuse the two uses.
 
-## Basic usage example
+## Usage examples
+
+### Adding two values
 
 ```
 let sum = 1 + 2; // <- `+` adds two values
 ```
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Summing a sensor's accumulated readings is ordinary arithmetic `+`, and
 the point where it's worth reaching for a checked variant is when the
@@ -53,13 +53,13 @@ assert_eq!(total_energy_wh(&today), Some(735));
 let sum = 2 + 2; // <- `+` plain arithmetic addition, no overflow risk here
 ```
 
-**Why this way:** `checked_add` turns a potential overflow panic (debug)
+`checked_add` turns a potential overflow panic (debug)
 or silent wraparound (release) into an explicit `Option`, which
 [Clippy's `arithmetic_side_effects`](https://rust-lang.github.io/rust-clippy/master/#arithmetic_side_effects)
 lint exists to flag when bare arithmetic operators are used on values
 whose range isn't obviously safe.
 
-### Scenario: Writing generic code
+### Writing generic code
 
 In trait-bound position `+` combines requirements rather than adding
 numbers — a generic function that needs a value it can both clone and
@@ -78,7 +78,7 @@ let (a, b) = log_and_duplicate(String::from("sensor-42"));
 assert_eq!(a, b);
 ```
 
-**Why this way:** spelling out `T: Clone + Debug` at the function
+Spelling out `T: Clone + Debug` at the function
 signature documents exactly what the generic code needs from its caller,
 which the [Book's generics chapter](https://doc.rust-lang.org/book/ch10-02-traits.html#specifying-multiple-trait-bounds-with-the--syntax)
 recommends over over-constraining with a single catch-all trait or

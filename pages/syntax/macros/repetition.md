@@ -38,7 +38,9 @@ matcher's. Repetitions can also nest (`$($($inner:tt),*);*`) to match
 lists of lists, as long as each metavariable is only ever referenced
 inside a transcriber repetition whose depth matches how it was captured.
 
-## Basic usage example
+## Usage examples
+
+### Matching and re-emitting zero or more repetitions
 
 ```
 macro_rules! sum_all {
@@ -50,9 +52,7 @@ macro_rules! sum_all {
 let total = sum_all!(1, 2, 3); // <- expands to 0 + 1 + 2 + 3
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 A batch-construction macro needs to accept any number of comma-separated
 readings, including an optional trailing comma — exactly the shape std's
@@ -68,7 +68,7 @@ macro_rules! reading_batch {
 let batch = reading_batch!(21.4, 19.8, 23.1,); // <- trailing comma accepted thanks to the `?` repetition
 ```
 
-**Why this way:** std's own `vec!` macro is implemented with this exact
+std's own `vec!` macro is implemented with this exact
 `$($x:expr),* $(,)?` shape, which is why both `vec![1, 2, 3]` and
 `vec![1, 2, 3,]` compile — see the
 [standard library's `vec!` documentation](https://doc.rust-lang.org/std/macro.vec.html)

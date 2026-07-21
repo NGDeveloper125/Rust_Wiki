@@ -33,7 +33,9 @@ is the concrete reason `assert_eq!`/`assert_ne!` are the default choice
 for equality checks in tests instead of `assert!(a == b)`/`assert!(a !=
 b)`.
 
-## Basic usage example
+## Usage examples
+
+### Custom failure messages vs. automatic operand reporting
 
 ```
 let cart_total = 24;
@@ -41,9 +43,7 @@ assert!(cart_total > 0, "cart total must be positive, got {cart_total}"); // <- 
 assert_eq!(cart_total, 24); // <- prints both `left` (cart_total) and `right` (24) if this ever fails
 ```
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 A unit test for a temperature-conversion function compares the computed
 and expected values with `assert_eq!`, and a follow-up check confirms
@@ -72,14 +72,14 @@ fn retried_request_gets_a_new_id() {
 }
 ```
 
-**Why this way:** the
+The
 [Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 recommends `assert_eq!`/`assert_ne!` over a bare `assert!(a == b)`
 because the failure output includes both operands' `Debug`
 representations, saving a debugging round trip spent re-running the test
 with an added print statement.
 
-### Scenario: Validating input
+### Validating input
 
 A public constructor enforces a range invariant with `assert!` rather
 than `debug_assert!`, because the invariant must hold in every build a
@@ -104,7 +104,7 @@ impl SamplingRate {
 let rate = SamplingRate::new(44_100);
 ```
 
-**Why this way:** the
+The
 [std docs](https://doc.rust-lang.org/std/macro.debug_assert.html) draw
 this exact line between the two macros — `assert!` is for invariants that
 must never be violated in any build a user runs, reserving

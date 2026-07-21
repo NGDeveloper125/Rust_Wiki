@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,9 +986,12 @@ trait already has one.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn print_all&lt;T: Iterator&lt;Item = String&gt;&gt;(items: T) {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Binding an iterator's associated type</h3>
+            <pre><code class="rust">fn print_all&lt;T: Iterator&lt;Item = String&gt;&gt;(items: T) {
     // &lt;- `Item = String` binds T's associated type to exactly String
     for item in items {
         println!("{item}");
@@ -997,17 +999,8 @@ trait already has one.</p>
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Writing generic code</h3>
             <p>A function that sums an iterator's values only compiles for iterators
 whose <code>Item</code> is actually summable as <code>u32</code> — the associated-type binding
@@ -1022,21 +1015,16 @@ where
 
 let total = total_readings(vec![10, 20, 30].into_iter());
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> leaving off <code>Item = u32</code> and writing just <code>I: Iterator</code>
+<p>Leaving off <code>Item = u32</code> and writing just <code>I: Iterator</code>
 wouldn't compile inside <code>.sum()</code>, since the compiler would have no
 concrete element type to sum — the
 <a href="https://doc.rust-lang.org/book/ch10-01-syntax.html">Book's generics chapter</a>
 covers trait bounds as the mechanism for telling the compiler exactly
 which operations a generic parameter supports, and an associated-type
 binding is how that extends to a trait's associated types specifically.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Runtime polymorphism</h3>
             <p>A plugin system that hands back a boxed, dynamically-dispatched iterator
 needs the binding to make <code>dyn Iterator</code> into a concrete, sized-behind-a-
@@ -1048,15 +1036,14 @@ pointer type in the first place.</p>
 
 let evens: Vec&lt;u32&gt; = even_numbers(10).collect();
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> returning <code>Box&lt;dyn Iterator&lt;Item = u32&gt;&gt;</code> lets the
+<p>Returning <code>Box&lt;dyn Iterator&lt;Item = u32&gt;&gt;</code> lets the
 function's actual iterator type (a <code>Filter&lt;Range&lt;u32&gt;, _&gt;</code> closure type,
 here) stay hidden behind the trait object, at the cost of one allocation
 and a vtable dispatch per call — the
 <a href="https://doc.rust-lang.org/reference/paths.html#paths-in-expressions">Rust Reference</a>
 documents associated-type bindings as part of a trait object type's
 grammar, not an optional add-on to it.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1073,7 +1060,7 @@ constraint with no <code>std</code>/allocator dependency on their own; the boxed
 equivalent) for the allocation <code>Box::new</code> performs, the same caveat as
 any other <code>Box&lt;dyn Trait&gt;</code> usage.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

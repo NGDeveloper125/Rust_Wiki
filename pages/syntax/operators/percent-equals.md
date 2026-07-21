@@ -13,16 +13,16 @@ see_also: ["%"]
 `%=` assigns the remainder of the left operand divided by the right,
 overloadable via `std::ops::RemAssign`.
 
-## Basic usage example
+## Usage examples
+
+### Assigning a remainder back into a variable
 
 ```
 let mut x = 7;
 x %= 2; // <- `%=` assigns the remainder of `x / 2` back into `x`
 ```
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 A ring buffer's write index needs to wrap back to `0` once it reaches the
 buffer's length — `%=` expresses "wrap this index in place" in one step,
@@ -47,7 +47,7 @@ buf.push(42);
 assert_eq!(buf.idx, 0); // wrapped from 7 back to 0
 ```
 
-**Why this way:** `idx %= len` is the idiomatic circular-index pattern —
+`idx %= len` is the idiomatic circular-index pattern —
 see [`+=`](plus-equals.md) for the general in-place-assignment rationale;
 the same "mutate the field directly" logic applies here, and the modulo
 avoids an explicit `if idx == len { idx = 0 }` branch.

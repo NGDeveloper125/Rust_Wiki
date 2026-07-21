@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -989,9 +988,12 @@ universally-quantified lifetime).</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn find_first&lt;'s&gt;(text: &amp;'s str, matches: impl for&lt;'a&gt; Fn(&amp;'a str) -&gt; bool) -&gt; Option&lt;&amp;'s str&gt; {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Accepting a closure that works for any lifetime</h3>
+            <pre><code class="rust">fn find_first&lt;'s&gt;(text: &amp;'s str, matches: impl for&lt;'a&gt; Fn(&amp;'a str) -&gt; bool) -&gt; Option&lt;&amp;'s str&gt; {
     // &lt;- `for&lt;'a&gt;`: the closure must accept a &amp;str of ANY lifetime, not one fixed lifetime
     text.split_whitespace().find(|word| matches(word))
 }
@@ -999,17 +1001,8 @@ universally-quantified lifetime).</p>
 find_first("sensor offline retry", |w| w.starts_with("r"));
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Writing generic code</h3>
             <p>A function that accepts a validation closure and calls it with several
 short-lived string slices, each borrowed only for the duration of one
@@ -1027,21 +1020,16 @@ let all_positive = validate_all(&amp;readings, |value| {
     value.parse::&lt;f64&gt;().map(|v| v &gt; 0.0).unwrap_or(false)
 });
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> each call to <code>is_valid</code> inside the loop passes a
+<p>Each call to <code>is_valid</code> inside the loop passes a
 reference whose lifetime is tied to that specific iteration — no single
 named lifetime in <code>validate_all</code>'s own signature could stand in for all
 of them, so the bound has to be universally quantified over every
 possible lifetime via <code>for&lt;'a&gt;</code>, as the
 <a href="https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds">Rust Reference's higher-ranked trait bounds section</a>
 describes.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A callback-taking API that stores the closure and invokes it later, with
 borrowed data whose lifetime differs on every invocation, must bound the
@@ -1065,14 +1053,13 @@ where
 let parser = Parser { on_token: |t: &amp;str| println!("token: {t}") };
 parser.run("start measuring stop");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> giving <code>Parser</code> its own named lifetime parameter and
+<p>Giving <code>Parser</code> its own named lifetime parameter and
 bounding <code>F: Fn(&amp;'p str)</code> against it would tie every call to one fixed
 lifetime <code>'p</code> chosen when <code>Parser</code> is constructed — but the <code>&amp;str</code>s
 passed to <code>on_token</code> are created fresh inside <code>run</code>, with a shorter
 lifetime than <code>'p</code> could ever be; <code>for&lt;'a&gt;</code> is the only bound shape that
 accepts a closure usable across all of those independently-scoped calls.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1088,7 +1075,7 @@ runtime representation — no <code>std</code>/allocator dependency. They appear
 <code>no_std</code> code any time a generic function takes a closure over borrowed
 data with a per-call lifetime, exactly as on a hosted target.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

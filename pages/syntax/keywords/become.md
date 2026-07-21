@@ -37,16 +37,16 @@ Using `become` as an ordinary identifier is a compile error today. The
 raw-identifier form `r#become` is legal, the same escape hatch every
 reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### Using the raw-identifier escape hatch
 
 ```
 let become = 5;     // error: expected identifier, found reserved keyword `become`
 let r#become = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Boxing and heap allocation
+### Boxing and heap allocation
 
 A recursive function walking a linked structure is exactly the case
 `become` targets: written naturally, each recursive call adds a stack
@@ -70,7 +70,7 @@ fn sum(mut node: Option<&Node>) -> i64 {
 }
 ```
 
-**Why this way:** without a stable tail-call guarantee, a recursive
+Without a stable tail-call guarantee, a recursive
 version of `sum` (`n.value + sum(n.next.as_deref())`) has no promise of
 constant stack usage, so idiomatic Rust today reaches for the loop form
 instead of trusting the optimizer; `become`, if stabilized, would let the

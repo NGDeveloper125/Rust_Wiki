@@ -63,7 +63,9 @@ mechanical: add a space (or another separator) between the identifier
 and the following `#`/`'`/`"`, or restructure macro-generated code so it
 doesn't paste an identifier directly against one of these characters.
 
-## Basic usage example
+## Usage examples
+
+### Triggering the reserved-prefix and reserved-guard errors
 
 ```
 // 2021 edition and later:
@@ -76,9 +78,7 @@ let ok = "hey"; // fine: no adjacency between an identifier and a quote
 let ok2 = "literal"; // fine: an ordinary string literal, no leading `#"`
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Working with text
 
 A small templating helper that stitches an identifier-like tag onto a
 literal string, generated through a macro, can accidentally produce a
@@ -98,7 +98,7 @@ macro_rules! log_event {
 log_event!(order_placed, "customer checkout completed");
 ```
 
-**Why this way:** keeping the identifier and the string as two separate
+Keeping the identifier and the string as two separate
 arguments passed through `println!`/`format!`, rather than concatenating
 their *tokens* together at macro-expansion time, avoids ever generating
 an `ident"..."` shape the 2021-edition reserved-prefix rule would reject
@@ -106,7 +106,7 @@ an `ident"..."` shape the 2021-edition reserved-prefix rule would reject
 [2021 edition guide's reserved syntax section](https://doc.rust-lang.org/edition-guide/rust-2021/reserved-syntax.html)
 documents this exact prefix-adjacency case.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A library author who likes the ergonomics of `sql"SELECT ..."`-style
 literal prefixes for a domain-specific string (as some other languages
@@ -128,12 +128,12 @@ let query = sql!("SELECT id FROM orders WHERE status = 'shipped'");
 // claim new prefixes like this.
 ```
 
-**Why this way:** the reserved-prefix rule exists precisely to keep
+The reserved-prefix rule exists precisely to keep
 `letters"..."` available for the *language* to standardize later, not
-for individual crates to informally claim — designing the public API
-around an explicit macro call (`sql!(...)`) rather than chasing a
-prefix-literal syntax keeps the crate compatible with whatever a future
-edition eventually does with that space, per the
+for individual crates to informally claim — an explicit macro call
+(`sql!(...)`) instead of a prefix-literal syntax keeps the crate
+compatible with whatever a future edition eventually does with that
+space, per the
 [Rust Reference's tokens chapter](https://doc.rust-lang.org/reference/tokens.html#reserved-prefixes).
 
 ## Embedded Rust Notes

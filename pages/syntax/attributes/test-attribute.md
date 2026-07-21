@@ -42,7 +42,9 @@ with [`#[ignore]`](ignore-attribute.md) to skip it by default, or
 [`#[should_panic]`](should-panic-attribute.md) to invert what counts as
 passing.
 
-## Basic usage example
+## Usage examples
+
+### Marking a function as a test case
 
 ```
 fn add(a: i32, b: i32) -> i32 {
@@ -60,9 +62,7 @@ mod tests {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 A test that needs a fallible setup step — parsing a fixture value, say —
 reads more directly with `?` and a `Result`-returning test function than
@@ -86,7 +86,7 @@ mod tests {
 }
 ```
 
-**Why this way:** letting `#[test]` functions return `Result<(), E>` means
+Letting `#[test]` functions return `Result<(), E>` means
 a genuinely fallible step in the test's own setup can use `?` instead of
 `.unwrap()`, so a setup failure is distinguishable in principle from an
 assertion failure further down; the

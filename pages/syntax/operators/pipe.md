@@ -27,15 +27,15 @@ The empty-parameter-list closure form uses `||` (its own token — see
 [`||`](pipe-pipe.md)) rather than `| |` with a space; the two are not
 interchangeable in the grammar.
 
-## Basic usage example
+## Usage examples
+
+### Bitwise OR between two integers
 
 ```
 let mask = 0b0100 | 0b0001; // <- `|` bitwise OR between two integers
 ```
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Combining several flag bits into one value to pass around or compare
 against is the bitwise-OR use of `|` — distinct from `|=`, which mutates
@@ -56,13 +56,13 @@ fn startup_flags(verbose: bool) -> u8 {
 assert_eq!(startup_flags(true), 0b0000_0101);
 ```
 
-**Why this way:** building the combined value with `|` and returning it
+Building the combined value with `|` and returning it
 (rather than mutating a `mut` accumulator with `|=`) fits a function
 that hands back a fresh flag set rather than modifying state in place —
 see [`|=`](pipe-equals.md) for the in-place variant of the same bitwise
 operation.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Inside a `match` arm, `|` separates alternative patterns that should all
 take the same branch — a different meaning of the same token from
@@ -86,7 +86,7 @@ fn is_client_error(status: &HttpStatus) -> bool {
 }
 ```
 
-**Why this way:** an or-pattern collapses what would otherwise be two
+An or-pattern collapses what would otherwise be two
 near-identical match arms with the same body, which the
 [Rust Reference](https://doc.rust-lang.org/reference/patterns.html#or-patterns)
 documents as a first-class pattern form rather than sugar layered on top

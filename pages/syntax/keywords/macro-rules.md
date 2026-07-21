@@ -55,7 +55,9 @@ stable syntax or behavior of its own; writing `macro` outside of
 experimental/nightly contexts is simply a compile error. Treat it as a
 name Rust has set aside for the future, not a usable feature today.
 
-## Basic usage example
+## Usage examples
+
+### Defining a single-arm expression macro
 
 ```
 macro_rules! double { // <- defines a declarative macro with one arm
@@ -65,9 +67,7 @@ macro_rules! double { // <- defines a declarative macro with one arm
 let n = double!(21); // <- expands to 21 + 21
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A helper macro that builds a `SensorReading` needs both a bare shorthand
 and an explicit-value form. Because arms are tried top to bottom, the
@@ -90,14 +90,14 @@ let a = sensor_reading!(default); // <- matches the first arm
 let b = sensor_reading!(18.5);    // <- falls through to the second arm
 ```
 
-**Why this way:** `macro_rules!` arms are matched exactly like `match`
+`macro_rules!` arms are matched exactly like `match`
 arms — top to bottom, first fit wins — so a specific literal-token
 pattern must be listed above a broad `expr` catch-all, or the specific
 arm is unreachable dead code; the
 [Rust Reference's macro-by-example chapter](https://doc.rust-lang.org/reference/macros-by-example.html)
 documents this ordered-matching rule explicitly.
 
-### Scenario: Testing
+### Testing
 
 A test-helper macro needs both an exact and an approximate comparison
 form. The arm containing the literal token `approx` is listed first so
@@ -120,7 +120,7 @@ fn readings_match() {
 }
 ```
 
-**Why this way:** literal tokens inside a matcher (here, the bare word
+Literal tokens inside a matcher (here, the bare word
 `approx`) must appear verbatim in the invocation to match, which lets one
 macro name support several distinct call shapes without an `if`/`match`
 inside the expansion — the

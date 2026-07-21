@@ -61,15 +61,15 @@ for `static mut` only in contexts (like a single-threaded interrupt
 handler) where the synchronization story is guaranteed by something
 outside the type system itself.
 
-## Basic usage example
+## Usage examples
+
+### Declaring a fixed-address global constant
 
 ```
 static MAX_CONNECTIONS: u32 = 100; // <- `static`: one fixed address for the whole program
 ```
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 A CRC-8 checksum routine used throughout a protocol driver needs the same
 256-entry lookup table available everywhere it's called; computing that
@@ -100,7 +100,7 @@ fn checksum(frame: &[u8]) -> u8 {
 }
 ```
 
-**Why this way:** a `const` of this size would be materialized wherever
+A `const` of this size would be materialized wherever
 it's referenced, bloating the binary by another 256 bytes per use site,
 while a `static` places the table once and every call to `checksum`
 indexes the same shared storage — the
@@ -108,7 +108,7 @@ indexes the same shared storage — the
 page documents exactly this fixed-single-address behavior as the
 distinguishing property `const` doesn't have.
 
-### Scenario: Multi-threading
+### Multi-threading
 
 A server tracks the number of requests handled across worker threads; a
 `static` atomic gives every thread the same shared counter with no lock
@@ -129,7 +129,7 @@ fn handle_request() {
 // unsafe { REQUEST_COUNT_RAW += 1; } // <- data race if two threads reach this at once; compiler can't stop it
 ```
 
-**Why this way:** `AtomicUsize` gives the `static` interior mutability
+`AtomicUsize` gives the `static` interior mutability
 with built-in synchronization, so ordinary safe code can increment it from
 any thread — the [Book's shared-state concurrency
 chapter](https://doc.rust-lang.org/book/ch16-03-shared-state.html)

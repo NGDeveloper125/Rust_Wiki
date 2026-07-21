@@ -23,7 +23,9 @@ nothing else constrains it. `usize`/`isize` are pointer-sized (their width
 depends on the target platform) and are the required type for array
 indices and lengths.
 
-## Basic usage example
+## Usage examples
+
+### Pinning a port number's type
 
 ```
 let port = 8080u16; // <- `u16` suffix pins the literal's type explicitly
@@ -32,9 +34,7 @@ let port = 8080u16; // <- `u16` suffix pins the literal's type explicitly
 **Restriction:** the literal's value must fit within the suffixed
 type's range — `300u8` is a compile error since `u8` maxes out at 255.
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Without a suffix, a bare integer literal defaults to `i32` — which is
 wrong the moment the value needs to be wider, and can fail to compile
@@ -54,13 +54,13 @@ let block_size = 4096u64; // <- `u64` suffix: matches `file_offset`'s parameter 
 let offset = file_offset(3, block_size);
 ```
 
-**Why this way:** suffixing the literal at its definition removes the
+Suffixing the literal at its definition removes the
 need for an `as` cast later — casts are exactly where
 [Clippy's cast-truncation lints](https://rust-lang.github.io/rust-clippy/master/index.html#cast_possible_truncation)
 look for accidental narrowing, so pinning the type once, early, avoids
 the whole class of bug.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A public constant's type is part of its contract with downstream crates —
 suffixing the literal documents the exact intended width at the
@@ -75,7 +75,7 @@ pub fn check_payload(len: usize) -> bool {
 }
 ```
 
-**Why this way:** matching the literal's suffix to the constant's
+Matching the literal's suffix to the constant's
 declared type keeps the intended width visible even if the value is ever
 copied into a doc example or another context without the surrounding
 type annotation — the kind of predictability the

@@ -33,16 +33,16 @@ see [`mut`](../keywords/mut.md).
 the lexer still produces the single `&&` token there, and it's the
 *parser* that splits it into two `&`s when it appears in borrow position.
 
-## Basic usage example
+## Usage examples
+
+### Creating a shared reference
 
 ```
 let x = 5;
 let r = &x; // <- `&` borrows `x`, producing a shared reference `&i32`
 ```
 
-## Best practices & deeper information
-
-### Scenario: Sharing data with multiple references
+### Sharing data with multiple references
 
 Several parts of a program often need to read the same value without any
 of them taking ownership of it — `&` lets each function borrow it
@@ -69,12 +69,12 @@ if is_valid(&config) {
 }
 ```
 
-**Why this way:** because `&T` is read-only, any number of shared borrows
+Because `&T` is read-only, any number of shared borrows
 can coexist safely — per [the Book's borrowing chapter](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html),
 this is what lets Rust share data across a program without cloning it
 just to satisfy the borrow checker.
 
-### Scenario: Multi-threading
+### Multi-threading
 
 `std::thread::scope` lets spawned threads borrow data from the enclosing
 stack frame with plain `&`, instead of requiring `Arc` and `move`,
@@ -96,12 +96,12 @@ std::thread::scope(|s| {
 });
 ```
 
-**Why this way:** [`std::thread::scope`](https://doc.rust-lang.org/std/thread/fn.scope.html)
+[`std::thread::scope`](https://doc.rust-lang.org/std/thread/fn.scope.html)
 statically proves the spawned threads can't outlive `readings`, so the
 compiler accepts a plain `&` borrow here where a non-scoped `thread::spawn`
 would demand `'static` data (typically via `Arc`).
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A function that only needs to read its argument should accept `&T`
 rather than an owned `T` — taking ownership needlessly forces every
@@ -124,7 +124,7 @@ fn total_items_owned(order: Order) -> usize {
 }
 ```
 
-**Why this way:** the [API Guidelines' flexibility guidance](https://rust-lang.github.io/api-guidelines/flexibility.html)
+The [API Guidelines' flexibility guidance](https://rust-lang.github.io/api-guidelines/flexibility.html)
 recommends borrowing over owning in function signatures whenever the
 function doesn't need to store or consume the value, since it's strictly
 less restrictive for every caller.

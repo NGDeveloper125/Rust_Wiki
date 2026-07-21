@@ -44,7 +44,9 @@ for it deliberately, at the one call site where ignoring really is
 correct, rather than removing `#[must_use]` from the function or type
 itself.
 
-## Basic usage example
+## Usage examples
+
+### Warning when a computed result is silently discarded
 
 ```
 #[must_use] // <- warns if the caller doesn't do anything with the returned value
@@ -58,9 +60,7 @@ fn main() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A builder's setter methods each return `Self` to enable chaining — if a
 caller calls one and discards the result instead of continuing the chain,
@@ -93,7 +93,7 @@ fn build_request() -> RequestBuilder {
 }
 ```
 
-**Why this way:** `#[must_use]` on the type means every method that
+`#[must_use]` on the type means every method that
 returns `RequestBuilder` — not just `new`, every chained setter too — is
 covered by one attribute, so discarding any link in the chain is flagged;
 the custom message clarifies specifically *why* discarding it is
@@ -102,7 +102,7 @@ how the standard library documents its own
 [`#[must_use]` conventions](https://doc.rust-lang.org/std/result/enum.Result.html)
 on `Result` and iterator adapters.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 A function returning `Result` should let that `Result`'s own
 `#[must_use]` do its job — deliberately discarding one specific,
@@ -120,7 +120,7 @@ fn shut_down() {
 }
 ```
 
-**Why this way:** `let _ = ...` is Clippy's documented way to intentionally
+`let _ = ...` is Clippy's documented way to intentionally
 silence the
 [`unused_must_use`](https://rust-lang.github.io/rust-clippy/master/#unused_must_use)
 lint at one specific, reviewed call site — see [`_`](../punctuation/underscore.md)

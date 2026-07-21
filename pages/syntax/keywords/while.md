@@ -29,7 +29,9 @@ A `while` loop can be given a label (`'outer: while ... `) so an inner
 `break` or `continue` can target it specifically instead of the nearest
 enclosing loop.
 
-## Basic usage example
+## Usage examples
+
+### Looping while a condition holds
 
 ```
 let mut count = 0;
@@ -38,14 +40,12 @@ while count < 10 { // <- repeats the block while the condition is `true`
 }
 ```
 
-**Restriction:** a `while` loop always evaluates to `()` and cannot
+A `while` loop always evaluates to `()` and cannot
 produce a value via `break value;`, unlike `loop` — the loop can end
 without any `break` running (the condition turns false), so there would
 be no value to yield.
 
-## Best practices & deeper information
-
-### Scenario: Message passing between threads
+### Message passing between threads
 
 Draining whatever messages are currently queued, without blocking the
 thread if the channel is momentarily empty, is a `while let` over
@@ -63,12 +63,12 @@ fn drain_pending(rx: &mpsc::Receiver<String>) {
 }
 ```
 
-**Why this way:** [`Receiver::try_recv`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv)
+[`Receiver::try_recv`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv)
 never blocks, so the `while` condition simply stops being true once the
 queue is momentarily empty — contrast with `for message in rx` (see
 [`for`](for.md)), which blocks until the channel closes entirely.
 
-### Scenario: Validating input
+### Validating input
 
 Retrying against a work queue of candidate values until one parses
 successfully is a `while let Some(...)` loop popping the next candidate
@@ -87,7 +87,7 @@ while let Some(entry) = pending.pop() {
 }
 ```
 
-**Why this way:** `while let Some(...) = queue.pop()` is the general
+`while let Some(...) = queue.pop()` is the general
 shape for "keep trying until the source runs out or a condition is met"
 when the source isn't an iterator (over an iterator, a `for` loop is the
 idiomatic form — Clippy's `while_let_on_iterator` lint suggests exactly

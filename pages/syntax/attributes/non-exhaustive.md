@@ -48,7 +48,9 @@ place — is covered on the
 [Exhaustiveness checking](../../concepts/pattern-matching/exhaustiveness-checking.md)
 concept page.
 
-## Basic usage example
+## Usage examples
+
+### Restricting external struct-literal construction
 
 ```
 #[non_exhaustive] // <- downstream crates can't build this with a plain struct literal
@@ -64,9 +66,7 @@ impl Config {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A payment library's variant list is a natural candidate for future
 growth as new providers get added, so the enum is marked
@@ -91,14 +91,14 @@ impl RefundRequest {
 }
 ```
 
-**Why this way:** adding a variant to a published, non-`#[non_exhaustive]`
+Adding a variant to a published, non-`#[non_exhaustive]`
 enum is a breaking change for every downstream exhaustive `match`; the
 [API Guidelines' future-proofing section](https://rust-lang.github.io/api-guidelines/future-proofing.html)
 recommends applying `#[non_exhaustive]` to both enums and structs a
 library expects to grow, decided at first publish rather than retrofitted
 after a breaking release already shipped.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Downstream code consuming a `#[non_exhaustive]` enum must add a wildcard
 arm even when it currently lists every known variant, because the
@@ -118,7 +118,7 @@ fn describe(method: &PaymentMethod) -> &'static str {
 }
 ```
 
-**Why this way:** without the wildcard arm, this fails to compile with an
+Without the wildcard arm, this fails to compile with an
 error naming `PaymentMethod` as non-exhaustive, even though every variant
 currently defined is already handled — the
 [Rust Reference](https://doc.rust-lang.org/reference/attributes/type_system.html#the-non_exhaustive-attribute)

@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -985,9 +984,12 @@ instead of recursively) to keep going.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![recursion_limit = "256"] // &lt;- raises the macro-expansion/trait-resolution recursion ceiling
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Raising the recursion limit for a token-counting macro</h3>
+            <pre><code class="rust">#![recursion_limit = "256"] // &lt;- raises the macro-expansion/trait-resolution recursion ceiling
 
 macro_rules! count_tokens {
     () =&gt; { 0 };
@@ -997,17 +999,8 @@ macro_rules! count_tokens {
 const N: usize = count_tokens!(a b c d e f g h); // one recursive expansion per token
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A <code>macro_rules!</code> macro that recursively counts or processes a long
 variadic-style list of items hits the default recursion limit once
@@ -1025,15 +1018,14 @@ fn total() -&gt; i32 {
     sum_of!(1, 2, 3, 4, 5, 6, 7, 8)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the compiler's own error message for exceeding the
+<p>The compiler's own error message for exceeding the
 default recursion limit names <code>recursion_limit</code> explicitly and suggests a
 concrete replacement value, which the
 <a href="https://doc.rust-lang.org/reference/attributes/limits.html#the-recursion_limit-attribute">Rust Reference</a>
 documents as the intended way to respond — raising the crate-wide limit is
 appropriate once a specific macro's legitimate recursion depth is known
 to exceed the default, rather than guessing at a number in advance.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1051,7 +1043,7 @@ links <code>std</code>. Embedded crates that lean heavily on recursive
 bindings across a whole chip family are, in practice, one of the more
 common places <code>#![recursion_limit]</code> actually needs raising.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

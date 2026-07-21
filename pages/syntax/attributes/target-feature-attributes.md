@@ -44,7 +44,9 @@ for one or the other, which matters when interworking with code compiled
 for a specific mode (a vendor bootloader, an interrupt vector expecting a
 specific mode) rather than whatever the crate's default is.
 
-## Basic usage example
+## Usage examples
+
+### Enabling a CPU feature for a single function
 
 ```
 #[target_feature(enable = "avx2")] // <- compiles this function assuming AVX2 is available
@@ -53,9 +55,7 @@ unsafe fn sum_avx2(data: &[f32]) -> f32 {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 A signal-processing library sums large buffers of samples far more often
 than anything else it does, so it ships both a portable baseline
@@ -81,7 +81,7 @@ fn sum_baseline(data: &[f32]) -> f32 {
 }
 ```
 
-**Why this way:** `is_x86_feature_detected!` performs the runtime CPU
+`is_x86_feature_detected!` performs the runtime CPU
 check that discharges the `unsafe` contract `#[target_feature]` imposes —
 calling `sum_avx2` without first confirming AVX2 is present is undefined
 behavior on a CPU lacking it, which the

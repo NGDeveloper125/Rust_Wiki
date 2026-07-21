@@ -65,7 +65,9 @@ own bespoke grammar. New capability tends to arrive as a new attribute
 name rather than a new keyword, precisely because the attribute mechanism
 is already general enough to carry it.
 
-## Basic usage example
+## Usage examples
+
+### Combining outer and inner attributes
 
 ```
 #![allow(dead_code)] // <- inner attribute: applies to the enclosing module/crate, not to what follows
@@ -76,9 +78,7 @@ struct Reading {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 The same kind of item — here, a module — can be annotated from the
 outside (an outer attribute on the `mod` item, from the parent's point of
@@ -97,17 +97,17 @@ mod metrics {
 }
 ```
 
-**Why this way:** an outer attribute reads naturally when a *caller* of an
+An outer attribute reads naturally when a *caller* of an
 item is making a decision about it (whether to compile `mod metrics` at
 all); an inner attribute reads naturally when an item is making a
 statement about *itself* (this crate root allows a specific Clippy lint
 everywhere within it) — the
 [Rust Reference](https://doc.rust-lang.org/reference/attributes.html)
 documents both forms as applying to "the item enclosing it" (inner) vs.
-"the item following it" (outer), and idiomatic code picks whichever
+"the item following it" (outer), and code picks whichever
 direction matches who owns the decision.
 
-### Scenario: Testing
+### Testing
 
 `#[cfg(test)]` (outer, gating a whole module from the outside) and
 `#[test]` (outer, marking one function inside it) are two independent
@@ -131,7 +131,7 @@ mod tests {
 }
 ```
 
-**Why this way:** keeping compilation-gating (`cfg`) and test-discovery
+Keeping compilation-gating (`cfg`) and test-discovery
 (`test`) as two separate, composable attributes — rather than one
 attribute trying to do both — is what lets the same `#[cfg(test)]` module
 also hold non-test helper functions, or lets `#[test]` be combined with

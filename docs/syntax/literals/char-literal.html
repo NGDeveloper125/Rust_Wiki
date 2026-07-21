@@ -945,8 +945,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -964,25 +963,19 @@ equivalent (<code>b'H'</code>).</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let grade: char = 'A'; // &lt;- char literal: produces a `char`, a full Unicode scalar value
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Producing a full Unicode char</h3>
+            <pre><code class="rust">let grade: char = 'A'; // &lt;- char literal: produces a `char`, a full Unicode scalar value
 </code></pre>
-<p><strong>Restriction:</strong> a char literal must contain exactly one Unicode scalar
+<p>A char literal must contain exactly one Unicode scalar
 value — <code>'ab'</code> is a compile error, and lone surrogate-pair halves are
 never valid scalar values.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>A small hand-written tokenizer matches individual characters directly,
 including as inclusive range-pattern bounds.</p>
@@ -1003,18 +996,13 @@ fn classify(c: char) -&gt; Token {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> matching <code>char</code> literals directly, including as range
+<p>Matching <code>char</code> literals directly, including as range
 bounds, is exactly the form a small tokenizer needs, and the compiler
 enforces exhaustiveness over the match — a guarantee spelled out in the
 <a href="https://doc.rust-lang.org/reference/patterns.html">Reference's pattern grammar</a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with text</h3>
             <p>A <code>char</code> is a decoded Unicode scalar value, not a byte — iterating text
 <code>char</code>-by-char avoids the panics that raw byte indexing risks on
@@ -1029,15 +1017,14 @@ let len_chars = word.chars().count(); // 4 chars
 let len_bytes = word.len();           // 5 bytes -- 'é' is 2 bytes in UTF-8
 assert_ne!(len_chars, len_bytes);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a <code>char</code> is always a full Unicode scalar value, so
+<p>A <code>char</code> is always a full Unicode scalar value, so
 <code>.chars()</code> is the safe way to walk text that might contain multi-byte
 characters — a <code>str</code> can't be indexed by a single <code>usize</code> at all, and
 <em>slicing</em> it (<code>&amp;s[0..n]</code>) panics if a bound falls inside a multi-byte
 character, as the
 <a href="https://doc.rust-lang.org/std/primitive.str.html#method.get">std <code>str</code> docs</a>
 note (use <code>.get()</code> or char-based iteration instead).</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1053,7 +1040,7 @@ though its 4-byte size is worth remembering on very memory-constrained
 targets where a raw <a href="../../syntax/literals/byte-literal.html">byte literal</a> (<code>u8</code>) is often the
 more appropriate choice for protocol/text work that's ASCII-only anyway.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

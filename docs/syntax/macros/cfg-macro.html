@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -979,23 +978,17 @@ some target.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let path_separator = if cfg!(target_os = "windows") { '\\' } else { '/' };
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Choosing a path separator at compile time</h3>
+            <pre><code class="rust">let path_separator = if cfg!(target_os = "windows") { '\\' } else { '/' };
 // &lt;- both branches are compiled on every target; cfg! only decides, at compile time, which one *runs*
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A logging helper picks a platform-appropriate line ending at compile
 time, without needing two separately-compiled versions of the function
@@ -1007,20 +1000,15 @@ gated by <code>#[cfg]</code>.</p>
 
 let line = format_log_line("service started");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/macro.cfg.html">std docs</a> recommend
 <code>cfg!</code> for exactly this kind of small, always-compilable behavioral
 branch — since both platforms' logic is trivial and compiles fine
 everywhere, a runtime <code>cfg!</code> check inside one shared function is simpler
 than maintaining two <code>#[cfg]</code>-gated copies of the whole function.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>An internal helper reports a more detailed, less stable error message in
 debug builds and a terse, stable one in release, branching on
@@ -1033,14 +1021,13 @@ debug builds and a terse, stable one in release, branching on
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/macro.cfg.html">std docs</a> point to
 <code>cfg!(debug_assertions)</code> as the standard way to vary <em>behavior</em> by build
 profile without a custom Cargo feature — both message forms live in the
 same compiled binary per profile, and which one runs is chosen at
 runtime by the flag baked in at compile time.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1056,7 +1043,7 @@ target's configuration — it has no runtime dependency on <code>std</code> or a
 and is used constantly in embedded code to pick behavior (e.g.
 <code>cfg!(target_arch = "arm")</code>) inside a function shared across targets.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

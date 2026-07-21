@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -967,24 +966,18 @@ string literal) — the constraint is "no embedded nul bytes," not
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let name: &amp;std::ffi::CStr = c"sensor01"; // &lt;- c-string literal: produces `&amp;CStr`, nul-terminated
-</code></pre>
-<p><strong>Restriction:</strong> the content cannot contain an embedded <code>\0</code> — a C
-string is nul-terminated, so an interior null byte is a compile error.</p>
-
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
+            <h3 class="scenario-title">Producing a nul-terminated C string</h3>
+            <pre><code class="rust">let name: &amp;std::ffi::CStr = c"sensor01"; // &lt;- c-string literal: produces `&amp;CStr`, nul-terminated
+</code></pre>
+<p>The content cannot contain an embedded <code>\0</code> — a C
+string is nul-terminated, so an interior null byte is a compile error.</p>
+
+          </div>
+        <div class="card">
             <h3 class="scenario-title">Working with text</h3>
             <p>Preparing a <code>CStr</code> constant that will eventually be handed to a C API is
 just a matter of writing the literal and holding onto it — the FFI call
@@ -998,14 +991,13 @@ fn device_name() -&gt; &amp;'static CStr {
     DEVICE_NAME // ready to pass to a C function expecting `*const c_char` -- the call itself is out of scope here
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a <code>c"..."</code> literal produces its nul-terminated bytes at
+<p>A <code>c"..."</code> literal produces its nul-terminated bytes at
 compile time, so a fixed constant like this never needs the fallible,
 allocating <code>CString::new(...).unwrap()</code> path at runtime — it hands back a
 <code>&amp;'static CStr</code> directly (see the
 <a href="https://doc.rust-lang.org/std/ffi/struct.CStr.html">std docs for <code>CStr</code></a>).
 Note <code>c"..."</code> literals require Rust 1.77+ and edition 2021 or later.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1021,7 +1013,7 @@ matters a great deal for embedded: calling into a vendor C HAL or RTOS
 API is one of the most common reasons to reach for a nul-terminated
 string in embedded Rust at all.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

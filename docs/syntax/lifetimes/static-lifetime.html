@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -993,23 +992,17 @@ already-owned value satisfies the bound for free (see
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let name: &amp;'static str = "engine-status"; // &lt;- string literals are `&amp;'static str` automatically
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Binding a string literal as &amp;'static str</h3>
+            <pre><code class="rust">let name: &amp;'static str = "engine-status"; // &lt;- string literals are `&amp;'static str` automatically
 println!("{name}");
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Multi-threading</h3>
             <p><code>thread::spawn</code>'s closure must be <code>'static</code>; moving an owned <code>String</code> into
 it satisfies that bound trivially, since owned data can't contain a
@@ -1026,20 +1019,15 @@ fn start_worker(label: String) -&gt; thread::JoinHandle&lt;()&gt; {
 let handle = start_worker(String::from("indexer"));
 handle.join().unwrap();
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the spawned thread's lifetime isn't bounded by the
+<p>The spawned thread's lifetime isn't bounded by the
 caller's stack frame, so nothing it captures may borrow from that frame —
 the
 <a href="https://doc.rust-lang.org/book/ch16-01-threads.html#using-move-closures-with-threads">Book's concurrency chapter</a>
 covers <code>move</code>-ing an owned value in as the standard way to satisfy
 <code>thread::spawn</code>'s <code>'static</code> bound without cloning anything unnecessarily.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A scheduler that stores heterogeneous jobs behind <code>Box&lt;dyn Trait&gt;</code> needs
 those trait objects to be <code>'static</code> — not because a job runs forever, but
@@ -1059,19 +1047,14 @@ impl Scheduler {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>dyn Trait</code> defaults to a <code>'static</code> lifetime bound unless
+<p><code>dyn Trait</code> defaults to a <code>'static</code> lifetime bound unless
 a shorter one is spelled out explicitly, which the
 <a href="https://doc.rust-lang.org/reference/types/trait-object.html#trait-object-lifetime-bounds">Rust Reference's trait-object lifetime-bounds section</a>
 documents as the reason a stored trait object needs the data behind it to
 be fully owned or itself <code>'static</code>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>Constants and literals baked into the binary are naturally <code>&amp;'static</code>, so
 many call sites can share the same reference without any explicit lifetime
@@ -1085,14 +1068,13 @@ fn region_label(region: Option&lt;&amp;'static str&gt;) -&gt; &amp;'static str {
 println!("{}", region_label(Some("eu-west-1")));
 println!("{}", region_label(None));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/primitive.str.html">standard library's <code>str</code> documentation</a>
 notes that string literals are <code>&amp;'static str</code> because they live directly in
 the compiled binary and are never deallocated, which is what lets code pass
 them around anywhere a <code>'static</code> reference is required with no lifetime
 annotation to write.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1109,7 +1091,7 @@ bounds show up constantly in embedded code for globally-shared driver
 state (<code>static</code> items, interrupt-shared data) for exactly the same
 structural reason described above, not because anything runs "forever."</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -982,9 +981,12 @@ string.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let order_id = 42;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Named-argument capture with precision formatting</h3>
+            <pre><code class="rust">let order_id = 42;
 let amount = 19.9;
 let receipt = format!("Order #{order_id}: ${amount:.2}"); // &lt;- named capture + 2-decimal precision, returns an owned String
 </code></pre>
@@ -995,17 +997,8 @@ compile error rather than a runtime surprise, since the format string
 itself must be a string literal (or a <code>concat!</code> of literals) known at
 compile time, never a runtime-computed <code>String</code>.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with text</h3>
             <p>Building a fixed-width shipment label combining several fields is exactly
 what <code>format!</code> is for, instead of repeated <code>push_str</code> calls glued
@@ -1026,19 +1019,14 @@ fn label(shipment: &amp;Shipment) -&gt; String {
 let line = label(&amp;Shipment { tracking_id: "TRK-8841".into(), carrier: "Northwind".into(), weight_kg: 3.4 });
 println!("{line}");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/fmt/index.html#width">std fmt docs</a> treat
 width, alignment, and precision specifiers as the idiomatic way to build
 fixed-width tabular text, replacing manual padding logic with a
 declarative format string.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Constructing a descriptive error message that embeds the offending value
 happens at the point of failure, then gets wrapped into a custom error
@@ -1052,14 +1040,13 @@ fn parse_port(raw: &amp;str) -&gt; Result&lt;u16, ConfigError&gt; {
         .map_err(|_| ConfigError(format!("invalid port value: {raw:?}"))) // &lt;- {:?} quotes the raw string in the message
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/book/ch09-00-error-handling.html">Book's error-handling chapter</a>
 and <a href="https://effective-rust.com/">Effective Rust</a> both favor errors that
 carry enough context to diagnose the failure without re-running the
 program — building the message with <code>format!</code> right where the bad input
 is still in scope is how that context gets captured before it's lost.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1080,7 +1067,7 @@ allocator, the usual substitute is <code>write!</code>ing into a stack buffer or
 <code>heapless::String</code> instead of allocating a fresh one (see
 <a href="../../syntax/macros/write-macros.html"><code>write!</code> / <code>writeln!</code></a>).</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

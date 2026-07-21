@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -991,9 +990,12 @@ attribute syntax.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[derive(Debug, Clone, PartialEq)] // &lt;- generates Debug, Clone, and PartialEq impls mechanically
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Deriving common traits mechanically</h3>
+            <pre><code class="rust">#[derive(Debug, Clone, PartialEq)] // &lt;- generates Debug, Clone, and PartialEq impls mechanically
 struct Point { x: f64, y: f64 }
 
 let a = Point { x: 1.0, y: 2.0 };
@@ -1001,17 +1003,8 @@ let b = a.clone();
 println!("{:?} {}", b, a == b);
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Implementing traits</h3>
             <p>Reaching for <code>#[derive(...)]</code> first, and only dropping to a hand-written
 <code>impl</code> once the mechanical, field-by-field behavior stops being correct,
@@ -1030,20 +1023,15 @@ impl PartialEq for SensorReading {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>#[derive(PartialEq)]</code> would compare <code>measured_at</code> too,
+<p><code>#[derive(PartialEq)]</code> would compare <code>measured_at</code> too,
 which isn't the intended meaning of equality here — the
 <a href="https://rust-lang.github.io/api-guidelines/interoperability.html">API Guidelines' C-COMMON-TRAITS</a>
 still recommends implementing <code>PartialEq</code>, just not necessarily via
 derive, whenever the mechanical field-by-field behavior isn't what's
 wanted.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p><code>assert_eq!</code> requires both <code>PartialEq</code> (to compare the two sides) and
 <code>Debug</code> (to print them in the failure message) — deriving both together
@@ -1057,14 +1045,13 @@ fn totals_order_correctly() {
     assert_eq!(order, Order { id: 1, total_cents: 1999 });
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>#[derive(Debug)]</code>, this fails to <em>compile</em>,
+<p>Without <code>#[derive(Debug)]</code>, this fails to <em>compile</em>,
 not just to pass — <code>assert_eq!</code> requires <code>Debug</code> on both sides to build
 its failure message, as the
 <a href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html">Rust Book's testing chapter</a>
 notes; deriving both traits in one attribute is the standard way to make
 a struct or enum usable in <code>assert_eq!</code> at all.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1083,7 +1070,7 @@ bare metal on its own — embedded code commonly derives against <code>defmt</co
 own <code>Format</code> trait instead (<code>#[derive(defmt::Format)]</code>), a third-party
 derive built for wire-efficient, <code>no_std</code>-friendly logging.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

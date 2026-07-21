@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -972,23 +971,17 @@ crate root.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">const WELCOME_TEMPLATE: &amp;str = include_str!("welcome_template.txt"); // &lt;- resolved relative to *this* file, not the crate root
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Embedding a text template and a binary file at compile time</h3>
+            <pre><code class="rust">const WELCOME_TEMPLATE: &amp;str = include_str!("welcome_template.txt"); // &lt;- resolved relative to *this* file, not the crate root
 const LOGO_PNG: &amp;[u8] = include_bytes!("logo.png");                  // &lt;- embedded as a byte array, no encoding requirement
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A CLI tool embeds its default config as a template at compile time, so
 the binary is self-contained and needs no external file to run <code>--init</code>.</p>
@@ -999,19 +992,14 @@ fn write_default_config(path: &amp;std::path::Path) -&gt; std::io::Result&lt;()&
     std::fs::write(path, DEFAULT_CONFIG_TEMPLATE)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/macro.include_str.html">std docs</a> note
 that embedding a template at compile time removes an entire runtime
 failure mode — the template file being missing or misplaced relative to
 the installed binary — at the cost of needing a rebuild to change it.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p>A parser's test suite loads its sample input from a fixture file instead
 of inlining a large literal string in the test source.</p>
@@ -1025,14 +1013,13 @@ fn counts_lines_in_fixture() {
     assert_eq!(parse_line_count(sample), 42);
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> keeping fixture data in its own file, loaded via
+<p>Keeping fixture data in its own file, loaded via
 <code>include_str!</code>, rather than a large inline string literal keeps the test
 function readable and lets the fixture be viewed, edited, and diffed as
 ordinary text — a shape the
 <a href="https://rust-lang-nursery.github.io/rust-cookbook/">Rust Cookbook</a>'s
 recipe-style examples favor for anything beyond a couple of lines.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1049,7 +1036,7 @@ specifically: <code>include_bytes!</code> is the standard way to bake a firmware
 image, font, or lookup table directly into the binary as a <code>&amp;'static [u8; N]</code> living in flash/ROM, with no filesystem or loader needed at
 runtime at all.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

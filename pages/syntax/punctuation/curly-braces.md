@@ -26,7 +26,9 @@ brace (a type path vs. nothing), which is also why `if SomeStruct { .. } { }`
 needs disambiguating parentheses in condition position — the parser would
 otherwise try to read the struct literal as the `if`'s block.
 
-## Basic usage example
+## Usage examples
+
+### Evaluating a block to a value
 
 ```
 let y = { // <- `{` opens a block expression
@@ -35,9 +37,7 @@ let y = { // <- `{` opens a block expression
 }; // <- `}` closes it; y is now 2
 ```
 
-## Best practices & deeper information
-
-### Scenario: Creating a new object
+### Creating a new object
 
 A struct literal's `{ }` can build the whole value in one expression,
 including computing derived fields inline — no separate mutation step
@@ -51,13 +51,13 @@ fn rectangle(width: f64, height: f64) -> Rectangle {
 }
 ```
 
-**Why this way:** constructing the fully-formed value in one struct
+Constructing the fully-formed value in one struct
 literal, rather than creating a default/partial value and mutating fields
 into place, avoids ever having an inconsistent intermediate state (e.g.
 `area` not yet matching `width`/`height`) that some other code could
 observe.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A `match` arm's body is any expression — wrapping it in `{ }` turns it
 into a block expression, which is what lets an arm run several statements
@@ -76,7 +76,7 @@ let description = match status {
 };
 ```
 
-**Why this way:** `match` is itself an expression with a single type, so
+`match` is itself an expression with a single type, so
 every arm — braced block or bare expression — must produce that same
 type. That's what lets `match` be assigned directly to a binding, rather
 than requiring a separate mutable variable set inside each arm.

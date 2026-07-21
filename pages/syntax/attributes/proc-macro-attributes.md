@@ -44,7 +44,9 @@ for the shared token-stream-in/token-stream-out mental model, and the
 kind-specific concept pages above for what each macro kind is actually
 for and how it's used well.
 
-## Basic usage example
+## Usage examples
+
+### Registering all three procedural macro kinds
 
 ```
 use proc_macro::TokenStream;
@@ -59,9 +61,7 @@ pub fn derive_reading(input: TokenStream) -> TokenStream { TokenStream::new() }
 pub fn traced(_attr: TokenStream, item: TokenStream) -> TokenStream { item }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A macro crate for a sensor-data library offers all three forms from one
 `proc-macro = true` crate: a derive for boilerplate trait impls, an
@@ -92,7 +92,7 @@ pub fn sql(input: TokenStream) -> TokenStream {
 }
 ```
 
-**Why this way:** each registration attribute fixes the function's exact
+Each registration attribute fixes the function's exact
 signature and what it's invoked as, so choosing between them is really
 choosing which of the three token-stream contracts a given macro needs —
 the [Rust Reference's procedural macros chapter](https://doc.rust-lang.org/reference/procedural-macros.html)

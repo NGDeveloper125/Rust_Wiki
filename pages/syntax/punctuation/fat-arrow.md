@@ -31,7 +31,9 @@ pattern from its expansion (`(pattern) => { expansion };`). That is a
 distinct, macro-specific grammar with its own matching rules — covered on
 the macro syntax pages, not here.
 
-## Basic usage example
+## Usage examples
+
+### Separating a match arm's pattern from its result
 
 ```
 let day = 3;
@@ -46,9 +48,7 @@ let name = match day {
 println!("{name}");
 ```
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Looking up a playing card's color from its suit is a one-to-one mapping —
 each arm's `=>` leads straight to the result, no further computation
@@ -74,13 +74,13 @@ fn color(suit: &Suit) -> &'static str {
 println!("{}", color(&Suit::Diamonds));
 ```
 
-**Why this way:** a one-line arm body after `=>` keeps a simple mapping
+A one-line arm body after `=>` keeps a simple mapping
 scannable at a glance — the
 [Rust Book](https://doc.rust-lang.org/book/ch06-02-match.html) uses this
 same terse, single-expression-per-arm style whenever an arm's logic doesn't
 need a block.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Reporting on a network fetch needs a different message per outcome — here
 `=>` leads into a multi-step expression rather than a single literal.
@@ -96,7 +96,7 @@ fn describe_fetch(result: Result<String, String>) -> String {
 println!("{}", describe_fetch(Ok("hello".to_string())));
 ```
 
-**Why this way:** whether the arm's expression is a bare literal or a
+Whether the arm's expression is a bare literal or a
 multi-step `format!` call, `=>` marks the same boundary — the pattern ends,
 the value to produce begins — which is why arms of very different
 complexity can sit in the same `match` without special-casing the

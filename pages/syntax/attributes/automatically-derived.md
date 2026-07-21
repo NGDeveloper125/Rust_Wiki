@@ -33,7 +33,9 @@ also why the attribute is legal to write by hand: a third-party
 same way the compiler's own derives are (by Clippy and similar tools)
 can emit `#[automatically_derived]` on its own generated code too.
 
-## Basic usage example
+## Usage examples
+
+### Recognizing the compiler-generated attribute in expanded output
 
 ```
 #[derive(Debug)] // <- the compiler attaches #[automatically_derived] to the impl this generates
@@ -44,9 +46,7 @@ struct Point { x: f64, y: f64 }
 // impl std::fmt::Debug for Point { ... }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A crate that ships its own `#[proc_macro_derive]`, mimicking the
 compiler's built-in derives, should tag its own generated `impl` blocks
@@ -66,7 +66,7 @@ let expanded = quote::quote! {
 };
 ```
 
-**Why this way:** without the attribute, a lint has no way to
+Without the attribute, a lint has no way to
 distinguish a custom derive's generated code from something a human
 typed by hand, and may flag it with suggestions that don't apply to
 generated code — emitting `#[automatically_derived]` is how a

@@ -952,8 +952,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1002,26 +1001,20 @@ combinations.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[repr(C)] // &lt;- requests a stable, C-compatible layout instead of the default repr(Rust)
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Requesting a C-compatible layout</h3>
+            <pre><code class="rust">#[repr(C)] // &lt;- requests a stable, C-compatible layout instead of the default repr(Rust)
 struct Point {
     x: f32,
     y: f32,
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>A struct shared with a C library often needs more than one layout
 guarantee at once — here, a C-compatible field order plus zero padding,
@@ -1039,8 +1032,7 @@ fn payload_len(header: &amp;FrameHeader) -&gt; u16 {
     header_copy.payload_len // &lt;- ...then access: avoids ever taking a reference into packed, misaligned data
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>#[repr(C, packed)]</code> combines both modifiers in a
+<p><code>#[repr(C, packed)]</code> combines both modifiers in a
 single attribute — writing <code>#[repr(C)] #[repr(packed)]</code> as two separate
 attributes on the same item is legal but conflates two independent
 requests where one attribute reads as a single, deliberate layout
@@ -1048,13 +1040,9 @@ decision; the
 <a href="https://doc.rust-lang.org/reference/type-layout.html#the-c-representation">Rust Reference</a>
 documents <code>repr</code> modifiers as combinable within one attribute for exactly
 this reason.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>A protocol's status byte maps directly onto a fieldless enum; pinning the
 discriminant width with an integer repr, alongside explicit discriminant
@@ -1069,20 +1057,15 @@ enum LinkStatus {
 
 let byte: u8 = LinkStatus::Up as u8; // &lt;- `as` reads the u8 discriminant `#[repr(u8)]` guarantees
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without an integer repr, the compiler is free to pick
+<p>Without an integer repr, the compiler is free to pick
 whatever discriminant width it wants for a field-less enum — the
 <a href="https://doc.rust-lang.org/reference/type-layout.html#reprc-enums">Rust Reference</a>
 specifies <code>#[repr(u8)]</code> and its siblings as the way to pin that width
 down so a cast to the integer type is guaranteed stable across compiler
 versions.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A newtype wrapper meant to cross an ABI boundary as if it were its inner
 type needs <code>#[repr(transparent)]</code> specifically — not <code>#[repr(C)]</code>, which
@@ -1090,14 +1073,13 @@ doesn't make the same single-field guarantee.</p>
 <pre><code class="rust">#[repr(transparent)] // &lt;- guarantees identical layout to the single u32 field; repr(C) alone would not
 pub struct SensorId(u32);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>#[repr(C)]</code> on a single-field tuple struct happens to
+<p><code>#[repr(C)]</code> on a single-field tuple struct happens to
 produce the same layout in practice, but only <code>#[repr(transparent)]</code>
 makes it a guarantee the compiler enforces — attempting it on a type with
 more than one non-zero-sized field is a compile error, which is the
 signal that the type no longer qualifies, per the
 <a href="https://doc.rust-lang.org/reference/type-layout.html#the-transparent-representation">Rust Reference</a>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1117,7 +1099,7 @@ than hosted ones, since removing all padding to match a wire format is
 more often worth the unaligned-access cost on a microcontroller than on a
 desktop CPU.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

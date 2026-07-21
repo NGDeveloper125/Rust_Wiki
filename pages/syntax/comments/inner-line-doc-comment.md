@@ -22,7 +22,9 @@ syntactically after it at all (e.g. at the top of `lib.rs`/`main.rs`,
 documenting the whole crate) — something no *outer* doc-comment form
 can do.
 
-## Basic usage example
+## Usage examples
+
+### Documenting the enclosing module
 
 ```
 //! <- this doc comment documents the enclosing module/crate, not an item below it
@@ -36,9 +38,7 @@ placed at the very top of a file (`lib.rs`/`main.rs`, or a module file) —
 placing it deep inside a function body would still compile but wouldn't
 mean what you expect.
 
-## Best practices & deeper information
-
-### Scenario: Documenting an API
+### Documenting an API
 
 The idiomatic place for `//!` is the very top of `lib.rs` (or a module
 file), giving the crate/module a landing-page summary before any item
@@ -59,12 +59,12 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
 pub struct ParseError;
 ```
 
-**Why this way:** `cargo doc` uses the crate-root `//!` block as the
+`cargo doc` uses the crate-root `//!` block as the
 front page of the generated documentation site — it's the first (and
 sometimes only) thing a new user of the crate reads, per the
 [rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html#documenting-components).
 
-### Scenario: Designing a public API
+### Designing a public API
 
 For a module with real invariants or safety expectations, `//!` is the
 place to state them once, up front, instead of repeating the same caveat
@@ -83,7 +83,7 @@ pub struct RingBuffer<T> {
 }
 ```
 
-**Why this way:** stating an invariant at the module level (`//!`) rather
+Stating an invariant at the module level (`//!`) rather
 than duplicating it across every method's `///` comment keeps the
 guarantee in exactly one place — when the invariant changes, there's one
 paragraph to update instead of a scattered set of near-copies that will

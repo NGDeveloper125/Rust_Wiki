@@ -32,7 +32,9 @@ array form `[String::new(); n]` does not: arrays require `Copy` for their
 repeat form outright, while `vec!` only requires `Clone`, at the cost of
 the per-element cloning actually happening at runtime.
 
-## Basic usage example
+## Usage examples
+
+### Building a Vec with the list and repeat forms
 
 ```
 let ids = vec![101, 102, 103]; // <- list form: three explicit elements
@@ -44,9 +46,7 @@ let zeros = vec![0u8; 8];      // <- repeat form: 8 copies of 0u8
 `vec![Mutex::new(0); 4]` doesn't compile, since `Mutex` isn't `Clone`
 (four independent mutexes can't be produced by cloning one).
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 Pre-sizing a lookup table of per-sensor accumulators is the natural job
 for the repeat form — "N copies of a starting value" — rather than a
@@ -62,13 +62,13 @@ println!("{totals:?}");
 println!("{labels:?}");
 ```
 
-**Why this way:** the
+The
 [std Vec docs](https://doc.rust-lang.org/std/vec/struct.Vec.html) treat
 `vec![value; n]` as the idiomatic spelling for "N slots, each starting
 equal" — allocated and filled in one call rather than
 `Vec::with_capacity(n)` plus a manual fill loop.
 
-### Scenario: Creating a new object
+### Creating a new object
 
 Building a fixed-size grid of independently owned buffers — each row its
 own `Vec<u8>` — is exactly where `Clone`, not `Copy`, is what makes the
@@ -82,7 +82,7 @@ let grid: Vec<Vec<u8>> = vec![vec![0u8; COLS]; ROWS];
 // <- the outer vec! clones the inner Vec<u8> (non-Copy) ROWS times — a real runtime clone per row, not a memcpy
 ```
 
-**Why this way:** reaching for `vec![inner; n]` here is correct
+Reaching for `vec![inner; n]` here is correct
 specifically because each row must be its own independently owned
 allocation — cloning is the operation the code actually needs, not an
 accidental cost; see [`Vec<T>`](../../concepts/collections-strings/vec.md)

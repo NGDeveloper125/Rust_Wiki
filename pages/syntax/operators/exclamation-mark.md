@@ -29,16 +29,16 @@ matter: `println ! ("hi")` compiles fine).
 value, such as `return`, `break`, `panic!()`, or an infinite `loop` with
 no `break`.
 
-## Basic usage example
+## Usage examples
+
+### Negating a boolean value
 
 ```
 let done = false;
 let not_done = !done; // <- `!` negates the bool
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 Writing a guard as `if !is_valid(x)` keeps the happy path as the
 unindented continuation of the function, instead of nesting the whole
@@ -62,10 +62,11 @@ fn load(config: &Config) {
 }
 ```
 
-**Why this way:** the early-return/early-panic style — guard clauses
+The early-return/early-panic style — guard clauses
 that reject bad input up front instead of deeply nesting the success
-path inside a positive `if` — is widely accepted practice, and `!`
-combined with a guard clause is the idiomatic way to write it.
+path inside a positive `if` — is what `!` enables here: negating the
+validity check lets the failure case exit immediately, leaving the rest
+of the function as the unindented success path.
 
 ## Embedded Rust Notes
 

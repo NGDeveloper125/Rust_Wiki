@@ -46,7 +46,9 @@ curated public API, and
 [Visibility & privacy](../../concepts/modules-crates-visibility/visibility-and-privacy.md)
 for what `pub` controls generally.
 
-## Basic usage example
+## Usage examples
+
+### Importing `HashMap` with `use`
 
 ```
 use std::collections::HashMap; // <- brings the full path into scope as `HashMap`
@@ -55,9 +57,7 @@ let mut ages: HashMap<&str, u32> = HashMap::new();
 ages.insert("Priya", 34);
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A crate re-exports two internal `Error` types under distinct public
 names, renaming one of them with `as` so the two don't collide once
@@ -80,14 +80,14 @@ pub struct Error;
 pub struct Error;
 ```
 
-**Why this way:** renaming at the `use` site is the standard way two
+Renaming at the `use` site is the standard way two
 identically-named items from different modules coexist in one scope, and
 re-exporting each under a distinct, descriptive public name keeps the
 crate's internal module names from leaking out as one ambiguous `Error`,
 in the spirit of the
 [API Guidelines' naming conventions](https://rust-lang.github.io/api-guidelines/naming.html).
 
-### Scenario: Working with collections
+### Working with collections
 
 Code that needs both a set and a map from `std::collections` groups them
 in one `use` line instead of writing two separate imports.
@@ -102,7 +102,7 @@ unique_tags.insert("rust".to_string());
 *tag_counts.entry("rust".to_string()).or_insert(0) += 1;
 ```
 
-**Why this way:** grouping related imports from a shared prefix keeps the
+Grouping related imports from a shared prefix keeps the
 import block scanning as one unit rather than one line per type — the
 form `rustfmt` itself normalizes multi-item imports from the same module
 into.

@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1005,22 +1004,16 @@ outside the type system itself.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">static MAX_CONNECTIONS: u32 = 100; // &lt;- `static`: one fixed address for the whole program
-</code></pre>
-
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
+            <h3 class="scenario-title">Declaring a fixed-address global constant</h3>
+            <pre><code class="rust">static MAX_CONNECTIONS: u32 = 100; // &lt;- `static`: one fixed address for the whole program
+</code></pre>
+
+          </div>
+        <div class="card">
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>A CRC-8 checksum routine used throughout a protocol driver needs the same
 256-entry lookup table available everywhere it's called; computing that
@@ -1048,21 +1041,16 @@ fn checksum(frame: &amp;[u8]) -&gt; u8 {
     frame.iter().fold(0u8, |crc, &amp;b| CRC_TABLE[(crc ^ b) as usize])
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a <code>const</code> of this size would be materialized wherever
+<p>A <code>const</code> of this size would be materialized wherever
 it's referenced, bloating the binary by another 256 bytes per use site,
 while a <code>static</code> places the table once and every call to <code>checksum</code>
 indexes the same shared storage — the
 <a href="https://doc.rust-lang.org/reference/items/static-items.html">Reference's static items</a>
 page documents exactly this fixed-single-address behavior as the
 distinguishing property <code>const</code> doesn't have.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Multi-threading</h3>
             <p>A server tracks the number of requests handled across worker threads; a
 <code>static</code> atomic gives every thread the same shared counter with no lock
@@ -1080,14 +1068,13 @@ fn handle_request() {
 // static mut REQUEST_COUNT_RAW: usize = 0;
 // unsafe { REQUEST_COUNT_RAW += 1; } // &lt;- data race if two threads reach this at once; compiler can't stop it
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>AtomicUsize</code> gives the <code>static</code> interior mutability
+<p><code>AtomicUsize</code> gives the <code>static</code> interior mutability
 with built-in synchronization, so ordinary safe code can increment it from
 any thread — the <a href="https://doc.rust-lang.org/book/ch16-03-shared-state.html">Book's shared-state concurrency
 chapter</a>
 recommends exactly this shape over a raw <code>static mut</code>, which offers the
 same global reach with none of the safety.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1108,7 +1095,7 @@ routinely communicate with the main loop through a <code>static</code> guarded b
 needs an OS), and raw memory-mapped register access through a <code>static mut</code> or a raw pointer derived from one is one of the most common places
 <code>unsafe</code> shows up in firmware code at all.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

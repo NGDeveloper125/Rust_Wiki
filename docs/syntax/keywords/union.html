@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -986,9 +985,12 @@ shapes" behavior with safe reads.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[repr(C)]
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Writing and reading a union field</h3>
+            <pre><code class="rust">#[repr(C)]
 union RegisterValue {
     as_u32: u32,
     as_bytes: [u8; 4],
@@ -998,17 +1000,8 @@ let value = RegisterValue { as_u32: 0x1234_5678 }; // &lt;- writing a field is s
 let bytes = unsafe { value.as_bytes }; // &lt;- `union` reads require `unsafe`: the compiler can't verify which field is live
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>A C library's header declares a <code>union</code> alongside a separate tag field
 telling callers which member is active; the Rust binding mirrors both the
@@ -1033,15 +1026,14 @@ fn describe(reading: &amp;SensorReading) -&gt; String {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> because a <code>union</code> carries no discriminant of its own,
+<p>Because a <code>union</code> carries no discriminant of its own,
 every read is only as safe as the external tag it's paired with is
 accurate — the
 <a href="https://doc.rust-lang.org/reference/items/unions.html">Rust Reference</a>
 specifies <code>union</code> field access as <code>unsafe</code> precisely because the type
 system cannot verify that invariant on its own; an <code>enum</code> is preferred
 whenever the C side doesn't force this shape.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1058,7 +1050,7 @@ vendor's C header that declares a union for a hardware register or
 protocol frame — with <code>#[repr(C)]</code> (or <code>#[repr(packed)]</code> for a
 bit-for-bit register layout) applied identically under <code>#![no_std]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

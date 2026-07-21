@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -975,9 +974,12 @@ into the function actually being optimized for the common case.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[cold] // &lt;- hints that this function is rarely called; keeps it out of the hot path's inlining
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Marking a rarely-called function as cold</h3>
+            <pre><code class="rust">#[cold] // &lt;- hints that this function is rarely called; keeps it out of the hot path's inlining
 fn report_out_of_range(value: i32) -&gt; ! {
     panic!("value {value} out of range");
 }
@@ -990,17 +992,8 @@ fn clamp_index(value: i32, len: usize) -&gt; usize {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>A request-validation function has a fast, common success path and a rare
 failure path that builds a detailed error message — splitting the error
@@ -1022,15 +1015,14 @@ fn validate_order_total(total_cents: i64) -&gt; Result&lt;(), ValidationError&gt
     Ok(())
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>#[cold]</code> communicates a likelihood the compiler can't
+<p><code>#[cold]</code> communicates a likelihood the compiler can't
 infer purely from control flow — that this particular branch is expected
 to run rarely — so the optimizer can prioritize the success path's
 instruction density and branch prediction over the failure path's; the
 <a href="https://doc.rust-lang.org/reference/attributes/codegen.html#the-cold-attribute">Rust Reference</a>
 documents <code>#[cold]</code> as exactly this kind of optimization hint, commonly
 paired with error-construction helpers for this reason.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1048,7 +1040,7 @@ rarely-taken error or panic-formatting path out of a hot interrupt
 handler's inlined code has a more noticeable effect on that handler's
 size and instruction-cache footprint than on a desktop CPU.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

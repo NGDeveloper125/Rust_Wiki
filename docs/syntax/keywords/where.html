@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -989,9 +988,12 @@ required, not stylistic, in these cases.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn largest&lt;T&gt;(items: &amp;[T]) -&gt; &amp;T
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Relocating a bound to a `where` clause</h3>
+            <pre><code class="rust">fn largest&lt;T&gt;(items: &amp;[T]) -&gt; &amp;T
 where
     T: PartialOrd, // &lt;- `where` relocates the bound out of `&lt;T: PartialOrd&gt;`
 {
@@ -1003,17 +1005,8 @@ where
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Writing generic code</h3>
             <p>A function generic over an iterator needs to bound the iterator's
 <em>yielded</em> type, not the iterator type itself — there's no way to write
@@ -1032,20 +1025,15 @@ where
 print_all(vec![1, 2, 3]);
 print_all(["west", "east"]);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>T::Item</code> names a type reachable <em>through</em> <code>T</code>, not <code>T</code>
+<p><code>T::Item</code> names a type reachable <em>through</em> <code>T</code>, not <code>T</code>
 itself, so there's no <code>&lt;T::Item: Display&gt;</code> position to write the bound in
 — the
 <a href="https://doc.rust-lang.org/reference/items/generics.html#where-clauses">Rust Reference's where-clauses section</a>
 confirms this associated-type-bound form is only legal inside a <code>where</code>
 clause.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A function with two type parameters, each carrying more than one bound,
 reads far better with the bounds moved to <code>where</code> than crammed into the
@@ -1074,13 +1062,12 @@ where
     merged
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/book/ch10-02-traits.html#clearer-trait-bounds-with-where-clauses">Rust Book</a>
 recommends <code>where</code> once a signature has more than one bounded type
 parameter, precisely so the function name and parameter list stay
 readable at a glance, with constraints listed separately underneath.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1096,7 +1083,7 @@ allocator dependency — <code>embedded-hal</code>-generic driver code relies on
 constantly to bound associated types (e.g. an SPI trait's associated
 error type) that have no inline bound position.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

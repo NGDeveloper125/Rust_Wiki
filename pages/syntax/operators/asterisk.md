@@ -30,7 +30,9 @@ expression with nothing on its left is prefix (dereference); `*` between
 two expressions is binary (multiplication); `*const`/`*mut` immediately
 followed by a type is the raw pointer type former.
 
-## Basic usage example
+## Usage examples
+
+### Dereferencing a reference
 
 ```
 let x = 5;
@@ -38,9 +40,7 @@ let r = &x;
 let y = *r; // <- `*` dereferences `r`, reading the value it points to
 ```
 
-## Best practices & deeper information
-
-### Scenario: Sharing data with multiple references
+### Sharing data with multiple references
 
 Reading through a smart pointer with explicit `*` is mostly needed
 outside method calls — for comparisons, formatting, or passing the
@@ -58,12 +58,12 @@ if *handle_a == *handle_b { // <- `*` follows each handle to the String it point
 }
 ```
 
-**Why this way:** `Deref` lets `Rc<T>`/`Box<T>` be read as if they were a
+`Deref` lets `Rc<T>`/`Box<T>` be read as if they were a
 plain `&T`, and auto-deref already handles method calls (`handle_a.len()`
 needs no `*`) — explicit `*` is reserved for the cases auto-deref doesn't
 cover, per the [Book's Deref chapter](https://doc.rust-lang.org/book/ch15-02-deref.html).
 
-### Scenario: Mutating through a reference
+### Mutating through a reference
 
 Writing `*reference = value` (or a compound form like `*reference +=
 value`) is how a function mutates the caller's data through a `&mut`
@@ -79,7 +79,7 @@ apply_offset(&mut temperature, -0.3);
 println!("calibrated: {temperature}");
 ```
 
-**Why this way:** per the [Book's references chapter](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html),
+Per the [Book's references chapter](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html),
 writing `reading = ...` without the `*` is a type mismatch the compiler
 rejects (an `f64` can't be assigned to a `&mut f64` place — rustc's
 E0308 suggests adding the `*`) — `*reading = ...` is what makes the

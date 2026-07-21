@@ -952,8 +952,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -993,9 +992,12 @@ concept page.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[non_exhaustive] // &lt;- downstream crates can't build this with a plain struct literal
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Restricting external struct-literal construction</h3>
+            <pre><code class="rust">#[non_exhaustive] // &lt;- downstream crates can't build this with a plain struct literal
 pub struct Config {
     pub retries: u32,
     pub timeout_ms: u32,
@@ -1008,17 +1010,8 @@ impl Config {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A payment library's variant list is a natural candidate for future
 growth as new providers get added, so the enum is marked
@@ -1040,20 +1033,15 @@ impl RefundRequest {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> adding a variant to a published, non-<code>#[non_exhaustive]</code>
+<p>Adding a variant to a published, non-<code>#[non_exhaustive]</code>
 enum is a breaking change for every downstream exhaustive <code>match</code>; the
 <a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">API Guidelines' future-proofing section</a>
 recommends applying <code>#[non_exhaustive]</code> to both enums and structs a
 library expects to grow, decided at first publish rather than retrofitted
 after a breaking release already shipped.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>Downstream code consuming a <code>#[non_exhaustive]</code> enum must add a wildcard
 arm even when it currently lists every known variant, because the
@@ -1070,14 +1058,13 @@ fn describe(method: &amp;PaymentMethod) -&gt; &amp;'static str {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without the wildcard arm, this fails to compile with an
+<p>Without the wildcard arm, this fails to compile with an
 error naming <code>PaymentMethod</code> as non-exhaustive, even though every variant
 currently defined is already handled — the
 <a href="https://doc.rust-lang.org/reference/attributes/type_system.html#the-non_exhaustive-attribute">Rust Reference</a>
 specifies this as deliberate: the wildcard is what lets the upstream
 crate add a variant later without breaking this function.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1094,7 +1081,7 @@ way to a HAL crate's error or event enums as to any other crate's public
 API, and matters just as much for a <code>1.0</code> embedded crate expecting to add
 new peripheral variants over time.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

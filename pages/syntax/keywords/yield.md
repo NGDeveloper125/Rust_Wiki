@@ -33,16 +33,16 @@ Using `yield` as an ordinary identifier is a compile error today. The
 raw-identifier form `r#yield` is legal, the same escape hatch every
 reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### The `yield` reservation error and raw-identifier escape hatch
 
 ```
 let yield = 5;     // error: expected identifier, found reserved keyword `yield`
 let r#yield = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 A `gen`/`yield` block would let you write a sequence-producing function
 that looks like ordinary sequential code with suspension points, instead
@@ -71,7 +71,7 @@ impl Iterator for Countdown {
 let values: Vec<u32> = Countdown(3).collect();
 ```
 
-**Why this way:** implementing `Iterator` by hand means manually
+Implementing `Iterator` by hand means manually
 tracking, in `self`, exactly where the last call left off — the state a
 `gen fn` would instead capture automatically at each `yield` point, the
 same way `async fn` automatically captures where execution paused at

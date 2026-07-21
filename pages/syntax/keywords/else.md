@@ -25,7 +25,9 @@ produce type `!` (e.g. `std::process::exit`), since control
 flow cannot continue past it without the pattern's bindings having been
 established.
 
-## Basic usage example
+## Usage examples
+
+### Providing the alternative branch of an if
 
 ```
 let x = 5;
@@ -36,9 +38,7 @@ if x > 0 {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A chain of `else if` branches testing the same value one case at a time
 still compiles fine, but once every branch tests a different variant of
@@ -73,7 +73,7 @@ fn describe(state: &ConnectionState) -> &str {
 }
 ```
 
-**Why this way:** a `match` on an enum is checked for exhaustiveness at
+A `match` on an enum is checked for exhaustiveness at
 compile time, so adding a new variant later forces every `match` on it to
 be updated — an `else`-if chain gives no such guarantee, per the
 [Book's chapter on `match`](https://doc.rust-lang.org/book/ch06-02-match.html).

@@ -40,6 +40,14 @@ pub struct Scenario {
     pub rationale_html: Option<String>,
 }
 
+/// A single titled entry under a syntax page's "Usage examples" section.
+/// Unlike `Scenario` (concept pages only), the intro/code/closing blurb all
+/// flow together as one blob — no separate rationale callout.
+pub struct Example {
+    pub title: String,
+    pub body_html: String,
+}
+
 pub struct Page {
     pub front: FrontMatter,
     pub section: Section,
@@ -51,9 +59,14 @@ pub struct Page {
     pub href: String,
 
     pub explanation_html: String,
+    /// Concept pages only; empty for syntax pages.
     pub basic_usage_html: String,
+    /// Concept pages only; empty for syntax pages.
     pub best_practices_intro_html: String,
+    /// Concept pages only; empty for syntax pages.
     pub scenarios: Vec<Scenario>,
+    /// Syntax pages only; empty for concept pages.
+    pub usage_examples: Vec<Example>,
     pub embedded_notes_html: String,
 }
 

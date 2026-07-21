@@ -38,7 +38,9 @@ for the mechanism and
 [Type erasure](../../concepts/traits-polymorphism/type-erasure-dyn-any.md)
 for the broader idea `dyn` is one instance of.
 
-## Basic usage example
+## Usage examples
+
+### Boxing a concrete type as a trait object
 
 ```
 trait Shape {
@@ -53,9 +55,7 @@ let shape: Box<dyn Shape> = Box::new(Circle); // <- `dyn Shape` erases Circle's 
 println!("{}", shape.area());
 ```
 
-## Best practices & deeper information
-
-### Scenario: Runtime polymorphism
+### Runtime polymorphism
 
 A notification system that dispatches to whichever channels are
 configured at startup needs one collection that can hold genuinely
@@ -91,13 +91,13 @@ let channels: Vec<Box<dyn Channel>> = vec![Box::new(EmailChannel), Box::new(SmsC
 notify_all("order shipped", &channels);
 ```
 
-**Why this way:** the exact mix of channels is only known once
+The exact mix of channels is only known once
 configuration is read at startup, ruling out a fixed enum or generic
 function — the canonical case
 [Trait objects & dynamic dispatch](../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.md)
 covers in depth, including the vtable mechanism `dyn` triggers.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A hot path that dispatches through a trait on every call, but only ever
 needs a reference to a value already living on the stack, can use
@@ -123,7 +123,7 @@ let console = ConsoleLogger;
 run(&console);
 ```
 
-**Why this way:** `dyn` only requires the fat pointer (data + vtable) that
+`dyn` only requires the fat pointer (data + vtable) that
 `&`/`&mut` already provide — `Box` is a separate, additional decision
 about ownership and heap placement, as
 [On-stack dynamic dispatch](../../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.md)

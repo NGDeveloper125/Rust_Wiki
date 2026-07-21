@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -965,9 +964,12 @@ reference identity" fallback the way some languages have.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let a = 5;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Comparing two values for equality</h3>
+            <pre><code class="rust">let a = 5;
 let b = 5;
 let same = a == b; // &lt;- `==` compares `a` and `b` for equality
 </code></pre>
@@ -976,17 +978,8 @@ Rust's grammar rejects chained comparison operators outright (rustc
 reports "comparison operators cannot be chained" and suggests
 <code>a == b &amp;&amp; b == c</code>); the expression never even reaches trait resolution.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Rejecting a request whose version doesn't match what the server supports
 is a plain equality check — <code>==</code> compares the field directly rather than
@@ -1002,20 +995,15 @@ fn is_valid(request: &amp;Request) -&gt; bool {
     request.api_version == SUPPORTED_VERSION // &lt;- `==` checks the request matches what this server supports
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> deriving <code>PartialEq</code> on the surrounding types (rather
+<p>Deriving <code>PartialEq</code> on the surrounding types (rather
 than hand-rolling comparisons field by field) keeps <code>==</code> checks like this
 correct as fields are added — the
 <a href="https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits">API Guidelines</a>
 recommend eagerly implementing <code>PartialEq</code> wherever structural equality
 is the intended comparison.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p><code>assert_eq!</code> uses <code>==</code>/<code>PartialEq</code> under the hood, but — unlike a bare
 <code>assert!(a == b)</code> — prints both values on failure, which is why it's the
@@ -1030,12 +1018,11 @@ fn computes_total_price() {
     assert_eq!(total, 7.5); // &lt;- `assert_eq!` compares with `==` and reports both sides on failure
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the <a href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html">Book's testing chapter</a>
+<p>The <a href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html">Book's testing chapter</a>
 recommends <code>assert_eq!</code>/<code>assert_ne!</code> over a bare <code>assert!(a == b)</code>
 specifically because the macro captures and prints both operands when
 the assertion fails, saving a debugging round trip.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1048,7 +1035,7 @@ the assertion fails, saving a debugging round trip.</p>
         </span>
         <p><strong>Full support.</strong> <code>PartialEq</code> lives in <code>core::cmp</code> — no <code>std</code> dependency.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

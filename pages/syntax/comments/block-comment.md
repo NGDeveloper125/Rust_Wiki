@@ -19,7 +19,9 @@ is a single, correctly-closed comment — the compiler tracks nesting depth
 rather than closing at the first `*/` encountered. This makes it safe to
 comment out a chunk of code that itself already contains a block comment.
 
-## Basic usage example
+## Usage examples
+
+### Nested block comments
 
 ```
 fn main() {
@@ -35,9 +37,7 @@ fn main() {
 an unterminated block comment is a compile error, unlike a line comment
 which simply ends at the newline.
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 While tracking down a failing test, it's common to temporarily comment
 out a whole test function to isolate the problem. `/* */`'s nesting is
@@ -69,7 +69,7 @@ Note the limit of the nesting guarantee: an *unmatched* stray `*/` in the
 disabled code (say, inside a string literal) still closes the wrapper at
 that point — nesting only protects properly paired inner comments.
 
-**Why this way:** this is a deliberately temporary debugging aid, not a
+This is a deliberately temporary debugging aid, not a
 substitute for `#[ignore]` — once the investigation is done, either fix
 the test or mark it properly with `#[ignore = "reason"]` so it still
 shows up (as skipped) in `cargo test` output instead of silently

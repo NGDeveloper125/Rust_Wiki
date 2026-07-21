@@ -38,7 +38,9 @@ arguments rather than literals (`{:.prec$}`, `{:width$.prec$}`), letting
 the formatting itself be computed at runtime rather than fixed in the
 string.
 
-## Basic usage example
+## Usage examples
+
+### Named-argument capture with precision formatting
 
 ```
 let order_id = 42;
@@ -53,9 +55,7 @@ compile error rather than a runtime surprise, since the format string
 itself must be a string literal (or a `concat!` of literals) known at
 compile time, never a runtime-computed `String`.
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Working with text
 
 Building a fixed-width shipment label combining several fields is exactly
 what `format!` is for, instead of repeated `push_str` calls glued
@@ -79,13 +79,13 @@ let line = label(&Shipment { tracking_id: "TRK-8841".into(), carrier: "Northwind
 println!("{line}");
 ```
 
-**Why this way:** the
+The
 [std fmt docs](https://doc.rust-lang.org/std/fmt/index.html#width) treat
 width, alignment, and precision specifiers as the idiomatic way to build
 fixed-width tabular text, replacing manual padding logic with a
 declarative format string.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Constructing a descriptive error message that embeds the offending value
 happens at the point of failure, then gets wrapped into a custom error
@@ -102,7 +102,7 @@ fn parse_port(raw: &str) -> Result<u16, ConfigError> {
 }
 ```
 
-**Why this way:** the
+The
 [Book's error-handling chapter](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
 and [Effective Rust](https://effective-rust.com/) both favor errors that
 carry enough context to diagnose the failure without re-running the

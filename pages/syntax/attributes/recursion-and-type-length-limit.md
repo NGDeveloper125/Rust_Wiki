@@ -46,7 +46,9 @@ Raising either limit doesn't fix a design problem; it just buys more room
 for something (often a macro that could be restructured iteratively
 instead of recursively) to keep going.
 
-## Basic usage example
+## Usage examples
+
+### Raising the recursion limit for a token-counting macro
 
 ```
 #![recursion_limit = "256"] // <- raises the macro-expansion/trait-resolution recursion ceiling
@@ -59,9 +61,7 @@ macro_rules! count_tokens {
 const N: usize = count_tokens!(a b c d e f g h); // one recursive expansion per token
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A `macro_rules!` macro that recursively counts or processes a long
 variadic-style list of items hits the default recursion limit once
@@ -82,7 +82,7 @@ fn total() -> i32 {
 }
 ```
 
-**Why this way:** the compiler's own error message for exceeding the
+The compiler's own error message for exceeding the
 default recursion limit names `recursion_limit` explicitly and suggests a
 concrete replacement value, which the
 [Rust Reference](https://doc.rust-lang.org/reference/attributes/limits.html#the-recursion_limit-attribute)

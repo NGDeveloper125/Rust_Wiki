@@ -39,7 +39,9 @@ hood). It is used less often, but still meaningfully, in hosted contexts
 where a custom C runtime or unusual embedding scenario needs to fully
 control the process's true entry point.
 
-## Basic usage example
+## Usage examples
+
+### Supplying a custom C-ABI entry point
 
 ```
 #![no_main] // <- suppresses generation of the ordinary Rust startup shim / `main` call
@@ -51,9 +53,7 @@ pub extern "C" fn main(_argc: i32, _argv: *const *const u8) -> i32 {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A `#![no_std]` firmware crate has no operating system to call a `main`
 symbol at all — the microcontroller's reset handler jumps directly to an
@@ -79,7 +79,7 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 ```
 
-**Why this way:** without `#[no_main]`, the compiler still expects to
+Without `#[no_main]`, the compiler still expects to
 generate a call into a conventional `main`, which requires a C runtime
 this bare-metal target doesn't have; supplying `_start` directly under
 `#[no_mangle]` is the standard shape embedded HAL crates and the

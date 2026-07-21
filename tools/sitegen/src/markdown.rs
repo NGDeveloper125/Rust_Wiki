@@ -37,6 +37,12 @@ pub fn split_scenarios(body: &str) -> (String, Vec<(String, String)>) {
     }
 }
 
+/// Split a syntax page's "Usage examples" section body on top-level
+/// `### <title>` lines. Returns (title, raw markdown body under that title).
+pub fn split_examples(body: &str) -> Vec<(String, String)> {
+    split_on_prefix(body, "### ")
+}
+
 fn split_on_prefix(body: &str, prefix: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     let mut current_title: Option<String> = None;

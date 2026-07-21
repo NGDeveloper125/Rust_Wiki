@@ -34,7 +34,9 @@ flushes or the process exits — an explicit `std::io::stdout().flush()`
 fixes that on the rare occasion it matters (a prompt printed with `print!`
 right before reading input, for instance).
 
-## Basic usage example
+## Usage examples
+
+### Printing to stdout and stderr
 
 ```
 let temperature = 21.5;
@@ -42,9 +44,7 @@ println!("Reading: {temperature}");    // <- prints to stdout, with a trailing n
 eprintln!("warning: sensor is stale"); // <- prints to stderr instead, same newline behavior
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Working with text
 
 A CLI tool prints normal progress to stdout, so it can be piped or
 captured, and problems to stderr, so they show up even when stdout is
@@ -61,13 +61,13 @@ fn run_backup(files_done: u32, files_total: u32, failed: &[String]) {
 run_backup(8, 10, &["archive.zip".to_string()]);
 ```
 
-**Why this way:** keeping errors on stderr and normal output on stdout
+Keeping errors on stderr and normal output on stdout
 follows a long-standing Unix convention the
 [std docs](https://doc.rust-lang.org/std/macro.eprintln.html) build
 `println!`/`eprintln!` around specifically so that redirecting stdout
 (`prog > out.txt`) doesn't silently swallow warnings along with it.
 
-### Scenario: Documenting an API
+### Documenting an API
 
 A doc comment for a public function includes a runnable example that
 prints the function's output for illustration, with `assert!` doing the
@@ -88,7 +88,7 @@ pub fn to_fahrenheit(celsius: f64) -> f64 {
 }
 ```
 
-**Why this way:** the [rustdoc book](https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html)
+The [rustdoc book](https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html)
 treats every fenced code block in a doc comment as a runnable test by
 default, so `println!` inside one doubles as both documentation and a
 compiled, executed example — but it's the `assert!` that actually catches

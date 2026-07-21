@@ -26,7 +26,9 @@ target it explicitly: `break 'outer;` (see loop labels under `loop`,
 (`'a: { ... break 'a value; }`) to exit early with a value, a lesser-known
 form useful for structuring multi-step logic without a `loop` at all.
 
-## Basic usage example
+## Usage examples
+
+### Exiting a `loop` immediately
 
 ```
 let done = true;
@@ -43,9 +45,7 @@ those loops can terminate without executing any `break` (the condition
 turns false or the iterator runs out), so a loop value would have no
 defined result.
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 Searching a slice of orders for one matching an id can be written as a
 manual loop over an iterator so that a match arm can `break` with the
@@ -70,13 +70,13 @@ let found = loop {
 };
 ```
 
-**Why this way:** for a plain predicate search,
+For a plain predicate search,
 [`Iterator::find`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.find)
 is more idiomatic than a hand-rolled loop; `break value` earns its keep
 once the search loop needs to do per-item work an adaptor chain can't
 express as cleanly.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A loop draining a queue of commands can use `break` inside one arm of a
 `match` to stop only on a specific variant, while other variants keep the
@@ -97,7 +97,7 @@ while let Some(cmd) = queue.pop() {
 }
 ```
 
-**Why this way:** scoping the exit condition to one `match` arm reads more
+Scoping the exit condition to one `match` arm reads more
 directly than a boolean flag checked after the match, and the
 [Reference's loop expressions](https://doc.rust-lang.org/reference/expressions/loop-expr.html)
 confirm `break` is legal from any position textually inside the loop body,

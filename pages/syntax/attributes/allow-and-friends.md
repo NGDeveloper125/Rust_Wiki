@@ -62,7 +62,9 @@ might add, not just the ones known today, which can turn a routine
 toolchain upgrade into a broken build. That page makes the full argument;
 this page is about the four-level mechanism itself.
 
-## Basic usage example
+## Usage examples
+
+### Allowing and denying specific lints
 
 ```
 #[allow(dead_code)] // <- silences the unused-code warning for this one function
@@ -74,9 +76,7 @@ fn must_check_the_result() -> Result<(), &'static str> {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A crate wants a small, curated set of lints to be hard errors — signaling
 "these are not negotiable" — without denying the open-ended `warnings`
@@ -97,14 +97,14 @@ pub fn parse_port(input: &str) -> Result<u16, std::num::ParseIntError> {
 }
 ```
 
-**Why this way:** naming specific lints means a compiler or Clippy upgrade
+Naming specific lints means a compiler or Clippy upgrade
 that introduces a brand-new warn-by-default lint doesn't retroactively
 turn previously-clean code into a build failure — see
 [Anti-pattern: #[deny(warnings)]](../../concepts/design-patterns-idioms/anti-pattern-deny-warnings.md)
 for the full argument against the blanket `warnings` group this contrasts
 with.
 
-### Scenario: Implementing traits
+### Implementing traits
 
 A crate exposes an `unsafe` FFI wrapper module where a specific safety
 lint must never be silenced by accident, even by a contributor working
@@ -123,7 +123,7 @@ mod ffi {
 }
 ```
 
-**Why this way:** `deny` alone still allows a nested scope to locally
+`deny` alone still allows a nested scope to locally
 `allow` the same lint back, which is appropriate for most lints but wrong
 for a safety-critical one a team wants to guarantee is enforced
 everywhere beneath a module boundary; the

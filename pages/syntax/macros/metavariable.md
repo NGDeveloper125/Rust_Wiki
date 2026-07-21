@@ -32,7 +32,9 @@ the macro's defining crate regardless of where the macro is invoked
 from, which matters once a macro is exported (see
 [`#[macro_export] / #[macro_use]`](../attributes/macro-export-and-use.md)).
 
-## Basic usage example
+## Usage examples
+
+### Reusing a captured metavariable in the expansion
 
 ```
 macro_rules! double {
@@ -42,9 +44,7 @@ macro_rules! double {
 let n = double!(21); // <- expands to 21 + 21
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A calibration helper captures a sensor-reading expression once as
 `$raw` and needs it both to build the returned value and to report the
@@ -68,7 +68,7 @@ fn read_sensor() -> f64 {
 let (adjusted, original) = calibrate!(read_sensor(), 0.5); // <- read_sensor() runs exactly once
 ```
 
-**Why this way:** a metavariable re-emits the exact tokens it captured at
+A metavariable re-emits the exact tokens it captured at
 every place it's written in the transcriber, so writing `$raw` twice
 would re-run `read_sensor()` twice — the
 [Rust Reference's macro expansion rules](https://doc.rust-lang.org/reference/macros-by-example.html)

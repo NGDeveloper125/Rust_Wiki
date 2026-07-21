@@ -25,7 +25,9 @@ a float: `1._5` is parsed as field access on `1.`, not a digit separator.
 unrelated token whenever it appears outside a numeric literal (a match
 arm, a discarded binding, an unused parameter).
 
-## Basic usage example
+## Usage examples
+
+### Grouping digits in a literal for readability
 
 ```
 let value = 10_000;
@@ -36,9 +38,7 @@ let value = 10_000;
 identifier) or follow a float's decimal point directly (`1._5` is field
 access, not a separator).
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 A large constant like a byte limit or a Unix timestamp is much easier to
 proofread once it's grouped into readable chunks.
@@ -52,7 +52,7 @@ fn is_within_limit(size: u64) -> bool {
 }
 ```
 
-**Why this way:** grouping digits in threes mirrors how people read large
+Grouping digits in threes mirrors how people read large
 numbers, which makes a stray or missing digit far more likely to jump out
 during review than in one unbroken run — the
 [Rust Reference](https://doc.rust-lang.org/reference/tokens.html#integer-literals)

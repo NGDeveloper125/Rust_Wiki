@@ -43,7 +43,9 @@ expected; the digit separator only ever appears between the digits of a
 number. Same character, disjoint grammars, resolved entirely by where it
 sits.
 
-## Basic usage example
+## Usage examples
+
+### Using `_` as a match catch-all
 
 ```
 let result: Result<i32, String> = Err("disk full".to_string());
@@ -54,9 +56,7 @@ match result {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 Not every discarded `Result` is the same: a best-effort cleanup can safely
 ignore its outcome, but a genuinely important operation should never be
@@ -82,14 +82,14 @@ fn process_order(order_id: u32) -> Result<(), String> {
 }
 ```
 
-**Why this way:** `let _ = ...` is Clippy's documented way to intentionally
+`let _ = ...` is Clippy's documented way to intentionally
 silence the
 [`unused_must_use`](https://rust-lang.github.io/rust-clippy/master/#unused_must_use)
 lint on a `Result` you've decided not to check — using it on a value whose
 failure genuinely matters just hides the bug instead of fixing it, which is
 why `submit_order_avoid` above is a defect, not a stylistic choice.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A process exit code only has a handful of well-known meanings; every other
 value still needs somewhere to go.
@@ -107,7 +107,7 @@ fn describe_exit_code(code: i32) -> &'static str {
 println!("{}", describe_exit_code(127));
 ```
 
-**Why this way:** `i32` has far more values than any list of literals could
+`i32` has far more values than any list of literals could
 enumerate, so a `_` catch-all is the only way this compiles at all — the
 [Rust Reference on exhaustiveness](https://doc.rust-lang.org/reference/expressions/match-expr.html#match-expressions)
 requires every value of the scrutinee's type to be covered by some arm.
