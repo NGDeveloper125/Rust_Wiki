@@ -147,17 +147,128 @@ reference counting; freeing it is a direct deallocation the moment its
 owner's scope ends, rather than something a collector has to discover is
 now garbage before it can reclaim it.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — and one of the clearest real-world proofs of this
-principle. Embedded and firmware targets typically have no room for a
-tracing garbage collector's memory overhead or unpredictable pause times,
-which historically left C as the only realistic systems choice and its
-manual-memory bugs (buffer overflows, use-after-free on interrupt-shared
-buffers) as a recurring source of firmware vulnerabilities. Rust's
-compile-time guarantee applies identically under `#![no_std]` at zero
-runtime cost, which is precisely why it has been adopted for kernel
-modules and bare-metal firmware; `unsafe` still exists for the raw
-register and DMA-buffer access embedded code genuinely needs, and
-allocator-free alternatives like `heapless` cover the cases where even
-`Box`'s single heap allocation isn't available.
+This page's guarantee isn't just convenient for embedded targets — it's
+close to the entire reason Rust is a viable language for them at all. A
+tracing garbage collector needs a runtime: something has to walk live
+objects, decide what's reachable, and reclaim the rest, which costs
+memory for bookkeeping, CPU cycles stolen from the program's own work, and
+— the part that actually disqualifies it — a pause of unpredictable
+length whenever collection runs. A microcontroller running a motor
+control loop, a UART protocol state machine, or a sensor sampled on a
+fixed timer doesn't get to say "pause for an unknown number of
+microseconds sometime soon"; missing a real-time deadline because a
+collector chose that instant to run isn't a performance regression, it's
+a correctness bug — a stepper motor loses steps, a protocol times out, a
+control loop overshoots. On top of the pause-time problem, a GC also
+typically assumes a heap and an allocator sized generously enough to
+tolerate fragmentation and collection overhead, which many microcontrollers
+simply don't have the RAM budget for in the first place. This is why,
+historically, embedded firmware had exactly one realistic option: C (or
+hand-rolled C++), with manual memory management and its entire associated
+bug class — buffer overflows, use-after-free, and, worst of all in this
+context, interrupt-shared buffers that a main loop frees while an
+interrupt handler is mid-write to them, corrupting memory in a way that
+might not surface until the device is in the field.
+
+Rust's answer is structural rather than a tuning knob: the ownership and
+borrow-checking machinery described above runs entirely at compile time
+and leaves nothing behind in the binary, so there is no pause to have in
+the first place — not "a shorter pause," genuinely none, because there's
+no collector thread and no collection pass to schedule. That's what makes
+"zero runtime cost" a hard requirement here rather than a nice-to-have:
+memory safety and deterministic, worst-case-analyzable timing are usually
+in direct tension in other languages, and this is the mechanism that lets
+Rust have both at once. It's also why embedded Rust code leans so heavily
+on stack allocation and `static` storage rather than the heap at all —
+`Box`, `Vec`, and friends need the `alloc` crate plus a
+`#[global_allocator]`, which many `#![no_std]` projects skip entirely,
+using fixed-capacity, allocation-free types like `heapless::Vec` instead.
+None of that changes the underlying guarantee: ownership tracking is a
+compile-time proof regardless of whether the value it's protecting ever
+touches a heap, so a program that never allocates at all still gets full
+memory safety, at zero runtime cost, with fully deterministic timing.
+`unsafe` remains the escape hatch for the raw register reads, MMIO writes,
+and DMA-buffer handling embedded code genuinely needs — but that's a small,
+auditable, explicitly-marked surface, not the default state of the whole
+program the way it effectively is in C.
+
+## Basic usage example (Embedded)
+
+```
+struct Reading { millivolts: u16 } // stack-allocated: no heap, no allocator, involved at all
+
+fn read_adc(raw_register_value: u16) -> Reading { // <- returns an owned value: nothing here can outlive its data
+    Reading { millivolts: raw_register_value }
+}
+
+// fn dangling_reading() -> &'static Reading {
+//     let reading = read_adc(0x2A0);
+//     &reading // would fail to compile: `reading` is dropped here — same guarantee as the classic example,
+//              // proven with zero heap allocation and zero runtime bookkeeping involved
+// }
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Managing resources (RAII)
+
+A DMA transfer into a receive buffer must never outlive that buffer, and
+the DMA channel must be disabled the instant the transfer's owner goes
+out of scope — tying the channel's lifetime to a guard value's `Drop`
+turns "remember to disable DMA before freeing the buffer" from a
+hand-followed rule into something the compiler enforces.
+
+```
+struct DmaTransfer<'buf> { channel: u8, buffer: &'buf mut [u8] }
+
+impl<'buf> Drop for DmaTransfer<'buf> {
+    fn drop(&mut self) { // <- runs synchronously the instant the owner's scope ends, no GC pause to wait for
+        disable_dma_channel(self.channel);
+    }
+}
+
+fn receive_frame(buffer: &mut [u8]) {
+    let _transfer = DmaTransfer { channel: 1, buffer }; // <- borrows `buffer` for exactly as long as the transfer lives
+    // ... wait for the transfer-complete interrupt ...
+} // <- _transfer.drop() runs here: DMA is disabled before `buffer` could ever be reused or freed
+
+fn disable_dma_channel(_channel: u8) {}
+```
+
+**Why this way:** the classic
+[Rust Book's `Drop` chapter](https://doc.rust-lang.org/book/ch15-03-drop.html)
+covers deterministic, scope-tied cleanup as RAII's central guarantee; on
+embedded hardware the stakes are sharper than a leaked file handle — the
+class of bug this prevents is hardware continuing to write into a buffer
+after the owning code considers it free, exactly the interrupt/DMA-shared
+buffer corruption that has historically been a recurring source of
+firmware vulnerabilities in hand-written C.
+
+### Scenario: Boxing and heap allocation
+
+A sensor-calibration buffer needs a fixed, known-at-compile-time capacity
+on a target with no heap at all — reaching for `Box`/`Vec` isn't just
+unidiomatic here, it may not compile without an `alloc` crate and a
+`#[global_allocator]` most `#![no_std]` firmware never sets up.
+
+```
+use heapless::Vec; // fixed-capacity, allocation-free substitute for std's Vec
+
+fn collect_samples(adc_read: impl Fn() -> i16) -> Vec<i16, 16> { // <- capacity 16 is part of the type, no heap involved
+    let mut samples = Vec::new();
+    for _ in 0..16 {
+        // AVOID: samples.push(adc_read()) unchecked — panics/aborts if a caller ever changes the loop bound
+        let _ = samples.push(adc_read()); // PREFER: push returns Result, capacity enforced at compile-time-known size
+    }
+    samples
+}
+```
+
+**Why this way:** [`heapless`](https://docs.rs/heapless/) gives the same
+ownership-tracked, deterministic-drop guarantee this page describes
+without requiring a heap or allocator at all, which matters on targets
+where an allocator's own bookkeeping (and its own, if smaller, source of
+timing jitter) is exactly the kind of runtime cost the "no garbage
+collector" promise is meant to avoid paying in the first place.

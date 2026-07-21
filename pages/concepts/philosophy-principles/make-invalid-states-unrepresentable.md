@@ -154,14 +154,123 @@ designing a robust public API — the invalid combination is ruled out by
 the type checker instead of relying on every caller to remember a rule
 that lives only in documentation.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Enums and newtypes are core-language, allocator-free,
-and frequently niche-optimized down to the size of the data they wrap (see
-[Enums (algebraic data types)](../types-data-modeling/enums-algebraic-data-types.md)),
-so making an invalid state unrepresentable costs nothing at runtime. This
-is one of embedded Rust's most-used idioms in practice: HAL crates
-routinely encode a pin's or peripheral's configuration state directly in
-its type, so calling a method that's only valid for an initialized or
-configured peripheral is a compile error rather than a runtime check that
-has to run on every access to hardware that can't afford the cycles.
+This principle earns its keep especially hard in embedded code, because
+the alternative it replaces is everywhere on a microcontroller: a raw
+register is, at bottom, just a `u8`/`u16`/`u32` bit pattern, and plenty of
+bit patterns a register's width can physically hold are reserved,
+undefined, or simply invalid for that peripheral. A UART's baud-rate
+divisor field, a sensor's power-mode select bits, a GPIO's mode-select
+bits — each has a small set of documented, legal values sitting inside a
+much larger space of bit patterns the hardware happens to allow you to
+write. Modeling that field as a bare integer means every read from the
+register, and every value about to be written to it, is a fresh
+opportunity to hold or send a bit pattern the datasheet never defined.
+Modeling it instead as an enum with exactly the legal variants — and
+converting between the enum and the raw register value at exactly one
+point, via `TryFrom`/`From` — means the invalid bit patterns simply have
+no corresponding enum value to exist as; a variable of that enum type is
+always one of the states the hardware actually documents.
+
+HAL crates push the same idea one step further with the "typestate"
+pattern: a GPIO pin's current mode (input, output, alternate function)
+becomes part of the pin's *type*, not a runtime flag checked inside each
+method. `set_high()` simply doesn't exist as a callable method on a pin
+typed as an input — the invalid operation is rejected at compile time by
+the same mechanism that rejects calling a `Shipped`-only method on an
+`OrderStatus::Pending` order, and unlike a runtime "is this pin configured
+as output?" check, it costs nothing on hardware where every cycle and
+every byte of flash is budgeted.
+
+## Basic usage example (Embedded)
+
+```
+#[repr(u8)]
+enum BaudRate { // <- only the documented, legal divisor codes exist as values of this type
+    Baud9600 = 0x04,
+    Baud19200 = 0x08,
+    Baud115200 = 0x40,
+}
+
+impl TryFrom<u8> for BaudRate {
+    type Error = u8; // the raw, unrecognized register value
+
+    fn try_from(raw: u8) -> Result<Self, u8> {
+        match raw {
+            0x04 => Ok(BaudRate::Baud9600),
+            0x08 => Ok(BaudRate::Baud19200),
+            0x40 => Ok(BaudRate::Baud115200),
+            other => Err(other), // <- every other bit pattern the register could hold is rejected here, once
+        }
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Bit manipulation and flags
+
+A UART driver reading its baud-rate register back after configuring it
+should trust the value it gets, rather than re-checking "is this one of
+the valid codes?" at every later call site — converting the raw register
+byte into the enum once, at the boundary, is what makes that trust sound.
+
+```
+struct UartRegisters { baud_select: u8 } // stand-in for a real MMIO register read
+
+fn configured_baud_rate(regs: &UartRegisters) -> Result<BaudRate, &'static str> {
+    BaudRate::try_from(regs.baud_select) // <- the one place a bad bit pattern can still surface, as an Err
+        .map_err(|bits| { let _ = bits; "register holds an undefined baud-rate code" })
+}
+
+fn set_baud_rate(regs: &mut UartRegisters, rate: BaudRate) {
+    regs.baud_select = rate as u8; // <- only ever one of the three legal codes gets written back
+}
+```
+
+**Why this way:** a `baud_select: u8` field could hold any of 256 bit
+patterns, only three of which the hardware documents as meaningful;
+converting through `BaudRate` at the register boundary means every other
+piece of driver code that reads `configured_baud_rate()`'s result works
+with a value the type system already guarantees is one of the three legal
+states, rather than re-validating a raw byte on every use — the same
+"parse, don't validate" discipline from
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/) that
+the classic Explanation applies to `EmailAddress`, applied here to a
+hardware register instead of user input.
+
+### Scenario: Designing a public API
+
+A GPIO HAL should make `set_high()` uncallable on a pin still configured
+as an input, rather than making it a runtime check the caller can forget
+— the typestate pattern moves that invariant into the type itself.
+
+```
+struct Input;
+struct Output;
+
+struct Pin<MODE> { number: u8, _mode: core::marker::PhantomData<MODE> }
+
+impl Pin<Input> {
+    fn into_output(self) -> Pin<Output> { // <- consumes the Input-typed pin, returns an Output-typed one
+        Pin { number: self.number, _mode: core::marker::PhantomData }
+    }
+}
+
+impl Pin<Output> {
+    fn set_high(&mut self) { /* write the peripheral's BSRR register */ }
+}
+
+let pin: Pin<Input> = Pin { number: 5, _mode: core::marker::PhantomData };
+let mut pin = pin.into_output(); // <- must convert before this compiles
+pin.set_high();
+```
+
+**Why this way:** encoding the pin's configuration in its type means
+calling `set_high()` on a pin still wired as an input is a compile error
+at the call site, not a runtime `if self.mode != Output` check that has to
+execute on every single toggle of a pin that hardware access can't afford
+to spend cycles re-verifying — this is the [embedded-hal](https://docs.rs/embedded-hal/)
+ecosystem's standard answer to making a peripheral's invalid configuration
+states unrepresentable.
