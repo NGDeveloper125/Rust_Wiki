@@ -1069,13 +1069,35 @@ dot accesses.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>.</code> means exactly the same thing under <code>#![no_std]</code> — field access,
+method calls, and tuple indexing are core grammar with no <code>std</code>
+dependency, and auto-deref works identically. The idiom this token
+enables that's distinctly embedded is the svd2rust "write closure"
+pattern used by most peripheral-access crates: a register write takes a
+closure, and the closure body chains several <code>.</code> method calls — one per
+bit-field — before the register is actually written in one go.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Chaining register field writes through a PAC closure</h3>
+            <pre><code class="rust">gpioa.odr.write(|w| w.odr5().set_bit()); // &lt;- `.` chains field-accessor calls on the register writer `w`
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Reading a driver's field through auto-deref</h3>
+            <pre><code class="rust">struct Sensor { calibration: u16 }
+
+fn offset(sensor: &amp;Sensor) -&gt; u16 {
+    sensor.calibration // &lt;- `.` auto-derefs through the `&amp;` to reach the field
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

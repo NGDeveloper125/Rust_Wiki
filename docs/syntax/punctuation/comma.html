@@ -1028,13 +1028,34 @@ number of style decisions a codebase has to make.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>,</code> means exactly the same thing under <code>#![no_std]</code> — pure separator
+grammar, no <code>std</code> dependency. It shows up just as constantly in embedded
+code, mostly in two places: fixed-size array/buffer literals (there's no
+heap-backed <code>vec![...]</code> to reach for instead) and peripheral config
+structs, where a driver's setup value is built from several named fields
+in one struct literal.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Building a fixed-size calibration buffer</h3>
+            <pre><code class="rust">let calibration: [u16; 4] = [512, 511, 509, 515]; // &lt;- `,` separates each calibration sample
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Constructing a peripheral config struct</h3>
+            <pre><code class="rust">let config = SerialConfig {
+    baud_rate: 115_200,
+    parity: Parity::None,
+    stop_bits: StopBits::One, // &lt;- trailing comma, same rustfmt convention as hosted code
+};
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

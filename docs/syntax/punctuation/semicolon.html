@@ -1041,13 +1041,43 @@ when a fixed-size array is the right choice over a growable one.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>;</code> means exactly the same thing under <code>#![no_std]</code> — statement
+terminator and array-length separator, resolved purely by the compiler.
+The "an accidental trailing <code>;</code> changes what a block returns" trap is, if
+anything, higher-stakes in a <code>#[no_mangle] extern "C" fn</code> entry point or
+an interrupt handler: these are called directly by the runtime/linker
+with no wrapping <code>main</code> and no caller-side application logic to catch a
+mismatch, so getting the last line's <code>;</code> wrong there is a raw
+ABI-shaped bug, not just a caught type error. The <code>[Type; N]</code> array form
+is, if anything, more central in embedded code than hosted, since a
+fixed-size array is usually the <em>only</em> buffer available without a heap.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A `#[no_mangle] extern &quot;C&quot;` entry point</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+#[no_mangle]
+pub extern "C" fn _start() -&gt; ! {
+    init_hardware(); // &lt;- `;` ends this statement
+    loop {} // &lt;- no `;` needed: `loop {}` never produces a value to return anyway
+}
+
+fn init_hardware() {}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Sizing a fixed DMA buffer with array syntax</h3>
+            <pre><code class="rust">static mut DMA_BUFFER: [u8; 256] = [0; 256]; // &lt;- both `;` here belong to array syntax, not statements
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

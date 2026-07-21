@@ -112,9 +112,35 @@ enumerate, so a `_` catch-all is the only way this compiles at all — the
 [Rust Reference on exhaustiveness](https://doc.rust-lang.org/reference/expressions/match-expr.html#match-expressions)
 requires every value of the scrutinee's type to be covered by some arm.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure pattern-matching and binding grammar, allocator-free,
-with zero runtime cost. Frequently used as a `match` catch-all when
-decoding a fixed-width register value where only a handful of bit patterns
-are meaningful and the rest should be handled uniformly.
+`_` means exactly the same thing under `#![no_std]` — wildcard pattern,
+discard binding, and unused-parameter marker, all allocator-free with
+zero runtime cost. It's especially common as a `match` catch-all when
+decoding a memory-mapped register: a status/control register usually
+reserves only a handful of bit patterns as meaningful and leaves the rest
+undefined, and `_` covers "every other bit pattern" in one arm instead of
+enumerating values that should never occur.
+
+## Usage examples (Embedded)
+
+### Catching every other bit pattern in a status register
+
+```
+fn decode_status(reg: u8) -> &'static str {
+    match reg & 0b0000_0011 {
+        0b00 => "idle",
+        0b01 => "receiving",
+        0b10 => "transmitting",
+        _ => "reserved", // <- `_` catches the one remaining 2-bit pattern
+    }
+}
+```
+
+### Discarding a fallible peripheral write
+
+```
+fn set_led_high(gpioa: &pac::GPIOA) {
+    let _ = gpioa.bsrr.write(|w| w.bs5().set_bit()); // <- `_`: this write can't fail in practice, ok to discard
+}
+```

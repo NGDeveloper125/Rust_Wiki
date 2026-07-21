@@ -91,6 +91,38 @@ unlike a `Vec`, the length is part of the type itself — see
 [Arrays vs `Vec`](../../concepts/types-data-modeling/arrays-vs-vec.md) for
 when a fixed-size array is the right choice over a growable one.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure statement-terminator grammar — no `std` dependency.
+`;` means exactly the same thing under `#![no_std]` — statement
+terminator and array-length separator, resolved purely by the compiler.
+The "an accidental trailing `;` changes what a block returns" trap is, if
+anything, higher-stakes in a `#[no_mangle] extern "C" fn` entry point or
+an interrupt handler: these are called directly by the runtime/linker
+with no wrapping `main` and no caller-side application logic to catch a
+mismatch, so getting the last line's `;` wrong there is a raw
+ABI-shaped bug, not just a caught type error. The `[Type; N]` array form
+is, if anything, more central in embedded code than hosted, since a
+fixed-size array is usually the *only* buffer available without a heap.
+
+## Usage examples (Embedded)
+
+### A `#[no_mangle] extern "C"` entry point
+
+```
+#![no_std]
+#![no_main]
+
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    init_hardware(); // <- `;` ends this statement
+    loop {} // <- no `;` needed: `loop {}` never produces a value to return anyway
+}
+
+fn init_hardware() {}
+```
+
+### Sizing a fixed DMA buffer with array syntax
+
+```
+static mut DMA_BUFFER: [u8; 256] = [0; 256]; // <- both `;` here belong to array syntax, not statements
+```

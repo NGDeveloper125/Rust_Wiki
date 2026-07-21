@@ -86,8 +86,31 @@ afterward — the
 [Rust Book](https://doc.rust-lang.org/book/ch06-02-match.html) covers
 this destructuring-in-match pattern for working with enum payloads.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Grouping, tuples, and calls are core grammar — no `std`
-dependency. The unit type `()` in particular is exactly as zero-cost on
-an embedded target as anywhere else.
+`( )` means exactly the same thing under `#![no_std]` — grouping, tuples,
+and calls are core grammar with no `std` dependency, and the unit type
+`()` is exactly as zero-cost on an embedded target as anywhere else.
+Firmware startup code leans on the call and tuple forms constantly: a
+device's peripherals are taken through an `Option`-returning call that
+gets unwrapped, and splitting a configuration value into several pieces
+is usually returned and destructured as a tuple.
+
+## Usage examples (Embedded)
+
+### Taking peripherals and constructing a driver
+
+```
+let dp = pac::Peripherals::take().unwrap(); // <- `( )` here is the `.take()` call
+let mut led = Led::new(dp.GPIOA); // <- `( )` here constructs the driver
+```
+
+### Building and destructuring a timer config tuple
+
+```
+fn timer_config() -> (u32, u8) {
+    (16_000_000, 8) // <- `( )` builds a tuple: (clock_hz, prescaler)
+}
+
+let (clock_hz, prescaler) = timer_config(); // <- `( )` destructures it back into two bindings
+```

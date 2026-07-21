@@ -1033,13 +1033,40 @@ than requiring a separate mutable variable set inside each arm.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>{ }</code> means exactly the same thing under <code>#![no_std]</code> — block-expression
+and struct-literal delimiter, resolved purely by the compiler with no
+<code>std</code> dependency. The one place it appears in a distinctly embedded
+position is an interrupt handler: <code>#[interrupt]</code>/<code>#[exception]</code>
+(cortex-m-rt) and RTIC task functions are ordinary Rust functions, so
+their body is delimited by the same <code>{ }</code> as any other <code>fn</code> — the
+attribute controls <em>when and how the runtime calls it</em>, not the grammar
+of what's inside.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">An interrupt handler's body</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::interrupt;
+
+#[interrupt]
+fn TIM2() { // &lt;- `{` opens the handler body; ordinary block-expression grammar
+    // acknowledge the timer interrupt, service the peripheral
+} // &lt;- `}` closes it
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Constructing a peripheral config struct literal</h3>
+            <pre><code class="rust">let config = SerialConfig { baud_rate: 115_200, parity: Parity::None }; // &lt;- `{ }` builds the config value in one expression
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

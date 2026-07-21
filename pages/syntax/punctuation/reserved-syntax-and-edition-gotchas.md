@@ -136,7 +136,35 @@ compatible with whatever a future edition eventually does with that
 space, per the
 [Rust Reference's tokens chapter](https://doc.rust-lang.org/reference/tokens.html#reserved-prefixes).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Reserved syntax is a lexer-level restriction, identical
-in `#![no_std]` and hosted Rust alike.
+Reserved syntax is a lexer-level restriction, checked before any code
+generation — it's identical on a hosted build and a `#![no_std]` target
+build, since the question of what runtime the binary will eventually run
+on hasn't even come up yet at that stage. The scenario most likely to
+trip an embedded codebase over it is the same one that trips hosted
+code: a `macro_rules!` macro — common in register-definition helpers, and
+in the peripheral-access crates svd2rust generates from a chip's SVD file
+— pasting an identifier directly against a string or `#`.
+
+## Usage examples (Embedded)
+
+### A register-definition macro that avoids the reserved-prefix trap
+
+```
+macro_rules! define_register {
+    ($name:ident, $addr:expr) => {
+        const $name: u32 = $addr; // <- kept as two separate tokens, never pasted into an ident"..." shape
+    };
+}
+
+define_register!(GPIOA_BASE, 0x4001_0800);
+```
+
+### What triggers the error in a hypothetical device-crate macro
+
+```
+// 2021 edition and later:
+// let reg = mmio"0x4001_0800"; // error: prefix `mmio` is unknown (reserved syntax)
+let reg = 0x4001_0800u32; // fine: an ordinary literal, no ident-quote adjacency
+```

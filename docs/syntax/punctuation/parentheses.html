@@ -1039,13 +1039,36 @@ this destructuring-in-match pattern for working with enum payloads.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>( )</code> means exactly the same thing under <code>#![no_std]</code> — grouping, tuples,
+and calls are core grammar with no <code>std</code> dependency, and the unit type
+<code>()</code> is exactly as zero-cost on an embedded target as anywhere else.
+Firmware startup code leans on the call and tuple forms constantly: a
+device's peripherals are taken through an <code>Option</code>-returning call that
+gets unwrapped, and splitting a configuration value into several pieces
+is usually returned and destructured as a tuple.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Taking peripherals and constructing a driver</h3>
+            <pre><code class="rust">let dp = pac::Peripherals::take().unwrap(); // &lt;- `( )` here is the `.take()` call
+let mut led = Led::new(dp.GPIOA); // &lt;- `( )` here constructs the driver
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Building and destructuring a timer config tuple</h3>
+            <pre><code class="rust">fn timer_config() -&gt; (u32, u8) {
+    (16_000_000, 8) // &lt;- `( )` builds a tuple: (clock_hz, prescaler)
+}
+
+let (clock_hz, prescaler) = timer_config(); // &lt;- `( )` destructures it back into two bindings
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

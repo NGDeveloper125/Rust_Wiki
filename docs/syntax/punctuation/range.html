@@ -1078,13 +1078,40 @@ requires <code>..=</code>, not <code>..</code>, for exactly this inclusive case.
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>..</code>/<code>..=</code>/<code>...</code> mean exactly the same thing under <code>#![no_std]</code> —
+allocator-free, compiling down to a plain counter and comparison. One
+nuance worth flagging: "slicing bits out of a register" is a common
+phrase in embedded code, but that isn't what the <code>..</code> <em>index</em> form does —
+pulling bits 4 through 7 out of a <code>u32</code> register value is a shift-and-mask
+operation (or a <code>bitflags</code>/bitfield crate), not a range expression. What
+<code>..</code> genuinely indexes is a <em>buffer</em> — a fixed-size sample or DMA buffer —
+which is exactly as common in firmware as it is in hosted code.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Slicing a fixed sample buffer</h3>
+            <pre><code class="rust">fn moving_average(samples: &amp;[u16; 32], start: usize, window: usize) -&gt; u32 {
+    let window_slice = &amp;samples[start..start + window]; // &lt;- `..` exclusive range slices the buffer
+    window_slice.iter().map(|&amp;s| s as u32).sum::&lt;u32&gt;() / window as u32
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Validating a baud-rate divisor with an inclusive range pattern</h3>
+            <pre><code class="rust">fn configure_baud(divisor: u16) -&gt; Result&lt;(), &amp;'static str&gt; {
+    match divisor {
+        1..=0xFFFF =&gt; Ok(()), // &lt;- `..=` inclusive range pattern: 0 is the one invalid divisor
+        _ =&gt; Err("divisor must be nonzero"),
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

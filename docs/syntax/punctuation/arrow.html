@@ -1034,13 +1034,49 @@ returned type.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>-&gt;</code> means exactly the same thing under <code>#![no_std]</code> — return-type grammar,
+resolved entirely at compile time, with no dependency on <code>std</code> or an
+allocator. Two embedded idioms lean on it more than typical hosted code
+does. First, embedded-hal-style drivers are often built around
+non-blocking, <code>Result</code>-returning signatures, so <code>-&gt;</code> is where a HAL
+trait states whether a call is blocking or would-block right now
+(<code>fn read(&amp;mut self) -&gt; nb::Result&lt;u16, Self::Error&gt;</code>). Second, a
+firmware entry point commonly returns the never type, <code>fn main() -&gt; !</code> —
+a <code>#[entry]</code> function isn't allowed to return at all, since there's no OS
+underneath to return <em>to</em>.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Declaring a HAL trait's non-blocking return type</h3>
+            <pre><code class="rust">use nb;
+
+trait AdcChannel {
+    type Error;
+    fn read_raw(&amp;mut self) -&gt; nb::Result&lt;u16, Self::Error&gt;; // &lt;- `-&gt;` names the non-blocking return type
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Returning `-&gt; !` from a firmware entry point</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -&gt; ! { // &lt;- `-&gt;` here introduces the never type: main must never return
+    loop {
+        // poll sensors, service the main control loop
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>
