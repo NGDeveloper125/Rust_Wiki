@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An enum defines a type as one of several distinct variants, each of which
 can optionally carry its own data — for example, a <code>Shape</code> enum might
@@ -974,7 +975,7 @@ needs updating, as a compile error, rather than a silent gap in behavior.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">enum Status {
     Active,
@@ -992,7 +993,7 @@ match s {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1089,22 +1090,148 @@ JSON shape is what the wire format actually needs.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Enums are core-language and allocator-free (their size
-is roughly the largest variant plus, when needed, a discriminant —
-though niche optimization often folds the tag into a variant's unused bit
-patterns, so e.g. <code>Option&lt;&amp;T&gt;</code> stays pointer-sized) — ideal for
-representing peripheral states, register field values, or protocol
-message types with zero runtime allocation.</p>
+        <p>Enums are core-language and allocator-free — their size is roughly the
+largest variant plus, when needed, a discriminant tag (niche optimization
+often folds that tag into a variant's unused bit patterns instead, so
+e.g. <code>Option&lt;&amp;T&gt;</code> stays pointer-sized) — which makes them a natural fit
+for representing a peripheral's discrete states, fault codes, or protocol
+message types with zero runtime allocation. See
+<a href="../philosophy-principles/make-invalid-states-unrepresentable.md">"Make invalid states unrepresentable"</a>'s
+embedded section for the full case of <em>why</em> this matters specifically for
+hardware — modeling a register field as an enum rather than a bare
+integer means only the datasheet's documented bit patterns can exist as
+values of that type at all; this page's job is the mechanics of the enum
+itself rather than repeating that argument.</p>
+<p>The mechanic worth covering here is <code>#[repr(u8)]</code> (or <code>u16</code>/<code>u32</code>): by
+default, Rust picks the enum's discriminant values and backing integer
+width itself, which is exactly right when nothing outside the program
+ever needs to see those numbers. The moment a discriminant has to match a
+<em>hardware-defined</em> encoding — a status register's mode-select bits, a
+protocol's message-type byte — <code>#[repr(u8)]</code> plus explicit <code>= value</code>
+assignments on each variant pin the enum's numeric representation to
+match the datasheet exactly, so <code>SomeEnum::Variant as u8</code> produces the
+precise byte the hardware expects, and <code>TryFrom&lt;u8&gt;</code> (as the
+cross-referenced page shows) converts a raw register read back into the
+enum, rejecting whatever bit patterns the datasheet leaves undefined.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#[repr(u8)] // &lt;- pins the discriminant width and layout to match a hardware encoding
+enum PowerMode {
+    Active = 0x01,
+    Idle = 0x02,
+    Sleep = 0x04,
+    DeepSleep = 0x08,
+}
+
+fn write_power_mode(mode: PowerMode) -&gt; u8 {
+    mode as u8 // &lt;- exact byte the peripheral's power-control register expects
+}
+
+let reg_value = write_power_mode(PowerMode::Sleep); // 0x04
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A peripheral's fault-status register packs several distinct, mutually
+exclusive fault codes into one byte; modeling them as a <code>#[repr(u8)]</code>
+enum with datasheet-matching discriminants means the numeric encoding is
+fixed exactly once, at the type definition, rather than as magic numbers
+scattered through every place the register is read.</p>
+<pre><code class="rust">#[repr(u8)]
+#[derive(Debug, PartialEq)]
+enum FaultCode {
+    None = 0x00,
+    Overcurrent = 0x01,
+    Overtemperature = 0x02,
+    UnderVoltage = 0x04,
+}
+
+impl TryFrom&lt;u8&gt; for FaultCode {
+    type Error = u8;
+    fn try_from(raw: u8) -&gt; Result&lt;Self, u8&gt; {
+        match raw {
+            0x00 =&gt; Ok(FaultCode::None),
+            0x01 =&gt; Ok(FaultCode::Overcurrent),
+            0x02 =&gt; Ok(FaultCode::Overtemperature),
+            0x04 =&gt; Ok(FaultCode::UnderVoltage),
+            other =&gt; Err(other), // &lt;- bit pattern the datasheet doesn't define
+        }
+    }
+}
+
+fn read_fault_register(raw: u8) -&gt; Result&lt;FaultCode, &amp;'static str&gt; {
+    FaultCode::try_from(raw).map_err(|_| "undefined fault code")
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> fixing the discriminants with <code>#[repr(u8)]</code> means
+<code>FaultCode::Overcurrent as u8</code> is guaranteed to be <code>0x01</code> — the exact
+value the datasheet documents — so the enum can be written to and read
+from the real register directly, instead of maintaining a separate
+mapping table between Rust-side names and hardware-side byte values.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A control loop driving a peripheral through a small number of discrete
+states — idle, sampling, transmitting, faulted — should dispatch on an
+exhaustive <code>match</code> over an enum, so adding a new state later is a compile
+error everywhere the loop needs updating, not a silently unhandled case
+in a real-time loop.</p>
+<pre><code class="rust">enum AdcState {
+    Idle,
+    Sampling { channel: u8 },
+    Transmitting,
+    Faulted(FaultCode),
+}
+
+fn step(state: AdcState) -&gt; AdcState {
+    match state { // &lt;- exhaustive: a new AdcState variant fails to compile here until handled
+        AdcState::Idle =&gt; AdcState::Sampling { channel: 0 },
+        AdcState::Sampling { channel } if channel &lt; 3 =&gt; AdcState::Sampling { channel: channel + 1 },
+        AdcState::Sampling { .. } =&gt; AdcState::Transmitting,
+        AdcState::Transmitting =&gt; AdcState::Idle,
+        AdcState::Faulted(code) =&gt; AdcState::Faulted(code), // &lt;- stays faulted until explicitly reset
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a control loop that runs for the life of the device
+can't afford a state transition table with a silently-missing branch —
+the exhaustiveness check turns "we added a new state and forgot to handle
+it somewhere" into a build failure instead of a fault that only shows up
+once the device is already deployed.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

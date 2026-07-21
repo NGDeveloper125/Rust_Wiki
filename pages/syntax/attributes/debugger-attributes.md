@@ -89,14 +89,51 @@ documents `collapse_debuginfo` as the mechanism for choosing that behavior
 per macro, appropriate for macros meant to feel like ordinary statements
 rather than something a caller needs to debug into.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Both attributes are compile-time debug-information
-metadata with no runtime cost, so they're available under `#![no_std]`
-the same as anywhere else — but their practical value depends entirely on
-which debugger is attached. Embedded debugging typically goes through GDB
-over a hardware probe (OpenOCD, probe-rs), which understands GDB-style
-pretty-printer scripts but not the Natvis format (a Windows/Visual Studio
-convention); a `#[debugger_visualizer(...)]` written specifically for
-Natvis has no effect on a GDB-based embedded debugging session, and vice
-versa.
+`#[collapse_debuginfo]` is unaffected by target — it's pure debug-info
+attribution for macro-generated code, and works the same whether the
+eventual debugger is a hosted one or GDB attached over a hardware probe.
+`#[debugger_visualizer(natvis_file = "...")]` is where the caveat lives:
+an embedded debugging session almost always goes through GDB (or an
+equivalent) over SWD/JTAG via a probe — `probe-rs`, OpenOCD, or a vendor
+tool — not through Visual Studio. Natvis is a Visual-Studio-specific XML
+format; a GDB frontend doesn't load it, so a
+`#[debugger_visualizer(natvis_file = "...")]` written for a HAL type has
+no effect at all in the GDB-based session actually used to debug the
+firmware on target. The GDB-pretty-printer-script form of
+`#[debugger_visualizer(...)]` is the one that matters for this workflow
+instead — though in practice, most embedded debugging leans less on
+custom pretty-printers and more on `defmt` (structured, low-overhead
+logging formatted on the host) piped over RTT, alongside `probe-rs`'s own
+tooling, a workflow that doesn't route through the debugger's
+variable-inspection view at all.
+
+## Usage examples (Embedded)
+
+### Why a Natvis visualizer doesn't help a probe-rs/GDB debugging session
+
+```
+// AVOID relying on this alone for embedded debugging — Natvis is Visual-Studio-specific:
+#[debugger_visualizer(natvis_file = "RingBuffer.natvis")] // <- has no effect when debugging via GDB over a probe
+pub struct RingBuffer {
+    head: usize,
+    data: [u8; 64],
+}
+```
+
+### Reaching for defmt/RTT instead of a visualizer for on-target inspection
+
+```
+use defmt::Format;
+
+#[derive(Format)] // <- defmt's own derive, not debugger_visualizer: formats this type for RTT logging
+pub struct RingBuffer {
+    head: usize,
+    data: [u8; 64],
+}
+
+fn log_state(buf: &RingBuffer) {
+    defmt::info!("ring buffer state: {:?}", buf); // <- printed over RTT, read by probe-rs on the host
+}
+```

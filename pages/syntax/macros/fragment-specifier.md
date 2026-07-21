@@ -91,10 +91,52 @@ document `expr` as producing an opaque AST node, which is exactly why
 seeing a specific token, like an operator, rather than having it parsed
 away.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Fragment matching is resolved entirely at compile
-time and has no runtime representation, so it behaves identically under
-`#![no_std]`. Embedded register- and peripheral-definition macros lean
-heavily on `tt` and `ident` specifically, since they're often generating
-code from raw identifiers and bit patterns rather than full expressions.
+Fragment specifiers are resolved entirely at macro-expansion time, before
+any code generation happens — there's no runtime representation at all,
+so every specifier in the table above behaves identically whether the
+macro's expansion ends up compiled for a hosted target or `#![no_std]`
+firmware. There's no embedded-specific nuance to the matching rules
+themselves.
+
+Where this genuinely shows up is *what kind* of macro gets written this
+way in the first place: register- and peripheral-definition boilerplate
+is one of the most common reasons to hand-write a `macro_rules!` in
+embedded Rust, and those macros lean on `ident` (to name the generated
+register/field/function) and `tt`/`literal` (to carry a bit position or
+mask) far more than on `expr`, since the macro is generating code that
+*names hardware*, not evaluating a runtime value.
+
+## Usage examples (Embedded)
+
+### Generating a GPIO register accessor from raw identifiers
+
+```
+macro_rules! gpio_pin {
+    ($name:ident, $offset:literal) => { // <- `ident` names the generated fn, `literal` carries the bit position
+        pub fn $name(odr: &mut u32) {
+            *odr |= 1 << $offset;
+        }
+    };
+}
+
+gpio_pin!(set_led, 5); // <- expands to `pub fn set_led(odr: &mut u32) { *odr |= 1 << 5; }`
+```
+
+### Matching an interrupt source with a pat fragment
+
+```
+macro_rules! on_interrupt {
+    ($source:pat => $body:block) => { // <- `pat` accepts the enum variant naming the interrupt source
+        match interrupt::pending() {
+            $source => $body,
+            _ => {}
+        }
+    };
+}
+
+on_interrupt!(Interrupt::Uart0 => {
+    handle_uart_rx();
+});
+```

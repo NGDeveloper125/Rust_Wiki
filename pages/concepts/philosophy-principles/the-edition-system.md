@@ -111,11 +111,65 @@ behavior difference, gated behind an opt-in edition bump and covered by an
 automated `cargo fix --edition` migration, rather than a silent change
 imposed on every crate at once.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The edition system is a build-time, front-end compiler
-concept entirely independent of target — a `#![no_std]` firmware crate
-declares its edition in `Cargo.toml` exactly the same way a hosted
-application does, and edition-gated syntax and default changes apply
-identically regardless of whether the final binary runs under an OS or on
-bare metal.
+There is honestly very little embedded-specific to say here, and it's
+worth stating that plainly rather than stretching for an angle that isn't
+there: the edition system is resolved entirely in the compiler's front
+end, before code generation ever begins, so it has no way to know or care
+whether the crate it's parsing will end up running under an OS or on a
+microcontroller with no OS at all. A `#![no_std]` peripheral-access crate
+or HAL declares `edition = "2021"` (or whichever) in its `Cargo.toml`
+exactly the same way a hosted web service does, and every edition-gated
+syntax and default-behavior change applies identically either way.
+
+The one place edition specifics are genuinely worth knowing in an embedded
+codebase is reserved syntax: register-definition and peripheral-access
+code — hand-written `macro_rules!` helpers, and especially the code
+`svd2rust` generates from a chip's SVD file — pastes identifiers and
+literals together more aggressively than most application code, which is
+exactly the pattern that can accidentally produce a 2021-reserved-prefix
+or 2024-reserved-guard shape. That's covered in full, with the actual
+register-macro example, on
+[Reserved syntax & edition gotchas](../../syntax/punctuation/reserved-syntax-and-edition-gotchas.md)
+— it applies to embedded macro-heavy code exactly as written there, with
+nothing to add beyond a pointer to it.
+
+## Basic usage example (Embedded)
+
+```
+[package]
+name = "sensor-driver"
+version = "0.1.0"
+edition = "2024" # <- same field, same meaning, whether the crate targets an OS or bare metal
+
+[dependencies]
+cortex-m-rt = "0.7"
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Bit manipulation and flags
+
+A register-definition macro used across a peripheral-access crate needs
+to keep pasting identifiers, addresses, and bit-mask literals together
+without ever producing a 2021-reserved `ident"..."` shape — the fix is the
+same mechanical one that applies outside embedded code, just more likely
+to come up here given how much of a PAC's source is macro-generated.
+
+```
+macro_rules! define_register {
+    ($name:ident, $addr:expr) => {
+        const $name: u32 = $addr; // <- kept as two separate tokens, never pasted into an ident"..." shape
+    };
+}
+
+define_register!(GPIOA_BASE, 0x4001_0800);
+```
+
+**Why this way:** this is the same register-definition example covered on
+[Reserved syntax & edition gotchas](../../syntax/punctuation/reserved-syntax-and-edition-gotchas.md),
+included here only to make the point concrete: the edition-gated reserved
+prefix rule is a lexer-level restriction that shows up in embedded code
+through ordinary macro hygiene, not through anything the edition system
+does differently for a bare-metal target.

@@ -71,8 +71,36 @@ depth later doesn't change how it refers back to the root — unlike a
 relative `super::super::...` chain, which would need editing every time a
 module moves.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `crate` is a compile-time path prefix with no runtime
-representation, so it resolves identically in a `#![no_std]` crate —
-`crate::` still names that crate's own root module regardless of target.
+`crate::` resolves identically under `#![no_std]` — a compile-time path
+prefix naming the current crate's root module, with no runtime
+representation on any target. It's exactly as useful in a HAL crate's
+typical layout as anywhere else: a peripheral-access module nested a few
+levels under the crate root (a driver's `gpio::pin` submodule, say)
+reaches the generated register definitions with `crate::pac::GPIOA`
+regardless of how deep the calling module sits, rather than working out
+a relative `super::super::...` path to the `pac` module every time the
+driver's own module tree gets reorganized.
+
+## Usage examples (Embedded)
+
+### Reaching the generated register module from a nested driver submodule
+
+```
+// src/lib.rs
+#![no_std]
+
+pub mod pac;   // generated register definitions, at the crate root
+
+pub mod gpio {
+    pub mod pin {
+        pub fn set_high(pin_number: u8) {
+            unsafe {
+                crate::pac::GPIOA.odr.modify(|_, w| w.bits(1 << pin_number));
+                // <- `crate::` reaches `pac` from two levels deep in `gpio::pin`
+            }
+        }
+    }
+}
+```

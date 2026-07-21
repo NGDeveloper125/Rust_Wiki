@@ -139,13 +139,94 @@ advice is to accept the least specific type a function actually needs —
 `&[T]` for reading — while returning the concrete owned `Vec<T>` when the
 caller genuinely takes ownership of new data.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** `Vec<T>` lives in the `alloc` crate, not `core` — on
-hosted `std` targets it just works, but under `#![no_std]` it requires
-`extern crate alloc` plus a configured `#[global_allocator]` before
-`alloc::vec::Vec` is usable at all. Where no heap is available, or where
-allocation failure and fragmentation are unacceptable,
-`heapless::Vec<T, N>` provides a fixed-*capacity* (chosen at compile
-time), allocation-free alternative that still tracks a runtime length
-and supports `push`/`pop`, at the cost of a hard upper bound `N`.
+Everything the classic Explanation describes — amortized-doubling growth,
+`with_capacity` pre-sizing, deref to `&[T]` — is true of `Vec<T>` under
+`#![no_std]` too, because `alloc::vec::Vec` and `std`'s `Vec` are the same
+type; the only embedded-specific fact is getting there at all. `Vec<T>`
+is defined in `alloc`, not `core`, so it needs `extern crate alloc` plus a
+configured `#[global_allocator]` before `Vec::new()`/`.push()` compile —
+once that's wired up, a `Vec` behaves identically to a hosted build,
+capacity growth and all.
+
+Where no heap is available — no allocator configured, no `alloc` at
+all — there is no way to make `Vec<T>` itself work, and the design
+question becomes what to replace it with. `heapless::Vec<T, N>` is the
+standard substitute: capacity `N` is a const generic, fixed at the type
+level and known to the compiler, so the buffer lives inline (on the
+stack or in `static` storage) rather than on a heap that doesn't exist.
+That fixed bound is the real tradeoff against the classic type: a
+`heapless::Vec<T, N>` can never grow past `N`, so `.push()` returns a
+`Result` that the caller must handle instead of silently reallocating —
+the failure mode that `std`'s `Vec` defers to an allocator (and ultimately
+to the OS) becomes a value the embedded caller has to decide about
+immediately, usually because there's nowhere further to defer it to.
+
+## Basic usage example (Embedded)
+
+```
+use heapless::Vec;
+
+let mut samples: Vec<f32, 4> = Vec::new(); // <- capacity fixed at 4, no heap involved
+samples.push(21.5).unwrap(); // <- push returns Result: Err(value) if the buffer is already full
+samples.push(22.0).unwrap();
+
+assert_eq!(samples.len(), 2);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+A fixed-size sensor sample buffer — read once per polling cycle, never
+grown past its planned size — is exactly the shape `heapless::Vec` is
+for: the capacity bound is decided once, at compile time, instead of
+being an unenforced assumption about how many samples will ever arrive.
+
+```
+use heapless::Vec;
+
+const SAMPLE_COUNT: usize = 8;
+
+fn collect_samples(mut read_sensor: impl FnMut(usize) -> f32) -> Vec<f32, SAMPLE_COUNT> {
+    let mut samples: Vec<f32, SAMPLE_COUNT> = Vec::new(); // <- capacity fixed at compile time, no allocator needed
+    for id in 0..SAMPLE_COUNT {
+        samples.push(read_sensor(id)).unwrap(); // <- Err if more than SAMPLE_COUNT samples are ever collected
+    }
+    samples
+}
+```
+
+**Why this way:** on a target with no heap, an unbounded `Vec` isn't just
+unavailable — even if it were, an attacker- or fault-free but unbounded
+buffer is itself a hazard on memory-constrained hardware. Fixing `N` at
+the type level turns "how many samples can this hold" into something the
+compiler enforces rather than a runtime assumption.
+
+### Scenario: Designing a public API
+
+A function that only reads a buffer of samples should accept `&[f32]`,
+exactly as the classic page's API-design scenario argues — and that
+guidance holds unchanged whether the caller's buffer is backed by
+`alloc::Vec` (once an allocator is configured) or `heapless::Vec`, since
+both deref to a plain slice.
+
+```
+fn average(samples: &[f32]) -> f32 { // <- &[f32]: works for alloc::Vec<f32> or heapless::Vec<f32, N> alike
+    samples.iter().sum::<f32>() / samples.len() as f32
+}
+
+use heapless::Vec;
+let mut samples: Vec<f32, 4> = Vec::new();
+samples.push(21.5).unwrap();
+samples.push(22.0).unwrap();
+
+let mean = average(&samples); // <- heapless::Vec<f32, 4> derefs to &[f32], same call site an alloc::Vec would use
+```
+
+**Why this way:** writing the function against `&[T]` instead of a
+concrete `Vec` type keeps it usable on both allocator-equipped and
+allocator-free targets without a second copy of the function — the
+tradeoff between `alloc::Vec` and `heapless::Vec` stays a construction-site
+decision, not something every reader of the buffer needs to care about.

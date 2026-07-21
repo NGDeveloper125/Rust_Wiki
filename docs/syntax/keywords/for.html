@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>for</code> iterates over anything that implements <code>IntoIterator</code>, repeatedly
 binding the loop variable to each item the iterator produces.</p>
@@ -975,7 +976,7 @@ same way <code>while</code>/<code>loop</code> do.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1033,19 +1034,52 @@ uses exactly this shape instead of a manual <code>loop</code> calling <code>.rec
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Iterating a fixed-size array or a <code>heapless::Vec</code> with
-<code>for</code> works exactly as it does with <code>std</code> collections — the <code>Iterator</code>
-machinery lives in <code>core</code>, not <code>std</code>.</p>
+        <p><code>for</code> behaves identically under <code>#![no_std]</code> — the <code>Iterator</code> and
+<code>IntoIterator</code> machinery it desugars to lives in <code>core</code>, not <code>std</code>, so
+iterating a fixed-size array or a <code>heapless</code> collection works exactly the
+same as iterating a <code>Vec</code> on a hosted target. The only real difference is
+what's on the other side of <code>in</code>: a fixed-size sample buffer or a
+capacity-bounded <code>heapless::Vec</code>, rather than a heap-allocated collection.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Iterating over a fixed sample buffer</h3>
+            <pre><code class="rust">let samples: [u16; 8] = read_adc_burst();
+for sample in samples {
+    // &lt;- `for` iterates the fixed-size array by value, same as any `IntoIterator`
+    accumulate(sample);
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Iterating over a heapless queue of pending commands</h3>
+            <pre><code class="rust">use heapless::Vec;
+
+let commands: Vec&lt;u8, 16&gt; = Vec::new();
+for cmd in &amp;commands {
+    // &lt;- `for` over a `heapless::Vec`, exactly like a `std` collection
+    dispatch(*cmd);
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

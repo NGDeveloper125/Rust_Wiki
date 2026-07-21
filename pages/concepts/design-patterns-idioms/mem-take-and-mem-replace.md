@@ -128,11 +128,103 @@ to pull an owned value out of interior-mutable storage while leaving a
 valid replacement behind, per the
 [std docs for `mem::replace`](https://doc.rust-lang.org/std/mem/fn.replace.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `mem::take` and `mem::replace` live in `core::mem` and
-require no allocator — the operation is a plain move plus writing a
-default/replacement into the vacated place. They're especially valuable
-on memory-constrained targets, where an unnecessary `.clone()` to work
-around the borrow checker might allocate a duplicate buffer that a
-tight `heapless`-style budget simply doesn't have room for.
+The mechanism is identical, and the "no allocation" property that's a
+nice-to-have on a hosted target is close to a non-negotiable one on many
+embedded ones: `mem::take` and `mem::replace` live in `core::mem`, need
+no allocator, and work exactly the same on a stack-resident struct field
+as on a heap-backed one — there's no `#![no_std]` caveat to state here at
+all, unlike patterns that need `alloc`. What's genuinely worth
+highlighting for embedded code is *where* this shows up most: driving a
+state machine forward on `&mut self` without needing every state wrapped
+in `Option` first, and without a clone.
+
+A sensor driver modeled as an enum (`Idle`, `Sampling { started_at_ms:
+u32 }`, `Done { reading: i16 }`) needs to move the *old* state out of
+`&mut self.state` in order to construct the *new* one from data the old
+state was holding — exactly the "can't leave a place empty" problem
+`mem::take`/`mem::replace` solve. Wrapping the field in `Option<State>`
+just to satisfy the borrow checker (`self.state.take()`, …, `self.state
+= Some(new_state)`) works, but it means every read of `self.state`
+elsewhere in the driver has to handle a `None` case that can never
+actually happen in practice — `mem::replace(&mut self.state,
+new_state)` sidesteps that entirely by moving the old state out and the
+new one in in a single step, keeping the field's type as the enum
+itself: no `Option` wrapper, no clone, no allocation.
+
+## Basic usage example (Embedded)
+
+```
+use core::mem;
+
+enum SensorState {
+    Idle,
+    Sampling { started_at_ms: u32 },
+}
+
+struct Driver {
+    state: SensorState,
+}
+
+impl Driver {
+    fn start_sampling(&mut self, now_ms: u32) {
+        // <- moves the old state out, writes the new one in, no `Option` field needed
+        let _old = mem::replace(&mut self.state, SensorState::Sampling { started_at_ms: now_ms });
+    }
+}
+
+let mut driver = Driver { state: SensorState::Idle };
+driver.start_sampling(1_000);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Modifying an existing object
+
+A sensor driver transitions from `Sampling` to `Done` and needs to carry
+the `started_at_ms` timestamp out of the old state to compute an elapsed
+time — `mem::replace` moves the whole old variant out by value so its
+data can be used, with no clone and no `Option`-wrapped field anywhere in
+the struct.
+
+```
+use core::mem;
+
+enum SensorState {
+    Idle,
+    Sampling { started_at_ms: u32 },
+    Done { elapsed_ms: u32, reading: i16 },
+}
+
+struct Driver {
+    state: SensorState,
+}
+
+impl Driver {
+    fn finish_sampling(&mut self, now_ms: u32, reading: i16) {
+        let old = mem::replace(&mut self.state, SensorState::Idle); // <- moves the old variant out; field never sits empty
+        self.state = match old {
+            SensorState::Sampling { started_at_ms } => SensorState::Done {
+                elapsed_ms: now_ms - started_at_ms,
+                reading,
+            },
+            other => other, // no-op transition if called from the wrong state
+        };
+    }
+}
+
+let mut driver = Driver { state: SensorState::Sampling { started_at_ms: 1_000 } };
+driver.finish_sampling(1_250, 421);
+```
+
+**Why this way:** `mem::replace` gets ownership of `started_at_ms` out of
+the old `Sampling` variant without cloning the enum or wrapping `state`
+in `Option<SensorState>` just to satisfy the borrow checker — on a
+target with no allocator, this is not an optimization over cloning, it's
+the only option, since `SensorState` here holds no `Clone` impl and
+wrapping every read site in `Option` handling for a state that's always
+present would be pure boilerplate; the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/idioms/mem-replace.html)
+book documents this exact shape as the idiomatic way to change a value
+behind `&mut self`.

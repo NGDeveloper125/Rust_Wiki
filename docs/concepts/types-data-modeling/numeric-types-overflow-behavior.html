@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Rust's integer types are explicit about width and signedness —
 <code>u8</code>/<code>i8</code> through <code>u128</code>/<code>i128</code>, plus pointer-sized <code>usize</code>/<code>isize</code> — with
@@ -978,7 +979,7 @@ unconditionally.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let a: u8 = 250;
 let b: u8 = 10;
@@ -993,7 +994,7 @@ explicit <code>checked_</code>/<code>wrapping_</code>/<code>saturating_</code> m
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1051,23 +1052,142 @@ value in production the first time a caller sends bad data —
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> All defined in <code>core</code>, no <code>std</code> dependency. Overflow
-behavior is worth extra attention in embedded code: register widths
-often dictate the natural integer type (<code>u16</code> for a 16-bit ADC reading,
-for example), and the debug-panics/release-wraps split still applies —
-safety-critical embedded code frequently uses explicit
-<code>checked_</code>/<code>saturating_</code> arithmetic deliberately, rather than relying on
-build-profile-dependent default behavior.</p>
+        <p>As <a href="../../syntax/operators/plus.md"><code>+</code></a>'s embedded section covers, a
+release build — the profile that actually gets flashed to a device — has
+overflow checks off by default, so an ordinary <code>a + b</code> wraps silently
+instead of panicking; a device already in the field can't be
+"recompiled in debug mode" to catch the bug later the way a desktop
+program can. That single fact makes <code>checked_*</code>/<code>wrapping_*</code>/<code>saturating_*</code>
+more load-bearing in firmware than in typical hosted code, for a simple
+reason: the debug build's panic was never a <em>plan</em> for handling overflow,
+just a development-time trip-wire, and firmware has no equivalent
+trip-wire once it ships.</p>
+<p>What's genuinely a design decision, though, is <em>which</em> of the three to
+reach for, and that follows from what the quantity itself means:</p>
+<ul>
+<li><strong><code>wrapping_*</code></strong> is correct, not just tolerated, when the quantity is
+<em>designed</em> to roll over — a free-running millis/tick counter
+incremented every interrupt is the canonical case. Wraparound there
+isn't a bug being suppressed; two's-complement wraparound arithmetic
+means <code>now.wrapping_sub(earlier)</code> still produces the correct elapsed
+time even after <code>now</code> has wrapped past its type's max, as long as the
+actual elapsed duration never exceeds the counter's range. Reaching for
+<code>checked_add</code> on a tick counter would be actively wrong — it would
+report a spurious failure on a rollover that isn't an error at all.</li>
+<li><strong><code>saturating_*</code></strong> fits a quantity that has a real physical or logical
+ceiling/floor where clamping is itself the sane behavior — a PWM duty
+cycle that must never exceed 100%, an accumulated ADC reading being
+scaled toward a display range. Silently wrapping a duty cycle past its
+max could momentarily command a wildly wrong value to actuator
+hardware before the next control cycle corrects it; saturating clamps
+it to the safe boundary instead, which is the outcome actually wanted.</li>
+<li><strong><code>checked_*</code></strong> is right when going out of range means something is
+actually wrong and the caller needs to know before acting on the
+result — a value parsed from a config blob in EEPROM/flash, an
+index computed from external input, anything where continuing past the
+overflow with <em>any</em> number (wrapped or clamped) would be worse than
+surfacing an explicit failure.</li>
+</ul>
+<p>Picking among the three is a per-quantity design decision, not a
+one-size-fits-all default — the same program legitimately uses
+<code>wrapping_*</code> for its tick counter and <code>checked_*</code> for a value it just
+parsed from storage.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct Millis(u32);
+
+impl Millis {
+    fn on_tick(&amp;mut self) {
+        self.0 = self.0.wrapping_add(1); // &lt;- correct by design: rollover is expected, not an error
+    }
+
+    fn elapsed_since(&amp;self, earlier: u32) -&gt; u32 {
+        self.0.wrapping_sub(earlier) // &lt;- still correct even if self.0 has wrapped past u32::MAX since `earlier`
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Numeric computation</h3>
+            <p>A free-running millis counter should wrap on purpose; a PWM duty-cycle
+value derived from it should never be allowed to wrap at all, because a
+wrapped duty cycle is a plausible-looking but wildly wrong value that
+could reach the hardware.</p>
+<pre><code class="rust">struct Millis(u32);
+
+fn duty_cycle_percent(on_time_us: u32, period_us: u32) -&gt; u8 {
+    let ratio = (on_time_us * 100) / period_us; // assumes period_us &gt; 0, checked elsewhere
+    ratio.min(100) as u8 // &lt;- PREFER: clamp explicitly, never let a computed duty cycle exceed the valid range
+}
+
+impl Millis {
+    fn on_tick(&amp;mut self) {
+        self.0 = self.0.wrapping_add(1); // &lt;- PREFER: rollover is the intended behavior for a tick counter
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the tick counter's job is to keep counting forever
+within a fixed width, so <code>wrapping_add</code> is the <em>correct</em> operation, not a
+concession; the duty cycle's job is to stay within a hardware-meaningful
+0–100 range, so clamping with <code>.min(100)</code> (or <code>saturating_*</code> on the raw
+arithmetic before the cast) prevents an out-of-range value from ever
+reaching a PWM register, where Clippy's
+<a href="https://rust-lang.github.io/rust-clippy/master/#arithmetic_side_effects"><code>arithmetic_side_effects</code></a>
+lint would flag the unchecked multiplication as worth a second look.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>A calibration constant read back from EEPROM or a config blob should be
+checked before it's used in arithmetic that ultimately drives hardware —
+unlike a tick counter, there's no "intended" out-of-range value here, so
+overflow must surface as an explicit error instead of continuing with a
+wrapped or clamped number that looks plausible but isn't.</p>
+<pre><code class="rust">fn scaled_reading(raw_adc: u16, calibration_gain: u16) -&gt; Result&lt;u32, &amp;'static str&gt; {
+    (raw_adc as u32)
+        .checked_mul(calibration_gain as u32) // &lt;- corrupt calibration data must not silently produce a bogus reading
+        .ok_or("calibration overflow: check stored gain value")
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a gain constant corrupted by a bad flash write or a
+misconfigured EEPROM cell isn't a case where wrapping or clamping
+produces anything meaningful — the only sound response is to refuse to
+report a reading at all, which is exactly what surfacing the failure as
+an explicit <code>Result</code> accomplishes, versus silently handing downstream
+control logic a number that only looks like a valid sensor reading.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

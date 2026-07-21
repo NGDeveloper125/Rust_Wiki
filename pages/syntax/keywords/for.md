@@ -88,8 +88,35 @@ message and stops cleanly once all senders have dropped — the
 [Book's message-passing chapter](https://doc.rust-lang.org/book/ch16-02-message-passing.html)
 uses exactly this shape instead of a manual `loop` calling `.recv()`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Iterating a fixed-size array or a `heapless::Vec` with
-`for` works exactly as it does with `std` collections — the `Iterator`
-machinery lives in `core`, not `std`.
+`for` behaves identically under `#![no_std]` — the `Iterator` and
+`IntoIterator` machinery it desugars to lives in `core`, not `std`, so
+iterating a fixed-size array or a `heapless` collection works exactly the
+same as iterating a `Vec` on a hosted target. The only real difference is
+what's on the other side of `in`: a fixed-size sample buffer or a
+capacity-bounded `heapless::Vec`, rather than a heap-allocated collection.
+
+## Usage examples (Embedded)
+
+### Iterating over a fixed sample buffer
+
+```
+let samples: [u16; 8] = read_adc_burst();
+for sample in samples {
+    // <- `for` iterates the fixed-size array by value, same as any `IntoIterator`
+    accumulate(sample);
+}
+```
+
+### Iterating over a heapless queue of pending commands
+
+```
+use heapless::Vec;
+
+let commands: Vec<u8, 16> = Vec::new();
+for cmd in &commands {
+    // <- `for` over a `heapless::Vec`, exactly like a `std` collection
+    dispatch(*cmd);
+}
+```

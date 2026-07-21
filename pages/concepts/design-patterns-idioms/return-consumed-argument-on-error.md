@@ -145,11 +145,107 @@ standard library already uses for
 gives callers a pattern they can recognize immediately, and it's the
 concrete precedent the return-consumed-argument idiom is modeled on.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Returning the consumed argument inside an error is
-ordinary `enum`/tuple/`struct` construction with no allocator dependency
-— it works identically under `#![no_std]`. It's a particularly good fit
-on embedded targets, where re-acquiring a dropped value (re-reading a
-sensor, reallocating a fixed buffer) may be expensive or simply
-unavailable once the original call has returned.
+The non-destructive-failure argument applies with extra force on
+embedded targets, where the value a fallible call consumes is often a
+buffer that was genuinely expensive to fill — samples pulled from an
+ADC, a frame assembled for DMA — and where there may be no cheap way to
+"just get another one" once it's gone. A peripheral-transaction API, like
+an SPI or I2C driver's `write`/`transfer`, takes its outgoing buffer by
+value so it can hold it for the duration of the transaction (and, on some
+HALs, hand it straight to a DMA engine); a failed transaction — a NACK
+from the target device, a bus timeout, lost arbitration — shouldn't also
+cost the caller its data. Shaping the error as `Err((Error, Buf))`, the
+same shape `std::sync::mpsc::SendError<T>` uses, lets the caller retry
+the exact bytes, log them, or fall back to a bit-banged implementation
+without re-populating the buffer from scratch.
+
+## Basic usage example (Embedded)
+
+```
+struct I2cError; // NACK, bus timeout, arbitration loss, ...
+
+fn i2c_write(addr: u8, buf: [u8; 4]) -> Result<(), (I2cError, [u8; 4])> {
+    if addr == 0 {
+        return Err((I2cError, buf)); // <- caller gets the un-sent buffer back, not just a failure
+    }
+    Ok(())
+}
+
+match i2c_write(0, [1, 2, 3, 4]) {
+    Ok(()) => {}
+    Err((_err, buf)) => {
+        let _ = buf; // still owned: can retry, log, or fall back without rebuilding it
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Handling and propagating errors
+
+An SPI driver's `write` takes ownership of a fixed-size frame built up
+from ADC samples so it can be handed straight to a DMA transfer; if the
+bus reports a timeout, the caller shouldn't have to re-sample the ADC
+just to retry the same frame.
+
+```
+struct SpiError; // bus timeout, mode fault, ...
+
+struct SpiBus;
+
+impl SpiBus {
+    fn write(&mut self, frame: [u8; 8]) -> Result<(), (SpiError, [u8; 8])> {
+        let bus_busy = true; // stand-in for a real bus-status register check
+        if bus_busy {
+            return Err((SpiError, frame)); // <- `frame` comes back, not lost with the failed transaction
+        }
+        Ok(())
+    }
+}
+
+let mut spi = SpiBus;
+match spi.write([0xAA; 8]) {
+    Ok(()) => {}
+    Err((_err, frame)) => {
+        let _ = spi.write(frame); // <- retries the same frame instead of re-reading the ADC
+    }
+}
+```
+
+**Why this way:** re-acquiring the data behind a failed peripheral
+transaction can mean re-sampling a sensor or re-running a DMA setup —
+real cost on hardware, not just inconvenience — so handing the buffer
+back inside the error, the shape the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/idioms/return-consumed-arg-on-error.html)
+book documents for `Sender::send`, is what makes retrying cheap.
+
+### Scenario: Designing a public API
+
+A HAL author modeling a `write` method's error type after the same
+convention `std::sync::mpsc` uses shapes it as a struct carrying the
+original bytes back, so firmware crates get a retry pattern they already
+recognize from channel APIs.
+
+```
+pub struct WriteError<B>(pub B); // <- mirrors std::sync::mpsc::SendError<T>'s shape, for a HAL transaction
+
+pub struct Uart;
+
+impl Uart {
+    pub fn write(&mut self, bytes: [u8; 16]) -> Result<(), WriteError<[u8; 16]>> {
+        let tx_fifo_full = false; // stand-in for a real hardware status flag
+        if tx_fifo_full {
+            return Err(WriteError(bytes)); // <- caller gets the bytes back, not just an error signal
+        }
+        Ok(())
+    }
+}
+```
+
+**Why this way:** giving a HAL's fallible transaction methods the same
+`SendError<T>`-style shape the standard library already uses keeps error
+handling non-destructive even though the underlying transport is a raw
+register interface, not a channel, and lets firmware authors recognize
+the retry pattern immediately.

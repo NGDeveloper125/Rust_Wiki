@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>in</code> binds the loop variable to the iterator source in a <code>for</code> loop, as in
 <code>for x in 0..10 { ... }</code>.</p>
@@ -963,7 +964,7 @@ call instead (<code>collection.contains(&amp;value)</code>).</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1000,18 +1001,49 @@ about it in isolation; see <a href="../../syntax/keywords/for.html"><code>for</c
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Pure grammar, part of the <code>for</code> loop form — no <code>std</code>
-dependency.</p>
+        <p><code>in</code> is pure grammar bound to the <code>for</code> loop form (and <code>pub(in path)</code>
+visibility) — it carries no behavior of its own, so there's nothing that
+changes under <code>#![no_std]</code> regardless of what kind of iterator source
+sits on its right: a range over register offsets, a fixed-size array, or
+a <code>heapless</code> collection all bind through <code>in</code> the same way.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Binding a loop variable while scanning a channel range</h3>
+            <pre><code class="rust">for offset in 0..NUM_CHANNELS {
+    // &lt;- `in` binds `offset` to each value the range produces
+    read_channel(offset);
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Destructuring a pin/level pair on each iteration</h3>
+            <pre><code class="rust">let pins = [(0u8, true), (1u8, false), (2u8, true)];
+
+for (pin, level) in pins {
+    // &lt;- `in` binds the destructured tuple to each pair the array yields
+    set_output(pin, level);
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

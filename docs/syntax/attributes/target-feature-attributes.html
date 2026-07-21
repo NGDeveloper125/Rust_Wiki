@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Both attributes let an individual function opt into CPU-specific
 compilation settings that differ from the rest of the crate, rather than
@@ -985,7 +986,7 @@ specific mode) rather than whatever the crate's default is.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1032,25 +1033,86 @@ detection, never an assumption based on the compilation target alone.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong>, and <code>#[instruction_set(...)]</code> in particular is far more
-relevant to embedded/bare-metal ARM targets than to hosted code — ARM
-Cortex-M cores commonly interwork between ARM and Thumb mode, and
-firmware linking against externally-compiled routines occasionally needs
-to pin a function to match. <code>#[target_feature(...)]</code> behaves identically
-without <code>std</code>, though runtime feature detection macros like
-<code>is_x86_feature_detected!</code> depend on <code>std</code>; a <code>#![no_std]</code> crate targeting
-a fixed microcontroller more commonly knows its CPU features at compile
-time via the target spec itself, rather than detecting them at runtime.</p>
+        <p>CPU capability varies far more across the embedded target space than it
+does between one desktop or server chip and another. Cortex-M0/M0+ cores
+(ARMv6-M) have no hardware divide and no DSP extension at all; Cortex-M3
+(ARMv7-M) adds hardware divide but still no DSP extension; Cortex-M4 and
+M7 (ARMv7E-M) add the DSP extension — extra SIMD-like saturating and
+packed-arithmetic instructions — plus an optional single/double-precision
+FPU; and Cortex-M33/M55 (ARMv8-M) add DSP and FPU as options again,
+alongside TrustZone. A signal-processing routine that would benefit from
+the DSP extension's saturating-arithmetic instructions genuinely cannot
+assume they exist just because the target is "some Cortex-M" — it has to
+be gated the same way an AVX2 routine is gated behind a feature check on
+x86.</p>
+<p>Where the story diverges from x86 is <em>how</em> that gating happens. On a
+hosted target, one binary is routinely shipped to run on any of a wide,
+unknown range of CPUs, so <code>is_x86_feature_detected!</code> checks the feature
+at runtime, once, the first time the accelerated path might run.
+Embedded firmware is built the opposite way: a given binary is compiled
+for one specific, known microcontroller variant, chosen at build time —
+by the <code>--target</code>/target-cpu selection and the HAL crate's own chip-
+specific Cargo feature (<code>stm32f405</code>, <code>nrf52840</code>, and similar) — so the
+CPU's features are already fully known at compile time. Rather than a
+runtime check, embedded code more commonly branches with
+<code>#[cfg(target_feature = "dsp")]</code>, selecting an entire implementation at
+compile time and never emitting the alternative path (or the runtime
+check) into the binary at all. <code>is_x86_feature_detected!</code>-style runtime
+detection also depends on <code>std</code>, unavailable under <code>#![no_std]</code> for the
+x86-specific macro itself, which reinforces compile-time <code>cfg</code> gating as
+the natural embedded idiom rather than a runtime workaround.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Enabling the DSP extension for a saturating-arithmetic routine</h3>
+            <pre><code class="rust">#[target_feature(enable = "dsp")] // &lt;- assumes the ARMv7E-M DSP extension (Cortex-M4/M7), not M0/M3
+unsafe fn scale_saturating(samples: &amp;mut [i16], factor: i16) {
+    for sample in samples {
+        *sample = sample.saturating_mul(factor); // a real implementation would use DSP intrinsics directly
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Selecting an implementation at compile time instead of runtime</h3>
+            <pre><code class="rust">#[cfg(target_feature = "dsp")] // &lt;- compiled in only when building for a DSP-capable Cortex-M variant
+fn scale_samples(samples: &amp;mut [i16], factor: i16) {
+    for sample in samples {
+        *sample = sample.saturating_mul(factor); // DSP-accelerated path
+    }
+}
+
+#[cfg(not(target_feature = "dsp"))] // &lt;- compiled in for Cortex-M0/M3 targets instead
+fn scale_samples(samples: &amp;mut [i16], factor: i16) {
+    for sample in samples {
+        *sample = (*sample).saturating_mul(factor); // portable fallback, identical result
+    }
+}
+</code></pre>
+<p>Unlike the <code>is_x86_feature_detected!</code> pattern, there's no runtime branch
+here at all — the build is already committed to one specific
+microcontroller variant, so <code>cfg(target_feature = ...)</code> resolves entirely
+at compile time and only one of the two functions above ever exists in
+the compiled firmware.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

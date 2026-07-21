@@ -155,14 +155,145 @@ a generic bound gives the same swappable-algorithm flexibility as
 confirms each instantiation is compiled into its own specialized,
 statically-dispatched function.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A closure parameter, a generic bound, and `&dyn
-Trait` all resolve without any heap allocation, so every shape here
-works unchanged under `#![no_std]`. Only the `Box<dyn PaymentStrategy>`
-variant, used when the concrete strategy is chosen at runtime, needs the
-`alloc` crate — an embedded equivalent typically matches on a fixed set
-of known strategies instead, the same trick shown in the "Writing
-generic code" scenario, or the
-[on-stack dynamic dispatch](on-stack-dynamic-dispatch.md) idiom if
-runtime selection is still needed without a heap.
+Strategy shows up in embedded code most often as a choice between
+different `embedded-hal` trait implementations providing the same
+capability through different means — a delay strategy backed by a
+busy-wait loop versus one backed by a hardware timer's interrupt, or a
+bit-banged protocol's timing driven by a fixed busy-wait versus a
+calibrated cycle-counter read. All three of hosted Rust's shapes still
+apply unchanged: a closure parameter, a generic bound, and `&dyn Trait`
+all resolve with no heap allocation, so they work identically under
+`#![no_std]`. What genuinely differs is the default preference: embedded
+code reaches for the generic, monomorphized version far more often than
+hosted code does, because the concrete strategy for a given build is
+usually fixed at compile time anyway (this board's bit-banged I2C always
+uses a busy-wait delay; that board's always uses a timer), and
+monomorphization means the compiler generates one specialized,
+zero-overhead function per strategy with no vtable indirection at all —
+a genuinely free win on a resource-constrained target, not just a style
+preference. Only `Box<dyn PaymentStrategy>`-equivalent — a strategy
+genuinely selected at runtime — needs the `alloc` crate; where runtime
+selection is still needed without a heap, `&dyn Trait` (the [on-stack
+dynamic dispatch](on-stack-dynamic-dispatch.md) idiom) covers it.
+
+## Basic usage example (Embedded)
+
+```
+trait DelayStrategy {
+    fn delay_half_bit(&self);
+}
+
+struct BusyWaitDelay;
+impl DelayStrategy for BusyWaitDelay {
+    fn delay_half_bit(&self) {
+        for _ in 0..1000 {} // stand-in for a calibrated busy-wait loop
+    }
+}
+
+fn bit_bang_write<D: DelayStrategy>(bit: bool, delay: &D) { // <- monomorphized per delay strategy: no vtable
+    let _ = bit;
+    delay.delay_half_bit();
+}
+
+bit_bang_write(true, &BusyWaitDelay);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Writing generic code
+
+A bit-banged I2C driver always uses the same timing strategy for a given
+board — decided by which delay source that board's build actually has
+wired up — so a generic bound picks the strategy once, at compile time,
+with zero runtime dispatch cost.
+
+```
+trait DelayStrategy {
+    fn delay_half_bit(&self);
+}
+
+struct TimerDelay; // backed by a hardware timer peripheral
+impl DelayStrategy for TimerDelay {
+    fn delay_half_bit(&self) {
+        // wait on a hardware timer's compare match
+    }
+}
+
+struct BusyWaitDelay; // backed by a calibrated busy-wait loop
+impl DelayStrategy for BusyWaitDelay {
+    fn delay_half_bit(&self) {
+        for _ in 0..1000 {}
+    }
+}
+
+struct BitBangI2c<D: DelayStrategy> { // <- monomorphized per delay strategy: compiled into one specialized function
+    delay: D,
+}
+
+impl<D: DelayStrategy> BitBangI2c<D> {
+    fn write_bit(&self, bit: bool) {
+        let _ = bit;
+        self.delay.delay_half_bit();
+    }
+}
+
+let bus = BitBangI2c { delay: TimerDelay };
+bus.write_bit(true);
+```
+
+**Why this way:** when a board's timing source is fixed at build time,
+a generic bound gives the same swappable-strategy structure as `dyn
+Trait` with none of the vtable indirection, which is why embedded code
+reaches for monomorphized generics over boxed trait objects by default —
+the [Rust Book's generics chapter](https://doc.rust-lang.org/book/ch10-01-syntax.html)
+confirms each instantiation compiles into its own specialized,
+statically-dispatched function, exactly the zero-overhead property a
+resource-constrained target wants.
+
+### Scenario: Runtime polymorphism
+
+A sensor driver needs to pick between two register-access strategies —
+a direct-register-write path for one detected chip revision versus an
+indirect page-select path for another — but which revision is on the
+board is only known after probing an ID register at startup, so the
+strategy has to be selected at runtime.
+
+```
+trait RegisterAccess {
+    fn write_register(&self, addr: u8, value: u8);
+}
+
+struct DirectAccess;
+impl RegisterAccess for DirectAccess {
+    fn write_register(&self, addr: u8, value: u8) {
+        let _ = (addr, value); // direct register write
+    }
+}
+
+struct PagedAccess;
+impl RegisterAccess for PagedAccess {
+    fn write_register(&self, addr: u8, value: u8) {
+        let _ = (addr, value); // select page, then write
+    }
+}
+
+fn select_strategy(chip_id: u8) -> &'static dyn RegisterAccess { // <- decided at runtime, from a probed chip ID
+    static DIRECT: DirectAccess = DirectAccess;
+    static PAGED: PagedAccess = PagedAccess;
+    if chip_id == 0x42 { &PAGED } else { &DIRECT }
+}
+
+let access = select_strategy(0x42);
+access.write_register(0x10, 0xFF);
+```
+
+**Why this way:** the chip revision isn't known until it's probed at
+runtime, so `dyn Trait` is the only option that lets the concrete
+strategy be picked after the program has started — using `&'static dyn
+RegisterAccess` over `static` values instead of `Box::new` keeps the
+runtime-selection benefit from the
+[Rust Design Patterns' strategy entry](https://rust-unofficial.github.io/patterns/patterns/behavioural/strategy.html)
+without needing `alloc` at all, per the
+[on-stack dynamic dispatch](on-stack-dynamic-dispatch.md) idiom.

@@ -100,9 +100,44 @@ which the
 [Book's error-handling chapter](https://doc.rust-lang.org/book/ch09-00-error-handling.html)
 treats as basic error-message hygiene.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A `&str`/`&'static str` literal needs no allocator at
-all — it's baked into the binary's read-only data section, which is
-exactly why string literals (log messages, error strings) are so cheap
-to use freely in embedded code even with no heap configured.
+A `"..."` literal needs nothing from `alloc`, only from `core` — it's
+`'static` text already sitting in the binary's rodata section at boot,
+not data that gets constructed or copied anywhere at runtime. That's
+worth stating plainly because it cuts against a common misconception:
+`#![no_std]` does not mean "no strings," it means no `String`/heap
+allocation without opting in. A `&str` literal used for a log message,
+an error string, or a fixed label works exactly the same way, with the
+exact same zero-cost `'static` guarantee, on a target with no heap
+configured at all. Where an *owned*, growable string is genuinely
+needed, `alloc::string::String` (behind the `alloc` crate) or a
+fixed-capacity `heapless::String` are the embedded substitutes — but the
+literal itself never requires either.
+
+## Usage examples (Embedded)
+
+### Logging a startup message with defmt, no heap involved
+
+```
+#![no_std]
+
+use defmt::info;
+
+fn log_startup() {
+    info!("firmware started"); // <- string literal: `&'static str` baked into rodata, no heap involved
+}
+```
+
+### Formatting a status line into a heapless::String
+
+```
+use core::fmt::Write;
+use heapless::String;
+
+fn status_message(reading: f32) -> String<32> {
+    let mut s: String<32> = String::new();
+    let _ = write!(s, "temp: {reading:.1}C"); // <- string literal: the format template itself, still needs no heap
+    s
+}
+```

@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>All three macros panic unconditionally and accept the same optional
 format-string message as <a href="../../syntax/macros/panic-macro.html"><code>panic!</code></a> — functionally,
@@ -983,7 +984,7 @@ actually false — a genuine bug, not missing work.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1071,19 +1072,83 @@ guarantee one of them never actually runs.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> All three are thin wrappers over <code>core::panic!</code> and
-work identically in <code>#![no_std]</code>, with the same <code>#[panic_handler]</code>/
-unwind-vs-abort caveats as <a href="../../syntax/macros/panic-macro.html"><code>panic!</code></a> itself.</p>
+        <p>All three macros are thin wrappers over <code>core::panic!</code>, so they carry no
+<code>std</code> dependency and their calling convention is identical under
+<code>#![no_std]</code> — what fires when any of them is reached is exactly the
+<a href="../attributes/panic-handler-attribute.md"><code>#[panic_handler]</code></a> function
+the binary supplies, the same as a direct <code>panic!</code> call; see
+<a href="panic-macro.md"><code>panic!</code></a> for why bare metal needs one and what crates
+like <code>panic-halt</code>/<code>panic-probe</code> do once it runs. The three macros'
+distinct meanings — "not written yet," "permanently unsupported,"
+"provably dead code" — carry over to embedded code unchanged, and if
+anything matter more there: a <code>todo!()</code> left in a trait method of a
+peripheral driver, or an <code>unreachable!()</code> guarding a state machine driven
+by interrupt handlers, panics identically to a hosted build, just by way
+of the embedded panic handler instead of a hosted unwind.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Marking an unimplemented HAL trait method</h3>
+            <pre><code class="rust">trait Pwm {
+    fn set_duty(&amp;mut self, percent: u8);
+    fn set_dead_time(&amp;mut self, ns: u32);
+}
+
+struct BasicTimerPwm;
+
+impl Pwm for BasicTimerPwm {
+    fn set_duty(&amp;mut self, percent: u8) {
+        let _ = percent;
+        // ... write to the timer's compare register
+    }
+
+    fn set_dead_time(&amp;mut self, _ns: u32) {
+        unimplemented!("this timer instance has no complementary outputs, so dead-time insertion is not supported")
+        // &lt;- permanent hardware limitation, not a stub
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Asserting an interrupt-driven state machine invariant</h3>
+            <p>An interrupt handler advances a link-state machine; the fallback arm is
+reachable only if the state machine's own invariants were violated
+elsewhere, so it panics via <code>unreachable!()</code> rather than continuing
+silently in a program state that shouldn't exist.</p>
+<pre><code class="rust">enum LinkState {
+    Down,
+    Negotiating,
+    Up,
+}
+
+fn on_link_interrupt(state: LinkState) -&gt; LinkState {
+    match state {
+        LinkState::Down =&gt; LinkState::Negotiating,
+        LinkState::Negotiating =&gt; LinkState::Up,
+        LinkState::Up =&gt; unreachable!("link-up interrupt fired again while already up"),
+        // &lt;- see panic! for what actually runs here on bare metal: the #[panic_handler]
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

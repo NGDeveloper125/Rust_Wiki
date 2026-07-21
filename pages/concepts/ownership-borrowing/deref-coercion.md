@@ -93,9 +93,92 @@ strings without the caller manually unwrapping anything — the
 recommend this for functions that only need read access to string-like
 data.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Deref`/`DerefMut` live in `core::ops` — no allocator
-dependency (the mechanism works the same whether or not the smart pointer
-being deref'd happens to need `alloc`, e.g. it applies just as well to
-allocator-free wrapper types).
+`Deref`/`DerefMut` coercion is identical under `#![no_std]` — both traits
+live in `core::ops`, and the compiler inserts the same automatic derefs
+whether the target being deref'd to is `str`, `[T]`, or something else
+entirely. The mechanism shows up constantly in idiomatic `no_std` code
+because `heapless`'s fixed-capacity collections lean on it directly:
+`heapless::Vec<T, N>` implements `Deref<Target = [T]>` the same way
+`std::Vec<T>` does, so a `heapless::Vec` can be passed anywhere a plain
+slice is expected, with no manual `.as_slice()` call needed. Driver crates
+lean on it deliberately too: a thin newtype wrapper around a HAL
+peripheral (`struct Debounced<P>(P)`) can implement `Deref<Target = P>` so
+every method the wrapped peripheral exposes stays callable directly on the
+wrapper — the wrapper adds behavior (debouncing, retries, a safety check)
+without hand-writing a forwarding method for each one. As on a hosted
+target, this is a distinct, legitimate use, separate from the "Deref
+polymorphism" anti-pattern of stretching `Deref` to fake an inheritance
+relationship between unrelated types — a debounce wrapper genuinely does
+"act like" the peripheral it wraps, which is exactly what `Deref` is for.
+
+## Basic usage example (Embedded)
+
+```
+fn checksum(data: &[u8]) -> u8 {
+    data.iter().fold(0, |acc, b| acc ^ b)
+}
+
+let buf: heapless::Vec<u8, 16> = heapless::Vec::from_slice(&[1, 2, 3]).unwrap();
+checksum(&buf); // <- &heapless::Vec<u8, 16> derefs to &[u8]
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A function that only needs to read bytes should accept `&[u8]`, not a
+specific collection type — deref coercion means callers holding a
+`heapless::Vec` can call it with no extra ceremony.
+
+```
+fn checksum(data: &[u8]) -> u8 { // <- PREFER: &[u8] accepts arrays, slices, and heapless::Vec alike
+    data.iter().fold(0, |acc, b| acc ^ b)
+}
+
+// fn checksum_narrow(data: &heapless::Vec<u8, 16>) -> u8 { ... } // AVOID: locks out arrays, other capacities, plain slices
+
+let frame: heapless::Vec<u8, 16> = heapless::Vec::from_slice(&[0xAA, 0x01, 0x10]).unwrap();
+checksum(&frame); // <- &heapless::Vec<u8, 16> coerces to &[u8]
+checksum(&[0xAA, 0x01, 0x10]); // a plain array reference works too, no coercion needed
+```
+
+**Why this way:** `&[u8]` accepts everything a specific collection type
+does (deref coercion covers `heapless::Vec` for free) plus arrays and
+slices from any other source, making it the strictly more widely callable
+parameter type — the same reasoning the
+[Rust Book](https://doc.rust-lang.org/book/ch04-03-slices.html#string-slices-as-parameters)
+gives for preferring `&str` over `&String` applies directly to preferring
+`&[u8]` over a concrete `no_std` collection type.
+
+### Scenario: Writing generic code
+
+A thin wrapper around an embedded-hal I2C bus adds a retry policy without
+needing to manually re-expose every method the underlying bus type has.
+
+```
+use core::ops::{Deref, DerefMut};
+
+struct RetryingI2c<I2C>(I2C); // <- wraps a bus, adds retry behavior on top
+
+impl<I2C> Deref for RetryingI2c<I2C> {
+    type Target = I2C;
+    fn deref(&self) -> &I2C { &self.0 }
+}
+
+impl<I2C> DerefMut for RetryingI2c<I2C> {
+    fn deref_mut(&mut self) -> &mut I2C { &mut self.0 }
+}
+
+fn read_register(bus: &mut RetryingI2c<impl embedded_hal::i2c::I2c>, addr: u8) {
+    bus.write(addr, &[0x00]).ok(); // <- calls I2c::write directly through the wrapper, no manual forwarding needed
+}
+```
+
+**Why this way:** implementing `Deref`/`DerefMut` for a newtype wrapper is
+the standard way to add behavior around a peripheral type without
+hand-writing a forwarding method for every one the wrapped bus exposes —
+this is `Deref` modeling "acts like a reference to the wrapped bus," the
+legitimate use the classic explanation distinguishes from "Deref
+polymorphism" fake inheritance.

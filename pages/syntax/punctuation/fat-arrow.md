@@ -102,8 +102,41 @@ the value to produce begins — which is why arms of very different
 complexity can sit in the same `match` without special-casing the
 separator.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure grammar, no `std` dependency — the separator compiles
-to nothing at all beyond whichever comparison or jump the arm's pattern
-requires, the same as in any hosted `match`.
+`=>` means exactly the same thing under `#![no_std]` — pure match-arm
+grammar, compiling to whatever comparison or jump the pattern needs, no
+`std` dependency. It shows up constantly in interrupt-driven firmware,
+where a peripheral's status/flags value is read once and matched to
+decide which follow-up action to take — the same one-to-one "pattern
+leads to an action" shape as any hosted `match`, just with hardware
+states standing in for the enum variants.
+
+## Usage examples (Embedded)
+
+### Dispatching on a UART interrupt flag
+
+```
+enum UartEvent {
+    RxNotEmpty,
+    TxEmpty,
+    Overrun,
+}
+
+fn handle(event: UartEvent) {
+    match event {
+        UartEvent::RxNotEmpty => { /* read the received byte */ } // <- `=>` separates the flag from its handler
+        UartEvent::TxEmpty => { /* push the next byte to transmit */ }
+        UartEvent::Overrun => { /* clear the overrun flag, log the drop */ }
+    }
+}
+```
+
+### Mapping a HAL read result onto a defmt log level
+
+```
+match sensor.read() {
+    Ok(sample) => defmt::info!("sample: {}", sample), // <- `=>` leads into the success path
+    Err(_) => defmt::warn!("sensor read failed"),
+}
+```

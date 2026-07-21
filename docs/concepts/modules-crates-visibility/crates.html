@@ -951,7 +951,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A crate is the smallest unit the Rust compiler treats as a single
 compilation — one call to <code>rustc</code> in, one library or executable out — and
@@ -984,7 +985,7 @@ dependencies, is what a <a href="../../concepts/modules-crates-visibility/worksp
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">// src/lib.rs — this file is the crate root
 pub fn greet(name: &amp;str) -&gt; String {   // &lt;- part of this crate's public API
@@ -1000,7 +1001,7 @@ pub mod inventory {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1068,22 +1069,117 @@ per the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> A crate is a compile-time and link-time unit, not a
-runtime one, so it works identically when targeting bare metal. A
-<code>#![no_std]</code> firmware crate is an ordinary crate from Cargo's point of
-view — it just declares <code>#![no_std]</code> at its crate root and typically
-depends on other crates with <code>default-features = false</code> so they don't
-pull in <code>std</code>-dependent code paths.</p>
+        <p>The crate-as-compilation-unit mechanism is unchanged for embedded
+targets; what's genuinely distinctive is the layered crate ecosystem
+embedded projects converge on. A peripheral access crate (PAC) — usually
+generated from the chip vendor's SVD register-description file by
+<code>svd2rust</code> — gives raw, unsafe, register-level access with no semantics
+attached beyond "this bit lives at this address." A hardware abstraction
+layer crate (HAL) depends on the PAC and wraps it in a safe API: types
+like <code>Gpio</code> or <code>Spi</code> whose methods enforce that registers get poked in
+valid sequences. A board support crate (BSP) depends on the HAL and adds
+one more layer: pin mappings and peripheral names specific to one
+physical development board, so application code can say
+<code>board.user_led</code> instead of naming a raw GPIO pin. The application crate,
+finally, depends on some combination of these and is where actual
+firmware logic lives. Each layer is an ordinary crate with its own
+<code>Cargo.toml</code>, its own semver version, and its own privacy boundary,
+exactly per the general crate model described above — the layering is a
+convention the ecosystem follows, not a different kind of crate.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">[dependencies]
+stm32f4 = "0.15"              # &lt;- PAC: svd2rust-generated raw register access
+stm32f4xx-hal = "0.21"        # &lt;- HAL: safe wrapper over the PAC
+# an application crate depends on the HAL directly;
+# a board support crate would sit between them, pin-mapped to one board
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL crate's whole purpose is to turn a PAC's raw register access into
+a public API that can't be driven into an invalid hardware state, so its
+<code>lib.rs</code> deliberately keeps the PAC import out of its own public
+surface.</p>
+<pre><code class="rust">// hal/src/lib.rs
+use stm32f4::stm32f411 as pac;   // &lt;- private: the PAC is an implementation detail of the HAL
+
+pub struct Gpio {
+    // ...
+}
+
+impl Gpio {
+    pub fn set_high(&amp;mut self) {
+        // unsafe register write happens here, behind a safe method
+    }
+}
+
+pub use self::Gpio as Pin;   // &lt;- curated public name, independent of the PAC's own naming
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> hiding the PAC dependency behind the HAL's own public
+types means the HAL's version can evolve, or even its underlying PAC be
+swapped, without breaking application code, matching the crate-curation
+practice the
+<a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">API Guidelines' future-proofing chapter</a>
+recommends generally, applied here to a hardware boundary.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Layering a hardware crate stack</h3>
+            <p>A new board support crate needs to depend on both the chip's HAL (for
+the safe peripheral API) and, transitively, its PAC — but application
+code should only ever need to depend on the BSP.</p>
+<pre><code class="rust">// bsp/Cargo.toml
+[dependencies]
+stm32f4xx-hal = "0.21"    # &lt;- BSP depends on the HAL, not the PAC directly
+
+// bsp/src/lib.rs
+pub use stm32f4xx_hal::gpio::Pin;   // &lt;- re-exports what applications actually need
+
+pub struct Board {
+    pub user_led: Pin,     // &lt;- pin already mapped to this specific board's LED
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> an application depending only on the BSP, not reaching
+past it to the HAL or PAC, keeps board-specific wiring (which pin the
+LED is actually on) in one place instead of duplicated across every
+application crate that targets the same board — the same "small crate,
+curated dependency direction" argument the
+<a href="https://rust-unofficial.github.io/patterns/idioms/prefer-small-crates.html">Rust Design Patterns' "Prefer small crates"</a>
+idiom makes generally.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

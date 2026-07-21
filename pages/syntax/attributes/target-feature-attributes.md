@@ -90,14 +90,71 @@ and `std::arch` documentation both specify as the required pattern:
 gate every `target_feature`-enabled call behind an explicit runtime
 detection, never an assumption based on the compilation target alone.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support**, and `#[instruction_set(...)]` in particular is far more
-relevant to embedded/bare-metal ARM targets than to hosted code — ARM
-Cortex-M cores commonly interwork between ARM and Thumb mode, and
-firmware linking against externally-compiled routines occasionally needs
-to pin a function to match. `#[target_feature(...)]` behaves identically
-without `std`, though runtime feature detection macros like
-`is_x86_feature_detected!` depend on `std`; a `#![no_std]` crate targeting
-a fixed microcontroller more commonly knows its CPU features at compile
-time via the target spec itself, rather than detecting them at runtime.
+CPU capability varies far more across the embedded target space than it
+does between one desktop or server chip and another. Cortex-M0/M0+ cores
+(ARMv6-M) have no hardware divide and no DSP extension at all; Cortex-M3
+(ARMv7-M) adds hardware divide but still no DSP extension; Cortex-M4 and
+M7 (ARMv7E-M) add the DSP extension — extra SIMD-like saturating and
+packed-arithmetic instructions — plus an optional single/double-precision
+FPU; and Cortex-M33/M55 (ARMv8-M) add DSP and FPU as options again,
+alongside TrustZone. A signal-processing routine that would benefit from
+the DSP extension's saturating-arithmetic instructions genuinely cannot
+assume they exist just because the target is "some Cortex-M" — it has to
+be gated the same way an AVX2 routine is gated behind a feature check on
+x86.
+
+Where the story diverges from x86 is *how* that gating happens. On a
+hosted target, one binary is routinely shipped to run on any of a wide,
+unknown range of CPUs, so `is_x86_feature_detected!` checks the feature
+at runtime, once, the first time the accelerated path might run.
+Embedded firmware is built the opposite way: a given binary is compiled
+for one specific, known microcontroller variant, chosen at build time —
+by the `--target`/target-cpu selection and the HAL crate's own chip-
+specific Cargo feature (`stm32f405`, `nrf52840`, and similar) — so the
+CPU's features are already fully known at compile time. Rather than a
+runtime check, embedded code more commonly branches with
+`#[cfg(target_feature = "dsp")]`, selecting an entire implementation at
+compile time and never emitting the alternative path (or the runtime
+check) into the binary at all. `is_x86_feature_detected!`-style runtime
+detection also depends on `std`, unavailable under `#![no_std]` for the
+x86-specific macro itself, which reinforces compile-time `cfg` gating as
+the natural embedded idiom rather than a runtime workaround.
+
+## Usage examples (Embedded)
+
+### Enabling the DSP extension for a saturating-arithmetic routine
+
+```
+#[target_feature(enable = "dsp")] // <- assumes the ARMv7E-M DSP extension (Cortex-M4/M7), not M0/M3
+unsafe fn scale_saturating(samples: &mut [i16], factor: i16) {
+    for sample in samples {
+        *sample = sample.saturating_mul(factor); // a real implementation would use DSP intrinsics directly
+    }
+}
+```
+
+### Selecting an implementation at compile time instead of runtime
+
+```
+#[cfg(target_feature = "dsp")] // <- compiled in only when building for a DSP-capable Cortex-M variant
+fn scale_samples(samples: &mut [i16], factor: i16) {
+    for sample in samples {
+        *sample = sample.saturating_mul(factor); // DSP-accelerated path
+    }
+}
+
+#[cfg(not(target_feature = "dsp"))] // <- compiled in for Cortex-M0/M3 targets instead
+fn scale_samples(samples: &mut [i16], factor: i16) {
+    for sample in samples {
+        *sample = (*sample).saturating_mul(factor); // portable fallback, identical result
+    }
+}
+```
+
+Unlike the `is_x86_feature_detected!` pattern, there's no runtime branch
+here at all — the build is already committed to one specific
+microcontroller variant, so `cfg(target_feature = ...)` resolves entirely
+at compile time and only one of the two functions above ever exists in
+the compiled firmware.

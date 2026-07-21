@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&lt;=</code> is the less-than-or-equal comparison, provided by <code>std::cmp::PartialOrd</code>
 alongside <code>&lt;</code>, <code>&gt;</code>, and <code>&gt;=</code> — implementing <code>PartialOrd</code> (usually via
@@ -961,7 +962,7 @@ four ordering operators together, not just one.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1001,17 +1002,52 @@ for the fuller ordering-operator treatment.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>PartialOrd</code> lives in <code>core::cmp</code> — no <code>std</code> dependency.</p>
+        <p><code>&lt;=</code> means the same thing under <code>#![no_std]</code> — the same <code>core::cmp</code>
+<code>PartialOrd</code> as <code>&lt;</code>, <code>&gt;</code>, and <code>&gt;=</code>. The inclusive-upper-bound reading
+comes up often in firmware for a retry counter that hasn't yet exceeded
+its cap (the capped attempt itself should still be allowed), and for the
+upper edge of an inclusive safe-operating range paired with <code>&gt;=</code> on the
+lower edge.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Allowing a bus transaction retry up to and including its cap</h3>
+            <pre><code class="rust">const MAX_RETRIES: u8 = 3;
+
+fn may_retry(attempt: u8) -&gt; bool {
+    attempt &lt;= MAX_RETRIES // &lt;- `&lt;=` allows the boundary attempt itself, not just attempts strictly below it
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Confirming a reading sits within an inclusive safe range</h3>
+            <pre><code class="rust">const MIN_SAFE_CELSIUS: i16 = -20;
+const MAX_SAFE_CELSIUS: i16 = 85;
+
+fn in_safe_range(temperature_celsius: i16) -&gt; bool {
+    MIN_SAFE_CELSIUS &lt;= temperature_celsius &amp;&amp; temperature_celsius &lt;= MAX_SAFE_CELSIUS
+    // &lt;- `&lt;=` twice expresses an inclusive range on both edges
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

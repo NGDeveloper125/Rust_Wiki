@@ -41,8 +41,12 @@ What Section 3 is **not**:
   rule, PAGES_DESIGN.md §2.2 and §4.2's angle split).
 - Not exhaustive. A page gets only the scenarios where it genuinely
   matters (§4). Forcing an irrelevant scenario is a defect, not coverage.
-- Not the place for embedded/no_std content — that stays in the
-  **Embedded Rust Notes** block (PAGES_DESIGN.md §2.5).
+- Not the place for embedded/no_std content — full parallel scenarios for
+  the embedded audience belong in **Best practices & deeper information
+  (Embedded)** instead (PAGES_DESIGN.md §2.5, decision #14), using this same
+  catalog and format but with embedded-appropriate code (HAL calls,
+  registers, `heapless`/`defmt`, …). `embedded_support: none` pages skip
+  this entirely and use the short **Embedded Rust Notes** block instead.
 
 ---
 
@@ -207,8 +211,11 @@ Source keys in the last column refer to §6.
    demonstrates deciding/designing well (when, why, tradeoffs). `&` shows
    how borrow expressions read in a threaded context; the Borrowing
    concept page shows how to *structure* code so borrows stay short.
-5. Embedded/no_std relevance goes to **Embedded Rust Notes**, never to a
-   Section 3 block.
+5. Embedded/no_std scenarios go in the parallel **Best practices & deeper
+   information (Embedded)** section (own scenario picks, same catalog —
+   see PAGES_DESIGN.md §2.5, decision #14), not mixed into the classic
+   Section 3 block. `embedded_support: none` pages have no embedded
+   Section 3 at all — just the short **Embedded Rust Notes** block.
 
 ### Starter map — current 8 page groups
 

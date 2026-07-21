@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Designing your own <code>E</code> in <a href="../../concepts/error-handling/result.html"><code>Result&lt;T, E&gt;</code></a> means choosing what
 a failure actually <em>is</em> as a type. <code>Result&lt;T, String&gt;</code> compiles and works,
@@ -990,7 +991,7 @@ see the crate policy note on the <a href="../../concepts/error-handling/result.h
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">// [dependencies] thiserror = "2"
 use thiserror::Error;
@@ -1013,7 +1014,7 @@ fn load(path: &amp;str) -&gt; Result&lt;String, ConfigError&gt; {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1123,23 +1124,153 @@ stringly-typed errors for anything beyond a throwaway script.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> A custom error enum is just an enum plus trait impls —
-core-language, no allocator required by the type itself. Since Rust 1.81
-stabilized <code>core::error::Error</code>, even a <code>#![no_std]</code> crate can implement
-the real <code>Error</code> trait directly; using <code>thiserror</code> there additionally
-requires disabling its default <code>std</code> feature, since the crate's <code>std</code>
-support assumes an allocator and the full <code>Error</code> trait location present
-on hosted targets.</p>
+        <p>A hand-written, no_std-compatible error enum is the standard way a HAL or
+driver crate reports failure — the same "one variant per distinct failure
+mode" design from the classic Explanation applies unchanged, since an enum
+plus trait impls is core-language and needs no allocator. What's genuinely
+different is the tooling around it: <code>thiserror</code> and <code>anyhow</code>, the classic
+page's default crate picks, are built with <code>std</code> in mind and generally
+aren't reached for inside <code>#![no_std]</code> code. Some crates do use
+<code>thiserror</code>'s <code>std</code>-feature-disabled mode where the version in use supports
+it, but that's worth checking per crate rather than assuming works
+everywhere. The idiomatic no_std substitute most driver crates reach for
+instead is a small hand-written enum deriving <code>Debug</code>, optionally paired
+with a manual <code>Display</code> and <a href="the-error-trait.md"><code>Error</code></a> impl written by
+hand — exactly the manual mechanism <a href="the-error-trait.md">The Error trait</a>
+walks through, just without a derive macro generating the boilerplate.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#[derive(Debug)]
+enum SensorError {
+    Bus,           // &lt;- one variant per distinct failure mode, no thiserror involved
+    NotResponding,
+}
+
+fn read(addr: u8) -&gt; Result&lt;u8, SensorError&gt; {
+    if addr == 0 {
+        return Err(SensorError::NotResponding);
+    }
+    Ok(0x42)
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>An IMU driver collapses any underlying I2C bus error into one variant via
+a hand-written <code>From</code> impl, so <code>?</code> can still convert automatically even
+without <code>thiserror</code>'s <code>#[from]</code> to generate it.</p>
+<pre><code class="rust">use embedded_hal::i2c::{I2c, Error as I2cErrorTrait};
+
+#[derive(Debug)]
+enum ImuError {
+    Bus,
+    BadWhoAmI(u8),
+}
+
+impl&lt;E: I2cErrorTrait&gt; From&lt;E&gt; for ImuError {
+    fn from(_e: E) -&gt; Self {
+        ImuError::Bus // &lt;- hand-written From, standing in for thiserror's #[from] in a no_std crate
+    }
+}
+
+fn init(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), ImuError&gt; {
+    let mut who_am_i = [0u8; 1];
+    i2c.write_read(addr, &amp;[0x0F], &amp;mut who_am_i)?; // &lt;- `?` converts any bus error via the impl above
+    if who_am_i[0] != 0x68 {
+        return Err(ImuError::BadWhoAmI(who_am_i[0]));
+    }
+    Ok(())
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> without <code>thiserror</code> available, the <code>From</code> impl has to be
+written by hand, but it's the same mechanism the derive would otherwise
+generate — see <a href="the-question-mark-operator.md"><code>?</code></a> and
+<a href="the-error-trait.md">The Error trait</a> for the underlying pattern.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A published driver crate marks its public error enum <code>#[non_exhaustive]</code>,
+since a later release may add a new fault code (say, for a new sensor
+revision) without that being a breaking change for downstream <code>match</code>
+statements — the same reasoning as the classic page, and still fully
+available since <code>#[non_exhaustive]</code> is a core-language attribute.</p>
+<pre><code class="rust">#[derive(Debug)]
+#[non_exhaustive] // &lt;- a later release can add a variant (e.g. a new fault code) without a breaking change
+pub enum DriverError {
+    Bus,
+    Timeout,
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> without it, adding a variant to a public driver error enum
+breaks every downstream <code>match</code> on the next release, per the
+<a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">API Guidelines' future-proofing section</a> —
+exactly as relevant to a <code>#![no_std]</code> driver crate as to a hosted one.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>Decoding a configuration register's mode field distinguishes a genuine bus
+failure from a merely unrecognized (but successfully read) encoding, since
+only one of those means "something is actually broken."</p>
+<pre><code class="rust">#[derive(Debug, PartialEq)]
+enum ConfigError {
+    Bus,
+    UnknownMode(u8),
+}
+
+fn decode_mode(bits: u8) -&gt; Result&lt;u8, ConfigError&gt; {
+    match bits &amp; 0b11 {
+        0b00 | 0b01 =&gt; Ok(bits &amp; 0b11),
+        other =&gt; Err(ConfigError::UnknownMode(other)), // &lt;- distinct from Bus: the read succeeded, the value just isn't valid
+    }
+}
+
+assert_eq!(decode_mode(0b11), Err(ConfigError::UnknownMode(0b11)));
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a caller might reasonably retry on <code>Bus</code> (a transient
+fault) but not on <code>UnknownMode</code> (retrying won't fix a firmware/hardware
+mismatch) — that decision is only possible if the two failure modes are
+kept distinguishable, the same argument the classic page makes generally
+for one variant per failure mode.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

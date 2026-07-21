@@ -43,7 +43,34 @@ made for [`+=`](plus-equals.md); watch the integer-truncation caveat this
 page's Explanation calls out if `average` were an integer type instead
 of `f64`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `DivAssign` lives in `core::ops` — same
-software-division caveat as [`/`](slash.md) on dividerless targets.
+`DivAssign` lives in `core::ops`, so `/=` behaves identically under
+`#![no_std]`, including the integer-truncation caveat this page's classic
+Explanation notes. It shares [`/`](slash.md)'s hardware nuance directly:
+on a microcontroller with no hardware integer divider, `/=` lowers to the
+same software division routine `/` does. When the divisor is a
+compile-time-known power of two — a common choice for a sample count or
+buffer length precisely because of this — the compiler turns `/=` into a
+shift for you, making it effectively free; a divisor that only becomes
+known at runtime doesn't get that optimization and pays the software
+division cost.
+
+## Usage examples (Embedded)
+
+### Averaging accumulated ADC samples in place
+
+```
+let mut sum: u32 = adc_samples.iter().map(|&s| s as u32).sum();
+sum /= adc_samples.len() as u32; // <- `/=` divides in place; a software routine unless the divisor is a compile-time power of two
+```
+
+### Choosing a power-of-two sample count so `/=` compiles to a shift
+
+```
+const SAMPLE_COUNT: u32 = 8; // power of two: `/=` by this constant compiles to a shift, not a divide
+
+fn average_in_place(sum: &mut u32) {
+    *sum /= SAMPLE_COUNT; // <- `/=` here is free: division by a power-of-two constant lowers to a shift
+}
+```

@@ -146,14 +146,98 @@ behavior can't drift apart silently, matching the
 [API Guidelines' C-FAILURE](https://rust-lang.github.io/api-guidelines/documentation.html#function-docs-include-error-panic-and-safety-considerations-c-failure)
 expectation that panic conditions are documented at all.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Doc tests compile and execute on the **host**
-toolchain, the same way unit and integration tests do — there is no
-mechanism to run a doc test on the target microcontroller itself. This is
-still useful for `#![no_std]` crates whose public API is pure logic (a
-parser, a checksum calculation): the doc example compiles against the
-`no_std` crate but runs as an ordinary host program. Anything whose
-correctness depends on real hardware isn't a good fit for a doc test and
-is usually left as plain, non-tested prose instead, or covered separately
-by an on-target framework like `defmt-test`.
+A doc test always compiles and executes on the **host** toolchain,
+`#![no_std]` crate or not — there is no mechanism for `cargo test` to
+flash a doc example onto a microcontroller and run it there, so the
+host-vs-target split described on
+[`///`](../../syntax/comments/outer-line-doc-comment.md)'s Embedded Rust
+Notes applies here directly: `#[doc = "..."]` generation itself is a
+compile-time, host-side step that doesn't care whether the target is
+bare metal, but *running* the example inside the fenced block is a real
+host process invocation.
+
+That makes a doc test a good fit for exactly the slice of a `no_std`
+crate's public API that's pure logic — a parser, a checksum, a unit
+conversion — where the example compiles against the `no_std` crate and
+then genuinely runs correctly on the host, no different from a doc test
+on any other crate. The moment an example would need to read a real
+register or wait on a real peripheral, it has nothing to run against on
+the host, and the idiomatic move is the same one the `///` page
+describes: annotate the block `no_run` so it still compiles (catching a
+signature change) without pretending to execute against hardware that
+isn't there.
+
+## Basic usage example (Embedded)
+
+```
+#![no_std]
+
+/// Converts a raw ADC sample to millivolts, given a reference voltage.
+///
+/// ```
+/// assert_eq!(sensors::to_millivolts(2048, 3300), 1650); // <- pure math: compiles and runs on the host
+/// ```
+pub fn to_millivolts(sample: u16, reference_mv: u16) -> u16 {
+    ((sample as u32 * reference_mv as u32) / 4096) as u16
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Documenting an API
+
+A `no_std` crate's checksum routine is exactly the kind of function
+worth a runnable doc example — it documents the algorithm and doubles as
+a regression test, with no target hardware required to prove it.
+
+```
+#![no_std]
+
+/// Computes an 8-bit wrapping checksum over `bytes`.
+///
+/// ```
+/// # use sensor_proto::checksum;
+/// assert_eq!(checksum(&[0x01, 0x02, 0x03]), 0x06); // <- what the reader sees; compiles and runs on the host
+/// ```
+pub fn checksum(bytes: &[u8]) -> u8 {
+    bytes.iter().fold(0u8, |acc, &b| acc.wrapping_add(b))
+}
+```
+
+**Why this way:** `checksum` never touches a peripheral, so there's no
+reason to give up the regression-test guarantee a doc test provides —
+the [rustdoc book](https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html)
+documents `#`-prefixed hidden lines as the way to keep the visible
+example this focused while it still genuinely compiles and runs.
+
+### Scenario: Testing
+
+A doc example for a function that reads a real timer peripheral has
+nothing to read on the host, so it's marked `no_run`: the doc test still
+catches the example going stale at compile time without claiming to have
+actually executed against hardware.
+
+```
+#![no_std]
+
+/// Reads the current tick count since boot from the SysTick peripheral.
+///
+/// ```no_run
+/// // <- `no_run`: compiles under `cargo test`, but doesn't execute — the host
+/// //    has no SysTick peripheral for this call to read from
+/// let ticks = firmware::systick::now();
+/// assert!(ticks > 0);
+/// ```
+pub fn now() -> u64 {
+    todo!()
+}
+```
+
+**Why this way:** without `no_run`, `cargo test` would try to actually
+call `now()` on the host and either fail to link or read garbage, since
+no SysTick register exists there; `no_run` keeps the compile-time
+guarantee the [rustdoc book](https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#pre-processing-examples)
+describes without asserting a runtime result the host has no way to
+provide.

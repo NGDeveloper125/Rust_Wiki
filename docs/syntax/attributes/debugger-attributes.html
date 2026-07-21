@@ -947,7 +947,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Both attributes exist purely to improve the experience of debugging Rust
 code in an external debugger — neither changes what the program computes
@@ -986,7 +987,7 @@ day-to-day application code.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1028,25 +1029,68 @@ rather than something a caller needs to debug into.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> Both attributes are compile-time debug-information
-metadata with no runtime cost, so they're available under <code>#![no_std]</code>
-the same as anywhere else — but their practical value depends entirely on
-which debugger is attached. Embedded debugging typically goes through GDB
-over a hardware probe (OpenOCD, probe-rs), which understands GDB-style
-pretty-printer scripts but not the Natvis format (a Windows/Visual Studio
-convention); a <code>#[debugger_visualizer(...)]</code> written specifically for
-Natvis has no effect on a GDB-based embedded debugging session, and vice
-versa.</p>
+        <p><code>#[collapse_debuginfo]</code> is unaffected by target — it's pure debug-info
+attribution for macro-generated code, and works the same whether the
+eventual debugger is a hosted one or GDB attached over a hardware probe.
+<code>#[debugger_visualizer(natvis_file = "...")]</code> is where the caveat lives:
+an embedded debugging session almost always goes through GDB (or an
+equivalent) over SWD/JTAG via a probe — <code>probe-rs</code>, OpenOCD, or a vendor
+tool — not through Visual Studio. Natvis is a Visual-Studio-specific XML
+format; a GDB frontend doesn't load it, so a
+<code>#[debugger_visualizer(natvis_file = "...")]</code> written for a HAL type has
+no effect at all in the GDB-based session actually used to debug the
+firmware on target. The GDB-pretty-printer-script form of
+<code>#[debugger_visualizer(...)]</code> is the one that matters for this workflow
+instead — though in practice, most embedded debugging leans less on
+custom pretty-printers and more on <code>defmt</code> (structured, low-overhead
+logging formatted on the host) piped over RTT, alongside <code>probe-rs</code>'s own
+tooling, a workflow that doesn't route through the debugger's
+variable-inspection view at all.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Why a Natvis visualizer doesn't help a probe-rs/GDB debugging session</h3>
+            <pre><code class="rust">// AVOID relying on this alone for embedded debugging — Natvis is Visual-Studio-specific:
+#[debugger_visualizer(natvis_file = "RingBuffer.natvis")] // &lt;- has no effect when debugging via GDB over a probe
+pub struct RingBuffer {
+    head: usize,
+    data: [u8; 64],
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Reaching for defmt/RTT instead of a visualizer for on-target inspection</h3>
+            <pre><code class="rust">use defmt::Format;
+
+#[derive(Format)] // &lt;- defmt's own derive, not debugger_visualizer: formats this type for RTT logging
+pub struct RingBuffer {
+    head: usize,
+    data: [u8; 64],
+}
+
+fn log_state(buf: &amp;RingBuffer) {
+    defmt::info!("ring buffer state: {:?}", buf); // &lt;- printed over RTT, read by probe-rs on the host
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

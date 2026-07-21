@@ -122,11 +122,58 @@ which is exactly what the
 [API Guidelines' C-STRUCT-PRIVATE](https://rust-lang.github.io/api-guidelines/future-proofing.html#structs-have-private-fields-c-struct-private)
 item recommends private fields for.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Visibility is enforced entirely at compile time with no
-runtime cost, so every form of `pub` behaves identically under
-`#![no_std]`. Embedded HAL crates rely on the scoped forms just as much as
-hosted code — commonly `pub(crate)` for register-access helpers shared
-between a driver's own submodules but never exposed to firmware code
-using the driver.
+`pub` and its scoped forms mean exactly the same thing under
+`#![no_std]` — a compile-time-only visibility marker with no runtime
+cost either way. It's put to essentially the same use in an embedded HAL
+crate as in any other library: a driver exposes a small, curated `pub`
+surface (the methods a firmware author actually calls — `set_high`,
+`read`, `configure`) while the register-level bit-twiddling that
+implements those methods stays unmarked (private) or `pub(crate)`,
+reachable only from the driver's own submodules. This split matters more
+than usual in embedded code specifically because register manipulation
+is `unsafe` and easy to get subtly wrong (wrong bit, wrong offset, a
+read-modify-write race with an interrupt) — keeping it out of the
+crate's public API is what lets the HAL guarantee its public methods
+uphold the peripheral's actual invariants, rather than letting a caller
+reach around them and write raw bits directly.
+
+## Usage examples (Embedded)
+
+### A HAL driver's public API over private register internals
+
+```
+pub struct Gpio {
+    base: u32,
+}
+
+impl Gpio {
+    pub fn set_high(&mut self, pin: u8) { // <- `pub`: the driver's public, safe-to-call API
+        self.write_odr(1 << pin);
+    }
+
+    fn write_odr(&mut self, mask: u32) {
+        // private: not `pub` — direct register access stays internal to the driver
+        let odr = (self.base + 0x14) as *mut u32;
+        unsafe { odr.write_volatile(odr.read_volatile() | mask) }
+    }
+}
+```
+
+### Sharing register helpers across a driver's own submodules with `pub(crate)`
+
+```
+mod uart {
+    pub(crate) fn baud_divisor(clock_hz: u32, baud: u32) -> u32 {
+        // <- `pub(crate)`: shared between `uart`'s own submodules, never part of this crate's public API
+        clock_hz / (16 * baud)
+    }
+
+    pub mod config {
+        pub fn apply(clock_hz: u32, baud: u32) -> u32 {
+            super::baud_divisor(clock_hz, baud) // reachable: same crate
+        }
+    }
+}
+```

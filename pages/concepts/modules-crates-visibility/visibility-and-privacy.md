@@ -175,12 +175,94 @@ crate root outward, so a crate's visibility choices are effectively its
 documentation's table of contents, per the
 [rustdoc book](https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Visibility is enforced entirely at compile time and has
-no runtime representation, so it costs nothing and behaves identically
-under `#![no_std]`. Embedded HAL crates lean on it heavily: a driver
-typically keeps raw register access private and exposes only a small set
-of `pub` methods that uphold the hardware's actual safety invariants,
-the same "private fields, validated public entry points" pattern shown
-above applied to a peripheral instead of an `Account`.
+Visibility is enforced entirely at compile time and has no runtime
+representation, so the mechanism is unchanged under `#![no_std]`. What's
+genuinely important here is a convention, not a new rule: an embedded
+HAL driver keeps every raw register read/write private and exposes only
+a small set of `pub` methods that encode the hardware's actual safety
+invariants (for example, "don't enable the peripheral before its clock
+is enabled") — so `unsafe` register manipulation is contained to a
+small, audited surface instead of scattered through application code.
+
+## Basic usage example (Embedded)
+
+```
+pub struct Gpio {
+    port: *mut u32,   // private: raw register pointer, never exposed
+}
+
+impl Gpio {
+    pub fn set_high(&mut self, pin: u8) {
+        unsafe { self.port.write_volatile(self.port.read_volatile() | (1 << pin)) } // <- unsafe write, contained here
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A GPIO driver's whole safety argument rests on nobody outside the module
+ever getting a raw pointer to the peripheral's registers — the `pub`
+surface only offers already-validated operations.
+
+```
+pub struct Gpio {
+    port: *mut u32,        // <- private: the raw register address never leaves this module
+}
+
+impl Gpio {
+    /// # Safety
+    /// `port` must be a valid pointer to this peripheral's GPIO register block.
+    pub unsafe fn new(port: *mut u32) -> Self {  // <- the one place the invariant is asserted, once
+        Gpio { port }
+    }
+
+    pub fn set_high(&mut self, pin: u8) {         // <- safe: callers can no longer misuse the address
+        unsafe {
+            self.port.write_volatile(self.port.read_volatile() | (1 << pin));
+        }
+    }
+}
+```
+
+**Why this way:** funneling every register access through a handful of
+`pub` methods, instead of exposing the raw pointer, means the `unsafe`
+contract only has to be checked once — at construction — rather than at
+every call site, the "contain unsafety behind a safe API" practice the
+[Rustonomicon](https://doc.rust-lang.org/nomicon/working-with-unsafe.html)
+describes for wrapping raw-pointer/FFI-style access generally, applied
+here to memory-mapped registers.
+
+### Scenario: Documenting an API
+
+A HAL crate's generated docs should read like a peripheral's user
+manual, not its register map — so the register-level constants and raw
+pointer types stay private and never appear in the published API.
+
+```
+mod registers {                 // <- private module: register offsets and bit positions
+    pub(super) const ENABLE_BIT: u32 = 1 << 0;
+}
+
+pub struct Spi {
+    // ...
+}
+
+impl Spi {
+    /// Enables the SPI peripheral.
+    pub fn enable(&mut self) {  // <- pub: this is what shows up in rustdoc
+        // uses registers::ENABLE_BIT internally
+    }
+}
+```
+
+**Why this way:** keeping register offsets and bit masks in a
+`pub(super)`-or-private `registers` module means rustdoc's generated
+page for the crate shows only the peripheral-level operations users
+actually call, per the
+[rustdoc book](https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html)'s
+"docs mirror the public API" behavior — applied here to keep a HAL's
+documentation focused on hardware behavior, not register trivia.

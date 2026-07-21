@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A zero-cost abstraction is a language feature that lets you write code at a
 higher level — generic functions, iterator chains, trait-based
@@ -1006,7 +1007,7 @@ runtime representation left behind in the compiled program.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let readings = [21.4, 19.8, 23.1, 18.6];
 
@@ -1023,7 +1024,7 @@ cost anyway.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1093,24 +1094,174 @@ as the equivalent manual loop.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> — and arguably the principle that matters most on
-constrained hardware. Flash and RAM budgets leave no room for a hidden
-runtime cost, so the fact that generics, iterator chains, and trait
-dispatch (when chosen as static dispatch) compile away to the same code a
-hand-written C-style loop would produce is precisely why embedded Rust can
-offer high-level ergonomics — the <code>embedded-hal</code> ecosystem chief among
-them — without the overhead that would rule out a garbage-collected or
-heavily runtime-typed language on the same device.</p>
+        <p>Of every principle on this site, this is arguably the one that matters
+most to whether embedded Rust is usable at all. A microcontroller's flash
+and RAM budget is measured in kilobytes, not gigabytes, and its clock
+budget for a control loop or interrupt handler is measured in a handful of
+microseconds — there is no room to pay even a small, "acceptable on a
+server" tax for writing readable code. If iterator chains, generics, and
+<code>Option</code>/<code>Result</code> carried any real overhead compared to a hand-rolled C
+loop and a raw integer flag, embedded developers simply couldn't use them,
+the same way they mostly can't reach for a garbage-collected language's
+convenience features on this hardware. Zero-cost abstractions are what
+make that tradeoff not exist in the first place: a <code>for reading in sensor_readings.iter().filter(...)</code> chain compiles to the identical
+machine code a hand-written indexing loop would produce, so choosing the
+readable version costs nothing measurable in flash size or cycle count.</p>
+<p>The same story extends past iterators. <code>Option&lt;T&gt;</code> and <code>Result&lt;T, E&gt;</code> are
+ordinary enums, and the compiler's niche-optimization pass frequently
+stores their discriminant in an already-unused bit pattern of <code>T</code> rather
+than adding a separate tag byte — <code>Option&lt;&amp;T&gt;</code> and <code>Option&lt;NonZeroU8&gt;</code> are
+each exactly the size of the value they wrap, with <code>None</code> represented by
+the one bit pattern (null, zero) the wrapped type can't otherwise take.
+That matters concretely on a device where a handful of extra bytes per
+struct, multiplied across every peripheral-configuration value in a
+firmware image, is a real fraction of the RAM budget. Generics compiled
+via monomorphization are what let the <code>embedded-hal</code> ecosystem exist at
+all: a HAL trait like <code>OutputPin</code> can be implemented identically for a
+dozen different chip families, and code written generically against
+<code>impl OutputPin</code> compiles, per concrete pin type, down to the exact
+sequence of register writes a hand-specialized function for that one chip
+would have used — no vtable, no indirect call, unless a driver explicitly
+opts into <code>dyn OutputPin</code> for real runtime polymorphism (e.g. a bootloader
+that genuinely doesn't know which board variant it's running on until
+runtime).</p>
+<p>The honest caveat from the classic explanation applies with extra force
+here, too: monomorphization means every concrete instantiation of a
+generic HAL function is a separate copy of machine code, and on a chip
+with 32 or 64 KB of flash total, leaning on generics across many
+peripheral types can grow the binary enough to matter in a way it simply
+wouldn't on a hosted target with gigabytes of storage. Choosing <code>dyn Trait</code>
+over a generic parameter is the same explicit, opt-in tradeoff described
+above — one real vtable indirection per call, worth it only when the
+flash savings from a single non-duplicated function body outweigh the
+cycle cost of the indirect call, which on some peripheral-heavy firmware
+it genuinely does.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">let readings: [i16; 4] = [212, -999, 198, 205]; // raw ADC counts; -999 marks a faulty sample
+
+let total: i32 = readings
+    .iter()
+    .copied()
+    .filter(|&amp;r| r != -999) // &lt;- adaptor: drops the fault sentinel, allocates nothing
+    .map(i32::from)          // &lt;- adaptor: widens before summing, still zero-cost
+    .sum();                  // &lt;- consumer: single pass, compiles to the same loop a hand-rolled `for` would
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Averaging a fixed array of ADC samples, skipping any that read as a fault
+sentinel, needs to run inside a tight interrupt handler with no
+allocation and no wasted cycles — an iterator chain over the raw array
+gets there without hand-writing the loop.</p>
+<pre><code class="rust">const FAULT_SENTINEL: i16 = -999;
+
+fn average_valid_readings(samples: &amp;[i16; 8]) -&gt; Option&lt;i32&gt; { // &lt;- fixed-size array: no heap, no Vec, no allocation
+    let (sum, count) = samples
+        .iter()
+        .copied()
+        .filter(|&amp;s| s != FAULT_SENTINEL) // &lt;- adaptor: lazily skips faults, no intermediate buffer allocated
+        .fold((0i32, 0i32), |(sum, count), s| (sum + s as i32, count + 1)); // &lt;- consumer: one pass over the array
+
+    if count == 0 { None } else { Some(sum / count) }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the compiled loop here is indistinguishable from a
+hand-written <code>for i in 0..8 { ... }</code> version — the
+<a href="https://doc.rust-lang.org/book/ch13-04-performance.html">Rust Book's loops-vs-iterators comparison</a>
+measures exactly this equivalence on hosted targets, and the same
+monomorphized-adaptor compilation applies under <code>#![no_std]</code>, which is why
+this idiom shows up throughout <code>embedded-hal</code>-based sensor-processing code
+without a size or speed tax.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A single "blink" routine should work against any GPIO pin type from any
+supported chip family, compiling down to the same direct register writes
+a version hand-written for one specific chip would use.</p>
+<pre><code class="rust">use embedded_hal::digital::OutputPin;
+
+fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P, delay_ms: impl Fn(u32)) { // &lt;- generic: monomorphized per concrete pin type
+    pin.set_high().ok();
+    delay_ms(200);
+    pin.set_low().ok();
+    delay_ms(200);
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> calling <code>blink</code> with an <code>stm32</code>-family pin and, in a
+different build, with an <code>nrf</code>-family pin produces two separate,
+independently-optimized copies of the function — each compiling to that
+chip's own direct register-write instructions, with no vtable and no
+runtime dispatch — which is exactly why the <code>embedded-hal</code> trait
+ecosystem can offer one portable API across chip families without
+imposing a per-call indirection cost on any of them.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A sensor's calibration offset register is either "not yet calibrated" or
+holds a nonzero calibration value — modeling that as <code>Option&lt;NonZeroU16&gt;</code>
+instead of a separate <code>bool</code> flag plus a <code>u16</code> keeps the struct at exactly
+2 bytes, with no discriminant byte spent on the tag.</p>
+<pre><code class="rust">use core::num::NonZeroU16;
+
+struct Calibration {
+    offset: Option&lt;NonZeroU16&gt;, // &lt;- niche-optimized: None reuses the all-zero bit pattern NonZeroU16 can't hold
+}
+
+fn apply_calibration(raw_reading: u16, cal: &amp;Calibration) -&gt; u16 {
+    match cal.offset {
+        Some(offset) =&gt; raw_reading.wrapping_add(offset.get()),
+        None =&gt; raw_reading, // not yet calibrated: pass the raw reading through unchanged
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>size_of::&lt;Option&lt;NonZeroU16&gt;&gt;()</code> is 2, identical to
+<code>size_of::&lt;NonZeroU16&gt;()</code> and to <code>size_of::&lt;u16&gt;()</code>, because the compiler
+stores <code>None</code> in the all-zero pattern <code>NonZeroU16</code> is guaranteed never to
+hold — a <code>bool</code> flag alongside a plain <code>u16</code> would cost at least one extra
+byte (likely more once alignment padding is counted) per calibration
+value, real savings once a firmware image tracks calibration state for
+several sensors on a RAM-constrained target.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

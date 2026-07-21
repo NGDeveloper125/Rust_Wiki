@@ -141,10 +141,44 @@ same reason `thread::spawn` does — the
 whenever a spawned task needs to own data from its surrounding function
 rather than borrow it.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `move` is core-language and allocator-free — capturing by
-value costs nothing extra by itself (only *boxing* a closure, e.g.
-`Box<dyn FnOnce()>`, needs `alloc`). `move` closures are exactly as usable in
-`#![no_std]` code (e.g. handing owned state to a `critical-section` closure
-or an RTIC task) as in hosted Rust.
+`move` means exactly the same thing under `#![no_std]` — it forces every
+variable a closure or async block captures to be taken by value rather
+than borrowed, and costs nothing extra by itself (only *boxing* a
+closure into a `Box<dyn FnMut()>` needs `alloc`). It's the standard way
+setup code hands an owned peripheral into a closure that a critical
+section, an interrupt-adjacent callback, or an RTIC/embassy task body
+needs to keep using long after the function that created it has
+returned — the closure has to own the resource outright, since there is
+no caller stack frame left around by the time an interrupt actually
+fires to borrow from.
+
+## Usage examples (Embedded)
+
+### Moving an owned peripheral into a critical-section closure
+
+```
+use critical_section::Mutex;
+use core::cell::RefCell;
+
+static SHARED_ADC: Mutex<RefCell<Option<Adc>>> = Mutex::new(RefCell::new(None));
+
+fn init(adc: Adc) {
+    critical_section::with(move |cs| {
+        // <- `move`: forces `adc` to be taken by value, since the closure stores it past this call
+        SHARED_ADC.borrow(cs).replace(Some(adc));
+    });
+}
+```
+
+### Moving a peripheral handle into a timer interrupt callback
+
+```
+fn schedule_blink(led: impl OutputPin + 'static, timer: &mut impl PeriodicTimer) {
+    timer.on_interrupt(move || {
+        // <- `move`: the closure must own `led`, since the timer callback fires long after `schedule_blink` returns
+        led.toggle().ok();
+    });
+}
+```

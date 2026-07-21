@@ -948,7 +948,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>||</code> is short-circuiting logical OR between two <code>bool</code> values, as in
 <code>if a &lt; 0 || b &lt; 0 { ... }</code> — the right operand only evaluates if the
@@ -963,7 +964,7 @@ of an expression is a closure's (empty) parameter list.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1024,19 +1025,62 @@ recommends for recoverable input errors.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> for both meanings — logical OR and zero-argument
-closures both work identically in <code>#![no_std]</code> (closures don't require
-heap allocation unless they're boxed as <code>dyn Fn</code>).</p>
+        <p><code>||</code> behaves identically under <code>#![no_std]</code> — short-circuiting boolean
+OR needs no allocator or runtime support. As with <code>&amp;&amp;</code>, the
+embedded-specific detail isn't the semantics but the frequency:
+checking several independent fault or out-of-range conditions before
+shutting down a peripheral is a constant pattern, and short-circuiting
+means the cheapest or most-likely-true check can be written first to
+skip the rest on the common path. The zero-argument-closure meaning
+shows up wherever a HAL exposes a callback-style API that doesn't need
+to hand the closure any data — a one-shot timer callback or a simple
+"do this once" scheduling helper — though in practice the
+single-parameter form (<code>|cs|</code>, covered on the <a href="pipe.md"><code>|</code></a> page) is
+more common in HAL critical-section APIs than the fully empty <code>||</code>
+form.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Checking multiple fault conditions before an emergency shutdown</h3>
+            <pre><code class="rust">fn shutdown_required(overcurrent: bool, overtemp: bool, undervoltage: bool) -&gt; bool {
+    overcurrent || overtemp || undervoltage // &lt;- `||`: any single fault is enough to trigger shutdown
+}
+
+let must_shutdown = shutdown_required(false, true, false);
+assert!(must_shutdown);
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Registering a zero-argument timer callback</h3>
+            <pre><code class="rust">fn on_tick&lt;F: FnMut()&gt;(mut callback: F) {
+    callback(); // in real firmware this runs once per timer interrupt
+}
+
+fn schedule_watchdog_kick() {
+    on_tick(|| { // &lt;- `||` opens this closure's empty parameter list
+        // feed_watchdog();
+    });
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

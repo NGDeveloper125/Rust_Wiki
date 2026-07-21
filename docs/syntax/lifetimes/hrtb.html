@@ -954,7 +954,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>for&lt;'a&gt; Type</code> is a <strong>higher-ranked trait bound</strong> (HRTB): a bound that
 says "this must hold for <em>every</em> lifetime <code>'a</code>, not one specific lifetime
@@ -988,7 +989,7 @@ universally-quantified lifetime).</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1063,20 +1064,84 @@ accepts a closure usable across all of those independently-scoped calls.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> HRTBs are resolved entirely at compile time with no
-runtime representation — no <code>std</code>/allocator dependency. They appear in
-<code>no_std</code> code any time a generic function takes a closure over borrowed
-data with a per-call lifetime, exactly as on a hosted target.</p>
+        <p>Mechanically, a higher-ranked trait bound means exactly the same thing
+under <code>#![no_std]</code> — it's resolved entirely at compile time, with zero
+runtime representation either way, so there's no such thing as a
+<code>no_std</code>-specific rule for <code>for&lt;'a&gt;</code>. What differs is how often it comes
+up: HRTBs are genuinely rarer in day-to-day embedded code than in, say,
+generic hosted libraries that hand callers a closure taking <code>&amp;str</code>. Most
+<code>embedded-hal</code> traits are written around concrete, already-named types
+(<code>&amp;mut self</code>, a fixed <code>Word</code> associated type) rather than generic
+closures parameterized over a borrow the trait itself doesn't own, so
+the shape that makes <code>for&lt;'a&gt;</code> necessary — a callback invoked later with
+a reference whose lifetime the callback's own signature can't name in
+advance — doesn't arise as often.</p>
+<p>The one place it does show up regularly is critical-section helpers.
+<code>critical_section::with</code> hands the closure a <code>CriticalSection&lt;'cs&gt;</code>
+token whose lifetime <code>'cs</code> is chosen internally, fresh, by <code>with</code>
+itself — not by the caller, and not fixed at the point the bound is
+written. That's the same shape as the classic page's
+<code>Fn(&amp;'a str) -&gt; bool</code> example: the compiler infers the higher-ranked
+bound automatically from <code>FnOnce(CriticalSection&lt;'_&gt;) -&gt; R</code>, but writing
+it out by hand as <code>for&lt;'cs&gt; FnOnce(CriticalSection&lt;'cs&gt;) -&gt; R</code> becomes
+necessary the moment a generic wrapper function needs to name that
+bound explicitly in its own signature, as in the second example below.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reading a shared value from inside a critical section</h3>
+            <pre><code class="rust">use core::cell::Cell;
+use critical_section::Mutex;
+
+static TICKS: Mutex&lt;Cell&lt;u32&gt;&gt; = Mutex::new(Cell::new(0));
+
+fn ticks() -&gt; u32 {
+    critical_section::with(|cs| {
+        // &lt;- the closure's parameter type is `CriticalSection&lt;'cs&gt;` for whichever `'cs` `with` supplies;
+        //    the implicit bound on `with`'s closure argument is `for&lt;'cs&gt; FnOnce(CriticalSection&lt;'cs&gt;) -&gt; R`
+        TICKS.borrow(cs).get()
+    })
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Naming the bound explicitly in a generic wrapper</h3>
+            <pre><code class="rust">use core::cell::Cell;
+use critical_section::Mutex;
+
+static TICKS: Mutex&lt;Cell&lt;u32&gt;&gt; = Mutex::new(Cell::new(0));
+
+fn read_shared&lt;F, R&gt;(f: F) -&gt; R
+where
+    F: for&lt;'cs&gt; FnOnce(critical_section::CriticalSection&lt;'cs&gt;) -&gt; R,
+    // &lt;- `for&lt;'cs&gt;`: `f` must accept whatever lifetime `critical_section::with` supplies when it calls it
+{
+    critical_section::with(f)
+}
+
+fn ticks() -&gt; u32 {
+    read_shared(|cs| TICKS.borrow(cs).get())
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>assert!(condition)</code> panics (via <a href="../../syntax/macros/panic-macro.html"><code>panic!</code></a>) if
 <code>condition</code> evaluates to <code>false</code>, and does nothing otherwise; an optional
@@ -976,7 +977,7 @@ for equality checks in tests instead of <code>assert!(a == b)</code>/<code>asser
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1053,21 +1054,80 @@ development.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> All three are <code>core::assert!</code>/<code>core::assert_eq!</code>/
-<code>core::assert_ne!</code>, implemented directly on top of <code>panic!</code> — they work
-identically in <code>#![no_std]</code>, subject to the same panic-handling caveats
-as <a href="../../syntax/macros/panic-macro.html"><code>panic!</code></a> itself (a <code>#[panic_handler]</code> must exist,
-and unwinding is typically unavailable).</p>
+        <p>All three are <code>core::assert!</code>/<code>core::assert_eq!</code>/<code>core::assert_ne!</code> and
+behave identically under <code>#![no_std]</code> — they're implemented directly on
+top of <code>panic!</code>, with no dependency on <code>std</code> at all. What changes is what
+happens when one fires: instead of unwinding into a hosted OS's runtime,
+a failed assertion calls into whatever <code>#[panic_handler]</code> the binary
+links — commonly <code>panic-halt</code> (spins the core forever) or <code>panic-probe</code>
+(prints the panic message over RTT to an attached debugger before
+halting or resetting). Either way there's no stack to unwind and no
+process for an OS to reap; the handler decides exactly what "give up"
+means for that hardware.</p>
+<p><code>debug_assert!</code>/<code>debug_assert_eq!</code>/<code>debug_assert_ne!</code> disappearing from
+release builds is a sharper trade-off on a microcontroller than on a
+desktop: release is what actually gets flashed to production hardware,
+so an invariant checked only via <code>debug_assert!</code> has no second chance to
+catch a violation once shipped — the same gap the classic explanation
+describes, just with less margin for error on the far side of it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Wiring assert! to a panic handler</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use panic_halt as _; // &lt;- #[panic_handler]: a failed assert! below spins the core forever here
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -&gt; ! {
+    let raw_reading = read_pressure_register();
+    assert!(raw_reading &lt; 4096, "12-bit ADC reading out of range: {raw_reading}"); // &lt;- panics into panic_halt's handler, not an unwind
+    loop {}
+}
+
+fn read_pressure_register() -&gt; u16 {
+    0 // placeholder for a real register read
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Validating a peripheral precondition that must hold in every build</h3>
+            <pre><code class="rust">pub struct Uart {
+    baud: u32,
+}
+
+impl Uart {
+    pub fn new(baud: u32) -&gt; Self {
+        // AVOID: debug_assert! is compiled out of release builds — a release
+        // firmware image would silently accept baud == 0 and never transmit.
+        // debug_assert!(baud &gt; 0, "baud rate must be nonzero");
+
+        assert!(baud &gt; 0, "baud rate must be nonzero, got {baud}"); // PREFER: checked in every build, including the one that gets flashed
+        Uart { baud }
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

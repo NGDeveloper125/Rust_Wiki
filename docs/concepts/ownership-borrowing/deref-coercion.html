@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>Deref</code> and <code>DerefMut</code> let a smart pointer type transparently behave like
 a reference to whatever it wraps. A type implementing <code>Deref&lt;Target = T&gt;</code>
@@ -971,7 +972,7 @@ resolution rather than genuinely reusable abstraction.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn greet(name: &amp;str) {
     println!("hello, {name}");
@@ -983,7 +984,7 @@ greet(&amp;boxed); // &lt;- &amp;Box&lt;String&gt; coerces through Box then Stri
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1045,20 +1046,117 @@ data.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Deref</code>/<code>DerefMut</code> live in <code>core::ops</code> — no allocator
-dependency (the mechanism works the same whether or not the smart pointer
-being deref'd happens to need <code>alloc</code>, e.g. it applies just as well to
-allocator-free wrapper types).</p>
+        <p><code>Deref</code>/<code>DerefMut</code> coercion is identical under <code>#![no_std]</code> — both traits
+live in <code>core::ops</code>, and the compiler inserts the same automatic derefs
+whether the target being deref'd to is <code>str</code>, <code>[T]</code>, or something else
+entirely. The mechanism shows up constantly in idiomatic <code>no_std</code> code
+because <code>heapless</code>'s fixed-capacity collections lean on it directly:
+<code>heapless::Vec&lt;T, N&gt;</code> implements <code>Deref&lt;Target = [T]&gt;</code> the same way
+<code>std::Vec&lt;T&gt;</code> does, so a <code>heapless::Vec</code> can be passed anywhere a plain
+slice is expected, with no manual <code>.as_slice()</code> call needed. Driver crates
+lean on it deliberately too: a thin newtype wrapper around a HAL
+peripheral (<code>struct Debounced&lt;P&gt;(P)</code>) can implement <code>Deref&lt;Target = P&gt;</code> so
+every method the wrapped peripheral exposes stays callable directly on the
+wrapper — the wrapper adds behavior (debouncing, retries, a safety check)
+without hand-writing a forwarding method for each one. As on a hosted
+target, this is a distinct, legitimate use, separate from the "Deref
+polymorphism" anti-pattern of stretching <code>Deref</code> to fake an inheritance
+relationship between unrelated types — a debounce wrapper genuinely does
+"act like" the peripheral it wraps, which is exactly what <code>Deref</code> is for.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">fn checksum(data: &amp;[u8]) -&gt; u8 {
+    data.iter().fold(0, |acc, b| acc ^ b)
+}
+
+let buf: heapless::Vec&lt;u8, 16&gt; = heapless::Vec::from_slice(&amp;[1, 2, 3]).unwrap();
+checksum(&amp;buf); // &lt;- &amp;heapless::Vec&lt;u8, 16&gt; derefs to &amp;[u8]
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A function that only needs to read bytes should accept <code>&amp;[u8]</code>, not a
+specific collection type — deref coercion means callers holding a
+<code>heapless::Vec</code> can call it with no extra ceremony.</p>
+<pre><code class="rust">fn checksum(data: &amp;[u8]) -&gt; u8 { // &lt;- PREFER: &amp;[u8] accepts arrays, slices, and heapless::Vec alike
+    data.iter().fold(0, |acc, b| acc ^ b)
+}
+
+// fn checksum_narrow(data: &amp;heapless::Vec&lt;u8, 16&gt;) -&gt; u8 { ... } // AVOID: locks out arrays, other capacities, plain slices
+
+let frame: heapless::Vec&lt;u8, 16&gt; = heapless::Vec::from_slice(&amp;[0xAA, 0x01, 0x10]).unwrap();
+checksum(&amp;frame); // &lt;- &amp;heapless::Vec&lt;u8, 16&gt; coerces to &amp;[u8]
+checksum(&amp;[0xAA, 0x01, 0x10]); // a plain array reference works too, no coercion needed
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>&amp;[u8]</code> accepts everything a specific collection type
+does (deref coercion covers <code>heapless::Vec</code> for free) plus arrays and
+slices from any other source, making it the strictly more widely callable
+parameter type — the same reasoning the
+<a href="https://doc.rust-lang.org/book/ch04-03-slices.html#string-slices-as-parameters">Rust Book</a>
+gives for preferring <code>&amp;str</code> over <code>&amp;String</code> applies directly to preferring
+<code>&amp;[u8]</code> over a concrete <code>no_std</code> collection type.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A thin wrapper around an embedded-hal I2C bus adds a retry policy without
+needing to manually re-expose every method the underlying bus type has.</p>
+<pre><code class="rust">use core::ops::{Deref, DerefMut};
+
+struct RetryingI2c&lt;I2C&gt;(I2C); // &lt;- wraps a bus, adds retry behavior on top
+
+impl&lt;I2C&gt; Deref for RetryingI2c&lt;I2C&gt; {
+    type Target = I2C;
+    fn deref(&amp;self) -&gt; &amp;I2C { &amp;self.0 }
+}
+
+impl&lt;I2C&gt; DerefMut for RetryingI2c&lt;I2C&gt; {
+    fn deref_mut(&amp;mut self) -&gt; &amp;mut I2C { &amp;mut self.0 }
+}
+
+fn read_register(bus: &amp;mut RetryingI2c&lt;impl embedded_hal::i2c::I2c&gt;, addr: u8) {
+    bus.write(addr, &amp;[0x00]).ok(); // &lt;- calls I2c::write directly through the wrapper, no manual forwarding needed
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> implementing <code>Deref</code>/<code>DerefMut</code> for a newtype wrapper is
+the standard way to add behavior around a peripheral type without
+hand-writing a forwarding method for every one the wrapped bus exposes —
+this is <code>Deref</code> modeling "acts like a reference to the wrapped bus," the
+legitimate use the classic explanation distinguishes from "Deref
+polymorphism" fake inheritance.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

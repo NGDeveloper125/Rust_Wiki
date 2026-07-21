@@ -117,9 +117,30 @@ pattern reads more clearly once more than one field is being pulled out,
 since naming each field there beats a run of numbered
 dot accesses.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Field access, method calls, and tuple indexing are
-core-language grammar with no `std` dependency — used identically to
-address peripheral register fields and driver state on an embedded
-target.
+`.` means exactly the same thing under `#![no_std]` — field access,
+method calls, and tuple indexing are core grammar with no `std`
+dependency, and auto-deref works identically. The idiom this token
+enables that's distinctly embedded is the svd2rust "write closure"
+pattern used by most peripheral-access crates: a register write takes a
+closure, and the closure body chains several `.` method calls — one per
+bit-field — before the register is actually written in one go.
+
+## Usage examples (Embedded)
+
+### Chaining register field writes through a PAC closure
+
+```
+gpioa.odr.write(|w| w.odr5().set_bit()); // <- `.` chains field-accessor calls on the register writer `w`
+```
+
+### Reading a driver's field through auto-deref
+
+```
+struct Sensor { calibration: u16 }
+
+fn offset(sensor: &Sensor) -> u16 {
+    sensor.calibration // <- `.` auto-derefs through the `&` to reach the field
+}
+```

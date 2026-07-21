@@ -950,14 +950,15 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>/=</code> divides the left operand by the right in place, overloadable via
 <code>std::ops::DivAssign</code>.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -988,18 +989,51 @@ of <code>f64</code>.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>DivAssign</code> lives in <code>core::ops</code> — same
-software-division caveat as <a href="../../syntax/operators/slash.html"><code>/</code></a> on dividerless targets.</p>
+        <p><code>DivAssign</code> lives in <code>core::ops</code>, so <code>/=</code> behaves identically under
+<code>#![no_std]</code>, including the integer-truncation caveat this page's classic
+Explanation notes. It shares <a href="slash.md"><code>/</code></a>'s hardware nuance directly:
+on a microcontroller with no hardware integer divider, <code>/=</code> lowers to the
+same software division routine <code>/</code> does. When the divisor is a
+compile-time-known power of two — a common choice for a sample count or
+buffer length precisely because of this — the compiler turns <code>/=</code> into a
+shift for you, making it effectively free; a divisor that only becomes
+known at runtime doesn't get that optimization and pays the software
+division cost.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Averaging accumulated ADC samples in place</h3>
+            <pre><code class="rust">let mut sum: u32 = adc_samples.iter().map(|&amp;s| s as u32).sum();
+sum /= adc_samples.len() as u32; // &lt;- `/=` divides in place; a software routine unless the divisor is a compile-time power of two
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Choosing a power-of-two sample count so `/=` compiles to a shift</h3>
+            <pre><code class="rust">const SAMPLE_COUNT: u32 = 8; // power of two: `/=` by this constant compiles to a shift, not a divide
+
+fn average_in_place(sum: &amp;mut u32) {
+    *sum /= SAMPLE_COUNT; // &lt;- `/=` here is free: division by a power-of-two constant lowers to a shift
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

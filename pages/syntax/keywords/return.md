@@ -84,8 +84,36 @@ valid path inside an `if` — the
 [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
 favor this guard-clause shape over deep nesting.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency. Note that a `#![no_std]` binary's
-`fn main() -> !` never returns at all — `return` is used for early exits
-from ordinary functions, same as on a hosted target.
+`return` behaves identically under `#![no_std]` — no `std` dependency.
+The one thing worth noting is the surrounding context: a `#![no_std]`
+binary's `fn main() -> !` never returns at all (see [`loop`](loop.md)),
+but ordinary functions below `main` — especially driver code — use
+`return` for early exits exactly as on a hosted target. It composes
+naturally with `?`: embedded drivers commonly return `Result<(), E>` from
+functions that talk to a peripheral over I2C/SPI/UART, and `?` is just
+sugar for an early `return Err(...)` on failure.
+
+## Usage examples (Embedded)
+
+### Exiting a driver function early on invalid input
+
+```
+fn set_prescaler(timer: &mut Timer, value: u16) -> Result<(), &'static str> {
+    if value == 0 {
+        return Err("prescaler must be nonzero"); // <- exits the function immediately with the error
+    }
+    timer.psc().write(|w| w.psc().bits(value));
+    Ok(())
+}
+```
+
+### Composing with `?` in a Result-returning driver function
+
+```
+fn init_sensor(i2c: &mut I2c) -> Result<(), Error> {
+    i2c.write(SENSOR_ADDR, &[REG_CONFIG, CONFIG_DEFAULT])?; // <- `?` returns early on failure, same as an explicit `return`
+    Ok(())
+}
+```

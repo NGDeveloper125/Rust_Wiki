@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Some character sequences that look like they should parse one way are
 deliberately made illegal instead — not because the underlying tokens are
@@ -1003,7 +1004,7 @@ doesn't paste an identifier directly against one of these characters.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1075,18 +1076,52 @@ space, per the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Reserved syntax is a lexer-level restriction, identical
-in <code>#![no_std]</code> and hosted Rust alike.</p>
+        <p>Reserved syntax is a lexer-level restriction, checked before any code
+generation — it's identical on a hosted build and a <code>#![no_std]</code> target
+build, since the question of what runtime the binary will eventually run
+on hasn't even come up yet at that stage. The scenario most likely to
+trip an embedded codebase over it is the same one that trips hosted
+code: a <code>macro_rules!</code> macro — common in register-definition helpers, and
+in the peripheral-access crates svd2rust generates from a chip's SVD file
+— pasting an identifier directly against a string or <code>#</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A register-definition macro that avoids the reserved-prefix trap</h3>
+            <pre><code class="rust">macro_rules! define_register {
+    ($name:ident, $addr:expr) =&gt; {
+        const $name: u32 = $addr; // &lt;- kept as two separate tokens, never pasted into an ident"..." shape
+    };
+}
+
+define_register!(GPIOA_BASE, 0x4001_0800);
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">What triggers the error in a hypothetical device-crate macro</h3>
+            <pre><code class="rust">// 2021 edition and later:
+// let reg = mmio"0x4001_0800"; // error: prefix `mmio` is unknown (reserved syntax)
+let reg = 0x4001_0800u32; // fine: an ordinary literal, no ident-quote adjacency
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

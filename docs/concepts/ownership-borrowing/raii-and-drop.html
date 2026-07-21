@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>RAII — Resource Acquisition Is Initialization — ties a resource's
 lifetime to a value's scope: acquiring the resource happens in a
@@ -968,7 +969,7 @@ never forget to use them.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct Guard;
 
@@ -986,7 +987,7 @@ impl Drop for Guard {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1066,22 +1067,116 @@ otherwise need to get right manually.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> — and arguably more central to embedded Rust than to
-hosted code. RAII is the idiomatic way embedded HAL crates model
-peripheral ownership: a driver struct's <code>Drop</code> impl can disable a
-peripheral, release a pin back to a default state, or turn off a clock
-the instant it goes out of scope, with no OS process teardown to lean on
-as a safety net the way a hosted program implicitly has.</p>
+        <p><code>Drop</code> is core-language and needs no allocator or <code>std</code>, so it runs on a
+microcontroller exactly as described above: deterministically, the moment
+a value's owner's scope ends, with the compiler inserting the call at
+every exit path including early returns. What's genuinely different in
+embedded code is <em>why</em> that guarantee matters more, not less, than on a
+hosted target. A hosted program has an OS underneath it that will reclaim
+file descriptors, memory, and locks even if a process is killed outright
+— <code>Drop</code> is a convenience there, not the last line of defense. Bare-metal
+firmware has no such backstop: if a peripheral is left enabled, a GPIO pin
+is left driving high, or a critical section is left entered, nothing else
+in the system will ever notice or clean it up. <code>Drop</code> running
+deterministically, with no OS involved, is exactly the guarantee that
+makes RAII a safety mechanism on bare metal rather than just tidiness.</p>
+<p>This is why HAL crates model peripheral access as guard types so
+routinely: a type returned by "enter a critical section" or "start using
+this pin as an output" carries the responsibility for undoing that state,
+and its <code>Drop</code> impl is what runs that undo — on a normal return, an early
+return, or unwinding from a panic — without the caller having to remember
+a matching "release" call at every possible exit.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct CriticalSection;
+
+impl CriticalSection {
+    fn enter() -&gt; Self { // &lt;- disables interrupts on construction
+        // ... disable interrupts
+        CriticalSection
+    }
+}
+
+impl Drop for CriticalSection {
+    fn drop(&amp;mut self) {
+        // ... re-enable interrupts, unconditionally
+    }
+}
+
+fn read_shared_counter() -&gt; u32 {
+    let _guard = CriticalSection::enter();
+    42 // placeholder for a real read of interrupt-shared state
+} // &lt;- _guard drops here: interrupts are re-enabled even on an early return above it
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Managing resources (RAII)</h3>
+            <p>A GPIO pin borrowed as an output for one operation should return to a
+known-safe default (input, high-impedance) the instant it's done being
+used, even if the function driving it returns early or panics partway
+through.</p>
+<pre><code class="rust">struct OutputPin { number: u8 } // stand-in for a HAL output-pin type
+
+struct DriveHigh&lt;'a&gt; { pin: &amp;'a mut OutputPin }
+
+impl&lt;'a&gt; DriveHigh&lt;'a&gt; {
+    fn new(pin: &amp;'a mut OutputPin) -&gt; Self {
+        // ... set the pin high
+        DriveHigh { pin }
+    }
+}
+
+impl&lt;'a&gt; Drop for DriveHigh&lt;'a&gt; {
+    fn drop(&amp;mut self) {
+        // ... set the pin back to input/high-impedance, regardless of how the guard's scope ended
+        let _ = self.pin.number;
+    }
+}
+
+fn pulse(pin: &amp;mut OutputPin, should_abort: bool) {
+    let _guard = DriveHigh::new(pin);
+    if should_abort {
+        return; // &lt;- _guard still drops here: the pin is returned to a safe state either way
+    }
+    // ... hold the pin high for the pulse duration
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> tying "pin driven high" to a guard's scope means every
+exit path — success, an early <code>return</code>, or a panic — leaves the pin in a
+known-safe state without the function needing a matching cleanup call at
+each one; this is the same "cleanup runs no matter how the scope ends"
+guarantee the
+<a href="https://doc.rust-lang.org/book/ch15-03-drop.html">Rust Book</a> describes
+for <code>Drop</code> generally, applied here with no OS process teardown available
+to fall back on if the guard were forgotten.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

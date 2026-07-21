@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>matches!(value, pattern)</code> expands to a full <code>match</code> that returns <code>true</code>
 for <code>pattern</code> and <code>false</code> for everything else — concretely, <code>match value { pattern =&gt; true, _ =&gt; false }</code> — collapsing that boilerplate into a
@@ -971,7 +972,7 @@ back to the caller.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1040,19 +1041,72 @@ inner <code>if</code> a full <code>match</code> would otherwise need.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>matches!</code> expands to an ordinary <code>match</code> at compile
-time and introduces no runtime dependency beyond the pattern match
-itself — identical under <code>#![no_std]</code>.</p>
+        <p><code>matches!</code> expands to an ordinary <code>match</code> at compile time and introduces
+no runtime dependency beyond the pattern match itself, so it behaves
+identically under <code>#![no_std]</code> — there's no heap, no allocation, and
+nothing hosted-only involved in a boolean pattern check. It's genuinely
+handy in embedded code specifically for checking a hardware-status or
+interrupt-flag enum inline — a peripheral register read decoded into an
+enum, then immediately reduced to "is it one of the states I care about"
+— without writing out a full <code>match</code> block just to get a <code>bool</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Checking an interrupt flag inline</h3>
+            <pre><code class="rust">enum InterruptFlag {
+    None,
+    DataReady,
+    Overrun,
+    FrameError,
+}
+
+fn read_status_flag() -&gt; InterruptFlag {
+    // pretend this decodes a peripheral's status register into the enum
+    InterruptFlag::DataReady
+}
+
+if matches!(read_status_flag(), InterruptFlag::DataReady | InterruptFlag::Overrun) {
+    // &lt;- one boolean check across two flag variants, no full match needed
+    // handle the pending data
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Guarding a register write on device power state</h3>
+            <p>A peripheral driver only allows a reconfiguration write while the device
+is idle or lightly loaded, checked with a pattern guard against a field
+decoded straight from a status register.</p>
+<pre><code class="rust">enum PowerState {
+    Off,
+    Standby,
+    Active { load_percent: u8 },
+}
+
+fn can_reconfigure(state: &amp;PowerState) -&gt; bool {
+    matches!(state, PowerState::Off | PowerState::Standby)
+        || matches!(state, PowerState::Active { load_percent } if *load_percent &lt; 5)
+        // &lt;- pattern guard narrows the Active case further, same mechanism as classic Rust
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

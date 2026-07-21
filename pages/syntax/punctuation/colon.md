@@ -75,6 +75,38 @@ When a local variable already shares a field's name
 [`redundant_field_names`](https://rust-lang.github.io/rust-clippy/master/#redundant_field_names)
 lint flags the redundant `field: field` form.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure grammar — no `std` dependency.
+`:` means exactly the same thing under `#![no_std]` — pure grammar, no
+`std` dependency, whether it's annotating a variable, a struct field, or a
+trait bound. Embedded code leans especially hard on the trait-bound form,
+because embedded-hal defines hardware capability as traits
+(`OutputPin`, `Read`, `Write`, …) rather than concrete types — a driver
+written against `T: OutputPin` compiles against any board whose HAL
+implements that trait, not just the one it was first tested on.
+
+## Usage examples (Embedded)
+
+### Bounding a generic driver against an embedded-hal trait
+
+```
+use embedded_hal::digital::OutputPin;
+
+struct Led<P: OutputPin> { // <- `:` here constrains P to types implementing OutputPin
+    pin: P,
+}
+
+impl<P: OutputPin> Led<P> {
+    fn on(&mut self) -> Result<(), P::Error> {
+        self.pin.set_high()
+    }
+}
+```
+
+### Annotating a peripheral's type from the device crate
+
+```
+fn configure(gpioa: pac::GPIOA) { // <- `:` here is a plain type annotation, same as hosted Rust
+    let _ = gpioa;
+}
+```

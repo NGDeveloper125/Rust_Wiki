@@ -106,8 +106,29 @@ caller immediately on failure, so by the time `let` finishes binding
 the
 [Book's section on the `?` operator](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `let` is core language grammar with no dependency on
-`std` — bindings work identically in `#![no_std]` firmware, on the stack,
-exactly as on a hosted target.
+`let` itself has little genuinely embedded-specific to say — it's core
+language grammar with no dependency on `std`, and a binding it introduces
+lives on the stack exactly as it does on a hosted target. Where an
+embedded binding's story actually diverges from a hosted one is not on
+`let` but on the pages next to it: [`mut`](mut.md) (a peripheral handle
+is almost always bound mutably, since writing a register requires `&mut
+self`), `static` (a value shared with an interrupt handler needs `'static`
+storage, not a stack binding), and lifetimes (a borrowed peripheral
+handle threaded through driver functions). `let` just supplies the
+ordinary binding form each of those builds on.
+
+## Usage examples (Embedded)
+
+### Binding a configured peripheral handle
+
+```
+let mut led = gpioa.pa5.into_push_pull_output(); // <- `let` binds the configured pin handle, same as any other value
+```
+
+### Binding a value produced by a fallible read
+
+```
+let reading = adc.read(&mut channel).unwrap_or(0); // <- ordinary `let` binding, no embedded-specific behavior
+```

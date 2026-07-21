@@ -135,13 +135,92 @@ recommend `AsRef` for functions that only need a borrowed view, since it
 lets `&str` and `String` (and other string-like types) all satisfy the
 same signature without the caller converting first.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support (split between the two types).** `&str` itself lives
-in `core` — a `&'static str` string literal works identically in
-`#![no_std]` with no allocator at all, since it borrows bytes already
-embedded in the binary. `String` lives in `alloc` and needs
-`extern crate alloc` plus a configured `#[global_allocator]` before it's
-available; where growable text is needed without a heap,
-`heapless::String<N>` provides a fixed-capacity, allocation-free
-alternative.
+The split this page draws between owned and borrowed text maps onto a
+second split under `#![no_std]`: `&str` needs nothing beyond `core`,
+while `String` needs `alloc`. A `&'static str` literal is compiled
+straight into the binary's read-only data — reading it back is the same
+single operation on a hosted target or a microcontroller with no heap at
+all, since nothing is ever allocated to produce it. `String`, by
+contrast, is defined in `alloc` and requires `extern crate alloc` plus a
+configured `#[global_allocator]` before `String::new()`/`.push_str()`
+compile — the same requirement `Vec<T>` carries, since `String` is
+`Vec<u8>` with a UTF-8 invariant layered on top.
+
+Where an owned, mutable string is genuinely needed but no heap is
+available, `heapless::String<N>` is the substitute: a fixed capacity `N`
+chosen at the type level, backed by an inline byte array instead of a
+heap allocation. It offers the same "build it up as you go" shape
+`String` does — `.push_str()`, `write!` support via `core::fmt::Write` —
+but bounded, so an append that would exceed `N` returns an error rather
+than growing. The practical embedded question this page's split becomes:
+is this text always one of a fixed, known-at-compile-time set of
+messages (`&'static str`, no heap ever touched), or does it get built or
+mutated at runtime (an owned buffer — `heapless::String<N>` without an
+allocator, `String` with one)?
+
+## Basic usage example (Embedded)
+
+```
+use core::fmt::Write as _;
+use heapless::String;
+
+const DEVICE_NAME: &str = "sensor-07"; // <- &'static str: baked into the binary, no heap involved
+
+let mut status: String<32> = String::new(); // <- owned, growable-within-32-bytes buffer, no allocator
+write!(status, "{DEVICE_NAME} ready").unwrap();
+
+let view: &str = &status; // <- borrows the heapless::String, same as &String deref to &str
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+The classic page's guidance — accept `&str`, not an owned type, for
+anything that only reads text — holds unchanged here: a function
+written against `&str` accepts a `&'static str` literal or a borrow of a
+`heapless::String<N>` equally, since `heapless::String<N>` also derefs
+to `&str`.
+
+```
+fn log_event(message: &str) { // <- &str: accepts a &'static str literal or a &heapless::String<N> alike
+    // ... hand `message`'s bytes to a UART/logging peripheral
+}
+
+const READY: &str = "device ready"; // <- &'static str, no heap
+let mut status: heapless::String<32> = heapless::String::new();
+core::fmt::Write::write_str(&mut status, "calibrating").unwrap();
+
+log_event(READY);   // &'static str
+log_event(&status); // heapless::String<32> derefs to &str, same call site
+```
+
+**Why this way:** the API Guidelines' preference for the narrowest
+borrowed type an embedded function's signature stays valid regardless of
+whether the caller's storage needs a heap at all — the function itself
+never has to know or care.
+
+### Scenario: Working with text
+
+Building a status line from values only known at runtime — a reading, an
+error count, an uptime counter — needs owned, mutable storage the same
+way the classic page's log-building example does; on a target with no
+heap, that owned storage is a `heapless::String<N>` instead of `String`.
+
+```
+use core::fmt::Write as _;
+use heapless::String;
+
+fn build_status(errors: u8, uptime_s: u32) -> String<64> {
+    let mut line: String<64> = String::new(); // <- fixed 64-byte capacity, no heap
+    write!(line, "errors={errors} uptime={uptime_s}s").unwrap(); // <- fails only if the text would exceed 64 bytes
+    line
+}
+```
+
+**Why this way:** the capacity bound has to live somewhere once there's
+no allocator to grow into — putting it in the type (`String<64>`) makes
+the limit visible at every call site, rather than discovering it only
+when a runtime append happens to fail.

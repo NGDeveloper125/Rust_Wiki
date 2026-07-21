@@ -47,7 +47,31 @@ for flipping a bit regardless of its current value — see
 [`+=`](plus-equals.md) for the general notes shared across the
 compound-assignment operator family.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `BitXorAssign` lives in `core::ops` — no `std`
-dependency.
+`^=` is the standard way to flip a hardware output bit without needing
+to know its current state first: many microcontroller GPIO ports have
+no dedicated "toggle" register (only the plain output-data register),
+so firmware reads the port's current value, XORs in the pin's bit, and
+writes the result back. Because XOR-ing the same bit twice restores the
+original value, `reg ^= mask` is self-inverse — calling the same toggle
+function twice in a row leaves the pin exactly where it started, which
+is exactly the behavior wanted for something like blinking an LED once
+per timer tick.
+
+## Usage examples (Embedded)
+
+### Toggling an LED pin via a read-modify-write
+
+```
+const GPIOA_ODR: *mut u32 = 0x4001_080C as *mut u32; // GPIOA output data register
+const LED_PIN: u32 = 1 << 5;
+
+fn toggle_led() {
+    unsafe {
+        let mut odr = core::ptr::read_volatile(GPIOA_ODR);
+        odr ^= LED_PIN; // <- flips only the LED bit, in place
+        core::ptr::write_volatile(GPIOA_ODR, odr);
+    }
+}
+```

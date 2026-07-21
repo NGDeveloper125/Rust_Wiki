@@ -142,13 +142,110 @@ macros), so the
 on integration tests exercising only the public API is the natural fit —
 the test lives in the consuming crate and checks what the macro produced.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A procedural macro runs entirely on the host machine
-during compilation and produces ordinary Rust source — it has no
-runtime footprint and no `std` requirement of its own, so it works
-identically when the *generated* code targets `#![no_std]`. This is
-exactly the mechanism behind common embedded tooling: `cortex-m-rt`'s
-`#[entry]` is an attribute-like macro, and `defmt`'s `#[derive(Format)]`
-is a derive macro — both ordinary procedural macros whose *output* is
-what has to be `no_std`-friendly, not the macro itself.
+The detail that's easy to miss about procedural macros in an embedded
+context is where, exactly, the macro's own code runs: a
+`proc-macro = true` crate is compiled for, and executed entirely on, the
+machine doing the build — the host — never the target microcontroller.
+This is true of every procedural macro on every project, embedded or
+not, but it's worth stating plainly here because it's the one thing
+that's genuinely different in *framing* (not in mechanism) from a
+desktop crate: the macro implementation itself can use full `std`, the
+filesystem, `syn`/`quote`, anything a normal host program could use,
+with zero connection to whether the crate consuming it is `#![no_std]`.
+Only the `TokenStream` the macro returns has to become code the *target*
+build can accept — the compiler splices that output into the embedded
+crate's source and compiles the result for the target triple, entirely
+separately from (and after) compiling the macro crate itself for the
+host. `cortex-m-rt`'s `#[entry]` (attribute-like) and `defmt`'s
+`#[derive(Format)]` (derive) are both ordinary host-executed functions in
+exactly this sense — nothing about writing or building either of them
+touches ARM/RISC-V code generation at all.
+
+## Basic usage example (Embedded)
+
+```
+use proc_macro::TokenStream;
+
+#[proc_macro] // <- ordinary std-using Rust: compiled for and run on the host, regardless of the target below
+pub fn double_addr(input: TokenStream) -> TokenStream {
+    let addr: usize = input.to_string().trim().parse().unwrap();
+    format!("{}", addr * 2).parse().unwrap()
+}
+```
+
+and the consuming, `#![no_std]` firmware crate:
+
+```
+#![no_std]
+
+use regkit::double_addr;
+
+const MIRROR_OFFSET: usize = double_addr!(0x1000); // <- expands before the no_std build even begins
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL crate wants a `#[derive(RegisterBlock)]`-style macro to feel like
+part of its own `no_std` API; the macro crate itself depends on ordinary
+`std` tooling (`syn`, `quote`) even though every consumer of the HAL
+builds with `#![no_std]`.
+
+```
+// hal-macros/Cargo.toml
+// [lib]
+// proc-macro = true
+// [dependencies]
+// syn = "2"
+// quote = "1"
+
+// hal/Cargo.toml
+// [dependencies]
+// hal-macros = { path = "../hal-macros", version = "0.1" }
+// # hal itself is #![no_std] — hal-macros is not, and never needs to be
+
+// hal/src/lib.rs
+#![no_std]
+pub use hal_macros::RegisterBlock; // <- re-exports a host-only macro crate from a no_std crate
+```
+
+**Why this way:** a `proc-macro = true` crate never contributes code to
+the target binary directly — the
+[Rust Reference's procedural macros chapter](https://doc.rust-lang.org/reference/procedural-macros.html)
+describes it as compiled and run by the compiler itself — so it is
+exempt from the consuming crate's `no_std` constraint entirely, and
+hiding that split behind a re-export keeps HAL users from having to
+reason about it.
+
+### Scenario: Testing
+
+A procedural macro that generates register accessors for a `no_std` HAL
+is still tested with ordinary `#[test]`s in a hosted binary, because the
+macro's expansion — and the test binary itself — both run on the host,
+never on the target.
+
+```
+// hal/tests/register_gen.rs — an ordinary hosted integration test, no #![no_std] here
+use hal::RegisterBlock;
+
+#[derive(RegisterBlock)] // <- expansion happens on the host; this test never touches the target at all
+struct Gpioa {
+    base: usize,
+}
+
+#[test]
+fn generates_expected_offset() {
+    let gpioa = Gpioa { base: 0x4800_0000 };
+    assert_eq!(gpioa.odr_address(), 0x4800_0014); // exercises code the macro generated
+}
+```
+
+**Why this way:** the target microcontroller is never involved in either
+the macro's expansion or this test's execution, so the
+[Rust Book's guidance](https://doc.rust-lang.org/book/ch11-03-test-organization.html)
+on integration tests exercising the public API applies exactly as it
+would for a desktop crate — the `no_std`-ness of the *generated* code has
+no bearing on how the macro that produced it gets tested.

@@ -94,9 +94,125 @@ reference cycles; see
 [Shared ownership (Rc & Arc)](shared-ownership-rc-arc.md) for when plain
 `Rc` is enough.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Same caveat as
-[Shared ownership (Rc & Arc)](shared-ownership-rc-arc.md) — `Weak<T>`
-lives in `alloc`, requiring a configured global allocator. Not available
-at all in a bare `#![no_std]` project with no allocator.
+`Weak<T>` is built directly on top of `Rc<T>`/`Arc<T>` — it lives in
+`alloc`, and needs the same `extern crate alloc;` plus a configured
+`#[global_allocator]` that its strong-reference counterparts need. See
+[Shared ownership (Rc & Arc)](shared-ownership-rc-arc.md) for that
+caveat in full, including the honest point that `Rc`/`Arc` are already
+uncommon in embedded code, since embedded rarely has the OS-thread-based
+multi-owner use case they were designed for, and interrupt-boundary
+sharing is usually better served by a `'static`
+`critical_section::Mutex<RefCell<T>>` instead. `Weak` inherits that
+unpopularity and then some: it only exists to solve a problem —
+reference cycles between `Rc`/`Arc`-owned values — that only arises once
+you're already using `Rc`/`Arc` for shared ownership in the first place.
+If a project isn't reaching for `Rc` much, it has correspondingly little
+need for `Weak` either.
+
+What embedded code needs instead is the same underlying idea `Weak`
+provides — a non-owning reference that might not resolve — without the
+heap and the refcounting machinery. The closest no-heap analogue is often
+just a plain `Option<&'a T>`: instead of a runtime check ("has every
+strong owner already dropped this?"), validity is tracked by the
+borrow checker at compile time through the lifetime `'a`, so there's
+nothing to `.upgrade()` at runtime — the reference either compiles, or it
+doesn't live long enough and the compiler rejects it up front. For
+longer-lived, more dynamic non-owning references (a task scheduler
+handing out handles to entries that can later be removed), the usual
+embedded pattern is an index into a fixed-size slab/arena — often paired
+with a generation counter so a stale index into a reused slot is detected
+as invalid — rather than a pointer at all: "might not resolve" becomes "the
+generation stored in the handle doesn't match the slot's current
+generation," checked with a plain comparison instead of reference-count
+bookkeeping.
+
+## Basic usage example (Embedded)
+
+```
+struct Sensor { reading: f32 }
+
+fn last_active<'a>(sensors: &'a [Sensor], last_index: Option<usize>) -> Option<&'a Sensor> {
+    // <- Option<&'a T>: "might not resolve" tracked by the borrow checker, not a runtime upgrade()
+    last_index.and_then(|i| sensors.get(i))
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Shared ownership
+
+A tree of sensor nodes where each child needs to reference its parent
+would use `Weak<Node>` on a hosted target to avoid a reference cycle —
+without an allocator, the no-heap analogue is a fixed-size arena plus
+plain indices, with a generation counter standing in for `Weak`'s
+"already dropped" check.
+
+```
+const MAX_NODES: usize = 16;
+
+#[derive(Clone, Copy)]
+struct NodeHandle { index: u8, generation: u8 } // <- the no-heap analogue of a Weak<Node>
+
+struct NodeSlot {
+    name: &'static str,
+    generation: u8,
+    occupied: bool,
+}
+
+struct Arena {
+    slots: [NodeSlot; MAX_NODES],
+}
+
+impl Arena {
+    fn resolve(&self, handle: NodeHandle) -> Option<&NodeSlot> {
+        let slot = &self.slots[handle.index as usize];
+        // <- the "might not resolve" check: stale handle into a reused/freed slot returns None, like upgrade()
+        if slot.occupied && slot.generation == handle.generation {
+            Some(slot)
+        } else {
+            None
+        }
+    }
+}
+```
+
+**Why this way:** a fixed-size arena gives every node a compile-time-known
+home with no heap allocation at all, and a generation counter recreates
+`Weak::upgrade`'s "tell me if this has already gone away" check without
+reference counting — the same shape the
+[Rust Book's `Weak` chapter](https://doc.rust-lang.org/book/ch15-06-reference-cycles.html)
+solves with `Rc`/`Weak`, reached here with plain arithmetic instead,
+which is the standard no-heap substitute wherever a project can't or
+won't configure a global allocator.
+
+### Scenario: Designing a public API
+
+A small task registry that hands out handles to registered tasks, some of
+which can later be cancelled and removed, needs an API for "a reference
+that might no longer be valid" — an index-based handle communicates that
+contract without requiring `alloc` at all.
+
+```
+pub struct TaskHandle { index: u8, generation: u8 } // <- public API surface: looks like a lightweight Weak<Task>
+
+pub struct TaskRegistry {
+    generations: [u8; 8],
+    active: [bool; 8],
+}
+
+impl TaskRegistry {
+    pub fn is_valid(&self, handle: &TaskHandle) -> bool {
+        // <- callers check validity explicitly, same contract as Weak::upgrade().is_some()
+        self.active[handle.index as usize] && self.generations[handle.index as usize] == handle.generation
+    }
+}
+```
+
+**Why this way:** documenting the handle as "might not resolve, check
+before use" up front — mirroring `Weak<T>`'s contract — sets the right
+caller expectations without needing `alloc`, `Rc`, or a refcount at all;
+the [API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html)
+favor an API whose type signals its own fallibility over one that panics
+on a stale handle and documents "don't do that" as the only safeguard.

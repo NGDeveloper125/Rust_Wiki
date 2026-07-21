@@ -947,7 +947,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>cfg!(predicate)</code> evaluates a configuration predicate — the same
 predicate grammar used inside <code>#[cfg(...)]</code>, like <code>target_os = "linux"</code>,
@@ -978,7 +979,7 @@ some target.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1031,20 +1032,67 @@ runtime by the flag baked in at compile time.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>cfg!</code> is resolved entirely at compile time against the
-target's configuration — it has no runtime dependency on <code>std</code> or an OS,
-and is used constantly in embedded code to pick behavior (e.g.
-<code>cfg!(target_arch = "arm")</code>) inside a function shared across targets.</p>
+        <p><code>cfg!(...)</code> resolves at compile time exactly as it does on a hosted
+target, and it's one of the more load-bearing tools in embedded Rust
+specifically, because embedded crates routinely support several
+different microcontrollers — often from different vendors entirely —
+from one codebase. A bare-metal target has no operating system at all,
+so <code>cfg!(target_os = "none")</code> is the standard way to detect "am I
+compiling for bare metal" inside logic shared between a <code>no_std</code>
+firmware crate and, say, its host-side test suite running under <code>std</code>.</p>
+<p>More commonly still, embedded crates gate behavior on a Cargo feature per
+supported chip rather than on <code>target_os</code>: a HAL crate supporting both an
+STM32F4 and an STM32F1 typically exposes <code>feature = "stm32f4"</code> /
+<code>feature = "stm32f1"</code> (mutually exclusive, chosen by the downstream
+<code>Cargo.toml</code>), and reaches for <code>cfg!(feature = "stm32f4")</code> inside a
+function whose logic is nearly identical between chips but differs in
+one register value or pin count — reserving
+<code>#[cfg(feature = "stm32f4")]</code> on the whole module or function for the
+parts that are structurally different per chip (a register block layout,
+a type that doesn't exist on the other chip) and genuinely wouldn't
+compile otherwise. The same "both branches must compile" rule from the
+classic explanation is exactly why <code>cfg!</code> is only the right tool for the
+<em>shared-logic</em> slice of a multi-target HAL.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Detecting a bare-metal target at compile time</h3>
+            <pre><code class="rust">fn heap_available() -&gt; bool {
+    !cfg!(target_os = "none") // &lt;- true on a hosted test build, false on bare-metal firmware
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Picking a chip-specific constant inside shared HAL logic</h3>
+            <pre><code class="rust">fn gpio_pin_count() -&gt; u8 {
+    if cfg!(feature = "stm32f401") { // &lt;- both branches compile in every build of this HAL crate
+        16
+    } else if cfg!(feature = "stm32f411") {
+        16
+    } else {
+        8 // fallback for the smaller chip variant in this family
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

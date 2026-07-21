@@ -101,11 +101,23 @@ Once a real test starts calling `assert_within_cents`,
 pointless attribute — instead of the suppression silently persisting
 forever the way a plain `#[allow(dead_code)]` would.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[expect(...)]` is a pure compile-time lint-level
-mechanism, identical to `#[allow(...)]`'s embedded story — no runtime cost
-and no dependency on `std`. It's equally useful in `#![no_std]` crates for
-tracking a temporarily-suppressed lint (a HAL crate's work-in-progress
-peripheral module, say) without the suppression quietly outliving its
-reason once that module is finished and wired in.
+`#[expect(...)]` is a pure compile-time lint-tracking mechanism with no
+runtime footprint, and nothing about it changes under `#![no_std]` — the
+embedded story here is identical to [`#[allow(...)]`](allow-and-friends.md)'s.
+It's genuinely useful in firmware code for the same reason it is
+anywhere else: a HAL's work-in-progress peripheral module with a
+temporarily-unused helper function can track that as a known,
+self-expiring gap instead of a silently-stale suppression.
+
+## Usage examples (Embedded)
+
+### Tracking a temporarily-unused HAL helper
+
+```
+#[expect(dead_code, reason = "will be called once the SPI DMA path lands")] // <- warns again once dead_code stops firing
+fn configure_spi_dma_burst(len: usize) {
+    let _ = len;
+}
+```

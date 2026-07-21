@@ -84,7 +84,75 @@ convention applies just as much to tuple structs as to named ones — a
 `new()` with named parameters is far less error-prone at the call site
 than three bare positional arguments to the tuple constructor directly.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No allocator dependency — commonly used in embedded
-HALs for lightweight typed wrappers (e.g. `struct Millivolts(u16);`).
+The mechanism is identical to hosted Rust — positional fields instead of
+named ones — and the same "brevity vs. the newtype pattern" trade-off
+from the classic explanation applies unchanged in `#![no_std]`. The
+genuinely embedded-flavored case is a small value where the position
+already carries all the meaning: a pair of raw register values read
+together (a low/high half of a 32-bit counter split across two 16-bit
+registers, say) or a sensor's raw axis readings, where `reading.0`,
+`reading.1`, `reading.2` reading as "first axis, second axis, third axis"
+costs nothing over naming them `x`, `y`, `z`, and a named struct would be
+scarcely more informative.
+
+## Basic usage example (Embedded)
+
+```
+struct Axes(i16, i16, i16); // <- three positional fields: a 3-axis accelerometer's raw readings
+
+let sample = Axes(120, -34, 998); // roughly 1g on the third axis, at rest
+println!("{}", sample.2); // <- positional access: sample.0, .1, .2
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A register pair split across two hardware registers (a timer's low and
+high halves) is a natural tuple struct — the order *is* the meaning, and
+naming the fields `low`/`high` would repeat what the position already
+says.
+
+```
+struct CounterHalves(u16, u16); // <- (low, high): position already documents which half is which
+
+fn combine(halves: CounterHalves) -> u32 {
+    (halves.1 as u32) << 16 | halves.0 as u32 // <- .0 is low, .1 is high, exactly as declared
+}
+
+let count = combine(CounterHalves(0xBEEF, 0x0001));
+```
+
+**Why this way:** once two positional values start meaning genuinely
+different things that a reader could get backwards (as opposed to
+"obviously the low half comes first"), that's the signal to switch to a
+named struct or to [the newtype pattern](the-newtype-pattern.md) instead
+— but a two-register split where the datasheet itself defines the order
+is exactly the case where positional access costs nothing in clarity.
+
+### Scenario: Creating a new object
+
+Even a small tuple struct benefits from a constructor once its positions
+correspond to something a caller could otherwise get wrong, like which
+raw sensor axis maps to which physical direction on the board.
+
+```
+struct Axes(i16, i16, i16); // <- positional: x, y, z raw accelerometer counts
+
+impl Axes {
+    fn from_raw(x: i16, y: i16, z: i16) -> Self {
+        Axes(x, y, z) // <- constructor documents which position is which axis
+    }
+}
+
+let sample = Axes::from_raw(120, -34, 998);
+```
+
+**Why this way:** the same
+[C-CTOR](https://rust-lang.github.io/api-guidelines/predictability.html#constructors-are-static-inherent-methods-c-ctor)
+convention applies here — named constructor parameters are far less
+error-prone at the call site than three bare positional arguments to the
+tuple constructor directly, especially where an axis mix-up would only
+show up as a physically-wrong sign at runtime.

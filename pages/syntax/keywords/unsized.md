@@ -68,7 +68,23 @@ documents `?Sized` as the one relaxation the language allows on an
 implicit default bound, which is exactly the gap a hypothetical
 `unsized` keyword would otherwise need to fill.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+**Full support.** `unsized` itself is still just a reserved keyword with
+no defined meaning, identical on every target — that part of the classic
+Explanation doesn't change under `#![no_std]`. The one live piece of this
+page, `?Sized`, also carries over unchanged: relaxing a generic
+parameter's implicit `Sized` bound, and working with dynamically-sized
+types like `str` or `dyn Trait` behind a reference, works the same way in
+`#![no_std]` firmware as anywhere else — the same considerations around
+`dyn Trait` (vtable dispatch, no allocator needed for the reference
+itself) covered on [`dyn`](dyn.md) apply here too.
+
+## Usage examples (Embedded)
+
+### The `unsized` reservation, unaffected by target
+
+```
+let unsized = 5;     // error: expected identifier, found reserved keyword `unsized`, on every target
+let r#unsized = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+```

@@ -67,7 +67,20 @@ pub struct Page {
     pub scenarios: Vec<Scenario>,
     /// Syntax pages only; empty for concept pages.
     pub usage_examples: Vec<Example>,
+
+    /// `embedded_support: none` pages only: the short "not supported" note.
+    /// Empty for `full`/`partial` pages, which use the fields below instead.
     pub embedded_notes_html: String,
+    /// `full`/`partial` pages only: the embedded counterpart of `explanation_html`.
+    pub embedded_explanation_html: String,
+    /// `full`/`partial` concept pages only.
+    pub embedded_basic_usage_html: String,
+    /// `full`/`partial` concept pages only.
+    pub embedded_best_practices_intro_html: String,
+    /// `full`/`partial` concept pages only.
+    pub embedded_scenarios: Vec<Scenario>,
+    /// `full`/`partial` syntax pages only.
+    pub embedded_usage_examples: Vec<Example>,
 }
 
 impl Page {

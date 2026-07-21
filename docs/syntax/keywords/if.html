@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>if</code> evaluates a boolean condition and branches accordingly. The condition
 must be a <code>bool</code> — Rust has no implicit truthiness conversion from
@@ -973,7 +974,7 @@ testing a <code>bool</code>.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1053,18 +1054,54 @@ that does nothing.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No dependency on <code>std</code>. Extremely common in embedded
-code for polling a hardware flag/register bit before proceeding.</p>
+        <p><code>if</code> behaves identically under <code>#![no_std]</code> — it's core-language control
+flow with no dependency on <code>std</code>, an allocator, or an OS scheduler. What
+changes is the shape of the conditions worth showing: embedded code most
+often reaches for <code>if</code> to poll a single status bit in a memory-mapped
+peripheral register, or to test a value a HAL read function returns,
+rather than a business-rule boolean. The guard-clause shape from the
+classic section is just as idiomatic here — rejecting an invalid
+configuration value before touching a register.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Polling a peripheral status register</h3>
+            <pre><code class="rust">if uart.status().read().rxne().bit_is_set() { // &lt;- `if` polls a hardware status bit before proceeding
+    let byte = uart.data().read().bits() as u8;
+    process_byte(byte);
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Validating a peripheral configuration value</h3>
+            <pre><code class="rust">fn set_prescaler(timer: &amp;mut Timer, value: u16) -&gt; Result&lt;(), &amp;'static str&gt; {
+    if value == 0 {
+        // &lt;- `if` as a guard clause: reject an invalid divisor before touching the register
+        return Err("prescaler must be nonzero");
+    }
+    timer.psc().write(|w| w.psc().bits(value));
+    Ok(())
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

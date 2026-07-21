@@ -129,11 +129,79 @@ about ownership and heap placement, as
 [On-stack dynamic dispatch](../../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.md)
 explains in full.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** for `&dyn Trait`/`&mut dyn Trait` — the vtable needs no
-allocator, only a reference to existing data. `Box<dyn Trait>`
-specifically needs the `alloc` crate and a configured global allocator;
-see
-[On-stack dynamic dispatch](../../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.md)
-for the allocator-free equivalent used throughout embedded Rust.
+`dyn Trait` works the same under `#![no_std]` as in hosted Rust —
+object-safety rules are identical, and a vtable-dispatched call requires
+neither an OS nor an allocator by itself. The form that needs nothing
+extra is `&dyn Trait` (or `&mut dyn Trait`): a fat pointer — data pointer
+plus vtable pointer — to a value already living somewhere (the stack, a
+`static`, or borrowed from a caller), with no heap involved at all.
+`Box<dyn Trait>` is a different story: `Box` itself is defined in
+`alloc`, so boxing a trait object is only available once a crate pulls in
+`alloc` and configures a `#[global_allocator]`.
+
+Even where `alloc` is available, many embedded codebases still prefer
+generics and monomorphization over `dyn Trait`, for reasons that matter
+more on a constrained core than on a server. A generic function is
+specialized per concrete type at compile time, so the compiler can inline
+across the call and the CPU executes a direct call instead of an
+indirect jump through a vtable — a real consideration on a core with a
+small or no branch predictor and every cycle budgeted. The tradeoff runs
+the other way in code size: monomorphization generates one copy of the
+generic code per concrete type actually used, where a single
+`dyn`-based function is one copy shared by every implementer — on a chip
+with a few tens of kilobytes of flash, that code-size cost is sometimes
+the deciding factor back toward `dyn` instead. Neither choice is
+universally correct; it's a genuine per-project tradeoff between
+dispatch predictability/inlining and flash footprint, not a case where
+one option is simply wrong.
+
+## Usage examples (Embedded)
+
+### `&dyn Trait` needs no heap
+
+```
+trait Sensor {
+    fn read_raw(&self) -> u16;
+}
+
+struct Thermistor;
+impl Sensor for Thermistor {
+    fn read_raw(&self) -> u16 { 512 }
+}
+
+fn log_reading(sensor: &dyn Sensor) { // <- `&dyn Sensor`: fat pointer to a borrowed value, no allocation
+    let _raw = sensor.read_raw();
+}
+
+let thermistor = Thermistor;
+log_reading(&thermistor);
+```
+
+### `Box<dyn Trait>` once `alloc` is configured
+
+```
+extern crate alloc;
+use alloc::boxed::Box;
+
+trait Sensor {
+    fn read_raw(&self) -> u16;
+}
+
+fn boxed_sensor(sensor: impl Sensor + 'static) -> Box<dyn Sensor> {
+    Box::new(sensor) // <- `dyn Sensor` here still requires `alloc` + a #[global_allocator], same as hosted Rust
+}
+```
+
+### Choosing generics over `dyn` for predictable, allocation-free dispatch
+
+```
+trait Sensor {
+    fn read_raw(&self) -> u16;
+}
+
+fn log_reading_generic<S: Sensor>(sensor: &S) { // <- monomorphized per concrete S: no vtable, no dyn at all
+    let _raw = sensor.read_raw();
+}
+```

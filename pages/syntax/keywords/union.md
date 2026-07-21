@@ -91,10 +91,44 @@ specifies `union` field access as `unsafe` precisely because the type
 system cannot verify that invariant on its own; an `enum` is preferred
 whenever the C side doesn't force this shape.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `union` is core-language and allocator-free. Embedded
-code uses it for the same reason hosted FFI code does — binding a
-vendor's C header that declares a union for a hardware register or
-protocol frame — with `#[repr(C)]` (or `#[repr(packed)]` for a
-bit-for-bit register layout) applied identically under `#![no_std]`.
+`union` shows up in embedded code for the same core reason it shows up in
+any FFI binding — reinterpreting the same bytes as more than one shape —
+but the embedded case is often more literal than a hosted C binding: the
+"other interpretation" is frequently a real hardware register, not merely
+a differently-typed view of ordinary memory. Overlaying a register's raw
+`u32` value with a bitfield struct view (each field a named sub-range of
+bits) lets code read the same storage either as one integer or
+field-by-field, with no safe-Rust abstraction layered in between — some
+low-level register-access code reaches for this instead of hand-written
+shift-and-mask helpers. Because the union's "current" interpretation is
+tracked nowhere but in the programmer's head — or in whatever the
+hardware's datasheet says a given access mode means — reading any field
+stays `unsafe`, exactly as in ordinary Rust. What changes is the stakes:
+a wrong reinterpretation here can mean acting on a fault flag that hasn't
+actually latched or misreading a peripheral's real state, not just
+misreading a harmless byte pattern sitting in RAM.
+
+## Usage examples (Embedded)
+
+### Overlaying a raw register value with its bitfield view
+
+```
+#[repr(C)]
+union ControlRegister { // <- `union`: both fields describe the exact same 4 bytes of hardware register
+    raw: u32,
+    bits: ControlBits,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ControlBits {
+    enable: bool,
+    mode: u8,
+}
+
+let reg = ControlRegister { raw: 0x0000_0001 }; // <- writing the whole `raw` field is safe
+let bits = unsafe { reg.bits }; // <- `union` reads require `unsafe`: reinterpreting raw register bits as a bitfield struct
+println!("{}", bits.enable);
+```

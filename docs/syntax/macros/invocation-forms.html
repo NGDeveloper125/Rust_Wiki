@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Every macro invocation — declarative or procedural, function-like or a
 <code>macro_rules!</code>-style call — is a path, a <code>!</code>, and one delimited group of
@@ -985,7 +986,7 @@ a statement still needs the trailing <code>;</code> (<code>println!("ready");</c
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1022,22 +1023,58 @@ and <code>macro_rules!</code> itself are always written this way in practice.</p
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Delimiter choice is resolved entirely at parse time and
-carries no runtime behavior, so it's identical under <code>#![no_std]</code>.
-Embedded crates follow the same conventions: register- and
-peripheral-definition macros in HAL crates are typically invoked with
-<code>{...}</code> when they expand to item blocks, and with <code>(...)</code> when they
-read as a single expression.</p>
+        <p>Delimiter choice is resolved entirely at parse time and carries no
+runtime behavior at all, so it's identical under <code>#![no_std]</code> — there's
+no embedded-specific grammar here. The same conventions from the classic
+explanation carry over directly: embedded crates reach for <code>{...}</code> when
+a macro's expansion is one or more items (<code>bitflags!</code>-style register-flag
+definitions, <code>macro_rules!</code> itself), <code>(...)</code> for anything that reads
+like a function call or single expression (<code>defmt::info!(...)</code>,
+<code>nb::block!(...)</code>), and <code>[...]</code> mainly for list-like expansions, which
+are rarer in <code>no_std</code> code simply because the standard list-like macro,
+<code>vec!</code>, needs <code>alloc</code> (see <a href="vec-macro.md"><code>vec!</code></a>).</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Defining register flags with the {} item form</h3>
+            <pre><code class="rust">bitflags::bitflags! { // &lt;- {} form: this macro's expansion is a whole struct item, not a single value
+    struct StatusFlags: u8 {
+        const READY   = 0b0000_0001;
+        const TX_BUSY = 0b0000_0010;
+        const RX_FULL = 0b0000_0100;
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Blocking on a non-blocking peripheral operation with the () form</h3>
+            <pre><code class="rust">let byte = nb::block!(serial.read()); // &lt;- () form: reads like an ordinary function call, evaluates to one value
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Same interchangeability, an unconventional [] call</h3>
+            <pre><code class="rust">let ready = assert_eq![gpio.read_pin(5), true]; // &lt;- legal: [] instead of the conventional () for this expression-like macro
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

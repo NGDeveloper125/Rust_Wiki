@@ -93,12 +93,46 @@ when the change feels minor, which is why
 evolution, rather than editing existing signatures in place, as the
 default way to grow a stable crate's public surface.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Dependency resolution and semver work identically
-regardless of target — Cargo doesn't distinguish "embedded" dependencies
-from any other kind. The idiom worth knowing is that many `no_std`-
-compatible crates expose a `std` Cargo feature enabled by default, so the
-same published crate works both hosted and on bare metal; an embedded
-consumer opts out with `default-features = false` rather than depending
-on a separate "embedded edition" of the crate.
+Semver and `Cargo.lock` work identically on an embedded target; the
+genuinely embedded-specific concern is that `#![no_std]` compatibility
+becomes a hard dependency-selection filter, not just a preference. A
+crate that transitively pulls in `std` — even through one dependency
+three levels down — simply fails to compile for a bare-metal target like
+`thumbv7em-none-eabihf`, since there's no OS underneath to provide it.
+This makes checking whether a candidate crate (and everything it depends
+on) supports `#![no_std]`, usually via an opt-out `std` Cargo feature,
+part of picking a dependency at all, not just of tuning it afterward.
+
+## Basic usage example (Embedded)
+
+```
+[dependencies]
+heapless = { version = "0.8", default-features = false }  # <- no_std-compatible fixed-capacity collections
+serde = { version = "1", default-features = false }        # <- opts out of serde's default `std` feature
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Selecting a dependency for a `#![no_std]` crate
+
+A firmware crate needs a JSON-like serialization story, and `serde` is
+the obvious candidate — but pulling it in with its defaults would
+silently drag in `std` and break the bare-metal build.
+
+```
+// AVOID: default features enabled — pulls in `std`, won't compile for thumbv7em-none-eabihf
+serde = "1"
+
+// PREFER: opts out of the default `std` feature; serde derive still works under `#![no_std]`
+serde = { version = "1", default-features = false }
+```
+
+**Why this way:** `serde`'s `std` feature is on by default because most
+of its users are hosted; disabling it and checking a candidate crate's
+docs for `no_std` support before adding the dependency avoids
+discovering a hard compile failure only after the code depending on it
+is already written, which the
+[Embedded Rust Book](https://docs.rust-embedded.org/book/) calls out as
+a routine first check for any candidate crate.

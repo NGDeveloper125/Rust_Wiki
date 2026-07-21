@@ -161,8 +161,66 @@ documents loop labels as the standard way to target an outer loop
 explicitly instead of restructuring the search with a found-flag and extra
 checks.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Lifetimes and loop labels are both purely compile-time,
-core-language constructs erased before codegen — identical behavior in
-`#![no_std]`, with no allocator or runtime footprint either way.
+Mechanically identical under `#![no_std]` in both of its meanings — a
+named lifetime parameter is erased before codegen, and a loop label is a
+compile-time-only jump target, neither carrying any runtime footprint on
+a hosted build or a bare-metal one. What changes is frequency, not
+meaning: explicit `'a` shows up in embedded code more often than in a
+lot of hosted application code, because `embedded-hal`-style driver
+structs are built around *borrowing* a peripheral rather than owning it
+outright. A driver that takes `&'a mut SpiBus` instead of consuming the
+whole bus lets several drivers share one physical peripheral in turn,
+each one only holding the borrow for as long as it's actively in use —
+and that relationship has to be named with an explicit lifetime
+parameter on the driver struct, exactly like `Excerpt<'a>` above names
+the lifetime of the text it borrows. Loop labels don't get any
+embedded-specific twist; they're used for the same "break out of a
+nested loop" reason as anywhere else, including embedded code that scans
+a bus for a responding device.
+
+## Usage examples (Embedded)
+
+### Borrowing a shared SPI bus in a sensor driver
+
+```
+struct Bme280<'a, SPI> {
+    spi: &'a mut SPI, // <- `'a` ties this driver's validity to the borrowed bus, not to a bus it owns outright
+}
+
+impl<'a, SPI> Bme280<'a, SPI>
+where
+    SPI: embedded_hal::spi::SpiBus,
+{
+    fn new(spi: &'a mut SPI) -> Self {
+        Bme280 { spi }
+    }
+
+    fn read_temperature(&mut self) -> Result<f32, SPI::Error> {
+        let mut buf = [0u8; 4];
+        self.spi.read(&mut buf)?;
+        Ok(f32::from_bits(u32::from_le_bytes(buf)))
+    }
+}
+```
+
+### Scanning an I2C bus for a device address with a loop label
+
+```
+fn find_device_address(bus: &mut impl embedded_hal::i2c::I2c) -> Option<u8> {
+    let mut found = None;
+
+    'scan: for candidate in 0x08..=0x77 {
+        // <- `'scan` is a loop label, the same `'ident` sigil as a lifetime but an unrelated meaning
+        for _attempt in 0..3 {
+            if bus.write(candidate, &[]).is_ok() {
+                found = Some(candidate);
+                break 'scan; // <- exits both loops at once, not just the retry loop
+            }
+        }
+    }
+
+    found
+}
+```

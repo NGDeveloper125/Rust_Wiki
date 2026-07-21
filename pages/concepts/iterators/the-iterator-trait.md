@@ -138,10 +138,87 @@ changing its signature, the flexibility the
 [Book's generics chapter](https://doc.rust-lang.org/book/ch10-01-syntax.html)
 recommends generic bounds for.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Iterator` lives in `core::iter`, not `std` — it has no
-dependency on an allocator or an operating system. Iterating a fixed-size
-array, a memory-mapped register range, or a `heapless` collection on a
-microcontroller uses exactly the same trait and the same `next()` method
-as hosted Rust.
+`Iterator` is defined in `core::iter`, not `std::iter` — the trait, its
+associated `Item` type, and the required `next` method have no dependency
+on an allocator, a heap, or an operating system. On a `#![no_std]`
+embedded target, iterating a fixed-size array of sensor readings, a
+memory-mapped register range, or a `heapless::Vec` uses exactly the same
+`next(&mut self) -> Option<Self::Item>` contract as hosted Rust — nothing
+about the trait itself changes. This matters more in embedded than it
+first sounds: because the whole adaptor/consumer machinery built on top
+of `next` is zero-cost, an iterator chain over a fixed array compiles
+down to the same tight loop a hand-written index-based loop would, with
+no runtime overhead and no hidden allocation — a genuine embedded selling
+point, not just a portability footnote. The one thing to keep separate
+from the trait itself is what a *consumer* does with the items it pulls
+out; `sum`, `count`, and `fold` need nothing beyond `core`, while
+`collect` into an allocating type is a separate concern (see
+[FromIterator & collect targets](fromiterator-and-collect-targets.md)).
+
+## Basic usage example (Embedded)
+
+```
+let readings: [u16; 4] = [512, 498, 610, 523]; // raw ADC samples
+
+let mut samples = readings.iter();
+assert_eq!(samples.next(), Some(&512)); // <- next() is the same required method as hosted Rust
+assert_eq!(samples.next(), Some(&498));
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+Scanning a fixed-size buffer of ADC samples for a value past a threshold
+only needs `next()` — no heap, no `Vec`, since the buffer is a plain
+array living on the stack (or in `.bss`).
+
+```
+let samples: [u16; 8] = [512, 498, 610, 523, 700, 480, 505, 690];
+let mut iter = samples.iter(); // <- iterating a plain array; no allocation involved
+
+let mut over_threshold = 0;
+while let Some(&sample) = iter.next() { // <- next() drives iteration one sample at a time
+    if sample > 600 {
+        over_threshold += 1;
+    }
+}
+assert_eq!(over_threshold, 2);
+```
+
+**Why this way:** a fixed `[u16; N]` array's `.iter()` returns a type
+implementing `Iterator` exactly like a `Vec`'s would, so the same
+one-required-method contract applies whether the readings live on the
+stack of a microcontroller or in a heap-backed collection on a hosted
+target.
+
+### Scenario: Writing generic code
+
+A helper that finds the highest reading from a bank of registers
+shouldn't care whether the values came from a fixed array, a
+`heapless::Vec`, or a peripheral read — bounding it on `Iterator` keeps it
+reusable across all three, with no allocation pulled in by the bound
+itself.
+
+```
+fn max_reading<I>(readings: I) -> Option<u16>
+where
+    I: Iterator<Item = u16>, // <- bound directly on core::iter's Iterator, no alloc required
+{
+    readings.fold(None, |max, r| match max {
+        Some(m) if m >= r => Some(m),
+        _ => Some(r),
+    })
+}
+
+let register_bank: [u16; 3] = [512, 498, 610];
+let highest = max_reading(register_bank.into_iter());
+assert_eq!(highest, Some(610));
+```
+
+**Why this way:** bounding on `Iterator<Item = u16>` instead of `&[u16]`
+or a concrete `heapless::Vec<u16, N>` lets the same function accept a
+fixed array, a `heapless` collection, or a filtered chain over either,
+without pulling `alloc` into a function that never needed it.

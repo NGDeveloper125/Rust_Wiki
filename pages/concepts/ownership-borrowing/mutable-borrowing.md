@@ -102,10 +102,104 @@ reflecting a login) enforced in one place — the
 book generally favors encapsulated mutation over exposing raw mutable
 fields that every caller has to update correctly by hand.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No allocator or `std` dependency. The exclusivity
-guarantee is especially valuable for embedded code touching shared
-peripheral state from both a main loop and an interrupt handler — it's
-part of what a sound embedded Rust design (e.g. RTIC's resource model)
-leans on to rule out data races between them at compile time.
+`&mut T`'s exclusivity rule needs no allocator and no `std` — it's core
+language, so it applies exactly as written above under `#![no_std]`. What
+makes it especially load-bearing in embedded code is what the "T" usually
+is: a HAL driver wrapping a peripheral. A method like
+`fn write(&mut self, byte: u8)` on an I2C or SPI driver isn't just an API
+convention — it's the compiler's guarantee that no other code anywhere in
+the program can be simultaneously mid-transaction with that same bus.
+Two `&mut` borrows of the same peripheral can never coexist, so it's
+impossible to compile code where, say, an interrupt handler and the main
+loop both believe they're free to issue the next byte of an I2C transfer
+at the same time.
+
+That guarantee is compile-time and free of runtime cost — no lock to
+acquire, no mutex to poison — which matters on hardware with no OS to fall
+back on for scheduling or fairness. It's also why frameworks like RTIC
+build their whole resource-sharing model on top of `&mut` access: a
+resource declared local to one task is handed out as `&mut` exactly once
+per access window, so the same aliasing-XOR-mutability rule that stops two
+closures from both mutating a `Vec` is what stops a main loop and an
+interrupt from both mid-transaction with the same peripheral.
+
+## Basic usage example (Embedded)
+
+```
+struct I2cBus; // stand-in for a HAL I2C peripheral handle
+
+impl I2cBus {
+    fn write(&mut self, addr: u8, byte: u8) { // <- exclusive access: no other code can also be mid-transaction
+        let _ = (addr, byte); // placeholder for the real register write
+    }
+}
+
+fn set_sensor_gain(bus: &mut I2cBus, addr: u8, gain: u8) {
+    bus.write(addr, gain);
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Mutating through a reference
+
+A multi-byte I2C write needs exclusive access to the bus for its entire
+duration — taking `&mut self` on the driver method is what stops any other
+code from interleaving a conflicting transaction in the middle of it.
+
+```
+struct I2cBus; // stand-in for a HAL I2C peripheral handle
+
+impl I2cBus {
+    fn write_register(&mut self, addr: u8, reg: u8, value: u8) { // <- &mut self: exclusive for the whole transfer
+        let _ = self.start(addr);
+        let _ = self.send(reg);
+        let _ = self.send(value);
+        self.stop();
+    }
+
+    fn start(&mut self, addr: u8) -> bool { let _ = addr; true }
+    fn send(&mut self, byte: u8) -> bool { let _ = byte; true }
+    fn stop(&mut self) {}
+}
+
+let mut bus = I2cBus;
+bus.write_register(0x68, 0x1B, 0x07); // <- one exclusive borrow covers start+send+send+stop
+```
+
+**Why this way:** if `send`/`stop` instead took `&self` and mutated the
+bus through, say, an unsafe register pointer, nothing would stop two
+independent call sites from interleaving their bytes on the wire — taking
+`&mut self` for the whole `write_register` call means the borrow checker
+itself enforces "one complete transaction at a time," matching how the
+[embedded-hal](https://docs.rs/embedded-hal/latest/embedded_hal/) traits
+model bus access as `&mut self` methods throughout.
+
+### Scenario: Modifying an existing object
+
+Configuring several related fields of a GPIO pin together — mode, speed,
+pull resistor — through one `&mut self` method keeps them consistent,
+instead of exposing public fields a caller could update out of order.
+
+```
+struct GpioPin { mode: u8, pull_up: bool }
+
+impl GpioPin {
+    fn configure_as_output(&mut self) { // <- exclusive access to update both fields together
+        self.mode = 0b01; // output mode
+        self.pull_up = false; // outputs don't need a pull resistor
+    }
+}
+
+let mut led_pin = GpioPin { mode: 0, pull_up: true };
+led_pin.configure_as_output();
+```
+
+**Why this way:** grouping the register-level fields behind one `&mut
+self` method keeps the pin's configuration internally consistent — the
+[API Guidelines](https://rust-lang.github.io/api-guidelines/flexibility.html)
+preference for methods over raw mutable fields applies just as much to a
+struct that happens to shadow a hardware register layout as to any other
+type.

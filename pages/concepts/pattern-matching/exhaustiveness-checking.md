@@ -135,11 +135,110 @@ recommends `#[non_exhaustive]` specifically for enums (and structs) a
 library expects to grow, so it can extend them without a semver-major
 bump.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Exhaustiveness checking is a compile-time-only
-guarantee with zero runtime cost and no allocator dependency. It's
-particularly valuable when decoding a fixed set of hardware states or
-protocol message kinds from raw register bits — the compiler guarantees
-every defined state is handled, which matters more, not less, in code
-that can't easily be patched after it ships.
+Exhaustiveness checking is a compile-time-only guarantee: zero runtime
+cost, no allocator dependency, identical proof obligation under
+`#![no_std]` as anywhere else. What changes is how much that guarantee
+is worth. Hosted code that forgets a case usually still fails loudly —
+an unhandled `enum` variant that slips past `match` would show up as a
+crash with a backtrace, filed as a bug, seen by a user. A microcontroller
+decoding a hardware status register or a peripheral's discrete power-mode
+enum has none of that safety net: no user watching the console, often no
+crash reporting at all, sometimes not even a way to reboot itself
+cleanly. An unhandled hardware state there doesn't announce itself — it's
+a silent hang, a motor left running, or state that quietly drifts wrong
+until someone notices the physical symptom. Exhaustiveness checking
+turns that entire failure mode into a compile error, before the firmware
+image is ever flashed to a device that may run unattended for years.
+
+## Basic usage example (Embedded)
+
+```
+enum PowerMode {
+    Active,
+    Idle,
+    Standby,
+    Shutdown,
+}
+
+fn duty_cycle_percent(mode: &PowerMode) -> u8 {
+    match mode { // <- every PowerMode variant must appear, or this fails to compile
+        PowerMode::Active => 100,
+        PowerMode::Idle => 40,
+        PowerMode::Standby => 5,
+        PowerMode::Shutdown => 0,
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Branching on data (pattern matching)
+
+A motor controller's fault register decodes into a fixed set of fault
+codes; matching exhaustively guarantees the firmware image flashed to a
+fleet of unattended devices can't ship with a fault code silently
+ignored — there's no crash report to surface the gap later.
+
+```
+enum MotorFault {
+    OverCurrent,
+    OverTemperature,
+    StallDetected,
+    EncoderFault,
+}
+
+fn shutdown_required(fault: &MotorFault) -> bool {
+    match fault { // <- exhaustive: a new fault code added later fails every match like this until handled
+        MotorFault::OverCurrent => true,
+        MotorFault::OverTemperature => true,
+        MotorFault::StallDetected => false,
+        MotorFault::EncoderFault => true,
+    }
+}
+```
+
+**Why this way:** on a device nobody is watching, an unhandled fault
+code isn't a visible crash to file a bug against — it's a motor that
+keeps running, or a controller that silently hangs, with no diagnostic
+trail at all; forcing the match to name every defined `MotorFault`
+variant stands in for the bug report a hosted program would eventually
+get, per the same exhaustiveness guarantee the
+[Rust Book](https://doc.rust-lang.org/book/ch06-02-match.html#matches-are-exhaustive)
+documents.
+
+### Scenario: Designing a public API
+
+A hardware-abstraction-layer crate's `ChipStatus` enum models every
+status bit the current silicon revision defines; marking it
+`#[non_exhaustive]` lets a later chip revision add a status the HAL
+didn't anticipate without breaking every firmware project's exhaustive
+match against the old release.
+
+```
+#[non_exhaustive] // <- a future silicon revision may define new status bits this HAL release doesn't know
+pub enum ChipStatus {
+    Ready,
+    Calibrating,
+    ThermalThrottle,
+}
+
+// in firmware built against this HAL:
+fn led_pattern(status: &ChipStatus) -> u8 {
+    match status {
+        ChipStatus::Ready => 0b0001,
+        ChipStatus::Calibrating => 0b0010,
+        ChipStatus::ThermalThrottle => 0b0100,
+        _ => 0b1111, // <- required by #[non_exhaustive]; a status this HAL version doesn't recognize yet
+    }
+}
+```
+
+**Why this way:** without `#[non_exhaustive]`, a HAL adding a status bit
+for a newer chip stepping would break every downstream firmware's
+exhaustive match on a minor version bump; the
+[API Guidelines' section on future-proofing](https://rust-lang.github.io/api-guidelines/future-proofing.html)
+recommends it for exactly this kind of enum a crate expects to grow —
+doubly so for hardware-tracking enums, where new silicon revisions are a
+certainty rather than a maybe.

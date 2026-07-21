@@ -183,12 +183,88 @@ handled here, a guarantee a hand-written visitor only keeps if every
 covers this exhaustiveness checking, which is why a closed, crate-local
 type set rarely needs a visitor at all.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both shapes shown here work identically in
-`#![no_std]`: the enum-plus-`match` form has no runtime cost beyond an
-ordinary tag check, and `&dyn Visitor`/`&mut dyn Visitor` dispatch needs
-only a reference, no allocator. The one allocating detail is incidental
-to the example, not the pattern: a `Vec<Box<dyn DocNode>>` collecting
-heterogeneous nodes needs the `alloc` crate; visiting a single value
-through `&dyn Visitor` does not.
+There isn't much genuinely embedded-specific to say about the visitor
+pattern beyond what already applies to any `#![no_std]` use of trait
+objects: both classic shapes work unchanged. The enum-plus-`match` form
+costs nothing beyond an ordinary tag check and needs no allocator, and
+`&dyn Visitor`/`&mut dyn Visitor` dispatch needs only a reference, not a
+`Box`, so it works the same way in firmware as it does on a hosted
+target (the same [on-stack dynamic dispatch](on-stack-dynamic-dispatch.md)
+mechanism the strategy and command pages lean on). If anything, the
+enum-preference argument from the classic Explanation applies even more
+strongly here: embedded element sets — a fixed sequence of register-field
+descriptors read out of a datasheet, a fixed set of frame types on a
+known protocol — are almost always closed and known at compile time,
+which is precisely the case where a `match` beats a trait-based visitor
+outright rather than being merely an alternative. A modest example
+suffices to show the shape; there is no deeper embedded-specific
+nuance beyond that.
+
+## Basic usage example (Embedded)
+
+```
+enum FieldDescriptor {
+    Reserved { bits: u8 },
+    Flag { name: &'static str, bit: u8 },
+}
+
+fn describe(field: &FieldDescriptor) {
+    match field { // <- match plays the visitor's role: no trait, no vtable, no allocator
+        FieldDescriptor::Reserved { bits } => { let _ = bits; }
+        FieldDescriptor::Flag { name, bit } => { let _ = (name, bit); }
+    }
+}
+
+let fields = [
+    FieldDescriptor::Flag { name: "ENABLE", bit: 0 },
+    FieldDescriptor::Reserved { bits: 3 },
+];
+for field in &fields {
+    describe(field);
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Branching on data (pattern matching)
+
+A control register's bitfield layout — which bits are flags, which are
+reserved, which form a multi-bit value — is fixed by the datasheet and
+entirely owned by this crate, so an exhaustive `match` plays the
+visitor's role with no trait or vtable at all.
+
+```
+enum RegisterField {
+    Flag { name: &'static str, bit: u8 },
+    Value { name: &'static str, mask: u32, shift: u8 },
+    Reserved { bits: u8 },
+}
+
+fn print_fields(fields: &[RegisterField]) {
+    for field in fields {
+        match field { // <- exhaustive match over a fixed, datasheet-defined field layout
+            RegisterField::Flag { name, bit } => println!("{name}: bit {bit}"),
+            RegisterField::Value { name, mask, shift } => println!("{name}: mask {mask:#x} << {shift}"),
+            RegisterField::Reserved { bits } => println!("(reserved: {bits} bits)"),
+        }
+    }
+}
+
+let ctrl_reg_fields = [
+    RegisterField::Flag { name: "ENABLE", bit: 0 },
+    RegisterField::Value { name: "CLOCK_DIV", mask: 0xF0, shift: 4 },
+    RegisterField::Reserved { bits: 3 },
+];
+print_fields(&ctrl_reg_fields);
+```
+
+**Why this way:** a register's field layout is fixed by the hardware
+datasheet, not extended by third-party code, so the compiler-enforced
+exhaustiveness of an
+[enum `match`](https://doc.rust-lang.org/book/ch06-02-match.html) gives
+every guarantee a hand-written visitor would, with no allocator and no
+vtable indirection — exactly the closed-set case where the classic
+Explanation's advice to prefer `match` over a trait-based visitor applies
+most cleanly.

@@ -152,11 +152,55 @@ type-check stage, since `str` and `dyn Sensor` have no compile-time-known
 size — `?Sized` is how a generic function opts into accepting them, per
 the [Rust Reference's dynamically sized types chapter](https://doc.rust-lang.org/reference/dynamically-sized-types.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both meanings are core-language. `expr?` desugars to a
-plain `match` plus `From::from` over `core::result::Result` /
-`core::option::Option`, so it works identically under `#![no_std]` with
-no allocator or runtime involved. `?Sized` is a purely compile-time
-relaxation of a trait bound with no runtime dependency at all — both are
-exactly as available on a microcontroller target as on a hosted one.
+`?` works exactly the same, unchanged, under `#![no_std]` — it desugars
+to a plain `match` plus `From::from` over `core::result::Result` /
+`core::option::Option`, both core-language types with no allocator or
+runtime involvement, so nothing about `#![no_std]` restricts it. This
+makes `?` quietly valuable for embedded driver code specifically: an I2C
+or SPI transaction is naturally a chain of several fallible steps — write
+a command byte, read back a response, write another byte — and `?` lets
+each step propagate its failure without a `match` at every line, exactly
+the pattern from the classic Explanation above. One thing worth being
+explicit about: `?`'s `From::from` conversion needs the enclosing
+function's error type to implement `From<E>` for whatever error `E` each
+step produces, and that has nothing to do with `std::error::Error` —
+which isn't available without `std` at all (`core::error::Error` now
+exists separately) — no more than hosted code strictly needs it either.
+Embedded driver crates typically define their own small, `#[derive(Debug)]`
+no_std error enum with a `From` impl per underlying error source (an I2C
+error, a SPI error, a timeout), and `?` chains through that enum exactly
+as it would through any hosted `Result` type.
+
+## Usage examples (Embedded)
+
+### Propagating I2C transaction errors through a custom no_std error type
+
+```
+use embedded_hal::i2c::{I2c, Error as I2cErrorTrait};
+
+#[derive(Debug)]
+enum SensorError {
+    Bus,
+    UnexpectedId(u8),
+}
+
+impl<E: I2cErrorTrait> From<E> for SensorError {
+    fn from(_error: E) -> Self {
+        SensorError::Bus // <- collapses any bus-level error into one variant
+    }
+}
+
+const WHO_AM_I_REG: u8 = 0x0F;
+const EXPECTED_ID: u8 = 0x68;
+
+fn read_who_am_i(i2c: &mut impl I2c, addr: u8) -> Result<u8, SensorError> {
+    let mut buf = [0u8; 1];
+    i2c.write_read(addr, &[WHO_AM_I_REG], &mut buf)?; // <- `?` converts any I2C error into SensorError via the impl above
+    if buf[0] != EXPECTED_ID {
+        return Err(SensorError::UnexpectedId(buf[0]));
+    }
+    Ok(buf[0])
+}
+```

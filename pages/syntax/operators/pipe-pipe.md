@@ -84,8 +84,45 @@ fail-fast validation style the
 [Book](https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html)
 recommends for recoverable input errors.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** for both meanings — logical OR and zero-argument
-closures both work identically in `#![no_std]` (closures don't require
-heap allocation unless they're boxed as `dyn Fn`).
+`||` behaves identically under `#![no_std]` — short-circuiting boolean
+OR needs no allocator or runtime support. As with `&&`, the
+embedded-specific detail isn't the semantics but the frequency:
+checking several independent fault or out-of-range conditions before
+shutting down a peripheral is a constant pattern, and short-circuiting
+means the cheapest or most-likely-true check can be written first to
+skip the rest on the common path. The zero-argument-closure meaning
+shows up wherever a HAL exposes a callback-style API that doesn't need
+to hand the closure any data — a one-shot timer callback or a simple
+"do this once" scheduling helper — though in practice the
+single-parameter form (`|cs|`, covered on the [`|`](pipe.md) page) is
+more common in HAL critical-section APIs than the fully empty `||`
+form.
+
+## Usage examples (Embedded)
+
+### Checking multiple fault conditions before an emergency shutdown
+
+```
+fn shutdown_required(overcurrent: bool, overtemp: bool, undervoltage: bool) -> bool {
+    overcurrent || overtemp || undervoltage // <- `||`: any single fault is enough to trigger shutdown
+}
+
+let must_shutdown = shutdown_required(false, true, false);
+assert!(must_shutdown);
+```
+
+### Registering a zero-argument timer callback
+
+```
+fn on_tick<F: FnMut()>(mut callback: F) {
+    callback(); // in real firmware this runs once per timer interrupt
+}
+
+fn schedule_watchdog_kick() {
+    on_tick(|| { // <- `||` opens this closure's empty parameter list
+        // feed_watchdog();
+    });
+}
+```

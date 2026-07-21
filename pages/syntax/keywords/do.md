@@ -33,7 +33,17 @@ let do = 5;     // error: expected identifier, found reserved keyword `do`
 let r#do = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+**Full support.** Keyword reservation is a lexer-level fact, identical in
+`#![no_std]` and hosted Rust alike — `do` carries no defined meaning on
+any target, so there's no embedded-specific behavior to describe.
+
+## Usage examples (Embedded)
+
+### The `do` reservation, unaffected by target
+
+```
+let do = 5;     // error: expected identifier, found reserved keyword `do`, on every target
+let r#do = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+```

@@ -123,12 +123,97 @@ so exact `==` silently produces false negatives; the
 lint exists to catch this before it becomes an intermittent bug in
 sensor or scientific code.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Clippy and rustfmt operate on source code through
-Cargo, entirely independent of the compilation target — they run exactly
-the same way, with the same lints and formatting rules, whether the crate
-targets a hosted OS or `#![no_std]` bare metal. Neither tool needs `std`,
-an allocator, or any runtime support to do its job, since both work at
-the level of source text and the compiler's own parsed representation of
-it, not the compiled artifact.
+Clippy and rustfmt run identically regardless of target. Both operate on
+source code — rustfmt reformats source text directly, and clippy lints
+against the compiler's parsed representation of it (roughly, the same
+stage `rustc` itself analyzes) — rather than on anything produced by
+codegen or linking. Cross-compiling to `thumbv7em-none-eabihf` instead of
+the host triple doesn't change what either tool sees: `cargo clippy
+--target thumbv7em-none-eabihf` and `cargo fmt` run the same lints and
+apply the same formatting rules they would on any hosted crate, with no
+embedded-specific behavior in either tool.
+
+What does shift is which of clippy's existing, general-purpose lints
+carry more weight in firmware. Nothing about `#![no_std]` adds
+embedded-specific lints, but restriction-group lints like
+`clippy::unwrap_used`, `clippy::indexing_slicing`, and
+`clippy::arithmetic_side_effects` — all of which flag places a panic
+could occur — are worth enabling more readily on a target where a panic
+often means an abort-and-reset with no attached terminal to report it,
+rather than a caught unwind a hosted process can log and recover from.
+That's a difference in which lints a project chooses to turn on, not a
+difference in what the tools themselves do.
+
+## Basic usage example (Embedded)
+
+```
+#![no_std]
+#![warn(clippy::arithmetic_side_effects)] // <- an ordinary clippy lint; runs the same under any --target
+
+pub fn scale_reading(raw: u16, factor: u16) -> u16 {
+    raw.saturating_mul(factor) // <- avoids the panic-on-overflow arithmetic the lint flags
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Numeric computation
+
+A calibration calculation on sensor data uses plain arithmetic that could
+overflow; `clippy::arithmetic_side_effects` flags it the same way it
+would in any hosted crate, but the consequence of leaving it unfixed is
+more severe on a target where an overflow panic resets the device rather
+than getting caught by a supervising process.
+
+```
+#![no_std]
+#![warn(clippy::arithmetic_side_effects)]
+
+// AVOID: an overflowing add here panics, and on target that means a reset, not a caught error
+fn calibrate_avoid(raw: u16, offset: u16) -> u16 {
+    raw + offset // <- clippy::arithmetic_side_effects flags this
+}
+
+// PREFER: overflow is handled explicitly instead of panicking
+fn calibrate(raw: u16, offset: u16) -> u16 {
+    raw.saturating_add(offset)
+}
+```
+
+**Why this way:** the lint itself is not embedded-specific — it fires
+identically on a hosted crate — but a panic from unchecked arithmetic is
+markedly more expensive on a target with no unwind-catching supervisor
+to report it, which is a reason to enable this ordinarily-opt-in
+restriction lint more readily in firmware; see
+[`clippy::arithmetic_side_effects`](https://rust-lang.github.io/rust-clippy/master/#arithmetic_side_effects)
+in the clippy lint list.
+
+### Scenario: Handling and propagating errors
+
+A peripheral-init routine that panics via `.unwrap()` on a hardware
+failure leaves a firmware author with only a reset to recover from;
+`clippy::unwrap_used` flags this exactly as it would in hosted code,
+pushing the driver toward a `Result`-returning constructor instead.
+
+```
+#![no_std]
+#![warn(clippy::unwrap_used)]
+
+// AVOID: any I2C failure here panics the whole firmware
+fn init_sensor_avoid(i2c: &mut impl embedded_hal::i2c::I2c) {
+    i2c.write(0x76, &[0x00]).unwrap(); // <- clippy::unwrap_used flags this in library code
+}
+
+// PREFER: the caller decides how to handle an init failure
+fn init_sensor(i2c: &mut impl embedded_hal::i2c::I2c) -> Result<(), embedded_hal::i2c::ErrorKind> {
+    i2c.write(0x76, &[0x00]).map_err(|_| embedded_hal::i2c::ErrorKind::Other)
+}
+```
+
+**Why this way:** the lint is the same one described in this page's
+classic "Designing a public API" scenario above, unchanged for an
+embedded target — but returning `Result` matters even more in firmware,
+where a caller may want to retry a transient bus error rather than let a
+panic-triggered reset discard in-progress state.

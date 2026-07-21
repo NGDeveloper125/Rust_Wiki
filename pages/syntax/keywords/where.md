@@ -128,9 +128,29 @@ recommends `where` once a signature has more than one bounded type
 parameter, precisely so the function name and parameter list stay
 readable at a glance, with constraints listed separately underneath.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `where` is pure compile-time grammar with no `std` or
-allocator dependency — `embedded-hal`-generic driver code relies on it
-constantly to bound associated types (e.g. an SPI trait's associated
-error type) that have no inline bound position.
+`where` means exactly the same thing under `#![no_std]` — a pure
+compile-time clause with no runtime cost or allocator dependency. It
+shows up constantly in embedded driver code specifically because
+`embedded-hal` traits lean on associated types (an SPI trait's associated
+`Error` type, for instance), and bounding an associated type has no
+inline position to write it in — `where` is the only legal spelling here,
+same as in any other Rust code with an associated-type bound.
+
+## Usage examples (Embedded)
+
+### Bounding a generic driver function over embedded-hal traits
+
+```
+fn init_display<SPI, CS>(spi: &mut SPI, cs: &mut CS) -> Result<(), SPI::Error>
+where
+    SPI: embedded_hal::spi::SpiBus, // <- `where` bounds the bus type over the SpiBus trait
+    CS: embedded_hal::digital::OutputPin,
+{
+    cs.set_low().ok();
+    spi.write(&[0xAE])?; // display-off command, as an example
+    cs.set_high().ok();
+    Ok(())
+}
+```

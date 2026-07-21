@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>( )</code> serves several distinct roles depending on context:</p>
 <ul>
@@ -974,7 +975,7 @@ tuple.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1029,19 +1030,48 @@ this destructuring-in-match pattern for working with enum payloads.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Grouping, tuples, and calls are core grammar — no <code>std</code>
-dependency. The unit type <code>()</code> in particular is exactly as zero-cost on
-an embedded target as anywhere else.</p>
+        <p><code>( )</code> means exactly the same thing under <code>#![no_std]</code> — grouping, tuples,
+and calls are core grammar with no <code>std</code> dependency, and the unit type
+<code>()</code> is exactly as zero-cost on an embedded target as anywhere else.
+Firmware startup code leans on the call and tuple forms constantly: a
+device's peripherals are taken through an <code>Option</code>-returning call that
+gets unwrapped, and splitting a configuration value into several pieces
+is usually returned and destructured as a tuple.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Taking peripherals and constructing a driver</h3>
+            <pre><code class="rust">let dp = pac::Peripherals::take().unwrap(); // &lt;- `( )` here is the `.take()` call
+let mut led = Led::new(dp.GPIOA); // &lt;- `( )` here constructs the driver
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Building and destructuring a timer config tuple</h3>
+            <pre><code class="rust">fn timer_config() -&gt; (u32, u8) {
+    (16_000_000, 8) // &lt;- `( )` builds a tuple: (clock_hz, prescaler)
+}
+
+let (clock_hz, prescaler) = timer_config(); // &lt;- `( )` destructures it back into two bindings
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

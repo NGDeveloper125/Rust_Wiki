@@ -100,9 +100,117 @@ types, so a hand-written `unsafe impl` should be rare and deliberate,
 reserved for the specific fields (raw pointers, FFI types) that opt a
 type out of the automatic derivation.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** All defined in `core` — no `std` dependency. `Send`/`Sync`
-are especially relevant in embedded code sharing state between a main
-loop and an interrupt handler, or between tasks in an async executor like
-`embassy`.
+`Copy`, `Sized`, `Send`, and `Sync` are all defined in `core::marker`, so
+none of them depend on `std`, and `Send`/`Sync` remain the canonical
+marker-trait example in embedded Rust for the same reason they are on a
+hosted target: they answer whether a type is safe to move or share across
+a concurrent boundary, purely through the type system, with no runtime
+check. The concurrent boundary itself looks different on bare metal —
+usually a main loop and one or more `#[interrupt]` handlers rather than
+OS threads — which is the full story [Send & Sync's embedded
+explanation](../concurrency-async/send-and-sync.md) covers in depth and
+isn't repeated here.
+
+A second, genuinely embedded-specific use of the marker-trait idea shows
+up inside HAL crates themselves, encoding a hardware capability or pin
+mode as a type-level fact rather than a runtime flag. A HAL that models
+each GPIO pin's electrical mode as a distinct type (a "type-state" pin)
+can also define a marker trait like `PwmCapable` implemented only for the
+specific pin/timer-channel combinations whose silicon actually routes to
+a PWM channel — a function that configures PWM output can then require
+`P: PwmCapable` and reject every other pin at compile time, with zero
+runtime cost, instead of accepting any pin and returning an error (or
+worse, silently doing nothing) the moment it's asked to drive PWM on a
+pin that was never wired to a timer.
+
+## Basic usage example (Embedded)
+
+```
+trait PwmCapable {} // marker: no methods, just a type-level fact about this pin
+
+struct Pa0; // this pin's timer channel is routed for PWM
+impl PwmCapable for Pa0 {}
+
+struct Pa1; // this pin has no timer channel wired up — no impl
+
+fn configure_pwm<P: PwmCapable>(_pin: P) { /* ... */ }
+
+configure_pwm(Pa0);
+// configure_pwm(Pa1); // <- fails to compile: Pa1 doesn't implement PwmCapable
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL exposing PWM configuration should reject non-PWM-capable pins at
+compile time rather than at runtime — a zero-method marker trait
+implemented only for the pins whose hardware genuinely supports it makes
+the constraint part of the function's signature.
+
+```
+trait PwmCapable {} // <- marker trait: encodes "this pin's timer channel supports PWM"
+
+struct TimerChannel2Pin; // wired to a timer with PWM output
+impl PwmCapable for TimerChannel2Pin {}
+
+struct PlainGpioPin; // no timer routing — deliberately no impl
+
+struct PwmOutput<P: PwmCapable> { // <- only accepts pins that implement the marker
+    pin: P,
+    duty: u8,
+}
+
+impl<P: PwmCapable> PwmOutput<P> {
+    fn new(pin: P) -> Self {
+        PwmOutput { pin, duty: 0 }
+    }
+}
+
+let pwm = PwmOutput::new(TimerChannel2Pin); // compiles
+// let bad = PwmOutput::new(PlainGpioPin); // <- fails to compile: PlainGpioPin isn't PwmCapable
+```
+
+**Why this way:** a wrong pin passed to `PwmOutput::new` becomes a
+compile error instead of a runtime misconfiguration that might only
+surface as "the LED never dims" — the marker trait costs nothing at
+runtime (it has no methods and no fields) while moving a hardware
+constraint the type system can express out of the realm of things a test
+has to catch.
+
+### Scenario: Multi-threading
+
+A queue type read from the main loop and written from an interrupt
+handler needs its element type bounded by `Send`, the same marker trait
+[Send & Sync's embedded explanation](../concurrency-async/send-and-sync.md)
+covers for sharing state across that boundary — here the constraint
+shows up on a generic queue's type parameter rather than on a single
+`static`.
+
+```
+struct IsrQueue<T: Send, const N: usize> { // <- Send bound: T must be safe to hand across the ISR boundary
+    items: [Option<T>; N],
+    len: usize,
+}
+
+impl<T: Send, const N: usize> IsrQueue<T, N> {
+    fn push(&mut self, item: T) -> bool {
+        if self.len == N {
+            return false;
+        }
+        self.items[self.len] = Some(item);
+        self.len += 1;
+        true
+    }
+}
+```
+
+**Why this way:** requiring `T: Send` on the queue itself means any
+attempt to store a type that isn't safe to hand across the main-loop/ISR
+boundary (an `Rc`, say) fails to compile at the queue's definition site,
+rather than only failing later at whichever call site happens to move a
+bad value into it — the same structural-propagation guarantee `Send`
+provides for OS threads, applied here to a queue shared with an interrupt
+handler instead of `std::sync::Mutex`.

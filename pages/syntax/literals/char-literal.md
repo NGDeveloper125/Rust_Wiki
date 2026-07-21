@@ -89,9 +89,31 @@ character, as the
 [std `str` docs](https://doc.rust-lang.org/std/primitive.str.html#method.get)
 note (use `.get()` or char-based iteration instead).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `char` is a `core` primitive — no `std` dependency,
-though its 4-byte size is worth remembering on very memory-constrained
-targets where a raw [byte literal](byte-literal.md) (`u8`) is often the
-more appropriate choice for protocol/text work that's ASCII-only anyway.
+`char` behaves identically under `#![no_std]` — it's a `core` primitive
+(`core::char`, re-exported as `std::char` on hosted targets), so nothing
+about a `char` literal changes on a bare-metal target: no allocator
+involvement, no feature gate, the full Unicode-scalar-value semantics
+exactly as on desktop. There isn't a genuinely new embedded-specific
+angle to this literal form beyond what the classic explanation already
+covers — the one practical note worth repeating in an embedded context
+is the same one already given for hosted code: a `char` is always 4
+bytes, so on a byte-oriented, ASCII-only interface (UART, AT commands, a
+text sensor protocol) a raw `u8`/[byte literal](byte-literal.md) is
+usually the more natural fit than decoding to `char` at all.
+
+## Usage examples (Embedded)
+
+### Matching a single command byte from a UART receive buffer
+
+```
+fn handle_command(byte: u8) -> &'static str {
+    match byte as char {
+        'r' => "reset requested",       // <- char literal: matched after casting an incoming UART byte to `char`
+        's' => "status requested",
+        '\r' | '\n' => "end of line",
+        _ => "unknown command",
+    }
+}
+```

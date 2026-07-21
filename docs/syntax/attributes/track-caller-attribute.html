@@ -948,7 +948,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[track_caller]</code> is placed on a <code>fn</code> item and changes what
 <code>core::panic::Location::caller()</code> reports when called anywhere inside
@@ -990,7 +991,7 @@ call has erased which concrete call site is calling through it.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1072,23 +1073,57 @@ describes for custom assertion helpers that want to preserve
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>#[track_caller]</code> and <code>Location::caller()</code> are both in
-<code>core</code>, with zero dependency on <code>alloc</code>/<code>std</code> or an OS, so the mechanism
-works identically in <code>#![no_std]</code>. It's arguably more valuable there: a
-<code>#![no_std]</code> panic handler often has no backtrace or debugger attached by
-default, so the file/line a <code>#[track_caller]</code>-annotated helper reports
-may be the only diagnostic information available about where a
-validation failure actually originated.</p>
+        <p><code>#[track_caller]</code> and <code>core::panic::Location::caller()</code> both live in
+<code>core</code>, with no dependency on <code>alloc</code>/<code>std</code> or an OS, so the mechanism is
+fully available and behaves identically under <code>#![no_std]</code>. It arguably
+matters <em>more</em> in embedded code than in a hosted program: a <code>#![no_std]</code>
+panic handler frequently has no attached debugger, no backtrace, and no
+OS-level crash report to fall back on — depending on the panic handler,
+all it does is blink an LED, reset the chip, or emit a message over
+RTT/UART. In that setting, the file/line a <code>#[track_caller]</code>-annotated
+validation helper reports may be the <em>only</em> diagnostic information
+available about where a bad value actually originated, rather than one
+convenience among several.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reporting the caller's location from a HAL validation panic</h3>
+            <pre><code class="rust">#[track_caller] // &lt;- panics from inside this function report the CALLER's source location
+fn require_valid_channel(channel: u8) -&gt; u8 {
+    if channel &gt;= 8 {
+        panic!("ADC channel {channel} out of range (0..=7)");
+    }
+    channel
+}
+
+fn read_adc(channel: u8) -&gt; u16 {
+    let channel = require_valid_channel(channel); // &lt;- an out-of-range call here is what gets reported
+    // ... trigger a conversion on `channel` and return the raw sample
+    0
+}
+</code></pre>
+<p>Without <code>#[track_caller]</code>, every misconfigured call
+across a firmware crate would report the same unhelpful line inside
+<code>require_valid_channel</code> itself — over RTT or a UART log with no debugger
+attached, that's often the only location information available at all.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

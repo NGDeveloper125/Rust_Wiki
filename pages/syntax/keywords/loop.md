@@ -108,8 +108,45 @@ distinguishes "empty for now" from "disconnected," which a blocking
 `recv()` inside `loop` can't do — the sleep keeps this from becoming a
 busy-spin that pegs a CPU core while waiting.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** An unconditional `loop {}` is the idiomatic body of
-`fn main() -> !` in almost every embedded firmware entry point, since a
-bare-metal program never "exits" the way a hosted process does.
+`loop` is arguably more central in embedded Rust than anywhere else in the
+language. A bare-metal firmware image has no OS to return control to when
+`main` finishes — there is no "exit," only "keep running or halt" — so
+`fn main() -> !` almost always ends with an unconditional `loop { ... }`
+as its body, and the `!` return type documents at the signature level
+that this function is never expected to return. The same shape appears
+one level down, too: before an interrupt-driven design is wired up (or
+when one genuinely isn't warranted), the standard way to wait on a
+peripheral is a tight `loop` that polls a status bit and `break`s once
+it's set — a busy-wait. Because `loop` is the one loop form that can
+`break` with a value, that pattern doubles as "spin until ready, then
+hand back what you were waiting for" in a single expression.
+
+## Usage examples (Embedded)
+
+### The firmware entry point that never returns
+
+```
+#[entry]
+fn main() -> ! {
+    let mut led = configure_led();
+    loop {
+        // <- `loop {}` is the idiomatic never-returning body of an embedded main function
+        led.toggle();
+        delay.delay_ms(500u16);
+    }
+}
+```
+
+### Busy-waiting on a peripheral flag before interrupts are wired up
+
+```
+loop {
+    // <- polls the status register directly; a real driver would switch to an interrupt once one is configured
+    if uart.status().read().txe().bit_is_set() {
+        break;
+    }
+}
+uart.data().write(|w| w.bits(byte as u32));
+```

@@ -947,7 +947,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>false</code> is the boolean literal for a false value, of type <code>bool</code>. Like
 <code>true</code>, it is both a reserved keyword and a complete literal expression.</p>
@@ -956,7 +957,7 @@ non-numeric type with no implicit conversions.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -993,18 +994,40 @@ for the fuller treatment of <code>bool</code> literals.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Same as <a href="../../syntax/keywords/true.html"><code>true</code></a> — a <code>core</code> primitive, no <code>std</code>
-dependency.</p>
+        <p>As with <a href="true.md"><code>true</code></a>, there's no genuine embedded-specific angle to
+<code>false</code> — it's the same <code>core</code> primitive literal, identical under
+<code>#![no_std]</code>. It's worth naming plainly rather than manufacturing a
+distinction: the only embedded-flavored thing to say is what a <code>false</code>
+typically represents in firmware — an interrupt flag that hasn't fired
+yet, or a peripheral not yet ready.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A completion flag that starts false until an interrupt fires</h3>
+            <pre><code class="rust">let mut dma_transfer_complete = false; // &lt;- `false` is the initial state before the DMA interrupt sets it
+
+fn on_dma_complete(flag: &amp;mut bool) {
+    *flag = true;
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

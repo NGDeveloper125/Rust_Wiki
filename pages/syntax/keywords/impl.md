@@ -120,10 +120,37 @@ for why this costs nothing at runtime. An explicit generic parameter
 becomes useful once the signature needs to refer to `T` more than once
 (e.g. two parameters that must share the same concrete type).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Inherent and trait `impl` blocks are core-language,
-allocator-free, and used identically in `#![no_std]` — `embedded-hal`
-driver crates are built almost entirely out of `impl Trait for Type`
-blocks connecting a vendor's peripheral type to the hardware-abstraction
-traits.
+`impl` means exactly the same thing under `#![no_std]` as in hosted
+Rust — the same choice between an inherent block and a trait-implementing
+block, made the same way. Worth naming explicitly is how central the
+trait-implementing form is to the embedded ecosystem: a driver crate
+written against `embedded-hal` is, at its simplest, one struct plus one
+or more `impl <HalTrait> for MyDriver` blocks translating the trait's
+generic method calls into the specific register writes a real chip
+needs.
+
+## Usage examples (Embedded)
+
+### Implementing an embedded-hal trait for a custom driver type
+
+```
+struct MockLed {
+    state: bool,
+}
+
+impl embedded_hal::digital::OutputPin for MockLed { // <- `impl Trait for Type`: connects OutputPin's methods to MockLed
+    type Error = core::convert::Infallible;
+
+    fn set_high(&mut self) -> Result<(), Self::Error> {
+        self.state = true;
+        Ok(())
+    }
+
+    fn set_low(&mut self) -> Result<(), Self::Error> {
+        self.state = false;
+        Ok(())
+    }
+}
+```

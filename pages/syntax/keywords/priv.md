@@ -66,7 +66,42 @@ validating constructor and a read accessor is the same "invalid states
 unrepresentable" discipline the API Guidelines and Effective Rust both
 build their privacy advice around.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+`priv` is still just reserved, unusable syntax under `#![no_std]` —
+keyword reservation is a lexer-level concept with no runtime footprint
+either way, so there's nothing target-specific about it. What is worth
+restating in an embedded setting is what `priv` used to do, and why
+today's inverted default fills the same role there: a HAL driver's
+register-twiddling internals stay private by the ordinary default (no
+`priv` needed, exactly as everywhere else in modern Rust), and only the
+handful of methods meant to be called from firmware code are opted in
+with `pub` — see [`pub`](pub.md) for that split in more depth. `priv`
+itself contributes nothing further to that story in embedded code beyond
+what it contributes anywhere else — this is one of those cases where
+there's genuinely no embedded-specific nuance to add.
+
+## Usage examples (Embedded)
+
+### The raw-identifier escape hatch, unchanged under `#![no_std]`
+
+```
+#![no_std]
+
+let priv = 5;     // error: expected identifier, found reserved keyword `priv`
+let r#priv = 5;   // ok: the raw-identifier form escapes the reservation, same as on any hosted target
+```
+
+### Today's default-private HAL internals doing `priv`'s old job
+
+```
+pub struct Adc {
+    resolution_bits: u8, // private by default — no `priv` needed, this is the current default
+}
+
+impl Adc {
+    pub fn new(resolution_bits: u8) -> Self {
+        Adc { resolution_bits: resolution_bits.min(12) } // <- invariant enforced here, not by the field
+    }
+}
+```

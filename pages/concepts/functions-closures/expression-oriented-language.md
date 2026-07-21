@@ -131,9 +131,58 @@ immutable as possible — a pattern the
 [Rust Design Patterns book](https://rust-unofficial.github.io/patterns/idioms/temporary-mutability.html)
 calls out directly as an idiom to prefer over temporary mutability.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Being expression-oriented is a compile-time property of
-the language's grammar — `if`/`match`/block expressions compile to the
-same branching code on a microcontroller as they would on a server, with
-no dependency on `std`, an allocator, or an OS.
+There is genuinely little to add here beyond: it's still true, and used
+exactly the same way. Being expression-oriented is a property of Rust's
+grammar, resolved entirely at compile time — `if`/`match`/block
+expressions produce values and lower to the same branching code whether
+the target is a hosted server or a microcontroller with no `std`, no
+allocator, and no OS. Embedded code leans on this just as much as any
+other Rust code, most visibly for picking a configuration constant based
+on a compile-time or boot-time condition (a baud rate, a clock-prescaler
+value, a register bit pattern) in one expression, rather than declaring a
+`mut` variable and assigning it in each branch.
+
+## Basic usage example (Embedded)
+
+```
+const HIGH_SPEED: bool = true;
+let baud_rate = if HIGH_SPEED { 115_200 } else { 9_600 };
+// <- `if`/`else` is an expression here: it produces `baud_rate` directly, no `mut` needed
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Creating a new object
+
+Building a UART configuration where the baud rate depends on which
+crystal frequency the board was fitted with reads more clearly when that
+field is computed by an `if` expression bound once, rather than declared
+`mut` and reassigned before the struct literal — exactly the same idiom
+as in hosted code, just choosing a hardware constant instead of an app
+setting.
+
+```
+struct UartConfig {
+    baud_rate: u32,
+    data_bits: u8,
+}
+
+fn build_uart_config(high_speed_crystal: bool) -> UartConfig {
+    let baud_rate = if high_speed_crystal { 115_200 } else { 9_600 };
+    // <- expression assigns the final value directly; `baud_rate` is never `mut`
+
+    UartConfig {
+        baud_rate,
+        data_bits: 8,
+    }
+}
+```
+
+**Why this way:** binding the result of an expression once, instead of
+mutating a placeholder, keeps the binding as short-lived and immutable as
+possible — the same
+[Rust Design Patterns temporary-mutability idiom](https://rust-unofficial.github.io/patterns/idioms/temporary-mutability.html)
+cited in this page's classic Best practices applies unchanged to a
+hardware-configuration value.

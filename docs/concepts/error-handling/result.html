@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>Result&lt;T, E&gt;</code> is Rust's type for an operation that might not succeed,
 and needs to say why when it doesn't. Like <a href="../../concepts/error-handling/option.html"><code>Option&lt;T&gt;</code></a> it's
@@ -989,7 +990,7 @@ composable failure type instead of an opaque message.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn parse_reading(raw: &amp;str) -&gt; Result&lt;f64, std::num::ParseFloatError&gt; { // &lt;- explicit "maybe failed" return type
     raw.trim().parse()
@@ -1003,7 +1004,7 @@ match parse_reading("21.5") {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1115,20 +1116,121 @@ on writing assertions that check specific outcomes.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Result&lt;T, E&gt;</code> is <code>core::result::Result</code>, works
-identically in <code>#![no_std]</code>, and requires no allocator by itself — only
-the choice of <code>E</code> (say, a <code>String</code>-based error, which needs <code>alloc</code>)
-can pull in a dependency the type itself doesn't require.</p>
+        <p><code>Result&lt;T, E&gt;</code> is <code>core::result::Result</code> — the same two-variant enum, with
+identical semantics and no allocator required by the type itself; only the
+choice of <code>E</code> (a <code>String</code>-based error, say, which needs <code>alloc</code>) can pull
+in a dependency the type itself doesn't demand.</p>
+<p>The design weight is higher in embedded code, though, not lower. On a
+hosted program there's usually a person or a log aggregator watching
+stderr, so an occasionally-swallowed error is merely sloppy. On a deployed
+device there is often nobody watching anything: <code>Result&lt;(), E&gt;</code> coming back
+from an SPI transaction, an I2C read, or a flash write is frequently the
+<em>only</em> signal that something went wrong at all. <code>embedded_hal</code>'s traits
+(<code>I2c</code>, <code>SpiDevice</code>, and the rest) return <code>Result&lt;T, Self::Error&gt;</code> from
+every fallible operation for exactly this reason, and consistently
+propagating that <code>Result</code> — logging it over UART/RTT, retrying, or falling
+back to a known-safe state — rather than reaching for <code>.unwrap()</code> or
+discarding it with <code>.ok()</code>, is what actually surfaces a hardware fault
+instead of letting it disappear silently into a wrong reading or a hung
+peripheral.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use embedded_hal::i2c::I2c;
+
+fn read_register&lt;I: I2c&gt;(i2c: &amp;mut I, addr: u8, reg: u8) -&gt; Result&lt;u8, I::Error&gt; { // &lt;- explicit "may fail" return type
+    let mut buf = [0u8; 1];
+    i2c.write_read(addr, &amp;[reg], &amp;mut buf)?;
+    Ok(buf[0])
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>A sensor driver turns a low-level SPI transfer failure into its own error
+type with <code>map_err</code>, then an averaging function propagates that same error
+across three chained reads with <code>?</code> instead of unwrapping past a bus
+fault.</p>
+<pre><code class="rust">use embedded_hal::spi::SpiDevice;
+
+#[derive(Debug)]
+struct SensorError;
+
+fn read_raw(spi: &amp;mut impl SpiDevice, cmd: u8) -&gt; Result&lt;u16, SensorError&gt; {
+    let mut buf = [0u8; 2];
+    spi.transfer(&amp;mut buf, &amp;[cmd]).map_err(|_| SensorError)?; // &lt;- Result::map_err adapts the low-level SPI error
+    Ok(u16::from_be_bytes(buf))
+}
+
+fn average_of_three(spi: &amp;mut impl SpiDevice, cmd: u8) -&gt; Result&lt;u32, SensorError&gt; {
+    let mut total: u32 = 0;
+    for _ in 0..3 {
+        total += read_raw(spi, cmd)? as u32; // &lt;- propagates instead of unwrapping past a bus fault
+    }
+    Ok(total / 3)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> propagating the <code>Result</code> instead of swallowing it with
+<code>.ok()</code> or panicking on it matters more here than on a hosted program — a
+bus fault surfaced only as a subtly wrong average is a far harder field bug
+to diagnose than one that halts the call chain immediately at the failing
+transaction.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>Writing a duty-cycle percentage to a PWM peripheral rejects an
+out-of-range value up front, returning <code>Result</code> instead of silently
+clamping it to something the caller never asked for.</p>
+<pre><code class="rust">#[derive(Debug, PartialEq)]
+struct OutOfRange;
+
+fn set_duty_cycle(percent: u8) -&gt; Result&lt;(), OutOfRange&gt; {
+    if percent &gt; 100 {
+        return Err(OutOfRange);
+    }
+    // ... write `percent` into the timer's compare register
+    Ok(())
+}
+
+assert_eq!(set_duty_cycle(150), Err(OutOfRange));
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> rejecting the bad value explicitly, rather than clamping
+it silently to 100%, keeps a caller's logic bug from masquerading as
+normal operation — a real risk on a device where the wrong duty cycle may
+run unnoticed for a long time before anyone checks the output.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

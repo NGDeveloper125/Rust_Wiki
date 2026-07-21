@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>{ }</code> delimits a <strong>block expression</strong> — a sequence of statements followed
 by an optional final expression.</p>
@@ -969,7 +970,7 @@ otherwise try to read the struct literal as the <code>if</code>'s block.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1023,18 +1024,52 @@ than requiring a separate mutable variable set inside each arm.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Block and struct-literal delimiters are core grammar —
-no <code>std</code> dependency.</p>
+        <p><code>{ }</code> means exactly the same thing under <code>#![no_std]</code> — block-expression
+and struct-literal delimiter, resolved purely by the compiler with no
+<code>std</code> dependency. The one place it appears in a distinctly embedded
+position is an interrupt handler: <code>#[interrupt]</code>/<code>#[exception]</code>
+(cortex-m-rt) and RTIC task functions are ordinary Rust functions, so
+their body is delimited by the same <code>{ }</code> as any other <code>fn</code> — the
+attribute controls <em>when and how the runtime calls it</em>, not the grammar
+of what's inside.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">An interrupt handler's body</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::interrupt;
+
+#[interrupt]
+fn TIM2() { // &lt;- `{` opens the handler body; ordinary block-expression grammar
+    // acknowledge the timer interrupt, service the peripheral
+} // &lt;- `}` closes it
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Constructing a peripheral config struct literal</h3>
+            <pre><code class="rust">let config = SerialConfig { baud_rate: 115_200, parity: Parity::None }; // &lt;- `{ }` builds the config value in one expression
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

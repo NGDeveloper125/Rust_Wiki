@@ -78,7 +78,25 @@ instead of the function; the
 [unstable book's `try_blocks` entry](https://doc.rust-lang.org/beta/unstable-book/language-features/try-blocks.html)
 documents the experimental syntax this reservation is held for.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+**Full support.** `try` is reserved at the lexer level, the same in a
+`#![no_std]` binary as in a hosted one — that's checked before any code
+generation, so it doesn't matter what target or runtime the binary is
+ultimately built for. The unstable `try { }` block design this
+reservation is held for is no different either: were it to stabilize,
+scoping `?`-based error propagation to a block instead of a whole
+function would be exactly as useful — and exactly as absent today — in
+embedded error-handling code as anywhere else. `Result`-returning HAL
+calls chained with `?` are common in embedded Rust, and a stable
+`try { }` would apply to them the same way it would to any other Rust
+code.
+
+## Usage examples (Embedded)
+
+### The `try` reservation, unaffected by target
+
+```
+let try = 5;     // error (2018 edition+): expected identifier, found reserved keyword `try`, on every target
+let r#try = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+```

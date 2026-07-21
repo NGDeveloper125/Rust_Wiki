@@ -157,10 +157,40 @@ also requires numeric patterns to visibly account for every value in
 range, per the
 [Rust Reference on exhaustiveness](https://doc.rust-lang.org/reference/expressions/match-expr.html#match-expressions).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `match` is core-language, allocator-free, and compiles to
-a jump table or comparison chain with no runtime cost beyond that — a
-standard way to decode a protocol byte or peripheral status register into
-one of several known shapes, with the compiler guaranteeing every expected
-bit pattern is handled.
+`match` behaves identically under `#![no_std]` — core-language, allocator-
+free, compiling to a jump table or comparison chain with no runtime cost
+beyond that. It's a standard way to decode a protocol byte or a
+peripheral's status/fault register into one of several known shapes, and
+the exhaustiveness check is genuinely useful here: it forces every bit
+pattern the register can hold — including ones that don't correspond to a
+documented fault — to be given a `_` catch-all rather than silently
+falling through.
+
+## Usage examples (Embedded)
+
+### Decoding a fault status register
+
+```
+enum Fault { None, OverCurrent, OverTemperature, UnderVoltage }
+
+fn decode_fault(reg: u8) -> Fault {
+    match reg { // <- `match` decodes the raw register value into a known set of fault states
+        0b000 => Fault::None,
+        0b001 => Fault::OverCurrent,
+        0b010 => Fault::OverTemperature,
+        0b100 => Fault::UnderVoltage,
+        _ => Fault::None, // unrecognized bit pattern; treat conservatively
+    }
+}
+```
+
+### Matching an Option from a non-blocking UART read
+
+```
+match uart.read() {
+    Some(byte) => process_byte(byte), // <- `match` on the `Option` a non-blocking read returns
+    None => {} // nothing available this cycle
+}
+```

@@ -77,7 +77,20 @@ tracking, in `self`, exactly where the last call left off — the state a
 same way `async fn` automatically captures where execution paused at
 each `.await`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+**Full support.** Keyword reservation is a lexer-level fact, identical
+whether the binary targets a hosted OS or bare metal — `yield`'s status
+doesn't change under `#![no_std]`. The unstable design it's held for,
+`yield` inside a `gen fn`/`gen { }` block (see [`gen`](gen.md)), is
+equally unstable and equally absent on every target today; there's no
+embedded-specific angle to add beyond that.
+
+## Usage examples (Embedded)
+
+### The `yield` reservation, unaffected by target
+
+```
+let yield = 5;     // error: expected identifier, found reserved keyword `yield`, on every target
+let r#yield = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+```

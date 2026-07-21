@@ -100,12 +100,60 @@ documents all three signatures, and a single `proc-macro = true` crate
 is free to mix any number of each, since the registration is per
 function, not per crate.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Registration and execution both happen entirely on the
-host machine at compile time and produce ordinary Rust source, so none
-of these attributes have a runtime footprint or `std` requirement of
-their own — support depends only on whether the *generated* code targets
-`#![no_std]`. Real embedded tooling uses all three: `cortex-m-rt`'s
-`#[entry]` is `#[proc_macro_attribute]`-backed, and `defmt`'s
-`#[derive(Format)]` is `#[proc_macro_derive]`-backed.
+Nothing about `#[proc_macro]`/`#[proc_macro_derive(...)]`/`#[proc_macro_attribute]`
+themselves changes for embedded targets, because a procedural macro never
+runs on the target at all — it's a plain function compiled for, and
+executed on, the *host* machine as part of the compiler's own build
+process, taking token streams in and producing token streams out. This
+host/target split is the same one doctests run into: the macro crate
+itself has no `#![no_std]` concerns, no target triple, and no access to
+(or need for) any peripheral — its only job is to transform source text
+before the *target* build ever begins.
+
+What is embedded-specific is what real embedded proc-macros generate:
+`cortex-m-rt`'s `#[entry]` is an attribute-like macro
+(`#[proc_macro_attribute]`-backed) that runs on the host at compile time
+and rewrites the annotated function into the shape the reset handler
+expects to call, wiring it up as the firmware's actual entry point;
+RTIC's `#[app]` is a much larger attribute-like macro that expands an
+entire annotated module into the interrupt-driven scheduling,
+resource-locking, and task-dispatch code RTIC applications run on. Both
+only ever produce ordinary `#![no_std]`-compatible Rust source — the
+macro's own execution is host-side and completely unaffected by the
+target it's generating code for.
+
+## Usage examples (Embedded)
+
+### cortex-m-rt's #[entry] transforming code at compile time, on the host
+
+```
+#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry; // <- #[proc_macro_attribute]-backed: runs on the host at compile time
+
+#[entry] // <- rewrites this function into the firmware's actual entry point; the rewritten code runs on-target
+fn main() -> ! {
+    loop {}
+}
+```
+
+### RTIC's #[app] expanding a whole module into scheduling code
+
+```
+#[rtic::app(device = pac)] // <- proc-macro-attribute expansion happens on the host; only its output ships to the chip
+mod app {
+    #[shared]
+    struct Shared {}
+
+    #[local]
+    struct Local {}
+
+    #[init]
+    fn init(_cx: init::Context) -> (Shared, Local) {
+        (Shared {}, Local {})
+    }
+}
+```

@@ -76,9 +76,49 @@ describe substitution as textual, not value-sharing, which is why a
 side-effecting or expensive input is bound to a local variable before
 being reused.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Metavariable capture and substitution happen entirely
-during compilation, before any code is generated, so there's no
-`#![no_std]`-specific behavior — the mechanism is identical whether the
-expansion targets a hosted or bare-metal build.
+Metavariable capture and substitution happen entirely during
+compilation, before any code is generated, so there's no
+`#![no_std]`-specific behavior here — the mechanism is identical whether
+the expansion targets a hosted binary or a bare-metal firmware image.
+Where this shows up constantly in embedded code is register-definition
+and peripheral-boilerplate macros: HAL crates generate dozens of
+near-identical register accessors or peripheral wrappers from a handful
+of `$name:ident`/`$addr:expr`-style metavariables, rather than
+hand-writing the same shape once per register.
+
+## Usage examples (Embedded)
+
+### Capturing a register name and address
+
+```
+macro_rules! define_register {
+    ($name:ident, $addr:expr) => { // <- captures an identifier and an expression as metavariables
+        const $name: usize = $addr; // <- $name and $addr are substituted with the exact captured tokens
+    };
+}
+
+define_register!(GPIOA_ODR, 0x4800_0014); // <- expands to: const GPIOA_ODR: usize = 0x4800_0014;
+```
+
+### Generating a peripheral accessor from captured metavariables
+
+A HAL-style macro captures a register's function name, address, and
+value type once, then reuses each metavariable both to name the
+generated function and to build its body — the same "capture once,
+reference the tokens repeatedly" mechanism the classic examples show,
+just applied to register boilerplate instead of arithmetic.
+
+```
+macro_rules! ro_register {
+    ($fn_name:ident, $addr:expr, $ty:ty) => {
+        fn $fn_name() -> $ty { // <- $fn_name names the generated accessor
+            unsafe { core::ptr::read_volatile($addr as *const $ty) } // <- $addr and $ty reused in the body
+        }
+    };
+}
+
+ro_register!(read_status_reg, 0x4001_0000, u32);
+// expands to: fn read_status_reg() -> u32 { unsafe { core::ptr::read_volatile(0x4001_0000 as *const u32) } }
+```

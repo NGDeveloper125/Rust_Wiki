@@ -57,9 +57,36 @@ pub fn build_page(
             path.display()
         );
     }
-    let embedded_md = find_section(&h2, "Embedded Rust Notes").unwrap_or_default();
 
-    let (basic_usage_html, best_practices_intro_html, scenarios, usage_examples) = match section {
+    let embedded_support = front.embedded_support.as_deref().unwrap_or("full");
+    let embedded_md = find_section(&h2, "Embedded Rust Notes").unwrap_or_default();
+    let embedded_explanation_md = find_section(&h2, "Explanation (Embedded)").unwrap_or_default();
+    if embedded_support == "none" {
+        if embedded_md.is_empty() {
+            eprintln!(
+                "  warning: {} — embedded_support: none but missing a '## Embedded Rust Notes' \
+                 section explaining why.",
+                path.display()
+            );
+        }
+    } else if embedded_explanation_md.is_empty() {
+        eprintln!(
+            "  warning: {} — embedded_support: {embedded_support} but missing a \
+             '## Explanation (Embedded)' section.",
+            path.display()
+        );
+    }
+
+    let (
+        basic_usage_html,
+        best_practices_intro_html,
+        scenarios,
+        usage_examples,
+        embedded_basic_usage_html,
+        embedded_best_practices_intro_html,
+        embedded_scenarios,
+        embedded_usage_examples,
+    ) = match section {
         Section::Concepts => {
             let basic_usage_md = find_section(&h2, "Basic usage example").unwrap_or_default();
             let best_practices_md =
@@ -78,10 +105,52 @@ pub fn build_page(
                 })
                 .collect();
 
+            let (embedded_basic_usage_html, embedded_best_practices_intro_html, embedded_scenarios) =
+                if embedded_support == "none" {
+                    (String::new(), String::new(), Vec::new())
+                } else {
+                    let embedded_basic_usage_md =
+                        find_section(&h2, "Basic usage example (Embedded)").unwrap_or_default();
+                    let embedded_best_practices_md =
+                        find_section(&h2, "Best practices & deeper information (Embedded)")
+                            .unwrap_or_default();
+                    if embedded_basic_usage_md.is_empty() || embedded_best_practices_md.is_empty()
+                    {
+                        eprintln!(
+                            "  warning: {} — embedded_support: {embedded_support} but missing \
+                             'Basic usage example (Embedded)' or 'Best practices & deeper \
+                             information (Embedded)'.",
+                            path.display()
+                        );
+                    }
+                    let (embedded_intro_md, embedded_scenario_blocks) =
+                        markdown::split_scenarios(embedded_best_practices_md);
+                    let embedded_scenarios = embedded_scenario_blocks
+                        .into_iter()
+                        .map(|(title, scenario_md)| {
+                            let (body_md, rationale_md) = markdown::split_rationale(&scenario_md);
+                            Scenario {
+                                title,
+                                body_html: markdown::to_html(&body_md),
+                                rationale_html: rationale_md.map(|r| markdown::to_html(&r)),
+                            }
+                        })
+                        .collect();
+                    (
+                        markdown::to_html(embedded_basic_usage_md),
+                        markdown::to_html(&embedded_intro_md),
+                        embedded_scenarios,
+                    )
+                };
+
             (
                 markdown::to_html(basic_usage_md),
                 markdown::to_html(&intro_md),
                 scenarios,
+                Vec::new(),
+                embedded_basic_usage_html,
+                embedded_best_practices_intro_html,
+                embedded_scenarios,
                 Vec::new(),
             )
         }
@@ -111,7 +180,36 @@ pub fn build_page(
                 })
                 .collect();
 
-            (String::new(), String::new(), Vec::new(), examples)
+            let embedded_usage_examples = if embedded_support == "none" {
+                Vec::new()
+            } else {
+                let embedded_examples_md = find_section(&h2, "Usage examples (Embedded)");
+                if embedded_examples_md.is_none() {
+                    eprintln!(
+                        "  warning: {} — embedded_support: {embedded_support} but missing a \
+                         '## Usage examples (Embedded)' section.",
+                        path.display()
+                    );
+                }
+                markdown::split_examples(embedded_examples_md.unwrap_or_default())
+                    .into_iter()
+                    .map(|(title, example_md)| Example {
+                        title,
+                        body_html: markdown::to_html(&example_md),
+                    })
+                    .collect()
+            };
+
+            (
+                String::new(),
+                String::new(),
+                Vec::new(),
+                examples,
+                String::new(),
+                String::new(),
+                Vec::new(),
+                embedded_usage_examples,
+            )
         }
     };
 
@@ -127,5 +225,10 @@ pub fn build_page(
         scenarios,
         usage_examples,
         embedded_notes_html: markdown::to_html(embedded_md),
+        embedded_explanation_html: markdown::to_html(embedded_explanation_md),
+        embedded_basic_usage_html,
+        embedded_best_practices_intro_html,
+        embedded_scenarios,
+        embedded_usage_examples,
     })
 }

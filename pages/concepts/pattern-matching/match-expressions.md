@@ -162,11 +162,100 @@ selection, say) impossible to reach by construction, which is the
 state-machine-via-enum idiom described in
 [Rust Design Patterns](https://rust-unofficial.github.io/patterns/).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `match` is core-language, allocator-free, and compiles
-down to a jump table or a chain of comparisons with no runtime cost
-beyond that. It is the standard way to dispatch on a peripheral's status
-register or decode a protocol byte into one of several message kinds,
-with exhaustiveness checking guaranteeing every bit pattern the code
-expects is actually handled.
+`match` in embedded code is unchanged core-language: it compiles to the
+same jump table or comparison chain the compiler would emit for hosted
+code, with no heap and no runtime cost beyond that generated branch. It
+is the natural tool for decoding a peripheral's discrete state — a
+status register whose bits collapse into a fixed set of power modes, or
+a byte read off a bus that identifies one of several message kinds —
+since matching on the decoded value, rather than a chain of
+bit-masking `if`s, keeps the mapping from raw bits to meaning in one
+place, next to the states it distinguishes.
+
+## Basic usage example (Embedded)
+
+```
+enum PowerMode {
+    Run,
+    Sleep,
+    Standby,
+    Off,
+}
+
+fn decode_power_mode(bits: u8) -> PowerMode {
+    match bits & 0b11 { // <- the whole match evaluates to a PowerMode value
+        0b00 => PowerMode::Run,
+        0b01 => PowerMode::Sleep,
+        0b10 => PowerMode::Standby,
+        _ => PowerMode::Off,
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Branching on data (pattern matching)
+
+An IMU's fault register decodes into one of a handful of known fault
+codes, and a `match` on the decoded value both identifies which fault
+occurred and picks the log message for it in one step, so the mapping
+from fault byte to meaning lives in exactly one place.
+
+```
+enum ImuFault {
+    None,
+    SelfTestFailed,
+    CommunicationTimeout,
+    FifoOverflow,
+}
+
+fn log_fault(fault: &ImuFault) -> &'static str {
+    match fault { // <- exhaustive: every ImuFault variant must appear below
+        ImuFault::None => "imu ok",
+        ImuFault::SelfTestFailed => "imu self-test failed",
+        ImuFault::CommunicationTimeout => "imu bus timeout",
+        ImuFault::FifoOverflow => "imu fifo overflow",
+    }
+}
+```
+
+**Why this way:** matching directly on the fault enum keeps the fault
+code and its message next to each other instead of scattering the
+mapping across separate `if`/`else` checks — the same reason the
+[Rust Book](https://doc.rust-lang.org/book/ch06-02-match.html) gives for
+`match` being the idiomatic way to branch on which variant a value
+holds, and it generates the same jump-table code regardless of target.
+
+### Scenario: Bit manipulation and flags
+
+A radio module hands the firmware a raw header byte for each received
+frame; matching on the byte's upper bits dispatches to the right
+frame-kind handler in one step, with the match itself doubling as the
+protocol's decode table.
+
+```
+enum FrameKind {
+    Beacon,
+    Data,
+    Ack,
+    Unknown,
+}
+
+fn frame_kind(header: u8) -> FrameKind {
+    match header >> 6 { // <- matches the top two bits of the header byte
+        0b00 => FrameKind::Beacon,
+        0b01 => FrameKind::Data,
+        0b10 => FrameKind::Ack,
+        _ => FrameKind::Unknown,
+    }
+}
+```
+
+**Why this way:** matching on the shifted-out bits reads as "which of
+these four kinds is it," matching the mental model of a protocol spec's
+own header table, whereas an equivalent `if`/`else if` chain of masks
+would need re-deriving that mapping instead of stating it directly — the
+same "branch on structure, not booleans" case the classic page makes for
+a session-state enum.

@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A doc test is a fenced code block written inside a documentation comment
 — <a href="../../syntax/comments/outer-line-doc-comment.html"><code>///</code></a> above an item,
@@ -980,7 +981,7 @@ asserts the example panics rather than returning normally.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">/// Converts a Celsius temperature to Fahrenheit.
 ///
@@ -994,7 +995,7 @@ pub fn celsius_to_fahrenheit(celsius: f64) -&gt; f64 {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1102,25 +1103,122 @@ expectation that panic conditions are documented at all.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> Doc tests compile and execute on the <strong>host</strong>
-toolchain, the same way unit and integration tests do — there is no
-mechanism to run a doc test on the target microcontroller itself. This is
-still useful for <code>#![no_std]</code> crates whose public API is pure logic (a
-parser, a checksum calculation): the doc example compiles against the
-<code>no_std</code> crate but runs as an ordinary host program. Anything whose
-correctness depends on real hardware isn't a good fit for a doc test and
-is usually left as plain, non-tested prose instead, or covered separately
-by an on-target framework like <code>defmt-test</code>.</p>
+        <p>A doc test always compiles and executes on the <strong>host</strong> toolchain,
+<code>#![no_std]</code> crate or not — there is no mechanism for <code>cargo test</code> to
+flash a doc example onto a microcontroller and run it there, so the
+host-vs-target split described on
+<a href="../../syntax/comments/outer-line-doc-comment.md"><code>///</code></a>'s Embedded Rust
+Notes applies here directly: <code>#[doc = "..."]</code> generation itself is a
+compile-time, host-side step that doesn't care whether the target is
+bare metal, but <em>running</em> the example inside the fenced block is a real
+host process invocation.</p>
+<p>That makes a doc test a good fit for exactly the slice of a <code>no_std</code>
+crate's public API that's pure logic — a parser, a checksum, a unit
+conversion — where the example compiles against the <code>no_std</code> crate and
+then genuinely runs correctly on the host, no different from a doc test
+on any other crate. The moment an example would need to read a real
+register or wait on a real peripheral, it has nothing to run against on
+the host, and the idiomatic move is the same one the <code>///</code> page
+describes: annotate the block <code>no_run</code> so it still compiles (catching a
+signature change) without pretending to execute against hardware that
+isn't there.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#![no_std]
+
+/// Converts a raw ADC sample to millivolts, given a reference voltage.
+///
+/// ```
+/// assert_eq!(sensors::to_millivolts(2048, 3300), 1650); // &lt;- pure math: compiles and runs on the host
+/// ```
+pub fn to_millivolts(sample: u16, reference_mv: u16) -&gt; u16 {
+    ((sample as u32 * reference_mv as u32) / 4096) as u16
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Documenting an API</h3>
+            <p>A <code>no_std</code> crate's checksum routine is exactly the kind of function
+worth a runnable doc example — it documents the algorithm and doubles as
+a regression test, with no target hardware required to prove it.</p>
+<pre><code class="rust">#![no_std]
+
+/// Computes an 8-bit wrapping checksum over `bytes`.
+///
+/// ```
+/// # use sensor_proto::checksum;
+/// assert_eq!(checksum(&amp;[0x01, 0x02, 0x03]), 0x06); // &lt;- what the reader sees; compiles and runs on the host
+/// ```
+pub fn checksum(bytes: &amp;[u8]) -&gt; u8 {
+    bytes.iter().fold(0u8, |acc, &amp;b| acc.wrapping_add(b))
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>checksum</code> never touches a peripheral, so there's no
+reason to give up the regression-test guarantee a doc test provides —
+the <a href="https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html">rustdoc book</a>
+documents <code>#</code>-prefixed hidden lines as the way to keep the visible
+example this focused while it still genuinely compiles and runs.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A doc example for a function that reads a real timer peripheral has
+nothing to read on the host, so it's marked <code>no_run</code>: the doc test still
+catches the example going stale at compile time without claiming to have
+actually executed against hardware.</p>
+<pre><code class="rust">#![no_std]
+
+/// Reads the current tick count since boot from the SysTick peripheral.
+///
+/// ```no_run
+/// // &lt;- `no_run`: compiles under `cargo test`, but doesn't execute — the host
+/// //    has no SysTick peripheral for this call to read from
+/// let ticks = firmware::systick::now();
+/// assert!(ticks &gt; 0);
+/// ```
+pub fn now() -&gt; u64 {
+    todo!()
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> without <code>no_run</code>, <code>cargo test</code> would try to actually
+call <code>now()</code> on the host and either fail to link or read garbage, since
+no SysTick register exists there; <code>no_run</code> keeps the compile-time
+guarantee the <a href="https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#pre-processing-examples">rustdoc book</a>
+describes without asserting a runtime result the host has no way to
+provide.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

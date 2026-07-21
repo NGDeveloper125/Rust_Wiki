@@ -144,12 +144,137 @@ the kind of small, independently-defaultable component this idiom
 produces, per the
 [standard library's `Default` trait docs](https://doc.rust-lang.org/std/default/trait.Default.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Grouping fields into smaller structs is a pure
-compile-time reorganization with no runtime cost, so it applies
-identically under `#![no_std]`. Whether a given field needs the `alloc`
-crate (a `String`, a `Vec`) is a property of that individual field's
-type, not of composing structs together — a `#![no_std]` config could
-compose the same way using fixed-size arrays or `heapless` types
-instead.
+This idiom fits embedded driver design about as directly as any pattern
+in this catalog: a peripheral driver is almost always, structurally, a
+composition of a HAL handle plus whatever configuration or state the
+driver layers on top of it. A `Sensor` struct isn't one flat bag of
+fields — it's naturally `Sensor { i2c: I2c, config: SensorConfig,
+calibration: Calibration }`, where `i2c` is an owned HAL peripheral
+handle, `config` is the sensor's own settings (sample rate, resolution),
+and `calibration` is data read back from the device itself. Splitting
+these into their own small structs gives each one an obvious owner and
+an obvious `impl` block: `SensorConfig` can validate its own sample-rate
+range independently of anything the I2C bus is doing, and `Calibration`
+can be swapped out or reset without touching the bus handle at all.
+
+The same instinct scales up to a whole board: a `Board` struct composed
+of `Led`, `Button`, and `Uart` fields — each itself perhaps composed
+further (a `Led` wrapping an `OutputPin`) — reads far more clearly than
+one flat struct holding every raw pin and peripheral register the board
+exposes, and each composed piece can be handed off independently to the
+part of the firmware that actually owns that concern (the button to an
+input task, the UART to a logging task), which a single monolithic board
+struct would make far more awkward.
+
+## Basic usage example (Embedded)
+
+```
+struct I2cHandle; // stands in for a HAL I2c peripheral type
+
+struct SensorConfig {
+    sample_rate_hz: u16,
+}
+
+struct Sensor { // <- composed of a HAL handle and its own config, not one flat struct
+    i2c: I2cHandle,
+    config: SensorConfig,
+}
+
+let sensor = Sensor {
+    i2c: I2cHandle,
+    config: SensorConfig { sample_rate_hz: 100 },
+};
+println!("{} Hz", sensor.config.sample_rate_hz);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A temperature-and-humidity sensor driver is composed from the I2C handle
+it talks over and its own settings, so the settings can be validated and
+reused independently of the specific bus instance the sensor happens to
+be wired to.
+
+```
+struct I2cHandle; // stands in for embedded-hal's I2c trait type
+
+struct SensorConfig {
+    sample_rate_hz: u16,
+    oversampling: u8,
+}
+
+impl SensorConfig {
+    fn validated(sample_rate_hz: u16, oversampling: u8) -> Option<Self> {
+        if sample_rate_hz == 0 || oversampling > 8 {
+            return None; // <- a method that only makes sense on this one focused concern
+        }
+        Some(Self { sample_rate_hz, oversampling })
+    }
+}
+
+struct TempHumiditySensor { // <- composed of two focused pieces instead of one flat struct
+    i2c: I2cHandle,
+    config: SensorConfig,
+}
+
+impl TempHumiditySensor {
+    fn new(i2c: I2cHandle, config: SensorConfig) -> Self {
+        Self { i2c, config }
+    }
+}
+
+let config = SensorConfig::validated(100, 4).expect("valid sample config");
+let sensor = TempHumiditySensor::new(I2cHandle, config);
+println!("{} Hz", sensor.config.sample_rate_hz);
+```
+
+**Why this way:** `SensorConfig` can be constructed, validated, and unit
+tested with no I2C bus present at all, and a second sensor on a
+different bus can reuse the exact same `SensorConfig` type — grouping
+the driver's own settings separately from the HAL handle it happens to
+be wired to is the same "group by what changes together" reasoning the
+classic page applies to a `ServerConfig`, just with a peripheral handle
+standing in for a database URL.
+
+### Scenario: Sharing data with multiple references
+
+A board-support struct composed of independent peripheral fields lets
+each one be borrowed and handed to a different part of firmware without
+those parts needing to know about each other or about the board struct
+itself.
+
+```
+struct Led;
+struct Button;
+struct Uart;
+
+struct Board { // <- composed of independent peripherals, not one flat register-access struct
+    status_led: Led,
+    user_button: Button,
+    debug_uart: Uart,
+}
+
+fn poll_button(button: &Button) -> bool {
+    let _ = button;
+    false // stands in for a real GPIO read
+}
+
+fn log_line(uart: &Uart, message: &str) {
+    let _ = (uart, message); // stands in for a real UART write
+}
+
+let board = Board { status_led: Led, user_button: Button, debug_uart: Uart };
+let pressed = poll_button(&board.user_button); // <- borrows only the field this task needs
+log_line(&board.debug_uart, "boot complete");
+println!("{pressed}");
+```
+
+**Why this way:** because each peripheral is its own field, one task can
+hold `&board.user_button` while another holds `&board.debug_uart` at the
+same time with no borrow conflict — a flat struct doesn't change what's
+possible here, but composing by peripheral makes each task's actual
+dependency explicit in its function signature instead of "the whole
+board."

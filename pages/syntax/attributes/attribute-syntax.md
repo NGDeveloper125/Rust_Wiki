@@ -140,10 +140,36 @@ grammar having to anticipate every combination in advance; see
 [Unit tests](../../concepts/testing-tooling/unit-tests.md) for the full
 picture of how `cargo test` uses this pairing.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Attribute syntax itself is core-language grammar,
-processed entirely at compile time with zero runtime footprint — it works
-identically whether or not the crate links `std`. `#![no_std]` is itself
-just an ordinary inner attribute applied to a crate root; see
-[`#![no_std]`](no-std-attribute.md) for what that specific attribute does.
+Attribute syntax is core-language grammar, resolved entirely at compile
+time before code generation, so it's identical whether or not the crate
+links `std` — the outer/inner distinction, the three argument forms, and
+meta-item nesting all work exactly the same under `#![no_std]`. The one
+thing that's genuinely emblematic of embedded code is *which* inner
+attributes tend to appear stacked at the very top of the crate root:
+`#![no_std]` (opting out of the standard library) and `#![no_main]`
+(opting out of the normal `fn main` entry-point convention, since a
+firmware crate's entry point is instead wired up by a runtime crate like
+`cortex-m-rt` via its own attribute) are both ordinary inner attributes on
+the crate root, applying to the whole crate exactly the way
+`#![allow(...)]` or `#![recursion_limit = "..."]` would.
+
+## Usage examples (Embedded)
+
+### The attribute stack at the top of a firmware crate
+
+```
+#![no_std] // <- inner attribute: this whole crate has no std library available
+#![no_main] // <- inner attribute: this crate supplies its own entry point, not a normal fn main
+
+use cortex_m_rt::entry;
+use panic_halt as _;
+
+#[entry] // <- outer attribute: marks this function as the runtime's entry point
+fn main() -> ! {
+    loop {
+        // ... firmware body
+    }
+}
+```

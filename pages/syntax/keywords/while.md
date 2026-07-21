@@ -95,8 +95,38 @@ that rewrite) — the
 [Reference's loop expressions](https://doc.rust-lang.org/reference/expressions/loop-expr.html)
 page defines exactly this semantics for `while let`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `while` polling loops are a staple of bare-metal
-embedded code (spinning on a status register bit until a peripheral is
-ready) when interrupts aren't used instead.
+`while` maps directly onto the most common polling idiom in bare-metal
+code: "spin while this status bit is not yet set." It's identical under
+`#![no_std]` — a plain condition check and jump, no allocator or OS
+involvement. One thing worth flagging that doesn't come up in hosted
+code: an unbounded `while` polling a register that never sets — because
+the peripheral is disconnected, misconfigured, or dead — hangs the
+program forever, and unlike a hosted program a user can just kill from a
+terminal, a wedged firmware loop usually means a full power-cycle to
+recover. Any polling `while` that isn't guaranteed to terminate by
+hardware behavior alone is worth pairing with an attempt counter or a
+hardware timer as a timeout.
+
+## Usage examples (Embedded)
+
+### Polling a status bit until it sets
+
+```
+while !uart.status().read().txe().bit_is_set() {} // <- spins while the transmit-empty flag is not yet set
+uart.data().write(|w| w.bits(byte as u32));
+```
+
+### Polling with a timeout
+
+```
+fn wait_ready(sensor: &Sensor, max_attempts: u32) -> Result<(), &'static str> {
+    let mut attempts = 0;
+    while !sensor.is_ready() && attempts < max_attempts {
+        // <- bounded: an unbounded `while` here would hang forever if the sensor is disconnected
+        attempts += 1;
+    }
+    if sensor.is_ready() { Ok(()) } else { Err("sensor timed out") }
+}
+```

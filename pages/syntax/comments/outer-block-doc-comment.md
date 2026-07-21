@@ -54,7 +54,27 @@ full treatment (summary/detail shape, doc tests, intra-doc links), all of
 which apply here unchanged. Reach for `/** */` only to match an existing
 codebase's established style, not for new code.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Same as [`///`](outer-line-doc-comment.md) — no `std`
-dependency, same host-vs-target doc test caveat.
+`/** ... */` documents the following item identically under `#![no_std]`
+— doc generation is a host-side compile step, unaffected by the target
+having no `std`. See [`///`](outer-line-doc-comment.md) for the fuller
+embedded-specific discussion (documenting register-level functions, the
+host-vs-target doc test caveat); everything there applies here unchanged.
+`///` remains the idiomatic choice in embedded crates, same as hosted
+Rust — this block form is rare.
+
+## Usage examples (Embedded)
+
+### Documenting a register-level function
+
+```
+/** Sets GPIOA pin 5 high.
+
+Must not be called before `clocks::init()` — GPIOA is unclocked until
+then and writes are silently ignored. */
+pub unsafe fn set_pin_5_high() {
+    // <- `/** */` above documents this fn; identical to `///` in behavior and rendering
+    // ...
+}
+```

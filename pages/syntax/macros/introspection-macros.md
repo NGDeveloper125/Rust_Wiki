@@ -111,9 +111,41 @@ ecosystem build their own logging macros on top of, per the
 [std docs](https://doc.rust-lang.org/std/macro.file.html) for
 `file!`/`line!`/`module_path!`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** All six are resolved entirely at compile time against
-source text and build metadata — none has any runtime dependency on
-`std` or an OS, so they work identically, with zero cost, under
-`#![no_std]`.
+All six remain pure compile-time constructs under `#![no_std]`, with no
+dependency on `std` or an OS — nothing here changes on a
+microcontroller. What does change is how the information they produce
+typically gets used: a hosted panic can rely on the OS/runtime to print
+a backtrace, but bare-metal firmware has no backtrace machinery at all,
+so `file!()`/`line!()` (and often `module_path!()`) become the *only*
+way a fault report names where in the source it happened. This is
+exactly the role they play wired into `defmt`'s logging macros or a
+custom diagnostic macro, reported over RTT to an attached debugger
+instead of printed to a terminal.
+
+## Usage examples (Embedded)
+
+### Reporting a fault's source location with no backtrace available
+
+```
+macro_rules! trace_fault {
+    ($msg:expr) => {
+        defmt::error!("[{}:{}] {}", file!(), line!(), $msg); // <- file!()/line!() name the call site, no OS backtrace involved
+    };
+}
+
+fn check_watchdog(expired: bool) {
+    if expired {
+        trace_fault!("watchdog expired");
+    }
+}
+```
+
+### Tagging log output with module_path!
+
+```
+fn log_sensor_event(message: &str) {
+    defmt::info!("[{}] {}", module_path!(), message); // <- e.g. "drivers::temperature_sensor", resolved at compile time
+}
+```

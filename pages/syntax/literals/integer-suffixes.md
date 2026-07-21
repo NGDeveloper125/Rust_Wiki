@@ -82,9 +82,35 @@ type annotation — the kind of predictability the
 [API Guidelines' predictability chapter](https://rust-lang.github.io/api-guidelines/predictability.html)
 asks public items to favor.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency. `usize`/`isize` are still
-pointer-sized on embedded targets, but that width is often much narrower
-than on a desktop host (commonly 32-bit, sometimes 16-bit on very small
-parts) — don't assume `usize` means "at least 64 bits" in embedded code.
+A type suffix pins a literal's width at compile time exactly the same
+way under `#![no_std]`, but *which* width you reach for matters more in
+embedded code than it typically does on a desktop host. In hosted code,
+`i32`/`usize` are usually fine defaults for a value with no strong width
+requirement of its own; in embedded code, a value very often represents
+a specific hardware field — an 8-bit GPIO data register, a 12-bit ADC
+result held in a `u16`, a 32-bit memory-mapped register — whose width is
+fixed by the chip, not a matter of taste. Suffixing a constant to that
+exact width turns a too-large value into a compile error at its
+definition site, instead of a silent truncation discovered later through
+an `as` cast at the point the constant is finally used. (Separately,
+`usize`/`isize` are still pointer-sized on embedded targets, but that
+width is often much narrower than on a desktop host — commonly 32-bit,
+sometimes 16-bit on very small parts — so it's worth not assuming
+`usize` means "at least 64 bits" in embedded code.)
+
+## Usage examples (Embedded)
+
+### Pinning a constant to the exact width of a peripheral register
+
+```
+const ADC_MAX: u16 = 4095u16; // <- `u16` suffix: matches the ADC's 12-bit result register width exactly
+```
+
+### Catching an out-of-range register value at compile time
+
+```
+const GPIO_PIN_MASK: u8 = 0b1111_1111u8; // <- `u8` suffix: this MCU's GPIO data register is only 8 bits wide
+// const BAD_MASK: u8 = 300u8; // would be a compile error: 300 doesn't fit in a u8
+```

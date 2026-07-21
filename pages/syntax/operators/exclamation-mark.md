@@ -68,12 +68,52 @@ path inside a positive `if` — is what `!` enables here: negating the
 validity check lets the failure case exit immediately, leaving the rest
 of the function as the unindented success path.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Not` lives in `core::ops`; macro invocation and the
-never type `!` are core grammar — none of this depends on `std`. Note
-that `panic!()` itself behaves differently under `#![no_std]` (see the
-[panic! macro](../macros/panic-macro.md) and
-[Panic & unwinding](../../concepts/error-handling/panic-and-unwinding.md) pages) — it
-still expands via this same `!` syntax, but requires a `#[panic_handler]`
-function since there's no default one without `std`.
+All three meanings of `!` carry over into `#![no_std]` unchanged: logical
+NOT and bitwise complement are core-language operators overloadable via
+`core::ops::Not`, macro-invocation syntax is resolved entirely at compile
+time regardless of target, and the never type `!` is likewise a
+core-language type with no runtime component. The never type is the one
+place `!` becomes *more* prominent rather than merely unchanged. Firmware's
+`fn main` conventionally never returns — there's no OS to return control
+to — so declaring it `fn main() -> !` and driving it with an unconditional
+`loop { }` isn't a stylistic quirk, it's the normal, expected shape of an
+embedded entry point, and the compiler uses that same `-> !` signature to
+statically confirm the function really never falls off the end. The same
+requirement applies to a `#[panic_handler]` function, which likewise must
+return `!` since a firmware panic has nowhere to unwind to.
+
+## Usage examples (Embedded)
+
+### Negating a peripheral's ready flag before polling
+
+```
+fn poll_until_ready(is_ready: impl Fn() -> bool) {
+    while !is_ready() { // <- `!` negates the ready check into a "keep waiting" condition
+        // spin until the peripheral reports ready
+    }
+}
+```
+
+### An embedded entry point that never returns
+
+```
+#[no_mangle]
+fn main() -> ! { // <- `!`: main never returns control to anything, so its return type is the never type
+    loop {
+        // service peripherals, feed a watchdog, etc. — forever
+    }
+}
+```
+
+### A panic handler, also required to diverge
+
+```
+use core::panic::PanicInfo;
+
+#[panic_handler]
+fn on_panic(_info: &PanicInfo) -> ! { // <- `!`: a firmware panic has nowhere to unwind to, so this must diverge too
+    loop {} // e.g. halt the core, or reset the microcontroller
+}
+```

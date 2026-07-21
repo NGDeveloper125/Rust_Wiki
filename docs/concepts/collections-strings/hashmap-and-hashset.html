@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>HashMap&lt;K, V&gt;</code> stores key-value pairs and answers "what value is this
 key associated with?" in average O(1) time by hashing the key rather
@@ -980,7 +981,7 @@ this up by key" or "is this here" and ordering genuinely doesn't matter
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">use std::collections::HashMap;
 
@@ -997,7 +998,7 @@ matters.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1094,26 +1095,88 @@ straightforward way to satisfy that without hand-writing either impl.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> Unlike <code>Vec</code>/<code>BTreeMap</code>, <code>HashMap</code>/<code>HashSet</code> are not
-part of the <code>alloc</code> crate at all: <code>alloc::collections</code> only ships the
-ordered, hasher-free trees, because a hash table needs a hasher, and
-<code>std</code>'s default <code>RandomState</code> hasher seeds itself from OS randomness to
-resist hash-flooding attacks — something <code>#![no_std]</code> has no access to.
-<code>no_std</code> code typically reaches for the <code>hashbrown</code> crate directly (the
-same hash-table implementation <code>std::collections::HashMap</code> is built on
-internally, usable with <code>alloc</code> and a fixed, non-random hasher), or for
-a fixed-capacity alternative like <code>heapless::FnvIndexMap</code> when no
-allocator is available either.</p>
+        <p><code>HashMap</code>/<code>HashSet</code> don't just need <code>alloc</code> the way <code>Vec</code>/<code>String</code> do —
+they aren't part of <code>alloc::collections</code> at all, because a hash table
+needs a hasher, and <code>std</code>'s default <code>RandomState</code> hasher seeds itself
+from OS-provided randomness specifically to resist hash-flooding attacks
+(an adversary crafting keys that all collide into the same bucket). A
+<code>#![no_std]</code> target generally has no OS source of randomness to seed
+that hasher from, so <code>no_std</code> code reaches for <code>hashbrown</code> directly (the
+same hash-table implementation <code>std::collections::HashMap</code> is built on,
+usable with <code>alloc</code> plus a fixed, non-random hasher) once an allocator is
+present.</p>
+<p>That DOS-resistance is also, honestly, overhead most embedded code
+doesn't need: <code>SipHash</code>'s cost buys protection against attacker-chosen
+keys, which matters for a server keyed by untrusted HTTP headers but not
+for a map keyed by sensor IDs or register addresses the firmware itself
+chose. Where no heap is available either, <code>heapless</code> provides
+fixed-capacity maps — <code>FnvIndexMap</code> is the one most commonly reached
+for — using a cheaper, non-cryptographic hash instead of <code>SipHash</code>,
+paired with the same const-generic fixed-capacity design
+<code>heapless::Vec&lt;T, N&gt;</code> uses. The exact API surface is narrower than
+<code>std::collections::HashMap</code>'s; treat it as "a fixed-capacity map with a
+cheap hash," not a drop-in.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use heapless::FnvIndexMap;
+
+let mut inventory: FnvIndexMap&lt;&amp;str, u32, 8&gt; = FnvIndexMap::new(); // &lt;- capacity fixed at 8, cheaper FNV-style hash, no allocator
+inventory.insert("widget", 42).unwrap(); // &lt;- insert returns Result: Err if the map is already full
+inventory.insert("gadget", 17).unwrap();
+
+assert_eq!(inventory.get("widget"), Some(&amp;42));
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A calibration table keyed by sensor ID is a fixed, known-at-startup set
+of keys chosen by the firmware itself, never by an attacker — exactly
+the case where <code>heapless</code>'s cheaper hash costs nothing in safety while
+avoiding both <code>SipHash</code>'s overhead and <code>HashMap</code>'s need for a heap.</p>
+<pre><code class="rust">use heapless::FnvIndexMap;
+
+const SENSOR_COUNT: usize = 8;
+
+fn build_calibration_table(offsets: [(u8, f32); 4]) -&gt; FnvIndexMap&lt;u8, f32, SENSOR_COUNT&gt; {
+    let mut table: FnvIndexMap&lt;u8, f32, SENSOR_COUNT&gt; = FnvIndexMap::new(); // &lt;- fixed capacity, no allocator
+    for (sensor_id, offset) in offsets {
+        table.insert(sensor_id, offset).unwrap(); // &lt;- Err if more than SENSOR_COUNT entries are ever inserted
+    }
+    table
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>SipHash</code>'s DOS-resistance defends against a threat
+model — attacker-chosen keys — that doesn't apply to firmware-internal
+identifiers, so paying for it here is pure overhead; a cheaper hash plus
+a compile-time capacity bound matches what the data actually needs.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

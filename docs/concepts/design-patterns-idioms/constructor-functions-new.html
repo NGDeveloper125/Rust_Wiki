@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Rust has no <code>new</code> keyword and no built-in notion of a constructor — a
 type is just data, and producing one is just a function call like any
@@ -986,7 +987,7 @@ the two never drift apart.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct RetryPolicy {
     max_attempts: u32,
@@ -1005,7 +1006,7 @@ println!("{} attempts", policy.max_attempts);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1087,21 +1088,116 @@ case.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>new()</code> is an ordinary associated function with no
-special compiler support — it works identically under <code>#![no_std]</code>,
-including on targets with no allocator, as long as the constructor itself
-doesn't require one (a <code>RetryPolicy</code> or <code>ConnectionPool</code>-style value made
-of plain fields costs nothing beyond the fields themselves).</p>
+        <p>The convention is identical — <code>new</code> as a plain associated function
+returning <code>Self</code>, expected to be infallible — and it shows up in
+embedded driver code in one particularly common shape: a constructor
+that takes ownership of the underlying HAL handle it will exclusively
+control. <code>Sensor::new(i2c: I2c) -&gt; Self</code> doesn't just store a reference
+to the I2C peripheral, it <em>consumes</em> it — the caller no longer has the
+<code>I2c</code> value once <code>Sensor::new</code> returns, only the <code>Sensor</code> that now owns
+it. This isn't a stylistic preference; it's the mechanism embedded Rust
+uses to enforce, at compile time, that no two drivers can independently
+try to drive the same physical bus. If <code>new</code> only borrowed the handle,
+two sensor drivers could each hold a <code>&amp;I2c</code> to the same peripheral and
+issue conflicting transactions with no compiler complaint; taking
+ownership means only one driver can exist per handle, ever, because the
+type system tracks the handle as moved.</p>
+<p>Where construction can genuinely fail — the sensor doesn't answer at the
+expected I2C address, a self-test byte doesn't match — the same
+fallible-constructor convention from the classic page applies: <code>try_new</code>
+(or <code>Sensor::new</code> returning <code>Result&lt;Self, SensorError&gt;</code>) rather than a
+<code>new</code> that silently returns a driver wired to a device that isn't
+actually there.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct I2c; // stands in for a HAL I2c peripheral handle
+
+struct Sensor {
+    i2c: I2c,
+}
+
+impl Sensor {
+    fn new(i2c: I2c) -&gt; Self { // &lt;- takes ownership of the HAL handle: only one Sensor can exist per bus
+        Sensor { i2c }
+    }
+}
+
+let bus = I2c;
+let sensor = Sensor::new(bus); // &lt;- `bus` is moved; nothing else can construct a driver on it now
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Creating a new object</h3>
+            <p>A sensor may not actually be present on the bus at the address the
+driver expects, so its constructor probes for it and reports failure
+instead of silently returning a <code>Sensor</code> that will fail on its first real
+read.</p>
+<pre><code class="rust">struct I2c;
+impl I2c {
+    fn probe(&amp;self, address: u8) -&gt; bool {
+        address == 0x76 // stands in for a real device-ID register check
+    }
+}
+
+struct SensorError;
+
+struct Sensor {
+    i2c: I2c,
+    address: u8,
+}
+
+impl Sensor {
+    fn try_new(i2c: I2c, address: u8) -&gt; Result&lt;Self, SensorError&gt; { // &lt;- fallible construction: named accordingly, not called `new`
+        if !i2c.probe(address) {
+            return Err(SensorError);
+        }
+        Ok(Sensor { i2c, address })
+    }
+}
+
+let bus = I2c;
+match Sensor::try_new(bus, 0x76) {
+    Ok(sensor) =&gt; println!("sensor ready at 0x{:02x}", sensor.address),
+    Err(_) =&gt; println!("no sensor responded"),
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> naming the fallible path <code>try_new</code> instead of <code>new</code>
+keeps the promise "a function called <code>new</code> always succeeds" intact,
+which matters more in firmware than in a desktop app — a <code>Sensor::new</code>
+that silently constructs a driver bound to a device that never answers
+would only surface the mistake later, likely at the first real read, far
+from the constructor that caused it; the
+<a href="https://rust-unofficial.github.io/patterns/idioms/ctor.html">Rust Design Patterns</a>
+convention of a differently-named fallible constructor applies here
+unchanged.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

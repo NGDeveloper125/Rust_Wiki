@@ -86,7 +86,31 @@ escape in JSON at all) — the practical consequence is to let a JSON
 library like [serde_json](https://serde.rs/) own all JSON escaping rather
 than hand-building JSON text with Rust string literals.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure lexical processing, resolved entirely at compile
-time — no `std` dependency.
+Escape-sequence processing is pure lexical, compile-time work — it
+happens identically whether the target is hosted or `#![no_std]`, with
+no runtime or allocator involved at any point. The escapes that come up
+most in embedded code are exactly the control-character ones: `\r\n`
+line endings (many serial terminals and AT-command interfaces expect
+CRLF, not a bare `\n`), `\0` for a nul-terminated C string handed across
+FFI, and `\xNN` hex byte escapes for framing bytes or raw control codes —
+`\x1B` in particular is the ASCII ESC character that begins an
+ANSI/VT100 escape sequence, the standard way to color or position text
+on a serial terminal from firmware logging code.
+
+## Usage examples (Embedded)
+
+### Sending an ANSI color code over a serial terminal
+
+```
+fn log_error(uart: &mut impl core::fmt::Write, message: &str) {
+    let _ = write!(uart, "\x1B[31m{message}\x1B[0m\r\n"); // <- `\x1B` escape: ANSI red-text, then reset, then CRLF line ending
+}
+```
+
+### Framing a boot banner for a terminal that expects CRLF
+
+```
+const READY_BANNER: &str = "boot ok\r\n"; // <- `\r\n` escape sequence: CRLF line ending a serial terminal expects
+```

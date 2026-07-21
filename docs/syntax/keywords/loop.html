@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>loop</code> repeats a block unconditionally, forever, until a <code>break</code> inside it
 (or its body) is reached.</p>
@@ -970,7 +971,7 @@ loop.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1052,19 +1053,62 @@ busy-spin that pegs a CPU core while waiting.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> An unconditional <code>loop {}</code> is the idiomatic body of
-<code>fn main() -&gt; !</code> in almost every embedded firmware entry point, since a
-bare-metal program never "exits" the way a hosted process does.</p>
+        <p><code>loop</code> is arguably more central in embedded Rust than anywhere else in the
+language. A bare-metal firmware image has no OS to return control to when
+<code>main</code> finishes — there is no "exit," only "keep running or halt" — so
+<code>fn main() -&gt; !</code> almost always ends with an unconditional <code>loop { ... }</code>
+as its body, and the <code>!</code> return type documents at the signature level
+that this function is never expected to return. The same shape appears
+one level down, too: before an interrupt-driven design is wired up (or
+when one genuinely isn't warranted), the standard way to wait on a
+peripheral is a tight <code>loop</code> that polls a status bit and <code>break</code>s once
+it's set — a busy-wait. Because <code>loop</code> is the one loop form that can
+<code>break</code> with a value, that pattern doubles as "spin until ready, then
+hand back what you were waiting for" in a single expression.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">The firmware entry point that never returns</h3>
+            <pre><code class="rust">#[entry]
+fn main() -&gt; ! {
+    let mut led = configure_led();
+    loop {
+        // &lt;- `loop {}` is the idiomatic never-returning body of an embedded main function
+        led.toggle();
+        delay.delay_ms(500u16);
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Busy-waiting on a peripheral flag before interrupts are wired up</h3>
+            <pre><code class="rust">loop {
+    // &lt;- polls the status register directly; a real driver would switch to an interrupt once one is configured
+    if uart.status().read().txe().bit_is_set() {
+        break;
+    }
+}
+uart.data().write(|w| w.bits(byte as u32));
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

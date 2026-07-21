@@ -163,10 +163,109 @@ field accesses — the
 [Rust Reference on patterns](https://doc.rust-lang.org/reference/patterns.html)
 allows arbitrary nesting for exactly this reason.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Destructuring is core-language, allocator-free, and
-compiles to direct field/offset access — no runtime cost beyond what a
-manual field access would cost. It's a natural fit for pulling named
-bit-fields out of a decoded register value or protocol header in one
-step, once the raw bits are represented as a struct or tuple.
+Destructuring is core-language and allocator-free: it compiles to direct
+field/offset access, identical to what a manual `.field` access would
+generate, so there's no runtime cost specific to writing the pattern
+form. It's a natural fit for a register block or a decoded protocol
+frame — once the raw bits behind a peripheral are represented as a
+struct (one field per register, or one field per header value), pulling
+several of them out in a single `let` or `match` arm reads the same way
+the datasheet's own register table does, instead of a run of separate
+`.field` accesses at the point of use.
+
+The same restriction to irrefutable patterns applies unchanged: a
+register block or a frame struct with a fixed shape destructures freely
+at a plain `let`, but a frame whose shape depends on a decoded message
+kind — an enum wrapping different payload structs per variant — needs
+its destructuring inside a `match` arm or an `if let`, exactly as on the
+host.
+
+## Basic usage example (Embedded)
+
+```
+struct GpioBlock {
+    input: u32,
+    output: u32,
+    direction: u32,
+}
+
+let regs = GpioBlock { input: 0x0000_00F0, output: 0x0000_0001, direction: 0x0000_00FF };
+let GpioBlock { input, output, direction } = regs; // <- binds all three register words in one step
+
+let pin3_set = input & (1 << 3) != 0;
+let _ = (output, direction, pin3_set);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Bit manipulation and flags
+
+A UART peripheral's 8-bit status register packs several independent
+flags into one word; the register is decoded once into a named struct
+so the flags can be destructured in a single step instead of masking
+each one out separately every time they're checked.
+
+```
+struct UartStatus {
+    rx_ready: bool,
+    tx_empty: bool,
+    framing_error: bool,
+}
+
+fn decode_status(raw: u8) -> UartStatus {
+    UartStatus {
+        rx_ready: raw & 0b001 != 0,
+        tx_empty: raw & 0b010 != 0,
+        framing_error: raw & 0b100 != 0,
+    }
+}
+
+let UartStatus { rx_ready, tx_empty, framing_error } = decode_status(0b011); // <- all three flags named in one step
+
+if framing_error {
+    // clear the error and resynchronize before reading further
+} else if rx_ready {
+    let _ = tx_empty; // a byte is waiting
+}
+```
+
+**Why this way:** decoding the raw register once into a named struct and
+then destructuring it keeps every later flag check readable by name
+instead of a repeated `raw & MASK != 0` at each use site, while
+compiling to the same direct bit tests a hand-written mask chain would
+produce — pattern matching costs nothing here beyond what the
+equivalent, less readable, hand-rolled version would take.
+
+### Scenario: Branching on data (pattern matching)
+
+A CAN bus driver receives frames tagged by kind; destructuring the
+frame's payload inside the same match arm that identifies the frame
+kind pulls it out in the one step the kind is determined, mirroring how
+the classic page nests a struct pattern inside an enum pattern.
+
+```
+struct CanFrame {
+    id: u16,
+    payload: [u8; 8],
+}
+
+enum Message {
+    Telemetry(CanFrame),
+    Command(CanFrame),
+}
+
+fn first_byte(msg: &Message) -> u8 {
+    match msg {
+        Message::Telemetry(CanFrame { payload, .. }) => payload[0], // <- destructures the CanFrame while matching Telemetry
+        Message::Command(CanFrame { payload, .. }) => payload[0],
+    }
+}
+```
+
+**Why this way:** nesting the `CanFrame` pattern inside the `Message`
+pattern names `payload` directly at the point the frame kind is known,
+rather than matching the kind first and then reaching into `.payload`
+separately afterward — the same one-step nesting the classic page uses
+for an order's customer and shipping data, just with bus-frame nouns.

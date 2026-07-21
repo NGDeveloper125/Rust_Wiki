@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>These three attributes register an ordinary function as a specific kind
 of procedural macro. Each requires the crate it's defined in to declare
@@ -991,7 +992,7 @@ for and how it's used well.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1048,23 +1049,76 @@ function, not per crate.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Registration and execution both happen entirely on the
-host machine at compile time and produce ordinary Rust source, so none
-of these attributes have a runtime footprint or <code>std</code> requirement of
-their own — support depends only on whether the <em>generated</em> code targets
-<code>#![no_std]</code>. Real embedded tooling uses all three: <code>cortex-m-rt</code>'s
-<code>#[entry]</code> is <code>#[proc_macro_attribute]</code>-backed, and <code>defmt</code>'s
-<code>#[derive(Format)]</code> is <code>#[proc_macro_derive]</code>-backed.</p>
+        <p>Nothing about <code>#[proc_macro]</code>/<code>#[proc_macro_derive(...)]</code>/<code>#[proc_macro_attribute]</code>
+themselves changes for embedded targets, because a procedural macro never
+runs on the target at all — it's a plain function compiled for, and
+executed on, the <em>host</em> machine as part of the compiler's own build
+process, taking token streams in and producing token streams out. This
+host/target split is the same one doctests run into: the macro crate
+itself has no <code>#![no_std]</code> concerns, no target triple, and no access to
+(or need for) any peripheral — its only job is to transform source text
+before the <em>target</em> build ever begins.</p>
+<p>What is embedded-specific is what real embedded proc-macros generate:
+<code>cortex-m-rt</code>'s <code>#[entry]</code> is an attribute-like macro
+(<code>#[proc_macro_attribute]</code>-backed) that runs on the host at compile time
+and rewrites the annotated function into the shape the reset handler
+expects to call, wiring it up as the firmware's actual entry point;
+RTIC's <code>#[app]</code> is a much larger attribute-like macro that expands an
+entire annotated module into the interrupt-driven scheduling,
+resource-locking, and task-dispatch code RTIC applications run on. Both
+only ever produce ordinary <code>#![no_std]</code>-compatible Rust source — the
+macro's own execution is host-side and completely unaffected by the
+target it's generating code for.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">cortex-m-rt's #[entry] transforming code at compile time, on the host</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry; // &lt;- #[proc_macro_attribute]-backed: runs on the host at compile time
+
+#[entry] // &lt;- rewrites this function into the firmware's actual entry point; the rewritten code runs on-target
+fn main() -&gt; ! {
+    loop {}
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">RTIC's #[app] expanding a whole module into scheduling code</h3>
+            <pre><code class="rust">#[rtic::app(device = pac)] // &lt;- proc-macro-attribute expansion happens on the host; only its output ships to the chip
+mod app {
+    #[shared]
+    struct Shared {}
+
+    #[local]
+    struct Local {}
+
+    #[init]
+    fn init(_cx: init::Context) -&gt; (Shared, Local) {
+        (Shared {}, Local {})
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

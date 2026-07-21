@@ -79,7 +79,21 @@ resumable state machine, differing only in what triggers a suspension
 (awaiting a future vs. yielding a value) and which trait the result
 implements (`Future` vs. `Iterator`).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+**Full support.** Reservation is checked at the lexer level before any
+target-specific code generation happens, so `gen` being unavailable as an
+identifier is identical in `#![no_std]` firmware and hosted code alike.
+The unstable `gen { }`/`gen fn` generator design this reservation is held
+for is likewise unstable everywhere — nothing about it is more or less
+available on embedded targets, since it doesn't exist as stable syntax on
+any target yet.
+
+## Usage examples (Embedded)
+
+### The `gen` reservation, unaffected by target
+
+```
+let gen = 5;     // error (2024 edition): expected identifier, found reserved keyword `gen`, on every target
+let r#gen = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+```

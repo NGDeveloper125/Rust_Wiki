@@ -73,9 +73,40 @@ generated code — emitting `#[automatically_derived]` is how a
 third-party derive macro opts into the same tooling treatment the
 compiler's built-in derives already get.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The attribute is a compile-time-only marker with no
-runtime representation and no `std` dependency — it appears identically
-on derive-generated impls in `#![no_std]` crates, including third-party
-`no_std`-oriented derives like `defmt`'s `#[derive(Format)]`.
+`#[automatically_derived]` is a compiler-inserted, compile-time-only
+marker with no representation in the compiled artifact — it carries over
+unchanged in `#![no_std]` builds, appearing above every `impl` block the
+compiler generates from a `#[derive(...)]`, whether that derive is one of
+the built-ins (`Debug`, `Clone`, ...) or a `no_std`-oriented third-party
+one like `defmt`'s `#[derive(Format)]`. There's no embedded-specific
+behavior beyond that: it costs no flash or RAM, and lints treat it the
+same way regardless of target.
+
+## Usage examples (Embedded)
+
+### Recognizing it above a defmt-generated impl
+
+```
+#[derive(defmt::Format)] // <- defmt's own proc-macro derive attaches #[automatically_derived] here too
+pub struct SensorReading {
+    raw_adc: u16,
+}
+
+// roughly what expands (never written by hand):
+// #[automatically_derived]
+// impl defmt::Format for SensorReading { ... }
+```
+
+### Marking a register-access crate's own derive output the same way
+
+```
+// inside a #[proc_macro_derive(RegisterField)] function's generated output for a no_std register-access crate:
+let expanded = quote::quote! {
+    #[automatically_derived] // <- marks this impl as generated, the same convention the compiler's own derives use
+    impl RegisterField for #name {
+        const OFFSET: u8 = #offset;
+    }
+};
+```

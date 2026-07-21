@@ -67,7 +67,29 @@ for why that descendant access exists — so `super::` is simply how that
 existing reachability gets spelled out as a path, with no need to widen
 `base_shipping_cents`'s visibility just to let a submodule use it.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `super` is a compile-time path prefix with no runtime
-representation, so it resolves identically under `#![no_std]`.
+`super` resolves exactly the same way under `#![no_std]` — a compile-time
+path prefix with no runtime cost. A common sighting in an embedded
+crate's module structure is a driver submodule reaching back up to a
+peripheral-access crate (PAC) re-exported near the crate root with
+`super::pac`, rather than importing that PAC path fresh inside every
+submodule.
+
+## Usage examples (Embedded)
+
+### Reaching a peripheral-access crate re-export from a driver submodule
+
+```
+pub use stm32f4xx_hal::pac; // <- re-exported once, near the crate root
+
+mod drivers {
+    pub mod gpio {
+        pub fn configure() {
+            let peripherals = super::super::pac::Peripherals::take().unwrap();
+            // <- `super::super::` climbs from `drivers::gpio` back up to the crate root's `pac` re-export
+            let _ = peripherals;
+        }
+    }
+}
+```

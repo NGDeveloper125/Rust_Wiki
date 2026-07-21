@@ -135,12 +135,41 @@ pattern the
 describes for custom assertion helpers that want to preserve
 `assert!`-quality diagnostics through a layer of indirection.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[track_caller]` and `Location::caller()` are both in
-`core`, with zero dependency on `alloc`/`std` or an OS, so the mechanism
-works identically in `#![no_std]`. It's arguably more valuable there: a
-`#![no_std]` panic handler often has no backtrace or debugger attached by
-default, so the file/line a `#[track_caller]`-annotated helper reports
-may be the only diagnostic information available about where a
-validation failure actually originated.
+`#[track_caller]` and `core::panic::Location::caller()` both live in
+`core`, with no dependency on `alloc`/`std` or an OS, so the mechanism is
+fully available and behaves identically under `#![no_std]`. It arguably
+matters *more* in embedded code than in a hosted program: a `#![no_std]`
+panic handler frequently has no attached debugger, no backtrace, and no
+OS-level crash report to fall back on — depending on the panic handler,
+all it does is blink an LED, reset the chip, or emit a message over
+RTT/UART. In that setting, the file/line a `#[track_caller]`-annotated
+validation helper reports may be the *only* diagnostic information
+available about where a bad value actually originated, rather than one
+convenience among several.
+
+## Usage examples (Embedded)
+
+### Reporting the caller's location from a HAL validation panic
+
+```
+#[track_caller] // <- panics from inside this function report the CALLER's source location
+fn require_valid_channel(channel: u8) -> u8 {
+    if channel >= 8 {
+        panic!("ADC channel {channel} out of range (0..=7)");
+    }
+    channel
+}
+
+fn read_adc(channel: u8) -> u16 {
+    let channel = require_valid_channel(channel); // <- an out-of-range call here is what gets reported
+    // ... trigger a conversion on `channel` and return the raw sample
+    0
+}
+```
+
+Without `#[track_caller]`, every misconfigured call
+across a firmware crate would report the same unhelpful line inside
+`require_valid_channel` itself — over RTT or a UART log with no debugger
+attached, that's often the only location information available at all.

@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A unit test is a small, self-contained check of a single function or a
 narrow piece of behavior, written as an ordinary function marked
@@ -986,7 +987,7 @@ how a pass/fail is decided.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn add(a: i32, b: i32) -&gt; i32 {
     a + b
@@ -1005,7 +1006,7 @@ mod tests {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1137,26 +1138,140 @@ recommends the <code>expected</code> argument for exactly this precision.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> The <code>#[test]</code> harness itself needs <code>std</code> — it
-depends on catching unwinding panics and printing a pass/fail report,
-neither of which exists on bare metal. In practice this rarely stops
-embedded projects from unit testing: hardware-independent logic (parsing,
-math, protocol encoding) is tested the ordinary way with <code>cargo test</code>
-running on the <em>host</em> development machine, compiled without the target's
-<code>#![no_std]</code> restriction. Only code that genuinely touches hardware needs
-a different approach — an on-target framework like <code>defmt-test</code> runs
-<code>#[test]</code>-like functions on the real microcontroller and reports results
-over the debug probe instead of through the host test harness.</p>
+        <p>The core story for unit-testing embedded code is a split by <em>where the
+logic actually lives</em>, not a single answer. The ordinary <code>#[test]</code>
+harness needs <code>std</code> — it schedules each test on its own OS thread and
+catches an unwinding panic to report pass/fail from a hosted process —
+none of which a bare <code>#![no_std]</code> target provides, so compiling the
+harness itself for the microcontroller isn't how this is normally done.</p>
+<p>In practice, most of a crate's genuinely unit-testable logic — parsing a
+sensor frame, encoding/decoding a protocol message, a calibration
+calculation, a checksum — doesn't touch a peripheral at all. That code is
+written to also compile for the host (kept on <code>core</code>, with <code>std</code> pulled
+in only behind <code>#[cfg(test)]</code>), and is tested with a completely ordinary
+<code>cargo test</code> run on the development machine, exactly as any other crate.
+Only the logic that's genuinely hardware-dependent — a driver's real
+register writes, an interrupt handler, timing against a live peripheral
+— can't be honestly tested that way, and instead needs <code>defmt-test</code> or
+<code>embedded-test</code> to run the <code>#[test]</code>-shaped functions for real on the
+target, flashed and executed over a debug probe (<code>probe-rs</code>), with
+results reported back over RTT rather than printed by a hosted process.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">// This function only manipulates bytes, so it's tested on the host, not the target.
+pub fn checksum(bytes: &amp;[u8]) -&gt; u8 {
+    bytes.iter().fold(0u8, |acc, &amp;b| acc.wrapping_add(b))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // &lt;- runs under an ordinary `cargo test` on the host, no target hardware involved
+    fn checksum_of_empty_slice_is_zero() {
+        assert_eq!(checksum(&amp;[]), 0);
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A firmware crate's frame-parsing logic is pure byte manipulation with no
+peripheral access, so it belongs in the ordinary host-tested <code>#[cfg(test)]</code>
+module rather than anywhere near a debug probe.</p>
+<pre><code class="rust">#![no_std]
+
+pub fn parse_frame_length(header: [u8; 2]) -&gt; u16 { // &lt;- hardware-independent: safe to test on the host
+    u16::from_be_bytes(header)
+}
+
+#[cfg(test)] // &lt;- pulls in `std` for the test build only; the crate itself stays `no_std`
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_a_two_byte_length_header() {
+        assert_eq!(parse_frame_length([0x01, 0x2C]), 0x012C);
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> running <code>cargo test</code> on the host is orders of magnitude
+faster and needs no hardware at all, so pushing every function that
+<em>can</em> be host-tested out of the hardware-dependent path keeps the fast
+feedback loop as large as possible; the split mirrors the same
+host-vs-target reasoning <a href="../../syntax/attributes/test-attribute.md"><code>#[test]</code></a>'s
+Embedded Rust Notes lay out for the attribute itself.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>A driver rejects an out-of-range channel selector before touching the
+ADC peripheral at all — a check that's still pure logic, so it doesn't
+need real hardware to verify even though the type it guards is only ever
+constructed right before a register write.</p>
+<pre><code class="rust">#![no_std]
+
+pub struct ChannelId(u8);
+
+impl ChannelId {
+    pub fn new(value: u8) -&gt; Result&lt;Self, &amp;'static str&gt; {
+        if value &gt; 7 {
+            Err("ADC channel out of range (0..=7)")
+        } else {
+            Ok(ChannelId(value)) // &lt;- validated before any register access happens
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_an_out_of_range_channel() {
+        assert!(ChannelId::new(9).is_err());
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the validation itself never reads a register, so
+testing it on the host is just as trustworthy as testing it on target
+and far cheaper to run on every commit; only the eventual register write
+<code>ChannelId</code> guards needs a <code>defmt-test</code>/<code>embedded-test</code> on-target test,
+and only once real hardware behavior — not input validation — is what's
+being verified.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

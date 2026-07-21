@@ -41,7 +41,22 @@ let typeof = 5;     // error: expected identifier, found reserved keyword `typeo
 let r#typeof = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+No real difference here: `typeof`'s reservation is a lexer-level fact,
+checked before any target or runtime is even in the picture, so it's
+exactly as unclaimed and exactly as inert under `#![no_std]` as in hosted
+Rust. There's no embedded-specific angle to add — no HAL, register, or
+interrupt handler changes what this keyword does, because it doesn't do
+anything yet in either context.
+
+## Usage examples (Embedded)
+
+### The reservation error is identical under `#![no_std]`
+
+```
+#![no_std]
+
+// let typeof = read_register(); // error: expected identifier, found reserved keyword `typeof`
+let r#typeof = 0u32; // ok: the raw-identifier form escapes the reservation, same as hosted Rust
+```

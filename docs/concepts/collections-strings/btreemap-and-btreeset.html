@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>BTreeMap&lt;K, V&gt;</code> stores key-value pairs the same way
 <a href="../../concepts/collections-strings/hashmap-and-hashset.html"><code>HashMap</code></a> does, but keeps its keys in sorted
@@ -980,7 +981,7 @@ the moment sorted iteration or range queries enter the picture.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">use std::collections::BTreeMap;
 
@@ -1000,7 +1001,7 @@ wrapping it in a type that provides a total order.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1064,26 +1065,103 @@ field belongs after the primary sort key, not before it.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> Unlike <code>HashMap</code>/<code>HashSet</code>, <code>BTreeMap</code>/<code>BTreeSet</code>
-<em>are</em> part of the <code>alloc</code> crate (<code>alloc::collections::BTreeMap</code>) — since
-ordering only needs <code>Ord</code>, not a hasher or a source of randomness, they
-carry none of the std-only baggage that keeps <code>HashMap</code> out of <code>alloc</code>.
-That makes them usable in <code>#![no_std]</code> code the moment a
-<code>#[global_allocator]</code> is configured, with no extra crate needed the way
-<code>hashbrown</code> is needed for hash-based lookups. They still require a heap,
-though — on allocator-free targets, a fixed-capacity, sorted
-<code>heapless</code>-style structure or a plain sorted array with binary search is
-the usual substitute.</p>
+        <p>Unlike <code>HashMap</code>/<code>HashSet</code>, <code>BTreeMap</code>/<code>BTreeSet</code> <em>are</em> part of <code>alloc</code>
+(<code>alloc::collections::BTreeMap</code>) — ordering only needs <code>Ord</code>, not a
+hasher or a source of randomness, so they carry none of the std-only
+baggage that keeps <code>HashMap</code> out of <code>alloc</code>. The moment <code>extern crate alloc</code> plus a <code>#[global_allocator]</code> are in place, <code>alloc::collections:: BTreeMap</code> behaves exactly like <code>std</code>'s version, sorted iteration and
+<code>.range()</code> included, with no extra crate needed the way <code>hashbrown</code> is
+needed for hash-based lookups.</p>
+<p>It's worth being direct, though: of this batch of collection pages, this
+is the least central embedded story. The sorted-order/range-query
+use case this page's Explanation builds around — leaderboards,
+time-ordered logs, "everything between X and Y" — shows up less often in
+typical firmware, where the data sets tend to be small and either fixed
+at compile time (a calibration table) or better served by a
+<code>heapless</code>-style fixed-capacity map that drops the ordering guarantee
+entirely because nothing downstream needs it. And <code>BTreeMap</code> still needs
+a heap regardless — for a data set that's genuinely fixed and known
+ahead of time, paying for an allocator at all is often unnecessary: a
+<code>const</code> sorted array searched with <code>.binary_search_by_key()</code> gives the
+same ordered lookup <code>BTreeMap</code> would, using only <code>core</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">extern crate alloc;
+use alloc::collections::BTreeMap;
+
+fn build_sensor_log() -&gt; BTreeMap&lt;u64, f32&gt; {
+    let mut log = BTreeMap::new(); // &lt;- behaves exactly like std's BTreeMap once alloc + a #[global_allocator] are configured
+    log.insert(1_700_000_010, 20.9);
+    log.insert(1_700_000_030, 21.4);
+    log
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A small set of calibration points that never changes at runtime is a
+case where reaching for <code>BTreeMap</code> costs a heap allocation for data that
+was already known at compile time; a <code>const</code> sorted array searched with
+<code>.binary_search_by_key()</code> gives the same ordered lookup without ever
+needing an allocator.</p>
+<pre><code class="rust">use alloc::collections::BTreeMap; // AVOID for a fixed, compile-time-known point set: needs alloc + a configured allocator
+
+fn calibration_lookup_alloc() -&gt; BTreeMap&lt;u16, f32&gt; { // &lt;- BTreeMap: correct, but pays for a heap allocation for 4 fixed points
+    let mut points = BTreeMap::new();
+    points.insert(0, -40.0);
+    points.insert(512, 0.0);
+    points.insert(1024, 20.0);
+    points.insert(2047, 85.0);
+    points
+}
+
+// PREFER on a no-heap (or heap-avoiding) target: the same points as a sorted const array
+const CALIBRATION_POINTS: [(u16, f32); 4] = [
+    (0, -40.0),
+    (512, 0.0),
+    (1024, 20.0),
+    (2047, 85.0),
+];
+
+fn calibration_lookup_array(raw: u16) -&gt; Option&lt;f32&gt; {
+    CALIBRATION_POINTS
+        .binary_search_by_key(&amp;raw, |&amp;(k, _)| k) // &lt;- binary_search_by_key: the ordered lookup BTreeMap.get() gives, no heap
+        .ok()
+        .map(|i| CALIBRATION_POINTS[i].1)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>BTreeMap</code>'s ordering guarantee is only worth its
+heap allocation when the key set genuinely changes at runtime; for a
+fixed point set known at compile time, a sorted array plus binary search
+gives the same O(log n) ordered lookup through <code>core</code> alone, with
+nothing to allocate at all.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

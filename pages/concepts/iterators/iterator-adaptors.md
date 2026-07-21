@@ -132,10 +132,87 @@ the
 using `fold` here would only produce the final total, not each running
 step.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support for building the chain.** Adaptors themselves live in
-`core::iter` and allocate nothing — `map`, `filter`, `scan`, and the rest
-work identically on a `#![no_std]` target. Only the final consumer at the
-end of a chain might need `alloc` (for example, `collect()` into a `Vec`
-or `String`); the adaptors in between never do.
+Adaptors (`map`, `filter`, `zip`, `enumerate`, `scan`, `take`, and the
+rest) are defined in `core::iter`, so building a chain of them costs
+nothing beyond the code itself — no allocator, no heap. This is one of
+the more concrete zero-cost-abstraction wins embedded Rust gets from the
+language: `sensor_readings.iter().filter(|&&r| r > threshold).map(|&r| r
+* scale)` compiles to the same tight loop a hand-rolled `for` loop with
+an `if` inside it would, with no intermediate array or `Vec` materialized
+between the `filter` and the `map`. The chain is just a nested struct
+type; the compiler inlines and fuses it. The one part of a chain that can
+pull in `alloc` is a *consumer* at the end (like `.collect::<Vec<_>>()`)
+— the adaptors in between never do, so a chain over a fixed-size array or
+a `heapless::Vec` can be built as long or as elaborate as needed while
+staying entirely on the stack.
+
+## Basic usage example (Embedded)
+
+```
+let raw_samples: [u16; 4] = [512, 498, 610, 523]; // raw ADC counts
+
+let scaled_over_threshold: u32 = raw_samples
+    .iter()
+    .filter(|&&s| s > 500) // <- filter: an adaptor, no allocation
+    .map(|&s| s as u32 * 3) // <- map: an adaptor, no allocation
+    .sum(); // consumer: drives the chain, still no heap involved
+
+assert_eq!(scaled_over_threshold, (512 + 610 + 523) * 3);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+Reporting the average of only the in-range readings from a fixed sensor
+buffer reads as `filter` then a numeric accumulation, with no `Vec` built
+at any point.
+
+```
+let readings: [i16; 6] = [-40, 22, 25, 130, 24, 23]; // last is a spurious out-of-range spike
+
+let in_range_avg: i32 = {
+    let mut sum = 0i32;
+    let mut count = 0i32;
+    for r in readings.iter().filter(|&&r| (-20..100).contains(&r)) { // <- filter: adaptor, skips out-of-range spikes
+        sum += *r as i32;
+        count += 1;
+    }
+    sum / count
+};
+
+assert_eq!(in_range_avg, 23);
+```
+
+**Why this way:** `filter` discards the spurious `130` reading before the
+loop ever sees it, and because adaptors allocate nothing, this pattern is
+as safe to use on a memory-constrained microcontroller as a manual bounds
+check would be — with none of the manual bookkeeping.
+
+### Scenario: Bit manipulation and flags
+
+Extracting which channels of a status register have their "ready" bit
+set combines a fixed array of raw register words with `enumerate` and
+`filter`, entirely without allocation.
+
+```
+let status_words: [u8; 4] = [0b0000_0001, 0b0000_0000, 0b0000_0001, 0b0000_0001];
+
+let ready_channels: [bool; 4] = {
+    let mut flags = [false; 4];
+    for (i, word) in status_words.iter().enumerate() { // <- enumerate: adaptor, pairs each register word with its index
+        flags[i] = word & 0b1 != 0; // READY bit is bit 0
+    }
+    flags
+};
+
+assert_eq!(ready_channels, [true, false, true, true]);
+```
+
+**Why this way:** `enumerate` gives each register word its channel index
+without a hand-tracked counter, and writing results into a fixed `[bool;
+4]` instead of collecting into a `Vec` keeps the whole scan on the stack
+— the same adaptor used on a hosted `Vec<u8>` in the classic example
+works unchanged here.

@@ -88,14 +88,83 @@ low-level trampoline, and the exact register set and asm syntax are
 target-specific rather than portable — this snippet's precise form
 compiles only for the ARM-family target it names.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support**, and this is essentially an embedded-only attribute —
-`#[naked]` has almost no legitimate use case in hosted `std` code, since
-hosted programs never need to write their own interrupt entry or
-context-switch trampolines. Even within embedded Rust it is reached for
-rarely: most projects get equivalent behavior for free from a hardware
-support crate's `#[interrupt]` attribute, which generates an ordinary
-(non-naked) handler function on top of a runtime crate's own naked entry
-trampoline, so application code essentially never writes `#[naked]`
-itself.
+`#[naked]` is one of the rare attributes that is genuinely embedded-only
+in any practical sense — hosted programs never need to hand-control
+register and stack state at a boundary the OS and calling convention
+already guarantee, but bare-metal code hits that need at exactly two
+places: the very first instructions after a hardware exception/interrupt
+fires (before any register is known to be saved), and a preemptive
+scheduler's context switch, where a routine must save one task's entire
+register file, swap the stack pointer itself, and restore a different
+task's register file — something an ordinary function's compiler-
+generated prologue is neither written for nor able to do, since it
+assumes it's the one establishing the stack frame, not tearing down and
+rebuilding someone else's.
+
+This second case — a hand-rolled real-time-OS context switch — is the
+single most iconic real use of `#[naked]` in embedded Rust. On Cortex-M,
+the switch is conventionally driven from the low-priority `PendSV`
+exception specifically so it can be deferred until no higher-priority
+interrupt needs the core, and the handler for it is written naked because
+it must control the exact sequence of register pushes/pops and the stack-
+pointer swap itself, with no compiler-inserted instruction anywhere in
+between.
+
+Most application-level embedded code never writes `#[naked]` directly.
+A hardware support crate's `#[interrupt]` attribute (from `cortex-m-rt`)
+generates an ordinary, non-naked handler function on top of a runtime
+crate's own naked entry trampoline, so `#[naked]` mostly stays inside the
+handful of low-level runtime and RTOS crates that need it, not
+application code sitting on top of them.
+
+## Usage examples (Embedded)
+
+### Writing a Cortex-M PendSV context-switch handler
+
+```
+#[unsafe(no_mangle)]
+#[unsafe(naked)] // <- must control the exact register save/restore and stack-pointer swap itself
+pub extern "C" fn PendSV() {
+    core::arch::naked_asm!(
+        "mrs r0, psp",           // r0 = the interrupted task's stack pointer
+        "stmdb r0!, {{r4-r11}}", // manually save the callee-saved registers a prologue would have saved
+        "bl {switch}",           // pick the next task; returns its saved stack pointer in r0
+        "ldmia r0!, {{r4-r11}}", // restore the next task's callee-saved registers
+        "msr psp, r0",           // hand the CPU the next task's stack pointer
+        "bx lr",                 // exception return: resumes the next task exactly where it left off
+        switch = sym choose_next_task,
+    );
+}
+
+extern "C" fn choose_next_task(saved_sp: u32) -> u32 {
+    saved_sp // stand-in for real scheduler logic picking the next task's stack pointer
+}
+```
+
+### Writing a naked reset handler that sets up the stack before any Rust runs
+
+```
+#[unsafe(no_mangle)]
+#[unsafe(naked)] // <- runs before the stack pointer or .data/.bss are guaranteed set up
+pub unsafe extern "C" fn Reset() -> ! {
+    core::arch::naked_asm!(
+        "ldr sp, =_stack_start", // set the stack pointer from a linker-script symbol
+        "bl {init}",             // now safe to call ordinary Rust: a real stack exists
+        init = sym init_runtime,
+    );
+}
+
+extern "C" fn init_runtime() -> ! {
+    loop {} // stand-in for zeroing .bss, copying .data, then calling the user's #[entry] fn
+}
+```
+
+An ordinary function's prologue assumes a stack pointer and calling
+convention are already valid, which is precisely what hasn't happened yet
+at the exact instruction the reset vector jumps to — `#[naked]` is what
+lets that hand-off be written explicitly before anything resembling
+normal Rust runs. In practice, both examples above are exactly the kind
+of code `cortex-m-rt` already provides, so most firmware never writes
+either by hand.

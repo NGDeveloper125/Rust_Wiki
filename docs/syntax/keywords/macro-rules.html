@@ -954,7 +954,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>macro_rules!</code> declares a declarative macro: a name, followed by a brace-
 delimited list of one or more <strong>arms</strong>, each written <code>(matcher) =&gt; {transcriber};</code> — so a two-armed definition reads as <code>macro_rules! name { (matcher_1) =&gt; { transcriber_1 }; (matcher_2) =&gt; { transcriber_2 }; }</code>
@@ -998,7 +999,7 @@ name Rust has set aside for the future, not a usable feature today.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1070,20 +1071,64 @@ the macro only chooses which assertion shape to generate.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>macro_rules!</code> expansion happens entirely before code
-generation, so it's identical under <code>#![no_std]</code> and costs nothing at
-runtime. The reserved <code>macro</code> keyword has no embedded-specific relevance
-either, since it isn't usable syntax on any target yet.</p>
+        <p><code>macro_rules!</code> expansion happens entirely before code generation, so
+arm-matching and transcription are identical under <code>#![no_std]</code> and cost
+nothing at runtime — the compiled firmware image ends up exactly as if
+the expanded code had been hand-written. This is exactly why
+register-definition macros are so common in HAL and peripheral-access
+crates: a chip can have hundreds of near-identical registers, and
+encoding "one register = one address plus one set of accessors" as a
+macro arm, tried against each register's definition in turn, keeps that
+boilerplate a single reviewed pattern instead of hundreds of hand-copied
+blocks. The reserved <code>macro</code> keyword has no additional embedded
+relevance beyond what the classic Explanation already covers — it isn't
+usable syntax on any target yet, embedded included.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A register-definition macro with a read-only and a read-write arm</h3>
+            <pre><code class="rust">macro_rules! register {
+    ($name:ident, $addr:expr, ro) =&gt; { // &lt;- tried first: matches only when the literal token `ro` appears
+        pub fn $name() -&gt; u32 {
+            unsafe { core::ptr::read_volatile($addr as *const u32) }
+        }
+    };
+    ($name:ident, $addr:expr, rw $set_name:ident) =&gt; { // &lt;- tried second: the read-write form also names a setter
+        pub fn $name() -&gt; u32 {
+            unsafe { core::ptr::read_volatile($addr as *const u32) }
+        }
+        pub fn $set_name(value: u32) {
+            unsafe { core::ptr::write_volatile($addr as *mut u32, value) }
+        }
+    };
+}
+
+register!(read_status, 0x4001_0000, ro);            // &lt;- expands via the first arm: one accessor, no setter
+register!(read_ctrl, 0x4001_0004, rw write_ctrl);    // &lt;- expands via the second arm: a reader and a writer
+</code></pre>
+<p>Just like the classic <code>sensor_reading!</code>/<code>assert_reading_eq!</code> examples,
+arm order here is meaningful, not cosmetic: <code>ro</code> and
+<code>rw $set_name:ident</code> are distinct enough token shapes that listing a
+more permissive arm first could swallow input meant for the more
+specific one below it.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

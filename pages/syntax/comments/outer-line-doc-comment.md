@@ -115,10 +115,57 @@ silently dead link, which the
 recommends over manual markdown links whenever the target is another
 item in the same doc set.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[doc = "..."]` generation works identically in
-`#![no_std]`. One practical note: doc tests still compile and run on the
-**host** toolchain by default, not on the target microcontroller — fine
-for documenting pure logic, but an example that needs real hardware
-typically has to be written as plain (non-tested) text instead.
+`///` documents the following item identically under `#![no_std]` —
+`#[doc = "..."]` generation is a host-side, compile-time step with no
+dependency on the target having `std`, a heap, or an OS. The one thing
+that *does* change in embedded code is doc tests: by default they compile
+and **execute on the host**, not on the microcontroller the crate targets
+— fine for a pure parsing function, but a doc test that calls into real
+registers has no hardware to run against and needs to opt out of
+execution.
+
+## Usage examples (Embedded)
+
+### Documenting a HAL function's safety contract
+
+Embedded APIs lean on `///`'s `# Safety`/`# Errors` conventions even more
+than hosted code, since the failure mode of an undocumented precondition
+is often silent hardware misbehavior rather than a caught error.
+
+```
+/// Sets GPIOA pin 5 high.
+///
+/// # Safety
+///
+/// Must not be called before `clocks::init()` — GPIOA is unclocked until
+/// then and writes are silently ignored, not rejected.
+pub unsafe fn set_pin_5_high() {
+    // <- everything above is `///`; documents this fn's precondition, not its body
+    // ...
+}
+```
+
+### Writing a doc test that can't run on the host
+
+```
+/// Reads the current tick count since boot.
+///
+/// ```no_run
+/// // <- `no_run`: this compiles under `cargo test` but doesn't execute —
+/// //    the host has no XYZ-100 timer peripheral to read from
+/// let ticks = my_crate::tick_count::now();
+/// assert!(ticks > 0);
+/// ```
+pub fn now() -> u64 {
+    todo!()
+}
+```
+
+Per the
+[rustdoc book](https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#attributes),
+`no_run` is exactly the tool for this: it still catches the example going
+stale at compile time (a signature change breaks the build) without
+requiring the doc test's host process to actually own the peripheral the
+real code depends on.

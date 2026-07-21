@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[panic_handler]</code> marks a function as the crate's panic handler — the
 code that runs whenever <code>panic!</code> (directly or through something built on
@@ -992,7 +993,7 @@ handler, not a replacement for it.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1075,23 +1076,104 @@ profile rather than per panic site.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> — <code>#[panic_handler]</code> exists specifically for
-<code>#![no_std]</code> contexts and is one of the first things any <code>#![no_std]</code>
-binary crate must supply; see <a href="../../syntax/attributes/no-std-attribute.html">#![no_std]</a> for the
-broader picture of what else is lost and gained by opting out of <code>std</code>.
-It has no equivalent role in hosted <code>std</code> binaries, where <code>std</code> already
-installs the default panic handler and <code>std::panic::set_hook</code> is the
-mechanism for customizing behavior instead.</p>
+        <p>This page is about the attribute's own placement and linkage rules;
+what actually happens once a panic fires — unwind versus abort, why most
+firmware builds with <code>panic = "abort"</code>, and the specific handler crates
+(<code>panic-halt</code>, <code>panic-itm</code>, <code>panic-probe</code>) built for that world — is
+covered from the <code>panic!</code> side on the
+<a href="../macros/panic-macro.md"><code>panic!</code></a> page, and isn't repeated here.</p>
+<p>What belongs here is the contract the compiler and linker actually
+enforce. The function must have exactly the signature
+<code>fn(&amp;core::panic::PanicInfo) -&gt; !</code> — no other argument types, no other
+return type, and never returning, since there's no defined way to resume
+past a panic in a <code>#![no_std]</code> binary. And exactly <strong>one</strong> such function
+may exist in a binary's final linked dependency graph: <strong>zero</strong> is a
+link error (the linker has no symbol to satisfy the panic-handling
+runtime hook every <code>#![no_std]</code> binary needs), and <strong>two or more</strong> is
+also a link error (a duplicate-symbol failure), not silently resolved by
+picking one. This second failure mode is the more common one in practice
+— it happens when two different "panic handler" crates both end up in
+the same dependency graph, each defining its own <code>#[panic_handler]</code>,
+often because one dependency pulls in <code>panic-halt</code> while another pulls in
+<code>panic-probe</code> transitively. The fix is always the same: make sure exactly
+one panic-handler crate is an actual dependency of the final binary, not
+a version or naming issue.</p>
+<p>Because the handler crate is chosen purely by which one is a compiled-in
+dependency — not by any explicit registration call — the idiomatic way to
+supply one is importing it purely for its side effect:
+<code>use panic_halt as _;</code> at the crate root. The <code>as _</code> discards the actual
+import name (there's nothing to call), while still causing the crate's
+<code>#[panic_handler]</code> function to be compiled into the binary and satisfy
+the linker's requirement.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Selecting a handler crate purely for its side effect</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use panic_probe as _; // &lt;- imported only so its #[panic_handler] gets linked in
+use defmt_rtt as _;   // &lt;- transport panic-probe's formatted output rides over
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -&gt; ! {
+    loop {}
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Keeping exactly one handler across build profiles</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+// Cargo.toml selects exactly one of these via mutually exclusive features,
+// so exactly one #[panic_handler] is ever compiled into a given build:
+//
+//   [dependencies]
+//   panic-halt  = { version = "0.2", optional = true }
+//   panic-probe = { version = "0.3", optional = true, features = ["print-defmt"] }
+//
+//   [features]
+//   release-halt = ["panic-halt"]
+//   debug-probe  = ["panic-probe"]
+
+#[cfg(feature = "release-halt")]
+use panic_halt as _;
+
+#[cfg(feature = "debug-probe")]
+use panic_probe as _;
+
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -&gt; ! {
+    loop {}
+}
+</code></pre>
+<p>Feature-gating the <code>use</code> this way makes the one-handler-per-binary rule
+a build-time guarantee rather than something discovered as a duplicate-
+symbol link error after two transitive dependencies each brought in their
+own handler crate.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

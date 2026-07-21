@@ -159,14 +159,81 @@ item recommends every public type implement `Debug`, since library
 consumers rely on it turning up automatically in their own logging and
 panic output without having to write a formatter themselves.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support (split by macro).** `core::fmt` itself — the `Display`
-and `Debug` traits, `write!`, and manually implementing `fmt::Write` to
-render into a fixed-size `[u8; N]` buffer — works in `#![no_std]` with
-no allocator at all, since it only writes through a `Formatter`/`Write`
-sink the caller supplies. `format!` and `.to_string()`, though, both
-build and return an owned `String`, which needs the `alloc` crate and a
-configured `#[global_allocator]` — on allocator-free targets, `write!`
-into a stack-allocated buffer (or a `heapless::String`) is the usual
-substitute for `format!`.
+The split this page draws between the `core::fmt` machinery and the
+allocating macros built on top of it is exactly the line embedded support
+falls on. `Display`, `Debug`, and `write!` all work in `#![no_std]` with
+no allocator at all, because they only ever write through a
+`Formatter`/`core::fmt::Write` sink the caller already owns — a custom
+`Display` impl written the way this page's Basic usage example shows
+compiles unchanged under `#![no_std]`. `format!` and `.to_string()`,
+though, both *return* a freshly allocated `String`, so they need `alloc`
+plus a configured `#[global_allocator]` the same way `Vec`/`String`
+themselves do (see [String vs &str](string-vs-str.md)).
+
+The realistic no-heap substitute isn't a different macro so much as a
+different destination: instead of `format!("...")` producing an owned
+`String`, `write!`/`writeln!` the same format string into a
+`heapless::String<N>` or directly into a peripheral (a UART) that
+implements `core::fmt::Write` — see
+[`write!` / `writeln!`](../../syntax/macros/write-macros.md) for how that
+destination-trait split works. This page's angle is which macro a caller
+reaches for, not the mechanics of the trait: reach for `write!` into an
+owned, bounded buffer or a peripheral wherever hosted code would reach
+for `format!`.
+
+For targets tight enough on flash that even `core::fmt`'s format-string
+parsing and `Arguments` machinery are too much code size, the `ufmt`
+crate is a real, narrower alternative: it defines its own leaner
+`uDisplay`/`uDebug` traits and a `uwrite!`/`uwriteln!` macro pair with a
+smaller compiled footprint than `core::fmt`, at the cost of supporting
+fewer format specifiers. It's a deliberate trade of `core::fmt`'s
+flexibility for less code, not a drop-in replacement for it.
+
+## Basic usage example (Embedded)
+
+```
+use core::fmt::Write as _;
+use heapless::String;
+
+struct Order { id: u64 }
+
+impl core::fmt::Display for Order {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "Order #{}", self.id) // <- same Display impl shape as hosted Rust, no heap involved
+    }
+}
+
+let order = Order { id: 42 };
+let mut summary: String<32> = String::new();
+write!(summary, "{order}").unwrap(); // <- writes into a fixed-capacity buffer instead of format!'s owned String
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with text
+
+Rendering a sensor reading into a log line needs `format!`'s shape —
+literal text interleaved with interpolated values — but not an
+allocation; `write!` into a `heapless::String` is the substitute that
+keeps the same `{}`/`{:.1}` grammar.
+
+```
+use core::fmt::Write as _;
+use heapless::String;
+
+fn render_reading(id: u32, celsius: f32) -> String<32> {
+    // AVOID: format!("sensor {id}: {celsius:.1}C") -- needs alloc + a configured #[global_allocator]
+    let mut line: String<32> = String::new();
+    write!(line, "sensor {id}: {celsius:.1}C").unwrap(); // PREFER: writes into a fixed 32-byte buffer, no heap
+    line
+}
+```
+
+**Why this way:** `write!` and `format!` share identical formatting
+syntax, so switching destinations costs nothing in readability — only
+the buffer changes from an owned, unbounded `String` to a bounded
+`heapless::String<N>`, per the same `core::fmt::Write` mechanics
+[`write!` / `writeln!`](../../syntax/macros/write-macros.md) documents in
+full.

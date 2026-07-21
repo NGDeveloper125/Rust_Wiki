@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>Vec&lt;T&gt;</code> is Rust's growable array: a contiguous, heap-allocated buffer of
 <code>T</code> that can gain and lose elements at runtime. Unlike a fixed-size array
@@ -988,7 +989,7 @@ problem actually calls for it.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let mut readings: Vec&lt;f64&gt; = Vec::new();
 readings.push(21.5); // &lt;- grows the Vec; len becomes 1, capacity may grow past 1
@@ -1003,7 +1004,7 @@ known to be in bounds.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1094,24 +1095,118 @@ caller genuinely takes ownership of new data.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> <code>Vec&lt;T&gt;</code> lives in the <code>alloc</code> crate, not <code>core</code> — on
-hosted <code>std</code> targets it just works, but under <code>#![no_std]</code> it requires
-<code>extern crate alloc</code> plus a configured <code>#[global_allocator]</code> before
-<code>alloc::vec::Vec</code> is usable at all. Where no heap is available, or where
-allocation failure and fragmentation are unacceptable,
-<code>heapless::Vec&lt;T, N&gt;</code> provides a fixed-<em>capacity</em> (chosen at compile
-time), allocation-free alternative that still tracks a runtime length
-and supports <code>push</code>/<code>pop</code>, at the cost of a hard upper bound <code>N</code>.</p>
+        <p>Everything the classic Explanation describes — amortized-doubling growth,
+<code>with_capacity</code> pre-sizing, deref to <code>&amp;[T]</code> — is true of <code>Vec&lt;T&gt;</code> under
+<code>#![no_std]</code> too, because <code>alloc::vec::Vec</code> and <code>std</code>'s <code>Vec</code> are the same
+type; the only embedded-specific fact is getting there at all. <code>Vec&lt;T&gt;</code>
+is defined in <code>alloc</code>, not <code>core</code>, so it needs <code>extern crate alloc</code> plus a
+configured <code>#[global_allocator]</code> before <code>Vec::new()</code>/<code>.push()</code> compile —
+once that's wired up, a <code>Vec</code> behaves identically to a hosted build,
+capacity growth and all.</p>
+<p>Where no heap is available — no allocator configured, no <code>alloc</code> at
+all — there is no way to make <code>Vec&lt;T&gt;</code> itself work, and the design
+question becomes what to replace it with. <code>heapless::Vec&lt;T, N&gt;</code> is the
+standard substitute: capacity <code>N</code> is a const generic, fixed at the type
+level and known to the compiler, so the buffer lives inline (on the
+stack or in <code>static</code> storage) rather than on a heap that doesn't exist.
+That fixed bound is the real tradeoff against the classic type: a
+<code>heapless::Vec&lt;T, N&gt;</code> can never grow past <code>N</code>, so <code>.push()</code> returns a
+<code>Result</code> that the caller must handle instead of silently reallocating —
+the failure mode that <code>std</code>'s <code>Vec</code> defers to an allocator (and ultimately
+to the OS) becomes a value the embedded caller has to decide about
+immediately, usually because there's nowhere further to defer it to.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use heapless::Vec;
+
+let mut samples: Vec&lt;f32, 4&gt; = Vec::new(); // &lt;- capacity fixed at 4, no heap involved
+samples.push(21.5).unwrap(); // &lt;- push returns Result: Err(value) if the buffer is already full
+samples.push(22.0).unwrap();
+
+assert_eq!(samples.len(), 2);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A fixed-size sensor sample buffer — read once per polling cycle, never
+grown past its planned size — is exactly the shape <code>heapless::Vec</code> is
+for: the capacity bound is decided once, at compile time, instead of
+being an unenforced assumption about how many samples will ever arrive.</p>
+<pre><code class="rust">use heapless::Vec;
+
+const SAMPLE_COUNT: usize = 8;
+
+fn collect_samples(mut read_sensor: impl FnMut(usize) -&gt; f32) -&gt; Vec&lt;f32, SAMPLE_COUNT&gt; {
+    let mut samples: Vec&lt;f32, SAMPLE_COUNT&gt; = Vec::new(); // &lt;- capacity fixed at compile time, no allocator needed
+    for id in 0..SAMPLE_COUNT {
+        samples.push(read_sensor(id)).unwrap(); // &lt;- Err if more than SAMPLE_COUNT samples are ever collected
+    }
+    samples
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> on a target with no heap, an unbounded <code>Vec</code> isn't just
+unavailable — even if it were, an attacker- or fault-free but unbounded
+buffer is itself a hazard on memory-constrained hardware. Fixing <code>N</code> at
+the type level turns "how many samples can this hold" into something the
+compiler enforces rather than a runtime assumption.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A function that only reads a buffer of samples should accept <code>&amp;[f32]</code>,
+exactly as the classic page's API-design scenario argues — and that
+guidance holds unchanged whether the caller's buffer is backed by
+<code>alloc::Vec</code> (once an allocator is configured) or <code>heapless::Vec</code>, since
+both deref to a plain slice.</p>
+<pre><code class="rust">fn average(samples: &amp;[f32]) -&gt; f32 { // &lt;- &amp;[f32]: works for alloc::Vec&lt;f32&gt; or heapless::Vec&lt;f32, N&gt; alike
+    samples.iter().sum::&lt;f32&gt;() / samples.len() as f32
+}
+
+use heapless::Vec;
+let mut samples: Vec&lt;f32, 4&gt; = Vec::new();
+samples.push(21.5).unwrap();
+samples.push(22.0).unwrap();
+
+let mean = average(&amp;samples); // &lt;- heapless::Vec&lt;f32, 4&gt; derefs to &amp;[f32], same call site an alloc::Vec would use
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> writing the function against <code>&amp;[T]</code> instead of a
+concrete <code>Vec</code> type keeps it usable on both allocator-equipped and
+allocator-free targets without a second copy of the function — the
+tradeoff between <code>alloc::Vec</code> and <code>heapless::Vec</code> stays a construction-site
+decision, not something every reader of the buffer needs to care about.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

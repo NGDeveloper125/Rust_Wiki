@@ -75,11 +75,41 @@ ordinary `mod` or `impl` block gives, which is why
 [`thread_local!`](https://doc.rust-lang.org/std/macro.thread_local.html)
 and `macro_rules!` itself are always written this way in practice.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Delimiter choice is resolved entirely at parse time and
-carries no runtime behavior, so it's identical under `#![no_std]`.
-Embedded crates follow the same conventions: register- and
-peripheral-definition macros in HAL crates are typically invoked with
-`{...}` when they expand to item blocks, and with `(...)` when they
-read as a single expression.
+Delimiter choice is resolved entirely at parse time and carries no
+runtime behavior at all, so it's identical under `#![no_std]` — there's
+no embedded-specific grammar here. The same conventions from the classic
+explanation carry over directly: embedded crates reach for `{...}` when
+a macro's expansion is one or more items (`bitflags!`-style register-flag
+definitions, `macro_rules!` itself), `(...)` for anything that reads
+like a function call or single expression (`defmt::info!(...)`,
+`nb::block!(...)`), and `[...]` mainly for list-like expansions, which
+are rarer in `no_std` code simply because the standard list-like macro,
+`vec!`, needs `alloc` (see [`vec!`](vec-macro.md)).
+
+## Usage examples (Embedded)
+
+### Defining register flags with the {} item form
+
+```
+bitflags::bitflags! { // <- {} form: this macro's expansion is a whole struct item, not a single value
+    struct StatusFlags: u8 {
+        const READY   = 0b0000_0001;
+        const TX_BUSY = 0b0000_0010;
+        const RX_FULL = 0b0000_0100;
+    }
+}
+```
+
+### Blocking on a non-blocking peripheral operation with the () form
+
+```
+let byte = nb::block!(serial.read()); // <- () form: reads like an ordinary function call, evaluates to one value
+```
+
+### Same interchangeability, an unconventional [] call
+
+```
+let ready = assert_eq![gpio.read_pin(5), true]; // <- legal: [] instead of the conventional () for this expression-like macro
+```

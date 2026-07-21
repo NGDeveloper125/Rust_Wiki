@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>The visitor pattern separates an operation from the data it operates
 over, so new operations can be added without touching the types being
@@ -990,7 +991,7 @@ other pass.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">trait Visitor {
     fn visit_circle(&amp;mut self, radius: f64);
@@ -1035,7 +1036,7 @@ println!("{}", summer.total);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1134,23 +1135,110 @@ type set rarely needs a visitor at all.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Both shapes shown here work identically in
-<code>#![no_std]</code>: the enum-plus-<code>match</code> form has no runtime cost beyond an
-ordinary tag check, and <code>&amp;dyn Visitor</code>/<code>&amp;mut dyn Visitor</code> dispatch needs
-only a reference, no allocator. The one allocating detail is incidental
-to the example, not the pattern: a <code>Vec&lt;Box&lt;dyn DocNode&gt;&gt;</code> collecting
-heterogeneous nodes needs the <code>alloc</code> crate; visiting a single value
-through <code>&amp;dyn Visitor</code> does not.</p>
+        <p>There isn't much genuinely embedded-specific to say about the visitor
+pattern beyond what already applies to any <code>#![no_std]</code> use of trait
+objects: both classic shapes work unchanged. The enum-plus-<code>match</code> form
+costs nothing beyond an ordinary tag check and needs no allocator, and
+<code>&amp;dyn Visitor</code>/<code>&amp;mut dyn Visitor</code> dispatch needs only a reference, not a
+<code>Box</code>, so it works the same way in firmware as it does on a hosted
+target (the same <a href="on-stack-dynamic-dispatch.md">on-stack dynamic dispatch</a>
+mechanism the strategy and command pages lean on). If anything, the
+enum-preference argument from the classic Explanation applies even more
+strongly here: embedded element sets — a fixed sequence of register-field
+descriptors read out of a datasheet, a fixed set of frame types on a
+known protocol — are almost always closed and known at compile time,
+which is precisely the case where a <code>match</code> beats a trait-based visitor
+outright rather than being merely an alternative. A modest example
+suffices to show the shape; there is no deeper embedded-specific
+nuance beyond that.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">enum FieldDescriptor {
+    Reserved { bits: u8 },
+    Flag { name: &amp;'static str, bit: u8 },
+}
+
+fn describe(field: &amp;FieldDescriptor) {
+    match field { // &lt;- match plays the visitor's role: no trait, no vtable, no allocator
+        FieldDescriptor::Reserved { bits } =&gt; { let _ = bits; }
+        FieldDescriptor::Flag { name, bit } =&gt; { let _ = (name, bit); }
+    }
+}
+
+let fields = [
+    FieldDescriptor::Flag { name: "ENABLE", bit: 0 },
+    FieldDescriptor::Reserved { bits: 3 },
+];
+for field in &amp;fields {
+    describe(field);
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A control register's bitfield layout — which bits are flags, which are
+reserved, which form a multi-bit value — is fixed by the datasheet and
+entirely owned by this crate, so an exhaustive <code>match</code> plays the
+visitor's role with no trait or vtable at all.</p>
+<pre><code class="rust">enum RegisterField {
+    Flag { name: &amp;'static str, bit: u8 },
+    Value { name: &amp;'static str, mask: u32, shift: u8 },
+    Reserved { bits: u8 },
+}
+
+fn print_fields(fields: &amp;[RegisterField]) {
+    for field in fields {
+        match field { // &lt;- exhaustive match over a fixed, datasheet-defined field layout
+            RegisterField::Flag { name, bit } =&gt; println!("{name}: bit {bit}"),
+            RegisterField::Value { name, mask, shift } =&gt; println!("{name}: mask {mask:#x} &lt;&lt; {shift}"),
+            RegisterField::Reserved { bits } =&gt; println!("(reserved: {bits} bits)"),
+        }
+    }
+}
+
+let ctrl_reg_fields = [
+    RegisterField::Flag { name: "ENABLE", bit: 0 },
+    RegisterField::Value { name: "CLOCK_DIV", mask: 0xF0, shift: 4 },
+    RegisterField::Reserved { bits: 3 },
+];
+print_fields(&amp;ctrl_reg_fields);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a register's field layout is fixed by the hardware
+datasheet, not extended by third-party code, so the compiler-enforced
+exhaustiveness of an
+<a href="https://doc.rust-lang.org/book/ch06-02-match.html">enum <code>match</code></a> gives
+every guarantee a hand-written visitor would, with no allocator and no
+vtable indirection — exactly the closed-set case where the classic
+Explanation's advice to prefer <code>match</code> over a trait-based visitor applies
+most cleanly.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

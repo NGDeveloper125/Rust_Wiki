@@ -948,7 +948,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>/* ... */</code> comments out everything between the delimiters, including
 line breaks — <code>/* this whole block is ignored */</code> works the same whether
@@ -960,7 +961,7 @@ comment out a chunk of code that itself already contains a block comment.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1015,17 +1016,52 @@ vanishing from the codebase.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Pure lexical construct — no <code>std</code> dependency.</p>
+        <p><code>/* ... */</code> is unchanged in embedded Rust: a lexical construct fully
+stripped before compilation, so it costs nothing on a target with no
+<code>std</code>, no heap, and no OS. Its nesting property is genuinely useful in
+firmware work, where large chunks of register-twiddling or interrupt
+setup code get commented out wholesale while bringing up new hardware.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Disabling an interrupt handler during bring-up</h3>
+            <p>Commenting out a whole <code>#[interrupt]</code> handler while debugging a board's
+power sequencing is exactly the case <code>/* */</code>'s nesting protects — the
+handler body already has its own <code>/* */</code>-free <code>//</code> comments, but if it
+contained a block comment of its own, nesting would still keep this outer
+one intact.</p>
+<pre><code class="rust">#![no_std]
+#![no_main]
+
+/*
+#[interrupt]
+fn TIM2() {
+    // clear the update interrupt flag before returning, or this fires forever
+    clear_tim2_update_flag();
+    tick_count::increment();
+}
+*/
+// &lt;- TIM2 handler disabled while bringing up the new board's timer config;
+//    re-enable once TIM2's prescaler is confirmed against the datasheet
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

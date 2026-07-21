@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A trait defines a set of behavior — methods a type promises to provide —
 that any type can then implement, independent of that type's own
@@ -975,7 +976,7 @@ for the compile-time side.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">trait Greet {
     fn greet(&amp;self) -&gt; String;
@@ -991,7 +992,7 @@ println!("{}", Cat.greet());
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1098,21 +1099,154 @@ illustrates with the same trait-double approach.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Traits are core-language and allocator-free. The
-<code>embedded-hal</code> crate is the clearest real-world proof of how central this
-is to embedded Rust: an entire ecosystem of hardware-agnostic driver
-crates is built purely on trait abstractions, letting one driver crate
-work across dozens of unrelated vendors' microcontrollers.</p>
+        <p>Traits are the mechanism that makes <code>embedded-hal</code> possible, and
+<code>embedded-hal</code> is the single clearest proof of how central traits are to
+embedded Rust. <code>embedded-hal</code> (and its async sibling, <code>embedded-hal-async</code>)
+ships almost no implementation code at all — it's a collection of trait
+definitions (<code>OutputPin</code>, <code>InputPin</code>, <code>SpiBus</code>, <code>I2c</code>, <code>DelayNs</code>, …), full
+stop. See <a href="../../syntax/keywords/trait.md"><code>trait</code></a> for the mechanics of
+how those declarations are written; this page is about the design payoff.</p>
+<p>Because a trait separates "the contract" from "who implements it," a chip
+vendor's HAL crate (typically layered over a peripheral-access crate
+generated from that chip's SVD file) can implement <code>embedded-hal</code>'s traits
+for its own concrete register types, while a sensor or display driver
+crate is written entirely against the traits — never against any vendor's
+concrete pin, bus, or timer type. Neither side has to know about the
+other in advance: the trait is the sole point of coordination. The result
+is an ecosystem where one driver crate (say, a BME280 humidity sensor
+driver) compiles and runs unmodified on an STM32 board, an RP2040 board,
+and a nRF52 board, purely because all three vendors' HALs implement the
+same <code>embedded-hal</code> traits. Without traits, this would require either
+per-vendor forks of every driver, or a runtime abstraction layer with the
+dispatch and code-size costs that come with it — traits get the same
+decoupling for free, resolved entirely at compile time.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">trait OutputPin {
+    type Error;
+    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+struct GpioPin5; // a concrete pin type, as a vendor's HAL crate would define it
+
+impl OutputPin for GpioPin5 { // &lt;- the vendor HAL implements the shared trait for its own pin type
+    type Error = core::convert::Infallible;
+    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt; {
+        // write to the peripheral's GPIO register here
+        Ok(())
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p>A vendor HAL crate makes its concrete I2C peripheral usable by every
+<code>embedded-hal</code>-based driver crate simply by implementing the shared <code>I2c</code>
+trait for its own bus type — no coordination with any driver author
+required.</p>
+<pre><code class="rust">trait I2c {
+    type Error;
+    fn write(&amp;mut self, addr: u8, bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+struct Bus1; // the vendor's concrete I2C peripheral handle
+
+impl I2c for Bus1 { // &lt;- one impl unlocks every driver crate written against I2c
+    type Error = core::convert::Infallible;
+    fn write(&amp;mut self, addr: u8, bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt; {
+        let _ = (addr, bytes); // send over the real peripheral here
+        Ok(())
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the HAL author and every driver author never need to
+meet — the trait is the entire coordination surface, which is exactly why
+<code>embedded-hal</code> chose "implement these traits" as its integration model
+instead of a shared concrete bus type.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A sensor driver crate's public constructor should ask for "anything
+implementing the <code>embedded-hal</code> trait it needs," not a specific vendor's
+concrete peripheral type — otherwise the driver silently becomes
+single-vendor.</p>
+<pre><code class="rust">pub struct TemperatureSensor&lt;I2C&gt; { // &lt;- generic over the trait, not any one vendor's I2C type
+    bus: I2C,
+}
+
+impl&lt;I2C: I2c&gt; TemperatureSensor&lt;I2C&gt; {
+    pub fn new(bus: I2C) -&gt; Self {
+        TemperatureSensor { bus }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a driver crate that names a concrete vendor type in its
+public API can only ever be used with that vendor's chips; bounding by
+the trait instead is what lets the same driver crate serve every board
+whose HAL implements <code>I2c</code>.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A sensor driver's trait boundary doubles as a test seam: implementing the
+same trait with an in-memory stand-in lets the driver's parsing/decoding
+logic run in a regular host-side test, with no real bus and no target
+hardware attached.</p>
+<pre><code class="rust">struct MockBus { canned_reply: Vec&lt;u8&gt; }
+
+impl I2c for MockBus {
+    type Error = core::convert::Infallible;
+    fn write(&amp;mut self, _addr: u8, _bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt; {
+        Ok(())
+    }
+}
+
+// TemperatureSensor::new(MockBus { canned_reply: vec![0x1a, 0x02] }) exercises
+// the driver's own logic without ever touching real hardware
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> this is precisely the role the <code>embedded-hal-mock</code> crate
+plays in the ecosystem — driver crates are tested against a mock
+implementation of the same traits real hardware satisfies, so CI can run
+a board's driver logic without the board.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

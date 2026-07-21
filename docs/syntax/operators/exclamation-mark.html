@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>As a prefix operator, <code>!</code> is logical NOT on <code>bool</code> and bitwise complement
 on integers (e.g. <code>!0b1010u8</code> flips every bit), overloadable via
@@ -970,7 +971,7 @@ no <code>break</code>.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1010,23 +1011,69 @@ of the function as the unindented success path.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Not</code> lives in <code>core::ops</code>; macro invocation and the
-never type <code>!</code> are core grammar — none of this depends on <code>std</code>. Note
-that <code>panic!()</code> itself behaves differently under <code>#![no_std]</code> (see the
-<a href="../../syntax/macros/panic-macro.html">panic! macro</a> and
-<a href="../../concepts/error-handling/panic-and-unwinding.html">Panic &amp; unwinding</a> pages) — it
-still expands via this same <code>!</code> syntax, but requires a <code>#[panic_handler]</code>
-function since there's no default one without <code>std</code>.</p>
+        <p>All three meanings of <code>!</code> carry over into <code>#![no_std]</code> unchanged: logical
+NOT and bitwise complement are core-language operators overloadable via
+<code>core::ops::Not</code>, macro-invocation syntax is resolved entirely at compile
+time regardless of target, and the never type <code>!</code> is likewise a
+core-language type with no runtime component. The never type is the one
+place <code>!</code> becomes <em>more</em> prominent rather than merely unchanged. Firmware's
+<code>fn main</code> conventionally never returns — there's no OS to return control
+to — so declaring it <code>fn main() -&gt; !</code> and driving it with an unconditional
+<code>loop { }</code> isn't a stylistic quirk, it's the normal, expected shape of an
+embedded entry point, and the compiler uses that same <code>-&gt; !</code> signature to
+statically confirm the function really never falls off the end. The same
+requirement applies to a <code>#[panic_handler]</code> function, which likewise must
+return <code>!</code> since a firmware panic has nowhere to unwind to.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Negating a peripheral's ready flag before polling</h3>
+            <pre><code class="rust">fn poll_until_ready(is_ready: impl Fn() -&gt; bool) {
+    while !is_ready() { // &lt;- `!` negates the ready check into a "keep waiting" condition
+        // spin until the peripheral reports ready
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">An embedded entry point that never returns</h3>
+            <pre><code class="rust">#[no_mangle]
+fn main() -&gt; ! { // &lt;- `!`: main never returns control to anything, so its return type is the never type
+    loop {
+        // service peripherals, feed a watchdog, etc. — forever
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">A panic handler, also required to diverge</h3>
+            <pre><code class="rust">use core::panic::PanicInfo;
+
+#[panic_handler]
+fn on_panic(_info: &amp;PanicInfo) -&gt; ! { // &lt;- `!`: a firmware panic has nowhere to unwind to, so this must diverge too
+    loop {} // e.g. halt the core, or reset the microcontroller
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>?</code> is control-flow sugar for early-return propagation: applied to a
 <a href="../../concepts/error-handling/result.html"><code>Result</code></a> or <a href="../../concepts/error-handling/option.html"><code>Option</code></a>, it either unwraps the
@@ -991,7 +992,7 @@ type system still guarantees every failure is accounted for somewhere.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn read_port_from_env() -&gt; Result&lt;u16, std::num::ParseIntError&gt; {
     let raw = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
@@ -1002,7 +1003,7 @@ type system still guarantees every failure is accounted for somewhere.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1166,21 +1167,147 @@ recommends <code>FromStr</code> for exactly this kind of textual parsing API.</p
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>?</code> desugars to plain <code>match</code> plus <code>From::from</code> on
-<code>core::result::Result</code> and <code>core::option::Option</code>, so it works
-identically in <code>#![no_std]</code> with no runtime cost and no allocator
-requirement — the enclosing function's return type just needs to stay
-compatible, exactly as on hosted targets.</p>
+        <p>On bare metal there's no OS-level try/catch to fall back on even in
+spirit — no unwinding runtime underneath most <code>#![no_std]</code> builds (see
+<a href="panic-and-unwinding.md">Panic &amp; unwinding</a>), so <code>panic!</code> is reserved for
+conditions the firmware truly cannot continue past, and <code>?</code>-based
+<code>Result</code> chains become the only realistic way to propagate an ordinary,
+expected failure — a bus that didn't ACK, a sensor that timed out — back
+up to a caller who can actually decide what to do about it: retry, fall
+back to a cached value, or escalate to a fault state. The
+<a href="../../syntax/operators/question-mark.md"><code>?</code> syntax page's embedded section</a>
+covers the mechanics — same desugaring, same zero-cost <code>core::result</code>/
+<code>core::option</code> operands, no allocator involved — this page is about <em>why</em>
+that shape fits embedded code particularly well: a driver function built
+from several dependent hardware transactions (power on a sensor, wait for
+a ready bit, read the result) reads as a flat sequence of <code>?</code>-suffixed
+calls, each one exiting immediately the moment a step the rest of the
+sequence depends on fails, with no <code>match</code> boilerplate at each line and,
+critically, no hidden path where a step's failure is silently read as its
+success.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use embedded_hal::i2c::I2c;
+
+#[derive(Debug)]
+struct SensorError;
+
+fn configure(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), SensorError&gt; {
+    i2c.write(addr, &amp;[0x20, 0x01]).map_err(|_| SensorError) // &lt;- enable the sensor
+}
+
+fn read_value(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u16, SensorError&gt; {
+    let mut buf = [0u8; 2];
+    i2c.write_read(addr, &amp;[0x28], &amp;mut buf).map_err(|_| SensorError)?;
+    Ok(u16::from_be_bytes(buf))
+}
+
+fn read_configured_value(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u16, SensorError&gt; {
+    configure(i2c, addr)?; // &lt;- exits immediately if enabling the sensor fails
+    read_value(i2c, addr)  // &lt;- last expression: its own Result is returned as-is
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>Reading a calibrated sensor value chains three independent hardware
+steps — waking the sensor, waiting for it to report ready, then reading
+the result — and <code>?</code> exits at the first one that fails instead of reading
+a result from a sensor that was never actually ready.</p>
+<pre><code class="rust">use embedded_hal::i2c::I2c;
+
+#[derive(Debug)]
+enum SensorError {
+    Bus,
+    NotReady,
+}
+
+fn wake(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), SensorError&gt; {
+    i2c.write(addr, &amp;[0x10, 0x01]).map_err(|_| SensorError::Bus) // &lt;- power-on command
+}
+
+fn wait_ready(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), SensorError&gt; {
+    let mut status = [0u8; 1];
+    i2c.write_read(addr, &amp;[0x00], &amp;mut status).map_err(|_| SensorError::Bus)?;
+    if status[0] &amp; 0x01 == 0 {
+        return Err(SensorError::NotReady);
+    }
+    Ok(())
+}
+
+fn read_measurement(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u16, SensorError&gt; {
+    wake(i2c, addr)?;       // &lt;- exits here if the power-on write fails
+    wait_ready(i2c, addr)?; // &lt;- exits here if the status read fails, or the sensor isn't ready yet
+    let mut buf = [0u8; 2];
+    i2c.write_read(addr, &amp;[0x28], &amp;mut buf).map_err(|_| SensorError::Bus)?;
+    Ok(u16::from_be_bytes(buf))
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> each <code>?</code> stops the sequence the instant a step the rest
+depends on fails, so <code>read_measurement</code> can never reach the final register
+read after a wake or readiness step actually failed — the same fail-fast
+shape the classic page's <code>load_max_connections</code> example gives a
+config-loading pipeline, applied here to a hardware transaction sequence
+instead of file I/O.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>Reading a device's operating mode out of a small on-flash config block
+rejects a missing field before it's used, using <code>?</code> on
+<code>Option::ok_or</code> exactly as the classic page does for a signup form — just
+with the form replaced by a byte read out of flash.</p>
+<pre><code class="rust">struct DeviceConfig&lt;'a&gt; {
+    mode_byte: Option&lt;&amp;'a u8&gt;,
+}
+
+#[derive(Debug)]
+struct ConfigError(&amp;'static str);
+
+fn read_mode(config: &amp;DeviceConfig) -&gt; Result&lt;u8, ConfigError&gt; {
+    let mode = config.mode_byte
+        .ok_or(ConfigError("mode byte missing from config block"))?; // &lt;- exits early if the field was never written
+    Ok(*mode)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>?</code> on <code>ok_or</code>/<code>ok_or_else</code> gives <code>Option</code> the same
+fail-fast propagation shape <code>?</code> gives <code>Result</code>, so a config reader for a
+flash-backed struct reads as flat checks instead of nested <code>if let</code>s — the
+same idiom as the classic page's <code>validate</code> example, applied to firmware
+config instead of a signup form.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

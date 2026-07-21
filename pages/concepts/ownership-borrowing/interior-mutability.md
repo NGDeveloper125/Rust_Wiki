@@ -113,12 +113,143 @@ panicking, as the
 [Rust Book](https://doc.rust-lang.org/book/ch16-03-shared-state.html)
 covers when introducing `Mutex<T>`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both `Cell` and `RefCell` live in `core::cell` — no
-allocator needed. `RefCell`'s runtime borrow tracking is single-threaded,
-though, which matters for embedded: it's not safe to share across an
-interrupt handler and the main loop the way a `critical-section`-gated
-cell or a hardware-mutex-backed type is. Embedded code sharing state with
-an interrupt typically reaches for `critical_section::Mutex<RefCell<T>>`
-rather than a bare `RefCell<T>`.
+`Cell` and `RefCell` both live in `core::cell`, so the mechanism described
+above — moving the "aliasing XOR mutability" check from compile time to
+runtime — works identically under `#![no_std]`, no allocator required.
+`Cell<T>` is a particularly good fit for embedded code because so much
+embedded state is naturally a small `Copy` value (a latest ADC sample, a
+tick count, a status byte): `Cell::get`/`set` never hands out a reference
+at all, so there's nothing to track and no runtime check to fail, making
+it strictly cheaper than `RefCell` wherever the contained type is `Copy`.
+
+Both types share one hard limitation that matters far more on embedded
+than it typically does hosted: neither is `Sync` (see
+[Send & Sync](../concurrency-async/send-and-sync.md)), so a bare
+`Cell`/`RefCell` is not safe to reach from both `fn main`'s loop and a
+`#[interrupt]` handler at once — the runtime check `RefCell` performs
+assumes single-threaded access, and an interrupt preempting `main`
+mid-borrow is exactly the kind of concurrent access that check was never
+designed to catch. Embedded code's standard answer, since there's usually
+no OS and therefore no `std::sync::Mutex` to fall back on, is
+`critical_section::Mutex<Cell<T>>` or `critical_section::Mutex<RefCell<T>>`:
+`critical-section`'s `Mutex` wrapper (a genuinely different type from
+`std::sync::Mutex`, despite the shared name) is only `Sync` when its
+contents are `Send`, and only permits touching the inner `Cell`/`RefCell`
+from inside a critical section — typically interrupts-disabled on a
+single-core target — which is what makes it sound to hand both `main` and
+an interrupt handler a `'static` reference to the same cell. This is, in
+effect, `no_std`'s substitute for `std::sync::Mutex<T>` in the one place
+OS-level locking isn't available to fall back on.
+
+## Basic usage example (Embedded)
+
+```
+use core::cell::Cell;
+
+let sample = Cell::new(0u16);
+sample.set(sample.get() + 1); // <- mutates through a shared Cell value, no runtime check needed: u16 is Copy
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Interior mutability
+
+A driver caches the last-read calibration offset behind a `Cell` so its
+`&self` reading method can update the cache without needing `&mut self` —
+safe because the value is `Copy` and the driver never crosses an
+interrupt boundary.
+
+```
+use core::cell::Cell;
+
+struct Thermometer {
+    last_offset: Cell<i16>, // <- Copy type: Cell is the cheapest form of interior mutability here
+}
+
+impl Thermometer {
+    fn read_celsius(&self, raw: i16) -> i16 { // <- &self, not &mut self
+        let offset = self.last_offset.get();
+        let corrected = raw - offset;
+        self.last_offset.set(corrected / 10); // <- mutates through &self, no reference ever handed out
+        corrected
+    }
+}
+```
+
+**Why this way:** `Cell` never hands out a reference to its contents, so
+there's no runtime borrow-tracking overhead at all — for a `Copy` value
+like a calibration offset, it's strictly cheaper than `RefCell` while
+giving the same "`&self` can still update internal state" capability the
+classic `RefCell` cache example relies on.
+
+### Scenario: Sharing state across threads
+
+A tick counter incremented by a timer interrupt and read from the main
+loop — the same no-OS pattern covered on
+[Send & Sync](../concurrency-async/send-and-sync.md), here from the
+interior-mutability angle: a bare `RefCell` isn't `Sync`, so it has to be
+wrapped before an interrupt handler can touch it too.
+
+```
+use core::cell::RefCell;
+use critical_section::Mutex;
+
+static LAST_ERROR: Mutex<RefCell<Option<u8>>> = Mutex::new(RefCell::new(None));
+
+#[interrupt]
+fn USART1() {
+    critical_section::with(|cs| {
+        *LAST_ERROR.borrow_ref_mut(cs) = Some(read_status_register());
+    });
+}
+
+fn main_loop() -> ! {
+    loop {
+        if let Some(code) = critical_section::with(|cs| LAST_ERROR.borrow_ref_mut(cs).take()) {
+            handle_error(code);
+        }
+    }
+}
+```
+
+**Why this way:** a bare `RefCell<Option<u8>>` isn't `Sync`, so `static
+LAST_ERROR: RefCell<...>` would fail to compile the instant the interrupt
+handler tried to touch it too — wrapping it in `critical-section`'s
+`Mutex` is what makes the type `Sync` and routes every access through a
+critical section, `no_std`'s equivalent of the `std::sync::Mutex` a hosted
+program would reach for instead.
+
+### Scenario: Modifying an existing object
+
+A pressure sensor driver lazily computes and caches an expensive
+linearization result behind `&self`, mirroring the classic single-threaded
+cache pattern but grounded in a real embedded correction routine.
+
+```
+use core::cell::RefCell;
+
+struct PressureSensor {
+    cache: RefCell<Option<(u16, f32)>>, // (last raw reading, linearized result)
+}
+
+impl PressureSensor {
+    fn read_kpa(&self, raw: u16) -> f32 { // <- &self: mutation of the cache stays an internal detail
+        if let Some((cached_raw, kpa)) = *self.cache.borrow() {
+            if cached_raw == raw {
+                return kpa;
+            }
+        }
+        let kpa = linearize(raw); // pretend this is an expensive polynomial correction
+        *self.cache.borrow_mut() = Some((raw, kpa));
+        kpa
+    }
+}
+```
+
+**Why this way:** exposing a read-only (`&self`) public API while updating
+an internal cache is exactly the case `RefCell` exists for, single-
+threaded — the moment this same cache needs touching from an interrupt
+handler too, the fix is the `critical_section::Mutex<RefCell<_>>` pattern
+above, not a thread-unsafe `RefCell` shared unguarded.

@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>move</code> appears immediately before a closure's parameter list (<code>move |x| ...</code>)
 or immediately after <code>async</code> and before an async block or async closure
@@ -988,7 +989,7 @@ for <code>move</code> to apply to. It is exclusively a closure/async-block modif
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1081,21 +1082,61 @@ rather than borrow it.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>move</code> is core-language and allocator-free — capturing by
-value costs nothing extra by itself (only <em>boxing</em> a closure, e.g.
-<code>Box&lt;dyn FnOnce()&gt;</code>, needs <code>alloc</code>). <code>move</code> closures are exactly as usable in
-<code>#![no_std]</code> code (e.g. handing owned state to a <code>critical-section</code> closure
-or an RTIC task) as in hosted Rust.</p>
+        <p><code>move</code> means exactly the same thing under <code>#![no_std]</code> — it forces every
+variable a closure or async block captures to be taken by value rather
+than borrowed, and costs nothing extra by itself (only <em>boxing</em> a
+closure into a <code>Box&lt;dyn FnMut()&gt;</code> needs <code>alloc</code>). It's the standard way
+setup code hands an owned peripheral into a closure that a critical
+section, an interrupt-adjacent callback, or an RTIC/embassy task body
+needs to keep using long after the function that created it has
+returned — the closure has to own the resource outright, since there is
+no caller stack frame left around by the time an interrupt actually
+fires to borrow from.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Moving an owned peripheral into a critical-section closure</h3>
+            <pre><code class="rust">use critical_section::Mutex;
+use core::cell::RefCell;
+
+static SHARED_ADC: Mutex&lt;RefCell&lt;Option&lt;Adc&gt;&gt;&gt; = Mutex::new(RefCell::new(None));
+
+fn init(adc: Adc) {
+    critical_section::with(move |cs| {
+        // &lt;- `move`: forces `adc` to be taken by value, since the closure stores it past this call
+        SHARED_ADC.borrow(cs).replace(Some(adc));
+    });
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Moving a peripheral handle into a timer interrupt callback</h3>
+            <pre><code class="rust">fn schedule_blink(led: impl OutputPin + 'static, timer: &amp;mut impl PeriodicTimer) {
+    timer.on_interrupt(move || {
+        // &lt;- `move`: the closure must own `led`, since the timer callback fires long after `schedule_blink` returns
+        led.toggle().ok();
+    });
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&amp;raw const expr</code> and <code>&amp;raw mut expr</code> build a raw pointer (<code>*const T</code> /
 <code>*mut T</code> respectively) directly from a place expression, without ever
@@ -996,7 +997,7 @@ invalid before you ever get the chance to read through it.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1079,22 +1080,84 @@ satisfy.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>&amp;raw const</code>/<code>&amp;raw mut</code> are core-language and
-allocator-free, so they work identically in <code>#![no_std]</code>. This is one of
-the operators' most natural homes: reading a memory-mapped hardware
-register or a field of a packed protocol struct is precisely the situation
-where forming an intermediate reference risks undefined behavior that
-<code>&amp;raw</code> was added to let you avoid.</p>
+        <p><code>&amp;raw const</code>/<code>&amp;raw mut</code> carry over into <code>#![no_std]</code> completely
+unchanged — they're core-language and allocator-free — but bare-metal
+firmware is where they earn their keep beyond the packed-struct/FFI case
+covered above. A <code>static mut</code> shared between <code>main</code> and an interrupt
+handler is a textbook case: taking <code>&amp;mut TICK_COUNT</code> to get a plain
+mutable reference requires proving, for as long as that reference lives,
+that nothing else can access <code>TICK_COUNT</code> — a guarantee an interrupt that
+can fire at any moment genuinely breaks, which is exactly why current
+Rust increasingly treats <code>&amp;mut</code> to a <code>static mut</code> as dangerous or rejects
+it outright. <code>&amp;raw mut TICK_COUNT</code> sidesteps the problem: it produces a
+<code>*mut T</code> pointing at the static without ever asserting exclusive access,
+so forming the pointer stays sound even though the static is genuinely
+shared; only the later dereference needs its own <code>unsafe</code> block and its
+own reasoning about why that particular read or write is safe (typically:
+interrupts disabled around it, or the access is a single properly-aligned
+load/store the target guarantees is atomic). The same reasoning is why a
+<code>#[repr(C)]</code> register-block struct benefits from the same operator:
+taking a pointer to one field with <code>&amp;raw mut regs.cr1</code> doesn't require
+asserting a reference to the <em>entire</em> struct is simultaneously exclusive,
+which matters when a peripheral's register block is reachable from more
+than one place — an interrupt handler and the main loop both holding a
+pointer into the same MMIO block, for instance.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Taking a raw pointer to a `static mut` shared with an interrupt handler</h3>
+            <pre><code class="rust">static mut TICK_COUNT: u32 = 0;
+
+// Called only from the timer interrupt handler.
+unsafe fn increment_tick_count() {
+    let ptr: *mut u32 = &amp;raw mut TICK_COUNT; // &lt;- forms the pointer without asserting exclusive access to the static
+    unsafe { *ptr += 1; } // the write itself is its own, separately-justified unsafe operation
+}
+
+// Called only from the main loop, with interrupts briefly disabled around the read.
+fn read_tick_count() -&gt; u32 {
+    let ptr: *const u32 = &amp;raw const TICK_COUNT; // &lt;- same static, read-only pointer, still no `&amp;u32` ever formed
+    unsafe { ptr.read_volatile() }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Pointing at one register of a memory-mapped peripheral block</h3>
+            <pre><code class="rust">#[repr(C)]
+struct Usart {
+    cr1: u32,
+    cr2: u32,
+    sr: u32,
+}
+
+const USART1: *mut Usart = 0x4001_3800 as *mut Usart;
+
+fn enable_usart() {
+    unsafe {
+        let cr1_ptr: *mut u32 = &amp;raw mut (*USART1).cr1; // &lt;- pointer to one register, no reference to the whole peripheral block
+        cr1_ptr.write_volatile(cr1_ptr.read_volatile() | 0x1); // set the enable bit
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

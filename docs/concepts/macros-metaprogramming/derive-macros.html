@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A derive macro is a function marked <code>#[proc_macro_derive(Name)]</code> with
 the signature <code>fn(TokenStream) -&gt; TokenStream</code>, registered as the
@@ -990,7 +991,7 @@ crate directly.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <p>The derive macro's definition, in its own <code>proc-macro = true</code> crate:</p>
 <pre><code class="rust">use proc_macro::TokenStream;
@@ -1034,7 +1035,7 @@ only export macros, never ordinary items alongside them.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1112,24 +1113,120 @@ idiomatic way to ship a derivable trait.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> A derive macro runs entirely at compile time and
-produces ordinary Rust code, so it has no runtime cost and no <code>std</code>
-requirement of its own — support depends only on whether the <em>generated</em>
-code (and any trait bounds it relies on) is <code>no_std</code>-friendly. The
-<code>no_std</code>-oriented logging crate <code>defmt</code> ships <code>#[derive(Format)]</code> as a
-real-world embedded derive macro, generating a <code>defmt::Format</code>
-implementation the same way <code>#[derive(Debug)]</code> would, but wire-efficient
-for constrained targets instead of routing through <code>core::fmt</code>.</p>
+        <p>A derive macro is exactly as host-side as every other procedural macro
+(see <a href="procedural-macros.md">Procedural macros</a> for the general
+host/target split): <code>#[proc_macro_derive(...)]</code> is a plain function that
+runs during the <em>embedded</em> crate's compilation, on the machine doing the
+compiling, and never executes on the microcontroller itself — only the
+<code>TokenStream</code> it returns, which the compiler splices in as ordinary
+source, ends up in the firmware image. That means a derive macro has no
+special embedded story at the mechanism level; what matters is whether
+the code it generates is itself <code>no_std</code>-compatible. Several real derive
+macros are written specifically for that constraint: <code>defmt</code>'s
+<code>#[derive(Format)]</code> generates an implementation of <code>defmt::Format</code> — a
+<code>no_std</code>-oriented stand-in for <code>Debug</code>/<code>Display</code> that encodes values
+compactly for transmission over a debug probe, rather than by formatting
+a <code>core::fmt</code>-built string — and serde's ordinary <code>#[derive(Serialize, Deserialize)]</code> is what crates like <code>postcard</code> build on to generate
+wire-format code that itself never allocates. In both cases the derive
+<em>author</em> had to design the generated impl to avoid assuming a heap or
+<code>std::fmt</code>; the derive mechanism supplying that impl is unchanged.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#![no_std]
+
+use defmt::Format;
+
+#[derive(Format)] // &lt;- proc-macro derive; runs on the host, generates a no_std-compatible impl
+struct SensorReading {
+    id: u8,
+    celsius: f32,
+}
+
+fn log_reading(reading: &amp;SensorReading) {
+    defmt::info!("reading: {}", reading); // &lt;- uses the generated Format impl, no core::fmt::Display involved
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL crate's public error type needs to be loggable over RTT without
+pulling in <code>core::fmt</code>'s heavier formatting machinery; deriving
+<code>defmt::Format</code> gives it that for free, the same way <code>#[derive(Debug)]</code>
+would in a hosted crate.</p>
+<pre><code class="rust">#[derive(defmt::Format)] // &lt;- generates a no_std, wire-efficient Format impl, not a core::fmt one
+pub enum SensorError {
+    NotResponding,
+    OutOfRange { celsius: f32 },
+}
+
+fn report(err: &amp;SensorError) {
+    defmt::warn!("sensor error: {}", err); // &lt;- consumes the derived impl directly
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a hand-written <code>core::fmt::Display</code> impl still routes
+through the same formatting machinery <code>println!</code> does, which is heavier
+than most constrained targets want just for diagnostic logging — the
+<a href="https://defmt.ferrous-systems.com/"><code>defmt</code> documentation</a> describes
+<code>Format</code> as deliberately built to avoid that cost, which is exactly what
+the derive gives a HAL's error types for free.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Serializing and deserializing</h3>
+            <p>A sensor packet transmitted over a wire link needs a compact,
+allocation-free encoding; deriving serde's <code>Serialize</code>/<code>Deserialize</code> and
+encoding through <code>postcard</code> gives that without needing <code>alloc</code> at all.</p>
+<pre><code class="rust">// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }, postcard = "1"
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)] // &lt;- serde's derive; the generated code itself never allocates
+struct SensorPacket {
+    id: u8,
+    celsius: f32,
+}
+
+fn encode(packet: &amp;SensorPacket) -&gt; postcard::Result&lt;heapless::Vec&lt;u8, 32&gt;&gt; {
+    postcard::to_vec(packet) // &lt;- postcard serializes into a fixed-capacity buffer, no heap involved
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> serde's derive itself makes no allocation decisions —
+<a href="https://serde.rs/no-std.html">serde.rs's <code>no_std</code> support notes</a> confirm
+the generated code is allocation-agnostic — so the choice of a
+heap-free wire format like <code>postcard</code> over <code>serde_json</code> is what actually
+determines whether the encoding step needs an allocator at all.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

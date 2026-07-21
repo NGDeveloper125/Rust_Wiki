@@ -129,8 +129,67 @@ bad state — the
 require every arm to be present, but only the code's own logic can
 guarantee one of them never actually runs.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** All three are thin wrappers over `core::panic!` and
-work identically in `#![no_std]`, with the same `#[panic_handler]`/
-unwind-vs-abort caveats as [`panic!`](panic-macro.md) itself.
+All three macros are thin wrappers over `core::panic!`, so they carry no
+`std` dependency and their calling convention is identical under
+`#![no_std]` — what fires when any of them is reached is exactly the
+[`#[panic_handler]`](../attributes/panic-handler-attribute.md) function
+the binary supplies, the same as a direct `panic!` call; see
+[`panic!`](panic-macro.md) for why bare metal needs one and what crates
+like `panic-halt`/`panic-probe` do once it runs. The three macros'
+distinct meanings — "not written yet," "permanently unsupported,"
+"provably dead code" — carry over to embedded code unchanged, and if
+anything matter more there: a `todo!()` left in a trait method of a
+peripheral driver, or an `unreachable!()` guarding a state machine driven
+by interrupt handlers, panics identically to a hosted build, just by way
+of the embedded panic handler instead of a hosted unwind.
+
+## Usage examples (Embedded)
+
+### Marking an unimplemented HAL trait method
+
+```
+trait Pwm {
+    fn set_duty(&mut self, percent: u8);
+    fn set_dead_time(&mut self, ns: u32);
+}
+
+struct BasicTimerPwm;
+
+impl Pwm for BasicTimerPwm {
+    fn set_duty(&mut self, percent: u8) {
+        let _ = percent;
+        // ... write to the timer's compare register
+    }
+
+    fn set_dead_time(&mut self, _ns: u32) {
+        unimplemented!("this timer instance has no complementary outputs, so dead-time insertion is not supported")
+        // <- permanent hardware limitation, not a stub
+    }
+}
+```
+
+### Asserting an interrupt-driven state machine invariant
+
+An interrupt handler advances a link-state machine; the fallback arm is
+reachable only if the state machine's own invariants were violated
+elsewhere, so it panics via `unreachable!()` rather than continuing
+silently in a program state that shouldn't exist.
+
+```
+enum LinkState {
+    Down,
+    Negotiating,
+    Up,
+}
+
+fn on_link_interrupt(state: LinkState) -> LinkState {
+    match state {
+        LinkState::Down => LinkState::Negotiating,
+        LinkState::Negotiating => LinkState::Up,
+        LinkState::Up => unreachable!("link-up interrupt fired again while already up"),
+        // <- see panic! for what actually runs here on bare metal: the #[panic_handler]
+    }
+}
+```

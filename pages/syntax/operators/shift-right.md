@@ -52,6 +52,25 @@ for a low field) is the standard field-extraction idiom for packed data —
 [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/literals.html)
 shows the basic shift and mask operators these idioms build on.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Shr` lives in `core::ops` — no `std` dependency.
+`>>` shows up anywhere a wider hardware reading needs to be reduced to
+a narrower range — a common example is a 12-bit ADC sample that needs
+to become an 8-bit value, for something like an 8-bit PWM duty cycle:
+shifting right by the difference in bit widths discards the low-order
+bits cheaply, without the cost of a division. As in hosted code, it's
+also the standard first step of extracting a specific field from a
+packed register value before masking off the surrounding bits.
+
+## Usage examples (Embedded)
+
+### Downscaling a 12-bit ADC sample to an 8-bit duty cycle
+
+```
+fn adc_to_duty_cycle(sample_12bit: u16) -> u8 {
+    (sample_12bit >> 4) as u8 // <- `>>` discards the low 4 bits, mapping 0..=4095 to 0..=255
+}
+
+assert_eq!(adc_to_duty_cycle(4095), 255);
+assert_eq!(adc_to_duty_cycle(0), 0);
+```

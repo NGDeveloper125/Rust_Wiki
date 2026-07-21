@@ -166,13 +166,108 @@ just as painful for every downstream user, which is why the
 usable, ergonomic call site as part of the API's design, not an
 afterthought to be discovered later from bug reports.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Like unit tests, the `tests/` harness links against
-`std` and runs as an ordinary host binary, so it cannot exercise code that
-only runs correctly on the target hardware. Embedded crates that expose a
-hardware-independent public API (a protocol encoder, a configuration
-parser) can and do use `tests/` normally, compiled for the host; anything
-that needs the real peripherals is instead covered by an on-target,
-hardware-in-the-loop test framework such as `defmt-test`, run on real
-silicon rather than through `cargo test`.
+The same host-vs-target split that governs [unit tests](unit-tests.md)
+applies here, with one extra wrinkle specific to integration tests: the
+classic `tests/` directory convention assumes each file under it can be
+compiled and linked as its own `std` test binary that the harness builds
+and runs directly. That assumption holds fine for the slice of an
+embedded crate's public API that's hardware-independent — a protocol
+encoder, a configuration parser — which can sit in `tests/` and run on
+the host exactly like any other crate's integration tests. It stops
+holding the moment an integration test needs to exercise the crate's
+public API *against real hardware*: `tests/` has no mechanism to flash a
+binary onto a microcontroller and run it there, so on-target integration
+testing isn't done through the ordinary `tests/` directory at all — it
+goes through `defmt-test`'s or `embedded-test`'s own harness instead,
+which builds a firmware image, flashes it via a debug probe, and reports
+each test's pass/fail back over RTT.
+
+## Basic usage example (Embedded)
+
+```
+// src/lib.rs
+#![no_std]
+
+pub struct Frame { pub id: u8, pub payload: u8 }
+
+pub fn encode_frame(frame: &Frame) -> [u8; 2] { // <- part of the crate's public API, no hardware touched
+    [frame.id, frame.payload]
+}
+
+// tests/encode.rs — an ordinary host-run integration test; no target hardware needed
+use protocol::{Frame, encode_frame};
+
+#[test]
+fn encodes_id_and_payload_in_order() {
+    let frame = Frame { id: 7, payload: 42 };
+    assert_eq!(encode_frame(&frame), [7, 42]);
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Testing
+
+A crate's public frame-encoding API is pure logic, so its integration
+test lives in the ordinary `tests/` directory and runs on the host —
+exactly the workflow [`#[test]`](../../syntax/attributes/test-attribute.md)'s
+Embedded Rust Notes describe for hardware-independent code in general.
+
+```
+// src/lib.rs
+#![no_std]
+
+pub struct Reading { pub channel: u8, pub millivolts: u16 }
+
+pub fn to_wire_bytes(reading: &Reading) -> [u8; 3] {
+    let mv = reading.millivolts.to_be_bytes();
+    [reading.channel, mv[0], mv[1]]
+}
+
+// tests/wire_format.rs
+use sensor_proto::{Reading, to_wire_bytes};
+
+#[test] // <- ordinary host-run integration test: `tests/` still applies for hardware-independent APIs
+fn encodes_channel_and_millivolts() {
+    let reading = Reading { channel: 2, millivolts: 3300 };
+    assert_eq!(to_wire_bytes(&reading), [2, 0x0C, 0xE4]);
+}
+```
+
+**Why this way:** nothing about `to_wire_bytes` depends on real silicon,
+so testing it through the ordinary `tests/` mechanism keeps the fast,
+no-hardware-needed feedback loop that host-run tests give any other
+crate.
+
+### Scenario: Designing a public API
+
+Writing the first test against a driver's public `init`/`read` sequence
+is often the first time anyone calls it the way a real firmware would —
+but for a driver that only behaves correctly against actual silicon, that
+first call has to happen on real hardware, through `embedded-test`'s
+harness rather than `tests/`.
+
+```
+#![no_std]
+#![no_main]
+
+#[embedded_test::tests] // <- on-target integration test: flashed and run via a debug probe, not `tests/`
+mod tests {
+    use my_hal::TemperatureSensor;
+
+    #[test]
+    fn sensor_reports_a_plausible_reading() {
+        let mut sensor = TemperatureSensor::init().expect("sensor init failed"); // <- exercises the public API end to end, on real hardware
+        let celsius = sensor.read().expect("read failed");
+        assert!((-40.0..125.0).contains(&celsius));
+    }
+}
+```
+
+**Why this way:** `TemperatureSensor::init`/`read` only behave correctly
+wired to a real sensor over a real bus, so a host-run `tests/` file could
+only fake the response, not prove the driver actually works — exercising
+the same public sequence through `embedded-test` on the target is what
+plays the "first real client" role an integration test is meant to.

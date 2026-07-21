@@ -75,9 +75,42 @@ for whenever the divisor comes from data the function doesn't fully control
 (as opposed to a compile-time-known nonzero constant, where bare `/` is
 fine).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Div` lives in `core::ops`. Worth knowing: many small
-microcontrollers have no hardware integer divider, so `/` on those
-targets compiles to a (slower) software division routine — profile before
-assuming it's free.
+`Div` lives in `core::ops`, so `/` means exactly the same thing under
+`#![no_std]` — truncation toward zero, and an unconditional panic on
+integer division by zero, both unchanged. The genuinely embedded-specific
+angle is the hardware: many small microcontroller cores (Cortex-M0/M0+,
+for instance) have no hardware integer divider at all, so a runtime `/`
+lowers to a software division routine — potentially hundreds of cycles,
+versus one or a few instructions on a core that does have a divider
+(Cortex-M3 and up). Where the divisor is known at compile time and happens
+to be a power of two, the compiler already turns `/` into a shift for you
+at no extra effort; where it's "constant enough" but not a power of two —
+a fixed sample rate, say — computing a reciprocal multiply-and-shift by
+hand and using that instead of a runtime `/` is a real, if micro-,
+optimization worth knowing about on a divider-less core. The same story
+applies to floating-point `/` on a core with no hardware FPU: it lowers to
+a softfloat routine, which is one more reason fixed-point/integer
+arithmetic is often preferred over `f32`/`f64` in latency-sensitive
+embedded code.
+
+## Usage examples (Embedded)
+
+### Dividing on a core without a hardware divider
+
+```
+fn average_temp(total: i32, count: i32) -> i32 {
+    total / count // <- `/` here compiles to a software-division routine on a divider-less Cortex-M0
+}
+```
+
+### Replacing a fixed power-of-two divisor with an explicit shift
+
+```
+const SAMPLE_RATE_SHIFT: u32 = 10; // sample rate is 1024 Hz == 2^10
+
+fn ms_from_samples(samples: u32) -> u32 {
+    (samples * 1000) >> SAMPLE_RATE_SHIFT // stands in for `samples * 1000 / 1024`; no divide instruction emitted
+}
+```

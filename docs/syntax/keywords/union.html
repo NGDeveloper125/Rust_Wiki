@@ -954,7 +954,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>union</code> declares a type whose grammar looks just like a named-field
 <code>struct</code> — a name, generics, and a brace-delimited list of <code>name: Type</code>
@@ -985,7 +986,7 @@ shapes" behavior with safe reads.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1037,21 +1038,61 @@ whenever the C side doesn't force this shape.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>union</code> is core-language and allocator-free. Embedded
-code uses it for the same reason hosted FFI code does — binding a
-vendor's C header that declares a union for a hardware register or
-protocol frame — with <code>#[repr(C)]</code> (or <code>#[repr(packed)]</code> for a
-bit-for-bit register layout) applied identically under <code>#![no_std]</code>.</p>
+        <p><code>union</code> shows up in embedded code for the same core reason it shows up in
+any FFI binding — reinterpreting the same bytes as more than one shape —
+but the embedded case is often more literal than a hosted C binding: the
+"other interpretation" is frequently a real hardware register, not merely
+a differently-typed view of ordinary memory. Overlaying a register's raw
+<code>u32</code> value with a bitfield struct view (each field a named sub-range of
+bits) lets code read the same storage either as one integer or
+field-by-field, with no safe-Rust abstraction layered in between — some
+low-level register-access code reaches for this instead of hand-written
+shift-and-mask helpers. Because the union's "current" interpretation is
+tracked nowhere but in the programmer's head — or in whatever the
+hardware's datasheet says a given access mode means — reading any field
+stays <code>unsafe</code>, exactly as in ordinary Rust. What changes is the stakes:
+a wrong reinterpretation here can mean acting on a fault flag that hasn't
+actually latched or misreading a peripheral's real state, not just
+misreading a harmless byte pattern sitting in RAM.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Overlaying a raw register value with its bitfield view</h3>
+            <pre><code class="rust">#[repr(C)]
+union ControlRegister { // &lt;- `union`: both fields describe the exact same 4 bytes of hardware register
+    raw: u32,
+    bits: ControlBits,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ControlBits {
+    enable: bool,
+    mode: u8,
+}
+
+let reg = ControlRegister { raw: 0x0000_0001 }; // &lt;- writing the whole `raw` field is safe
+let bits = unsafe { reg.bits }; // &lt;- `union` reads require `unsafe`: reinterpreting raw register bits as a bitfield struct
+println!("{}", bits.enable);
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

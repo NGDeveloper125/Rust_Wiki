@@ -181,12 +181,103 @@ type or field layout — the same trait-bound mechanism the
 [Rust Book's generics chapter](https://doc.rust-lang.org/book/ch10-02-traits.html)
 uses throughout.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Struct composition and trait default methods are
-core-language mechanisms with zero runtime cost beyond ordinary field
-layout and static or vtable dispatch, so both work identically under
-`#![no_std]`. Neither implies heap allocation on its own; allocation only
-enters if a composed component's own type happens to need it (a `Vec`
-field, for instance), which is a property of that component, not of
-composition itself.
+Composition over inheritance isn't just applicable to embedded Rust — the
+entire `embedded-hal` ecosystem is built as a direct consequence of it
+having no other option. There is no chip-specific base class a driver
+could extend even if Rust had inheritance: a temperature sensor driver
+written against `embedded-hal`'s `I2c` trait doesn't know or care whether
+it's running against an STM32, an nRF52, or a Linux-hosted
+`linux-embedded-hal` implementation talking to real hardware over
+`/dev/i2c-1`. The driver is generic over the trait, composed with
+whatever concrete HAL implementation the target board provides, and
+every one of those HAL crates independently implements the same small
+set of traits (`embedded_hal::i2c::I2c`, `embedded_hal::spi::SpiBus`,
+`embedded_hal::digital::OutputPin`) without any of them needing to share
+an ancestor. A driver written once against the trait works, unmodified,
+on any chip whose HAL crate implements it — the payoff composition over
+inheritance promises in the abstract is, in embedded Rust, the literal
+reason a driver crate can be chip-agnostic at all.
+
+The anti-pattern warning from the classic page — reaching for `Deref` to
+fake inherited behavior — shows up in embedded code specifically around
+HAL wrapper types (see [Anti-pattern: Deref
+polymorphism](anti-pattern-deref-polymorphism.md)'s embedded notes for a
+worked I2C example); the fix is the same explicit-delegation-or-shared-trait
+answer, just with an `embedded-hal` trait usually already sitting there
+as the shared behavior to compose against instead of a bespoke one.
+
+## Basic usage example (Embedded)
+
+```
+trait TemperatureSensor {
+    fn read_celsius(&mut self) -> f32;
+}
+
+struct Bme280<I2C> { // <- generic over any I2C implementation, composed rather than inherited
+    i2c: I2C,
+}
+
+impl<I2C> TemperatureSensor for Bme280<I2C> {
+    fn read_celsius(&mut self) -> f32 {
+        21.5 // stands in for a real register read over `self.i2c`
+    }
+}
+
+fn log_temperature(sensor: &mut dyn TemperatureSensor) {
+    println!("{:.1} C", sensor.read_celsius());
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A sensor driver crate needs to run on any board's I2C peripheral without
+depending on a specific chip's HAL — composing the driver generically
+over the `embedded-hal` `I2c` trait instead of any concrete
+implementation is what makes that possible.
+
+```
+trait I2c {
+    fn write_read(&mut self, addr: u8, out: &[u8], in_: &mut [u8]) -> Result<(), ()>;
+}
+
+struct Bme280<I2C: I2c> { // <- composed of any I2C implementation, not inherited from a chip-specific base
+    i2c: I2C,
+    address: u8,
+}
+
+impl<I2C: I2c> Bme280<I2C> {
+    fn new(i2c: I2C, address: u8) -> Self {
+        Self { i2c, address }
+    }
+
+    fn read_celsius(&mut self) -> Result<f32, ()> {
+        let mut raw = [0u8; 2];
+        self.i2c.write_read(self.address, &[0xFA], &mut raw)?;
+        Ok(i16::from_be_bytes(raw) as f32 / 100.0)
+    }
+}
+
+struct Stm32I2c1; // a board's concrete HAL type
+impl I2c for Stm32I2c1 {
+    fn write_read(&mut self, _addr: u8, _out: &[u8], in_: &mut [u8]) -> Result<(), ()> {
+        in_.copy_from_slice(&[0x08, 0x34]); // stands in for a real bus transaction
+        Ok(())
+    }
+}
+
+let mut sensor = Bme280::new(Stm32I2c1, 0x76);
+println!("{:.2} C", sensor.read_celsius().unwrap());
+```
+
+**Why this way:** `Bme280<I2C>` never names a concrete chip anywhere in
+its own code, so the exact same driver crate compiles and runs unchanged
+against any board whose HAL implements the `I2c` trait — this is the
+`embedded-hal` ecosystem's core design point, and the
+[embedded-hal project itself](https://github.com/rust-embedded/embedded-hal)
+documents composing driver crates against its traits as the mechanism
+that makes drivers portable across chip families with no shared base
+type anywhere in the picture.

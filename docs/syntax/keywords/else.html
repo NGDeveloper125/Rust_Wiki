@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>else</code> supplies the alternative branch to an <code>if</code> (or the diverging branch
 of a <code>let ... else</code>). It cannot appear on its own — it is always the tail
@@ -969,7 +970,7 @@ established.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1024,17 +1025,51 @@ See <a href="../../syntax/keywords/if.html"><code>if</code></a> for the fuller <
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No <code>std</code> dependency — behaves identically in <code>#![no_std]</code>.</p>
+        <p><code>else</code> is pure grammar attached to <code>if</code>/<code>let</code>, with no runtime behavior of
+its own — identical under <code>#![no_std]</code>. The classic caution about an
+<code>else if</code> chain vs. <code>match</code> applies just as much to decoding hardware
+state: a chain re-testing bit patterns one at a time is exactly the shape
+that should become a <code>match</code> over a fault enum once every bit combination
+needs to be accounted for.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Providing the alternative branch when polling an input pin</h3>
+            <pre><code class="rust">if button.is_pressed() {
+    led.set_high();
+} else {
+    led.set_low(); // &lt;- `else` runs when the button isn't pressed
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Bailing out of a driver function with let-else</h3>
+            <pre><code class="rust">fn read_calibration(eeprom: &amp;Eeprom) -&gt; Result&lt;Calibration, &amp;'static str&gt; {
+    let Some(raw) = eeprom.read_page(CALIBRATION_PAGE) else {
+        return Err("calibration page unreadable"); // &lt;- `else` block must diverge
+    };
+    Ok(Calibration::from_bytes(raw))
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

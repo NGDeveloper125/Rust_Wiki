@@ -59,7 +59,30 @@ literal invites off-by-one mistakes; the
 [Rust by Example bitwise chapter](https://doc.rust-lang.org/rust-by-example/primitives/literals.html)
 shows the same shift-to-build-a-mask idiom.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Shl` lives in `core::ops` — bit shifts are used
-constantly in embedded code to construct register masks (`1 << pin_num`).
+`<<` carries over unchanged and is the standard way to position a
+value at a specific bit offset within a register, rather than at bit
+0. Many peripheral registers pack several unrelated fields into one
+word — a UART's word length, parity, and stop-bit count might each
+occupy a couple of bits at different offsets — and writing one of
+those fields means shifting its value up to the field's offset before
+OR-ing it into the register (see [`|`](pipe.md)). That's distinct from
+the single-bit case of turning a pin index into a mask (`1 << pin`):
+the same operator, but shifting a value *wider than one bit* into
+position rather than a single set bit.
+
+## Usage examples (Embedded)
+
+### Positioning a multi-bit field within a control register
+
+```
+const STOP_BITS_OFFSET: u32 = 12; // USART CR2 STOP field starts at bit 12
+const STOP_BITS_2: u32 = 0b10;    // "2 stop bits", per the field's own encoding
+
+fn cr2_value() -> u32 {
+    STOP_BITS_2 << STOP_BITS_OFFSET // <- `<<` moves the 2-bit field up to its position in the register
+}
+
+assert_eq!(cr2_value(), 0b10_0000_0000_0000);
+```

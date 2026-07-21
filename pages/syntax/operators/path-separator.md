@@ -121,9 +121,38 @@ what inherent methods `T` might also have, which matters in generic code
 where the concrete type behind `T` — and therefore its full method set —
 isn't known when `trait_area` is written, only that it implements `Shape`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `::` is pure compile-time grammar — path resolution,
-associated-item lookup, and turbofish are all resolved before code
-generation, with no `std` dependency either way. `core`/`alloc` paths use
-exactly the same `::` syntax as `std` paths.
+`::` means exactly the same thing under `#![no_std]` — pure compile-time
+path resolution, identical whether walking `std`'s module tree or
+`core`/`alloc`'s. Embedded code leans on it just as heavily, but the paths
+it walks look different: instead of `std::collections::HashMap`, firmware
+code walks into a peripheral-access crate (a "PAC," generated from the
+chip's SVD file) or a HAL crate wrapping it. `crate::pac::GPIOA` reaches
+the register-block type for a specific GPIO peripheral, and
+`cortex_m::peripheral::NVIC` reaches the Cortex-M core peripheral that
+controls interrupts. Turbofish shows up in the same disambiguating role
+it always does — most often forcing which concrete peripheral or register
+type a generic HAL function should operate on.
+
+## Usage examples (Embedded)
+
+### Walking into a peripheral-access crate to reach a register block
+
+```
+use crate::pac::GPIOA; // <- `::` walks `crate` -> `pac` -> the GPIOA register-block type
+
+fn set_pin_high(gpioa: &GPIOA) {
+    gpioa.bsrr.write(|w| w.bs0().set_bit());
+}
+```
+
+### Reaching a core peripheral through a HAL crate
+
+```
+use cortex_m::peripheral::NVIC; // <- `::` walks `cortex_m` -> `peripheral` -> `NVIC`, the interrupt controller
+
+fn mask_interrupt(nvic: &mut NVIC, interrupt: crate::pac::Interrupt) {
+    NVIC::mask(interrupt); // <- `::` also reaches `NVIC`'s own associated function `mask`
+}
+```

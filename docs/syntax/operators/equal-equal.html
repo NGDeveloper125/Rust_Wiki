@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>==</code> tests equality, overloadable via <code>std::cmp::PartialEq</code> (usually
 obtained via <code>#[derive(PartialEq)]</code> rather than hand-written).</p>
@@ -964,7 +965,7 @@ reference identity" fallback the way some languages have.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1026,17 +1027,56 @@ the assertion fails, saving a debugging round trip.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>PartialEq</code> lives in <code>core::cmp</code> — no <code>std</code> dependency.</p>
+        <p><code>==</code> means exactly the same thing under <code>#![no_std]</code> — <code>PartialEq</code> lives in
+<code>core::cmp</code>, so nothing about the trait or the comparison changes on a
+microcontroller target. What genuinely differs is <em>what</em> gets compared:
+embedded code constantly checks a hardware identity or status register
+against a constant the datasheet defines, rather than comparing two
+ordinary in-memory values. A "WHO_AM_I"-style identity register — many
+I2C/SPI sensors expose one — exists specifically so driver code can
+confirm it's actually talking to the chip it expects before trusting
+anything else that chip reports.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Confirming a sensor's identity register before use</h3>
+            <pre><code class="rust">const EXPECTED_WHO_AM_I: u8 = 0x68; // datasheet-defined identity byte for this sensor model
+
+fn is_expected_sensor(who_am_i_reg: u8) -&gt; bool {
+    who_am_i_reg == EXPECTED_WHO_AM_I // &lt;- `==` confirms the chip on the bus is the one this driver expects
+}
+
+let who_am_i_reg = 0x68; // value read back from the sensor's WHO_AM_I register
+assert!(is_expected_sensor(who_am_i_reg));
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Checking a peripheral's status flag against an expected encoding</h3>
+            <pre><code class="rust">const STATUS_READY: u8 = 0x01;
+
+fn is_ready(status_reg: u8) -&gt; bool {
+    status_reg == STATUS_READY // &lt;- `==` checks the status register matches the "ready" encoding
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

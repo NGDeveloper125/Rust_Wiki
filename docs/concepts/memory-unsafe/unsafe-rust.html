@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Unsafe Rust is the subset of the language where the compiler stops
 checking a handful of specific guarantees and instead trusts the
@@ -993,7 +994,7 @@ memory layout that unsafe code frequently has to reason about explicitly.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let mut num = 5;
 let r = &amp;mut num as *mut i32; // &lt;- creating a raw pointer is safe...
@@ -1009,7 +1010,7 @@ println!("{num}");
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1091,25 +1092,146 @@ it, so a caller can never observe or trigger the broken invariant.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Unsafe Rust is core-language and works identically in
-<code>#![no_std]</code> — if anything, it is used more often in embedded code, since
-memory-mapped registers, interrupt vector tables, and DMA buffers are
-usually accessed through raw pointers or mutable statics that only
-<code>unsafe</code> can touch. Hardware abstraction layer (HAL) crates typically
-concentrate all of a project's <code>unsafe</code> blocks in one low-level module,
-exposing a safe, typed API (<code>embedded-hal</code> traits) to application code —
-the same "contain unsafety in small modules" idiom shown above, applied
-to a microcontroller instead of a buffer.</p>
+        <p>The <a href="../../syntax/keywords/unsafe.md"><code>unsafe</code> keyword page</a> already
+covers <em>why</em> embedded code reaches for <code>unsafe</code> constantly — register
+access and vendor FFI calls are two of its five gated operations doing
+real, unavoidable work. What belongs here, at the concept level, is the
+design discipline that keeps that unavoidable <code>unsafe</code> from spreading
+through an entire firmware codebase: contain it to a thin, deliberately
+narrow hardware-abstraction-layer (HAL) module, and let every line of
+application code above that module stay entirely safe.</p>
+<p>This containment matters more in embedded Rust than almost anywhere
+else, because the invariant an embedded <code>unsafe</code> block relies on is
+often <em>physical</em>, not just logical: a raw pointer dereference is sound
+only if the address is really mapped to the peripheral the code thinks
+it is, a <code>static mut</code> is sound only if the interrupt that can also touch
+it is masked or the access is genuinely atomic, and a vendor FFI call is
+sound only if the C library's undocumented assumptions about calling
+context are actually met. None of that is checkable by the compiler, and
+re-deriving it at every call site multiplies the chance of getting it
+wrong. The <code>embedded-hal</code> ecosystem's whole design point is this
+containment done well: a chip-specific HAL crate owns every raw register
+dereference and every <code>unsafe extern "C"</code> call, and exposes a small set
+of safe, trait-based methods (<code>set_high()</code>, <code>read()</code>, <code>write(&amp;bytes)</code>)
+that the rest of the firmware — sensor drivers, application logic, RTOS
+tasks — builds on without ever writing <code>unsafe</code> itself. A firmware
+project where <code>unsafe</code> is scattered through business logic instead of
+concentrated in one audited layer has usually skipped this discipline,
+not encountered some embedded-specific necessity for it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">const TIMER_CTRL: *mut u32 = 0x4000_0000 as *mut u32;
+
+/// Starts the hardware timer. Contained to this one function; callers
+/// elsewhere in the firmware never touch TIMER_CTRL directly.
+pub fn start_timer() {
+    unsafe {
+        // SAFETY: TIMER_CTRL is the timer peripheral's real control
+        // register on this chip, and setting bit 0 is its documented
+        // "enable" operation.
+        core::ptr::write_volatile(TIMER_CTRL, 0x1);
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A temperature sensor driver's entire unsafe surface is one raw pointer
+read; everything a caller sees is a safe function returning a typed
+value.</p>
+<pre><code class="rust">mod sys {
+    pub const SENSOR_DATA: *const u32 = 0x4003_4000 as *const u32; // &lt;- raw address stays private to this module
+}
+
+pub struct TemperatureSensor;
+
+impl TemperatureSensor {
+    pub fn read_celsius(&amp;self) -&gt; f32 {
+        let raw = unsafe {
+            // SAFETY: SENSOR_DATA is always mapped on this chip; a plain
+            // volatile read has no other preconditions.
+            core::ptr::read_volatile(sys::SENSOR_DATA) // &lt;- the only unsafe operation in the whole driver
+        };
+        (raw as f32) * 0.0625 // datasheet's raw-to-Celsius conversion
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>sys::SENSOR_DATA</code> never leaves the module, so
+<code>TemperatureSensor::read_celsius</code> is the <em>only</em> place in the entire crate
+an auditor needs to check against the datasheet — the same "thin unsafe
+core, safe API" idiom the
+<a href="https://doc.rust-lang.org/nomicon/working-with-unsafe.html">Rustonomicon</a>
+describes for any unsafe module, applied to a register instead of a data
+structure.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing state across threads</h3>
+            <p>A tick counter incremented by a timer interrupt and read from the main
+loop is embedded Rust's closest analogue to sharing state across
+threads — the interrupt handler is a genuinely concurrent execution
+context, just one triggered by hardware instead of <code>thread::spawn</code>.</p>
+<pre><code class="rust">static mut TICK_COUNT: u32 = 0;
+
+// Registered as the timer interrupt handler; runs at any point, preempting main.
+#[allow(non_snake_case)]
+fn TIM2() {
+    unsafe {
+        // SAFETY: interrupts of the same priority don't nest on this
+        // chip, so no other write to TICK_COUNT can be in progress here.
+        let ptr = &amp;raw mut TICK_COUNT;
+        *ptr = ptr.read_volatile().wrapping_add(1);
+    }
+}
+
+pub fn ticks() -&gt; u32 {
+    cortex_m::interrupt::free(|_| unsafe {
+        // SAFETY: interrupts are masked for the duration of this closure,
+        // so TIM2 cannot preempt this read.
+        core::ptr::read_volatile(&amp;raw const TICK_COUNT)
+    })
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> without masking interrupts around the main-loop read,
+<code>ticks()</code> could observe <code>TICK_COUNT</code> mid-update if <code>TIM2</code> fires between a
+load and a store elsewhere in the program — <code>cortex_m::interrupt::free</code>
+is the embedded equivalent of a mutex critical section, and <code>&amp;raw mut</code>/<code>&amp;raw const</code> (see <a href="../../syntax/operators/raw-borrow.md"><code>&amp;raw const</code>/<code>&amp;raw mut</code></a>) form the pointer without
+ever asserting the <code>static mut</code> is exclusively borrowed, which a plain
+<code>&amp;mut TICK_COUNT</code> cannot honestly claim from inside an interrupt
+handler.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

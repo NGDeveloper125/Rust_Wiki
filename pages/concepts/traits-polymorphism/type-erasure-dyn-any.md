@@ -80,9 +80,78 @@ requires `T: 'static`, so a type that borrows non-`'static` data can
 never be erased to `dyn Any` or downcast back. The `T: Any` bounds above
 already imply `'static`; a struct holding a `&'a str` would be rejected.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Any` and `downcast_ref` live in `core::any` — no
-allocator needed for the reference-based form. As with ordinary trait
-objects, only a `Box<dyn Any>` (an owned, heap-allocated erased value)
-needs the `alloc` crate; borrowing-based downcasting does not.
+`Any` and `downcast_ref` live in `core::any`, so the reference-based form
+works under `#![no_std]` with no allocator at all — only `Box<dyn Any>`
+(an owned, heap-allocated erased value) needs `alloc`, same as any other
+trait object.
+
+Worth being honest about, though: type erasure via `Any` is genuinely
+rarer in embedded code than in hosted Rust, and rarer than the already-low
+bar set on the classic side of this page. Resource-constrained firmware
+overwhelmingly prefers a fixed enum of known message/command kinds, or a
+generic function bounded by a concrete trait, over anything that pays a
+runtime `TypeId` check — both because the set of types involved is
+usually genuinely fixed at compile time (there's no third-party plugin
+loading a bare-metal binary), and because a `match` over an enum
+compiles to a jump table the compiler can reason about, where `Any`
+downcasting is an opaque runtime comparison the compiler can't optimize
+across. Where `Any` does show up honestly is a debug/diagnostic console
+task that needs to hold a small, fixed-capacity table of heterogeneous
+handler types registered at startup — a genuinely dynamic-lookup need,
+just a narrow one. Reaching for `Any` anywhere else in embedded code is
+usually a sign an enum or a generic bound was available and simpler.
+
+## Basic usage example (Embedded)
+
+```
+use core::any::Any;
+
+fn describe(value: &dyn Any) {
+    if let Some(n) = value.downcast_ref::<u16>() { // <- runtime check, no heap involved
+        let _raw_adc_reading = n;
+    }
+}
+
+describe(&512u16);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A debug console task wants to store a handful of heterogeneous command
+handlers registered at startup, looked up by type — a genuinely dynamic
+case, but a narrow one; most embedded designs reach for a fixed enum of
+known commands instead, and should, unless the handler set truly isn't
+fixed at compile time.
+
+```
+use core::any::{Any, TypeId};
+
+struct HandlerSlot {
+    type_id: TypeId,
+    handler: &'static dyn Any, // <- erased, but heap-free: a 'static reference, not Box<dyn Any>
+}
+
+struct HandlerTable {
+    slots: [Option<HandlerSlot>; 4], // fixed capacity, no allocator needed
+}
+
+impl HandlerTable {
+    fn get<T: Any>(&self) -> Option<&T> {
+        self.slots.iter().flatten()
+            .find(|slot| slot.type_id == TypeId::of::<T>())
+            .and_then(|slot| slot.handler.downcast_ref::<T>()) // <- runtime check recovers the concrete type
+    }
+}
+```
+
+**Why this way:** a fixed-size array in place of a heap-allocated map
+keeps the table allocator-free, which matters more here than in hosted
+code — but the honest caveat still applies: this pattern earns its place
+only where the handler set genuinely isn't known until runtime; a
+compile-time-fixed set of commands is better served by an enum, which
+[`std::any::Any`](https://doc.rust-lang.org/std/any/trait.Any.html)'s own
+docs frame as the exception case, not the default.

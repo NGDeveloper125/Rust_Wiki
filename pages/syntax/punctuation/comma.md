@@ -80,6 +80,29 @@ function calls, and collection literals mean `rustfmt` never has to
 special-case one construct — one rule, applied everywhere reduces the
 number of style decisions a codebase has to make.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure list-separator grammar — no `std` dependency.
+`,` means exactly the same thing under `#![no_std]` — pure separator
+grammar, no `std` dependency. It shows up just as constantly in embedded
+code, mostly in two places: fixed-size array/buffer literals (there's no
+heap-backed `vec![...]` to reach for instead) and peripheral config
+structs, where a driver's setup value is built from several named fields
+in one struct literal.
+
+## Usage examples (Embedded)
+
+### Building a fixed-size calibration buffer
+
+```
+let calibration: [u16; 4] = [512, 511, 509, 515]; // <- `,` separates each calibration sample
+```
+
+### Constructing a peripheral config struct
+
+```
+let config = SerialConfig {
+    baud_rate: 115_200,
+    parity: Parity::None,
+    stop_bits: StopBits::One, // <- trailing comma, same rustfmt convention as hosted code
+};
+```

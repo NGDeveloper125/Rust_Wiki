@@ -122,9 +122,25 @@ specific items is the idiomatic way to get both without two `use`
 statements, as shown throughout the
 [Rust Reference's use-declarations section](https://doc.rust-lang.org/reference/items/use-declarations.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** for both senses. Method receivers (`self`/`&self`/
-`&mut self`) are core-language and central to `embedded-hal` driver APIs;
-the module-path sense of `self` in `use` statements is likewise pure
-compile-time name resolution, with no `std` dependency either way.
+Both senses of `self` mean exactly the same thing under `#![no_std]`.
+The method-receiver sense is what nearly every `embedded-hal` driver
+method uses to talk to a peripheral — `&mut self` on a method that needs
+to change the peripheral's state (write a register, toggle a pin),
+`&self` on one that only reads it — with no difference in meaning or
+runtime cost from the hosted case.
+
+## Usage examples (Embedded)
+
+### A driver method taking `&mut self` to talk to a peripheral
+
+```
+struct Led<P> { pin: P }
+
+impl<P: embedded_hal::digital::OutputPin> Led<P> {
+    fn toggle_on(&mut self) -> Result<(), P::Error> { // <- `&mut self`: mutates the driver's peripheral state
+        self.pin.set_high()
+    }
+}
+```

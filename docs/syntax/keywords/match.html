@@ -957,7 +957,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>match</code> compares a scrutinee value against a sequence of arms, each written
 <code>pattern =&gt; expression</code>, and runs the first arm whose pattern fits. Arms are
@@ -998,7 +999,7 @@ final expression.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1099,21 +1100,57 @@ range, per the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>match</code> is core-language, allocator-free, and compiles to
-a jump table or comparison chain with no runtime cost beyond that — a
-standard way to decode a protocol byte or peripheral status register into
-one of several known shapes, with the compiler guaranteeing every expected
-bit pattern is handled.</p>
+        <p><code>match</code> behaves identically under <code>#![no_std]</code> — core-language, allocator-
+free, compiling to a jump table or comparison chain with no runtime cost
+beyond that. It's a standard way to decode a protocol byte or a
+peripheral's status/fault register into one of several known shapes, and
+the exhaustiveness check is genuinely useful here: it forces every bit
+pattern the register can hold — including ones that don't correspond to a
+documented fault — to be given a <code>_</code> catch-all rather than silently
+falling through.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Decoding a fault status register</h3>
+            <pre><code class="rust">enum Fault { None, OverCurrent, OverTemperature, UnderVoltage }
+
+fn decode_fault(reg: u8) -&gt; Fault {
+    match reg { // &lt;- `match` decodes the raw register value into a known set of fault states
+        0b000 =&gt; Fault::None,
+        0b001 =&gt; Fault::OverCurrent,
+        0b010 =&gt; Fault::OverTemperature,
+        0b100 =&gt; Fault::UnderVoltage,
+        _ =&gt; Fault::None, // unrecognized bit pattern; treat conservatively
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Matching an Option from a non-blocking UART read</h3>
+            <pre><code class="rust">match uart.read() {
+    Some(byte) =&gt; process_byte(byte), // &lt;- `match` on the `Option` a non-blocking read returns
+    None =&gt; {} // nothing available this cycle
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A type that contains itself directly — a linked-list node holding another
 node, a tree node holding child nodes of the same type — can't be
@@ -963,7 +964,7 @@ makes the recursion possible to represent at all.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">enum List {
     Cons(i32, Box&lt;List&gt;),
@@ -981,7 +982,7 @@ iterative form instead.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1021,23 +1022,161 @@ despite the heap indirection each <code>Cons</code> involves underneath.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> <code>Box&lt;T&gt;</code> lives in <code>alloc</code> and needs a configured
-allocator. Without one, a genuinely recursive/self-referential structure
-is usually reworked around a fixed-depth array-backed arena, an index
-into a <code>heapless::Vec</code> acting as a pseudo-pointer, or simply avoided in
-favor of an iterative, fixed-size design — common in embedded code
-where unbounded recursion/allocation is itself undesirable regardless of
-whether an allocator is present.</p>
+        <p>As <a href="../../syntax/keywords/box.md"><code>box</code>'s embedded section</a> covers,
+<code>Box&lt;T&gt;</code> lives in <code>alloc</code>, not <code>core</code>, so <code>Cons(i32, Box&lt;List&gt;)</code> above
+only compiles once a crate pulls in <code>alloc</code> and configures a
+<code>#[global_allocator]</code> — and there's no <code>heapless::Box</code> waiting to fill
+the gap the way <code>heapless::Vec</code> fills in for <code>Vec</code>, because a
+fixed-capacity "box" is a contradiction: the whole reason to reach for
+<code>Box</code> here is that the recursive type's size isn't statically bounded,
+while every <code>heapless</code> type exists specifically to fix a size at compile
+time.</p>
+<p>The honest no-heap alternative is therefore a different <em>design</em>, not a
+substitute type. The standard one is an index-based arena: instead of
+each node owning a <code>Box</code> pointing to the next/child node, every node
+lives in one fixed-capacity array (or <code>heapless::Vec&lt;Node, N&gt;</code>), and a
+node refers to another node by storing its plain integer index into that
+array rather than a pointer. The whole structure — however deep it
+logically nests — occupies exactly <code>N * size_of::&lt;Node&gt;()</code> bytes, fixed
+at compile time, and "removing" or "linking" a node becomes ordinary
+index bookkeeping instead of anything the allocator needs to be involved
+in. The tradeoff is real: the type system no longer tracks the
+ownership/lifetime relationship between nodes the way it does for
+<code>Box</code> — a stale or out-of-range index is a logic bug the compiler can't
+catch the way a dangling <code>Box</code> can't exist in the first place — so an
+arena's indices need to be validated at the boundary (bounds-checked
+indexing, or a generational index scheme) the way any other embedded
+input does.</p>
+<p>The second, often simpler alternative is to sidestep genuine recursion
+altogether: many structures that look naturally recursive (a fixed number
+of filter stages, a bounded menu depth, a small protocol nesting limit)
+actually have a known maximum depth in practice, in which case a flat
+<code>[T; N]</code> array replaces the recursive type entirely, with no indices and
+no arena bookkeeping at all — the same "is the size really unbounded, or
+just currently modeled that way" question the classic Explanation's array-
+vs-recursive-structure choice already raises, just pushed one level
+further.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct Node {
+    value: i32,
+    next: Option&lt;usize&gt;, // &lt;- index into the arena instead of Box&lt;Node&gt;; None plays Nil's role
+}
+
+struct Arena {
+    nodes: [Option&lt;Node&gt;; 8], // &lt;- fixed capacity, no heap
+    len: usize,
+}
+
+impl Arena {
+    fn push_front(&amp;mut self, value: i32, next: Option&lt;usize&gt;) -&gt; usize {
+        let idx = self.len;
+        self.nodes[idx] = Some(Node { value, next });
+        self.len += 1;
+        idx // &lt;- caller's "pointer" is now just this integer
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Boxing and heap allocation</h3>
+            <p>A linked list of sensor-calibration steps, applied in sequence, needs the
+same "each step points to the next" shape a <code>Box</code>-based <code>Cons</code> list has —
+but on a target with no allocator, an index-based arena gives that same
+shape without ever calling into <code>alloc</code>.</p>
+<pre><code class="rust">struct Step {
+    gain: f32,
+    next: Option&lt;usize&gt;, // &lt;- plays the role Box&lt;List&gt; plays classically, as a plain index instead of a pointer
+}
+
+struct Pipeline {
+    steps: [Option&lt;Step&gt;; 4],
+    head: Option&lt;usize&gt;,
+}
+
+fn apply(pipeline: &amp;Pipeline, mut value: f32) -&gt; f32 {
+    let mut current = pipeline.head;
+    while let Some(idx) = current {
+        if let Some(step) = &amp;pipeline.steps[idx] {
+            value *= step.gain;
+            current = step.next; // &lt;- walks the chain via indices, no Box, no heap indirection
+        } else {
+            break;
+        }
+    }
+    value
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> on a target with no <code>#[global_allocator]</code> configured —
+common for the smallest microcontrollers — <code>Box&lt;List&gt;</code> simply doesn't
+compile, and there's no <code>heapless::Box</code> to reach for instead, since a
+fixed-capacity box is a contradiction in terms; an index-based arena is
+the standard way the embedded ecosystem gets the same "each element
+points to the next" shape without ever touching a heap.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>An arena's public API should surface "no more room" as an explicit
+<code>Result</code>, the same way <code>heapless::Vec::push</code> does, rather than silently
+overwriting a slot or panicking on an out-of-bounds arena index.</p>
+<pre><code class="rust">struct Arena {
+    nodes: [Option&lt;Node&gt;; 8],
+    len: usize,
+}
+
+struct Node { value: i32, next: Option&lt;usize&gt; }
+
+impl Arena {
+    fn try_push(&amp;mut self, value: i32, next: Option&lt;usize&gt;) -&gt; Result&lt;usize, i32&gt; {
+        if self.len == self.nodes.len() {
+            return Err(value); // &lt;- arena full: explicit failure instead of a silent overwrite or panic
+        }
+        let idx = self.len;
+        self.nodes[idx] = Some(Node { value, next });
+        self.len += 1;
+        Ok(idx)
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> an arena's fixed capacity is exactly the same kind of
+compile-time bound a <code>heapless::Vec&lt;T, N&gt;</code> enforces, so it deserves the
+same API discipline — reporting exhaustion as a <code>Result</code> the caller must
+handle, rather than a bug that only surfaces once the arena happens to
+fill up in the field.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

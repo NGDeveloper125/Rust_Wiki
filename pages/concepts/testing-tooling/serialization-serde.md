@@ -159,14 +159,105 @@ the same requirement the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 notes for any equality assertion, serde-derived types included.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** `serde` itself has a `derive`-only, allocator-free
-mode, but the common companion crates are less bare-metal-friendly:
-`serde_json` and `toml` both lean on heap allocation (`String`, `Vec`)
-for the values they produce, so they need at least `alloc` and typically
-assume a hosted environment. The embedded-world answer for a compact,
-`#![no_std]`-friendly wire format is `postcard` — a binary serde data
-format designed specifically for resource-constrained targets, with no
-required allocator and a much smaller code-size footprint than a JSON or
-TOML implementation.
+`serde`'s traits and its `derive` macro don't themselves need `std` — the
+crate builds with `default-features = false` to drop the parts of its
+API that assume an allocator, leaving `Serialize`/`Deserialize` and the
+derive fully usable in a `#![no_std]` crate. What typically doesn't carry
+over is the format crates most tutorials reach for: `serde_json` and
+`toml` both produce `String`/`Vec`-shaped output, so they need at least
+`alloc`, and in practice assume a hosted environment with plenty of heap.
+
+The embedded-world answer is `postcard` — a binary serde data format
+designed specifically for resource-constrained targets: compact (no
+field names or JSON punctuation on the wire, just the encoded values),
+and able to serialize into a fixed-size buffer without requiring a heap
+allocator for that direction. (Its exact allocator requirements differ a
+little by API used and by version, so check `postcard`'s own
+documentation for the specifics that matter for a given target rather
+than assuming every corner of it is allocator-free.) The same
+`#[derive(Serialize, Deserialize)]` written for `serde_json` on a hosted
+config struct works unchanged with `postcard` on a `#![no_std]` firmware
+— it's the format crate underneath, not the derive, that changes.
+
+## Basic usage example (Embedded)
+
+```
+// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }, postcard = "1"
+#![no_std]
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)] // <- same derive as the hosted example; the format crate below is what differs
+struct SensorReading {
+    id: u32,
+    millivolts: u16,
+}
+
+fn encode(reading: &SensorReading, buf: &mut [u8]) -> usize {
+    let used = postcard::to_slice(reading, buf).unwrap(); // <- serializes into a caller-provided buffer, no heap needed
+    used.len()
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Serializing and deserializing
+
+A sensor node needs to send a compact reading over a low-bandwidth radio
+link — `postcard` serializes straight into a fixed-size, statically
+sized buffer, with no allocation and no wire overhead spent on field
+names the way a JSON payload would carry.
+
+```
+// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }, postcard = "1"
+#![no_std]
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+struct SensorReading {
+    id: u8,
+    celsius_tenths: i16,
+}
+
+fn build_packet(reading: &SensorReading) -> [u8; 16] {
+    let mut buf = [0u8; 16]; // <- fixed-size, stack-allocated: no heap involved
+    let used = postcard::to_slice(reading, &mut buf).unwrap(); // <- postcard: the no_std-friendly wire format
+    let len = used.len();
+    buf[..len].try_into().unwrap_or(buf)
+}
+```
+
+**Why this way:** a radio packet has a hard size ceiling and no
+allocator to spare, so a format that serializes into a caller-owned
+buffer without needing `alloc` fits directly, whereas `serde_json` would
+need heap-backed `String`/`Vec` output just to produce the bytes to
+send; `postcard`'s own documentation positions it specifically for this
+resource-constrained niche.
+
+### Scenario: Designing a public API
+
+A config struct shared between firmware and a desktop configuration tool
+should use field types that compile on both sides — a plain `serde`
+derive over primitives and fixed-size arrays works unchanged in a
+`#![no_std]` build and a hosted one, without special-casing either
+target.
+
+```
+// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }
+#![no_std]
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct DeviceConfig {
+    pub sample_rate_hz: u16,
+    pub channel_mask: u8, // <- plain primitives: no String/Vec, so this compiles under no_std as-is
+}
+```
+
+**Why this way:** choosing allocator-free field types up front means the
+same struct definition, and the same derive, serializes with `postcard`
+on the firmware side and with `serde_json` on a desktop configuration
+tool without maintaining two parallel type definitions — `serde`'s
+`default-features = false` mode is exactly what keeps that single
+definition available to the `no_std` side of that pairing.

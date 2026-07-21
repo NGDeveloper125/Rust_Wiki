@@ -98,8 +98,56 @@ A pattern guard lets a single boolean check express
 exactly as it would inside a full `match` — without the extra arm and
 inner `if` a full `match` would otherwise need.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `matches!` expands to an ordinary `match` at compile
-time and introduces no runtime dependency beyond the pattern match
-itself — identical under `#![no_std]`.
+`matches!` expands to an ordinary `match` at compile time and introduces
+no runtime dependency beyond the pattern match itself, so it behaves
+identically under `#![no_std]` — there's no heap, no allocation, and
+nothing hosted-only involved in a boolean pattern check. It's genuinely
+handy in embedded code specifically for checking a hardware-status or
+interrupt-flag enum inline — a peripheral register read decoded into an
+enum, then immediately reduced to "is it one of the states I care about"
+— without writing out a full `match` block just to get a `bool`.
+
+## Usage examples (Embedded)
+
+### Checking an interrupt flag inline
+
+```
+enum InterruptFlag {
+    None,
+    DataReady,
+    Overrun,
+    FrameError,
+}
+
+fn read_status_flag() -> InterruptFlag {
+    // pretend this decodes a peripheral's status register into the enum
+    InterruptFlag::DataReady
+}
+
+if matches!(read_status_flag(), InterruptFlag::DataReady | InterruptFlag::Overrun) {
+    // <- one boolean check across two flag variants, no full match needed
+    // handle the pending data
+}
+```
+
+### Guarding a register write on device power state
+
+A peripheral driver only allows a reconfiguration write while the device
+is idle or lightly loaded, checked with a pattern guard against a field
+decoded straight from a status register.
+
+```
+enum PowerState {
+    Off,
+    Standby,
+    Active { load_percent: u8 },
+}
+
+fn can_reconfigure(state: &PowerState) -> bool {
+    matches!(state, PowerState::Off | PowerState::Standby)
+        || matches!(state, PowerState::Active { load_percent } if *load_percent < 5)
+        // <- pattern guard narrows the Active case further, same mechanism as classic Rust
+}
+```

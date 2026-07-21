@@ -57,7 +57,47 @@ Ordering the cheap, panic-free checks first and letting
 against an empty string — see [`||`](pipe-pipe.md) for the OR counterpart,
 used when any single condition failing should reject the input.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Built into the language, not a trait — no `std`
-dependency.
+`&&` behaves identically in `#![no_std]` — it's core-language
+short-circuit boolean logic, so there's no runtime or allocator
+involved and nothing about it changes on a bare-metal target. What is
+worth calling out is how often it shows up in embedded control flow
+specifically: guard conditions that combine "the hardware isn't ready
+yet" with "give up after some bound" are a constant pattern in polling
+and retry loops, and `&&`'s short-circuiting means the retry counter is
+only checked once the hardware condition has already failed — the
+counter never gets touched, and no extra polling happens, once the
+hardware reports ready.
+
+## Usage examples (Embedded)
+
+### Guarding a retry loop against a non-responsive sensor
+
+```
+const MAX_RETRIES: u8 = 5;
+
+fn sensor_ready() -> bool {
+    false // placeholder: real code polls a status register bit
+}
+
+fn read_sensor_raw() -> u16 {
+    0
+}
+
+fn delay_ms(_ms: u32) {}
+
+fn read_sensor_with_retry() -> Option<u16> {
+    let mut retries = 0;
+    while !sensor_ready() && retries < MAX_RETRIES {
+        // <- `&&`: `retries` is only checked once `sensor_ready()` has already failed
+        retries += 1;
+        delay_ms(10);
+    }
+    if sensor_ready() {
+        Some(read_sensor_raw())
+    } else {
+        None
+    }
+}
+```

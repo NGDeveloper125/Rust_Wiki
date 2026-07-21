@@ -166,19 +166,140 @@ explicit `Err` a caller must decide how to handle — even Rust's failure
 mode for a threading bug is a compile-time-typed signal, not an
 undiagnosed data race.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** for the underlying guarantee — `Send`/`Sync` and the
-borrow checker are `core`-level and cost nothing at runtime regardless of
-target. If anything, compile-time data-race rejection matters *more* on
-embedded targets: there's rarely a debugger, sanitizer, or crash reporter
-attached to firmware in the field, so catching a race between a main loop
-and an interrupt handler at compile time — rather than during an
-unreproducible field failure — is disproportionately valuable.
-`std::thread` itself needs an OS and isn't available under `#![no_std]`;
-concurrent tasks there come from an RTOS's own primitives or an async
-executor like `embassy`, and shared mutable state typically goes through a
-`critical-section`-based mutex instead of `std::sync::Mutex` (see
-[shared-state concurrency](../concurrency-async/shared-state-concurrency.md)
-for that substitution) — but the same `Send`/`Sync` compile-time checking
-still applies to every one of those alternatives.
+On bare metal there's usually no OS and no `std::thread::spawn`, so it's
+tempting to think "fearless concurrency" simply doesn't apply — but almost
+every microcontroller program is concurrent in the sense that actually
+matters here: an interrupt handler can preempt `fn main`'s loop at any
+instruction boundary, run to completion, and hand control back, and from
+the compiler's point of view that's a second concurrent context every bit
+as real as a second OS thread. Any state touched by both `main` and a
+`#[interrupt]` handler is exactly the shared-mutable-data situation
+`Send`/`Sync` and the borrow checker exist to police — the guarantee
+"fearless concurrency" describes for threads is the same guarantee,
+applied to the main-loop/ISR boundary instead. The mechanics of *why* —
+`Send`/`Sync` as compile-time-checked marker traits, `critical-section`'s
+`Mutex` as the no-OS analog of `std::sync::Mutex` — are covered in full on
+[Send & Sync](../concurrency-async/send-and-sync.md); this page won't
+repeat that ground, only the reframing.
+
+Async executors built for embedded, like `embassy`, add a third kind of
+concurrent context: cooperatively-scheduled tasks that can be preempted at
+`.await` points. The same `Send` bound the classic explanation described
+for `std`'s async runtimes applies again here — anything a task captures
+across an `.await`, or moves into `spawner.spawn(...)`, is checked at
+compile time the same way.
+
+The honest edges carry over unchanged, too, and if anything matter more on
+a microcontroller. The type system still can't catch a logic race, and it
+still can't catch a new failure mode specific to this context: holding a
+`critical-section` too long doesn't corrupt data, but it does delay every
+interrupt for as long as the section is held, which on a real-time target
+can itself blow a timing deadline. That's a genuine embedded-specific
+tradeoff the compiler has no opinion on — keeping critical sections short
+is a discipline the type system doesn't enforce, exactly the way it
+doesn't enforce deadlock-freedom on a hosted target.
+
+## Basic usage example (Embedded)
+
+```
+use core::cell::Cell;
+use critical_section::Mutex;
+
+static BUTTON_PRESSED: Mutex<Cell<bool>> = Mutex::new(Cell::new(false)); // <- Sync only because Cell<bool> is Send
+
+#[interrupt]
+fn EXTI0() { // <- second concurrent context: can preempt `main` at any instruction boundary
+    critical_section::with(|cs| BUTTON_PRESSED.borrow(cs).set(true));
+}
+
+fn main() -> ! {
+    loop {
+        if critical_section::with(|cs| BUTTON_PRESSED.borrow(cs).get()) {
+            // ... handle the button press
+        }
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Sharing state across threads
+
+A motor controller's target speed is written by a UART-receive interrupt
+and read every tick by the main control loop — reshaping it through a
+`critical-section` mutex is what turns "shared mutable state touched from
+two contexts" from a potential race into something the compiler has
+actually checked.
+
+```
+use core::cell::Cell;
+use critical_section::Mutex;
+
+static TARGET_RPM: Mutex<Cell<u16>> = Mutex::new(Cell::new(0)); // <- static requires TARGET_RPM: Sync, checked at compile time
+
+#[interrupt]
+fn USART1() { // <- runs as a second concurrent context alongside `main`
+    let new_target = read_rpm_from_uart_frame();
+    critical_section::with(|cs| TARGET_RPM.borrow(cs).set(new_target));
+}
+
+fn control_loop_tick() {
+    let target = critical_section::with(|cs| TARGET_RPM.borrow(cs).get());
+    drive_motor_towards(target);
+}
+
+fn read_rpm_from_uart_frame() -> u16 { 1200 }
+fn drive_motor_towards(_rpm: u16) {}
+```
+
+**Why this way:** a bare `static mut TARGET_RPM: u16` would compile but
+gives the compiler nothing to check — reading and writing it from two
+contexts is undefined behavior the moment they overlap; wrapping it in
+`critical-section`'s `Mutex` makes the type genuinely `Sync` and forces
+every access through a section with interrupts disabled, the mechanism
+[Send & Sync](../concurrency-async/send-and-sync.md) covers in depth for
+exactly this main-loop/ISR pairing.
+
+### Scenario: Async tasks
+
+An `embassy` executor running a sensor-polling task alongside a
+button-watching task needs the same "won't compile if it isn't safe to
+hand to the executor" guarantee async code gets on a hosted target — the
+risk profile is identical, just running cooperatively on one core instead
+of preemptively across OS threads.
+
+```
+use embassy_executor::Spawner;
+use embassy_sync::mutex::Mutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+
+static LATEST_READING: Mutex<CriticalSectionRawMutex, u16> = Mutex::new(0);
+
+#[embassy_executor::task]
+async fn poll_sensor() {
+    loop {
+        let reading = read_sensor().await;
+        *LATEST_READING.lock().await = reading; // <- checked Send at this .await, same as a spawned std task
+    }
+}
+
+#[embassy_executor::task]
+async fn report_reading() {
+    loop {
+        let reading = *LATEST_READING.lock().await;
+        // ... transmit `reading`
+    }
+}
+
+async fn read_sensor() -> u16 { 0 }
+```
+
+**Why this way:** `embassy`'s executor requires spawned futures to be
+`'static` and the values they move across an `.await` to be `Send`, so a
+task that captured non-thread-safe state without going through a shared,
+lock-protected type would fail to compile rather than corrupt
+`LATEST_READING` under task preemption — the same compile-time check the
+classic explanation describes for `tokio`, applied to a single-core
+cooperative executor instead of an OS-backed one.

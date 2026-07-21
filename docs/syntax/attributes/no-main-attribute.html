@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#![no_std]</code> is an inner attribute placed at the very top of a crate root
 that disables <code>#![no_main]</code>'s counterpart, ordinary Rust program startup:
@@ -982,7 +983,7 @@ control the process's true entry point.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1030,22 +1031,99 @@ document for a custom entry point.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> — <code>#[no_main]</code> is overwhelmingly an embedded/OS-dev
-attribute. Most embedded projects don't write it directly; a hardware
-support crate's <code>#[entry]</code> macro (from crates like <code>cortex-m-rt</code>) expands
-to the equivalent of <code>#![no_main]</code> plus a properly named, <code>#[no_mangle]</code>
-reset-handler function, so application code just writes <code>#[entry] fn main() -&gt; !</code>. See <a href="../../syntax/attributes/no-std-attribute.html">#![no_std]</a> for the broader
-context <code>#[no_main]</code> almost always appears alongside.</p>
+        <p>On a microcontroller, program "startup" isn't a call from a C runtime
+into <code>main</code> at all — it's the CPU's hardware reset behavior. The very
+first entry of the interrupt/exception vector table (a fixed array of
+function-pointer-sized words placed at the start of flash by the linker
+script) holds the initial stack pointer, and the second holds the address
+of the <strong>reset handler</strong>: the hardware loads the program counter straight
+from that table entry on power-up or reset, with no OS, no C runtime, and
+no call instruction involved anywhere. <code>#![no_main]</code> is what tells the
+compiler not to generate the ordinary startup shim that would otherwise
+expect to call a conventional <code>fn main</code>, since there is nothing here for
+that shim to be called by in the first place.</p>
+<p>In practice, almost no embedded project writes the reset handler or
+<code>#![no_main]</code>'s companion entry point by hand. <code>cortex-m-rt</code>'s <code>#[entry]</code>
+attribute is the standard way in: it expands to roughly a <code>#[no_mangle]</code>
+<code>extern "C" fn main</code> that the crate's own reset handler calls after
+zeroing <code>.bss</code> and copying <code>.data</code> from flash into RAM, and it enforces at
+compile time that only one <code>#[entry]</code> function exists and that it never
+returns (<code>-&gt; !</code>) — the same one-per-binary discipline
+<a href="panic-handler-attribute.md"><code>#[panic_handler]</code></a> enforces, for the same
+underlying reason: there is exactly one hardware reset vector to point
+at. Concurrency frameworks built on top, like <code>RTIC</code>, also require
+<code>#![no_main]</code> in the application crate, replacing the ordinary <code>fn main</code>
+with their own <code>#[app]</code> macro that generates the hardware interrupt
+handlers, shared-state locking, and task dispatch directly instead of a
+single linear entry point.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Using cortex-m-rt's #[entry] instead of a hand-rolled reset handler</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main] // &lt;- no C runtime exists to call an ordinary `main`
+
+use panic_halt as _;
+use cortex_m_rt::entry; // &lt;- provides the real reset-vector wiring
+
+#[entry] // &lt;- expands to the equivalent of a #[no_mangle] reset-called entry function
+fn main() -&gt; ! {
+    loop {
+        // application logic
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Building an interrupt-driven application with RTIC</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main] // &lt;- RTIC's #[app] macro generates the real entry point and vector table wiring
+
+use panic_halt as _;
+
+#[rtic::app(device = nrf52840_hal::pac)]
+mod app {
+    #[shared]
+    struct Shared {}
+
+    #[local]
+    struct Local {}
+
+    #[init]
+    fn init(_cx: init::Context) -&gt; (Shared, Local) {
+        (Shared {}, Local {})
+    }
+
+    #[task(binds = TIMER0)]
+    fn on_timer(_cx: on_timer::Context) {
+        // runs whenever the TIMER0 interrupt fires
+    }
+}
+</code></pre>
+<p><code>#![no_main]</code> here isn't optional scaffolding — the <code>#[app]</code> macro's
+generated code <em>is</em> the crate's entry point and interrupt table, so the
+ordinary Rust startup shim <code>#![no_main]</code> suppresses would only be in the
+way. See <a href="no-std-attribute.md"><code>#![no_std]</code></a> for the broader picture this
+entry point sits inside.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

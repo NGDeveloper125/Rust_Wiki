@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>;</code> terminates a statement, and — just as importantly in an
 expression-oriented language — turns what would otherwise be an
@@ -967,7 +968,7 @@ statement-terminator role.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1031,17 +1032,55 @@ when a fixed-size array is the right choice over a growable one.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Pure statement-terminator grammar — no <code>std</code> dependency.</p>
+        <p><code>;</code> means exactly the same thing under <code>#![no_std]</code> — statement
+terminator and array-length separator, resolved purely by the compiler.
+The "an accidental trailing <code>;</code> changes what a block returns" trap is, if
+anything, higher-stakes in a <code>#[no_mangle] extern "C" fn</code> entry point or
+an interrupt handler: these are called directly by the runtime/linker
+with no wrapping <code>main</code> and no caller-side application logic to catch a
+mismatch, so getting the last line's <code>;</code> wrong there is a raw
+ABI-shaped bug, not just a caught type error. The <code>[Type; N]</code> array form
+is, if anything, more central in embedded code than hosted, since a
+fixed-size array is usually the <em>only</em> buffer available without a heap.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A `#[no_mangle] extern &quot;C&quot;` entry point</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+#[no_mangle]
+pub extern "C" fn _start() -&gt; ! {
+    init_hardware(); // &lt;- `;` ends this statement
+    loop {} // &lt;- no `;` needed: `loop {}` never produces a value to return anyway
+}
+
+fn init_hardware() {}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Sizing a fixed DMA buffer with array syntax</h3>
+            <pre><code class="rust">static mut DMA_BUFFER: [u8; 256] = [0; 256]; // &lt;- both `;` here belong to array syntax, not statements
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

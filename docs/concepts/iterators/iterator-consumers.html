@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A consumer is a method on <a href="../../concepts/iterators/the-iterator-trait.html"><code>Iterator</code></a> that drives
 iteration to completion and produces a final, non-iterator value —
@@ -977,7 +978,7 @@ every consumer here to become usable on your own type for free.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let shipment_weights_kg = [12.5, 8.0, 20.25];
 
@@ -987,7 +988,7 @@ assert_eq!(total, 40.75);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1076,23 +1077,98 @@ recommend it for over <code>fold</code>.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>sum</code>, <code>count</code>, <code>fold</code>, <code>reduce</code>, <code>for_each</code>,
-<code>any</code>/<code>all</code>, and <code>min</code>/<code>max</code> are all default methods in <code>core::iter</code> and
-allocate nothing — they run identically on a <code>#![no_std]</code> target.
-<code>collect</code> is the one consumer whose support depends on the target type
-being built; see
-<a href="../../concepts/iterators/fromiterator-and-collect-targets.html">FromIterator &amp; collect targets</a> for
+        <p>Consumers — <code>sum</code>, <code>count</code>, <code>fold</code>, <code>reduce</code>, <code>for_each</code>, <code>any</code>/<code>all</code>,
+<code>min</code>/<code>max</code> — are default methods defined in <code>core::iter</code>, so they run
+identically on a <code>#![no_std]</code> target: none of them need an allocator,
+because each only needs to hold a running accumulator (a number, a
+<code>bool</code>, a running max) rather than build a new collection. This makes
+them a natural fit for reading a fixed-size buffer of sensor samples or
+scanning a bank of registers — a firmware loop that used to hand-roll an
+accumulator variable and a <code>for</code> loop over indices can instead reach for
+<code>.sum()</code>, <code>.fold()</code>, or <code>.any()</code> at no cost difference. <code>collect</code> is the
+one exception worth flagging on its own: it's still a consumer, but
+<em>what</em> it collects into determines whether it needs <code>alloc</code> at all — see
+<a href="fromiterator-and-collect-targets.md">FromIterator &amp; collect targets</a> for
 that caveat.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">let shipment_weights_g: [u32; 3] = [1250, 800, 2025]; // grams, fixed-capacity buffer
+
+let total: u32 = shipment_weights_g.iter().sum(); // &lt;- sum is a consumer: no allocation, just an accumulator
+assert_eq!(total, 4075);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Counting how many entries in a fixed-size buffer of register readings
+are non-zero, and checking whether every one is within range, calls for
+two consumers matched to the two questions — with no <code>Vec</code> built to hold
+intermediate results.</p>
+<pre><code class="rust">let register_values: [u16; 4] = [0, 512, 498, 610];
+
+let nonzero_count = register_values.iter().filter(|&amp;&amp;v| v != 0).count(); // &lt;- count: consumer, drives to a final number
+let all_in_range = register_values.iter().all(|&amp;v| v &lt;= 1023); // &lt;- all: consumer, short-circuits on first violation
+
+assert_eq!(nonzero_count, 3);
+assert!(all_in_range);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>count</code> and <code>all</code> each walk the fixed array directly
+and produce a plain number or <code>bool</code>, so neither needs a heap-backed
+intermediate — a meaningful distinction on a target with kilobytes of
+RAM rather than gigabytes.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Numeric computation</h3>
+            <p>Computing a running average of buffered sensor samples needs both a sum
+and a count from a single pass — <code>fold</code> does this with one accumulator
+tuple and no second walk over the buffer.</p>
+<pre><code class="rust">let samples: [i32; 4] = [21, 23, 19, 25]; // degrees C, fixed buffer from a ring of recent readings
+
+let (total, count) = samples
+    .iter()
+    .fold((0, 0), |(sum, n), &amp;s| (sum + s, n + 1)); // &lt;- fold: consumer, accumulates (sum, count) with no allocation
+
+let average = total / count;
+assert_eq!(average, 22);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>fold</code> walks the fixed buffer exactly once, keeping its
+whole accumulator in a couple of registers or stack slots — important
+when the alternative (<code>.sum()</code> then <code>.count()</code> separately) would mean a
+second pass over memory that may be scarce.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

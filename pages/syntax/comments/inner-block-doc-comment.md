@@ -57,7 +57,31 @@ everything there applies here unchanged. `/*! */` is rare enough in real
 codebases that introducing it fresh mostly just surprises readers
 expecting `//!`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Same as [`//!`](inner-line-doc-comment.md) — no `std`
-dependency.
+`/*! ... */` documents its enclosing module/crate identically under
+`#![no_std]` — doc generation doesn't touch `std` at all. See
+[`//!`](inner-line-doc-comment.md) for the fuller embedded-specific
+discussion (crate-root docs stating hardware assumptions, the
+host-vs-target doc test caveat); everything there applies to this block
+form unchanged. As with the hosted-Rust version, `//!` is still the
+idiomatic choice in embedded crates too — this form is rare.
+
+## Usage examples (Embedded)
+
+### Documenting a HAL crate's assumptions
+
+```
+/*! Peripheral access crate for the XYZ-100 microcontroller.
+
+Assumes a 16 MHz external crystal; call `clocks::init()` before touching
+any other peripheral, or reads return unspecified values. */
+// <- crate-root doc states the one hardware assumption every user must know
+
+pub mod clocks;
+pub mod gpio;
+```
+
+Stating the crystal-frequency assumption once at the crate root, in
+whichever doc-comment form the crate already favors, saves every
+peripheral module from repeating it.

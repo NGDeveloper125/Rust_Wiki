@@ -88,13 +88,62 @@ allocation — cloning is the operation the code actually needs, not an
 accidental cost; see [`Vec<T>`](../../concepts/collections-strings/vec.md)
 for how the resulting `Vec` behaves once built.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** `vec!` builds an `alloc::vec::Vec`, so like `Vec<T>`
-itself it needs the `alloc` crate and a configured `#[global_allocator]`
-under `#![no_std]` — it isn't available on a target with no heap at all.
-Where allocation isn't available, `heapless::Vec` has no equivalent
-macro; the fixed-capacity buffer is built with `Vec::new()` plus
-`.push()`/`.resize()` calls instead. See
-[`Vec<T>`](../../concepts/collections-strings/vec.md) for the embedded
-story on the underlying type.
+`vec!` is defined purely in terms of `alloc::vec::Vec` — under
+`#![no_std]` it's available exactly when the `alloc` crate is pulled in
+and a `#[global_allocator]` is configured to back it, at which point
+`vec![1, 2, 3]` and `vec![0u8; 8]` behave identically to a hosted build:
+same list/repeat forms, same `Clone`-not-`Copy` requirement for the
+repeat form. On a target with no heap at all — no allocator configured,
+no `alloc` — `vec!` simply isn't available, and there is no
+macro-level equivalent to reach for instead:
+[`heapless::Vec<T, N>`](../../concepts/collections-strings/vec.md) (a
+fixed-capacity, statically allocated vector) is the idiomatic substitute,
+but it's built imperatively — `heapless::Vec::new()` followed by
+`.push()` per element, or `.resize()` to fill it to a starting value —
+rather than through a `vec!`-style literal, since a fixed-capacity
+collection has no single expression that means "however many elements,
+however big the source list turns out to be."
+
+## Usage examples (Embedded)
+
+### Building a Vec once alloc is configured
+
+```
+extern crate alloc;
+use alloc::vec::Vec;
+
+fn make_thresholds() -> Vec<u16> {
+    vec![100, 200, 300] // <- list form, identical to hosted Rust once `alloc` + a #[global_allocator] are set up
+}
+```
+
+### Building a fixed-capacity buffer with heapless (no allocator)
+
+```
+use heapless::Vec;
+
+fn make_readings() -> Vec<f32, 8> { // <- capacity 8, fixed at compile time, no heap involved
+    let mut readings = Vec::new(); // <- heapless::Vec has no vec!-style literal
+    readings.push(21.4).unwrap(); // <- push() returns a Result, since the buffer can be full
+    readings.push(19.8).unwrap();
+    readings
+}
+```
+
+### Pre-filling a heapless buffer to a starting value
+
+Where classic code reaches for `vec![0u8; 8]`'s repeat form, the
+`heapless` equivalent is a `.resize()` call on an already-constructed
+fixed-capacity `Vec`.
+
+```
+use heapless::Vec;
+
+fn zeroed_frame() -> Vec<u8, 8> {
+    let mut frame = Vec::new();
+    frame.resize(8, 0u8).unwrap(); // <- fills to 8 elements of 0u8, the resize() this page's vec![elem; n] maps onto
+    frame
+}
+```

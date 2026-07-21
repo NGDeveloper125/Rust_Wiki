@@ -158,13 +158,54 @@ blanket safe API without actually checking each item — the per-item
 [Rust Edition Guide](https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-extern.html)
 introduced alongside `unsafe extern` blocks for this purpose.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `extern` is, if anything, more central in embedded Rust
-than in hosted Rust: an interrupt vector table is a table of `extern "C"`
-function pointers the linker wires up, and vendor-supplied peripheral
-libraries are almost always bound through `unsafe extern "C"` blocks
-rather than called through any higher-level mechanism. The main practical
-difference from hosted FFI is linkage — a `#![no_std]` crate typically
-pulls in the vendor's compiled library via a `build.rs` script rather than
-the system linker finding a shared library on its default search path.
+`extern` is, if anything, more central in embedded Rust than in hosted
+Rust, because binding against a chip vendor's C SDK is one of the most
+common ways an embedded crate reaches hardware functionality that
+doesn't yet have (or will never get) a pure-Rust equivalent.
+`unsafe extern "C" { ... }` blocks are the standard way to declare the
+signatures of a vendor HAL's C functions — an ST-style `HAL_GPIO_Init`
+call, a chip's C peripheral library, or a C RTOS's task-creation API —
+so Rust code can call directly into a `.a`/`.o` compiled from that
+vendor's C sources, typically pulled in via a `build.rs` script (using
+the `cc` crate) rather than the system's dynamic linker finding a shared
+library, since a bare-metal target has no shared-library loader at all.
+The reverse direction matters just as much: an interrupt vector table
+is, at its core, a table of `extern "C"` function pointers the linker
+wires directly into the vector-table section — `#[interrupt] fn TIM2()
+{ ... }` in a `cortex-m-rt`-based crate ultimately relies on the
+function having a stable, C-compatible calling convention and a stable
+symbol name so the linker script can place its address at the correct
+vector-table slot.
+
+## Usage examples (Embedded)
+
+### Binding a vendor C HAL function via `extern "C"`
+
+```
+unsafe extern "C" {
+    fn HAL_GPIO_WritePin(gpio_port: *mut core::ffi::c_void, pin: u16, state: u8); // <- `extern "C"`: declares the vendor C HAL's signature
+}
+
+pub fn set_pin_high(port: *mut core::ffi::c_void, pin: u16) {
+    unsafe {
+        // SAFETY: `port` is a valid GPIO port base address configured by the vendor's init code.
+        HAL_GPIO_WritePin(port, pin, 1);
+    }
+}
+```
+
+### Exposing a Rust interrupt handler with C linkage for the vector table
+
+```
+#[unsafe(no_mangle)]
+pub extern "C" fn TIM2_IRQHandler() {
+    // <- `extern "C"`: the linker's vector-table entry calls this by a fixed symbol name and calling convention
+    unsafe { clear_tim2_update_flag() };
+}
+
+unsafe extern "C" {
+    fn clear_tim2_update_flag();
+}
+```

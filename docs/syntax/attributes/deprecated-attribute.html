@@ -947,7 +947,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[deprecated]</code> is placed above an item — a function, struct, enum,
 trait, module, or any other item that can be named — and marks it as
@@ -976,7 +977,7 @@ compiler warning itself rather than requiring a trip to a changelog.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1030,20 +1031,58 @@ warning actionable rather than just a red flag.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>#[deprecated]</code> is a pure compile-time, zero-runtime-cost
-diagnostic mechanism — it works identically in <code>#![no_std]</code> crates, and is
-just as useful there for a HAL crate migrating callers from an old
-peripheral API to a redesigned one across major versions.</p>
+        <p><code>#[deprecated]</code> is a pure compile-time diagnostic mechanism with zero
+runtime footprint, so it behaves identically under <code>#![no_std]</code> as
+anywhere else — <code>core</code> and <code>alloc</code> items are deprecated using the exact
+same attribute as <code>std</code> ones. It's a particularly natural fit for HAL
+(hardware abstraction layer) crates, which routinely redesign their
+peripheral APIs across major versions: an old register-access method gets
+deprecated in favor of a newer, safer, or more ergonomic replacement, and
+every downstream firmware crate calling the old method gets a compiler
+warning naming the replacement — without an immediate breaking removal
+that would force every consumer to migrate on the HAL maintainer's
+schedule rather than their own.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Deprecating an old register-access method in a HAL crate</h3>
+            <pre><code class="rust">pub struct Gpio {
+    // ...
+}
+
+impl Gpio {
+    #[deprecated(since = "0.5.0", note = "use `Gpio::set_pin_state` instead; this method silently ignores an invalid pin index")] // &lt;-
+    pub fn set_pin(&amp;mut self, pin: u8, high: bool) {
+        self.set_pin_state(pin, high).ok();
+    }
+
+    pub fn set_pin_state(&amp;mut self, pin: u8, high: bool) -&gt; Result&lt;(), &amp;'static str&gt; {
+        if pin &gt; 15 {
+            return Err("pin index out of range for this GPIO port");
+        }
+        // ... write to the port's ODR register here
+        Ok(())
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

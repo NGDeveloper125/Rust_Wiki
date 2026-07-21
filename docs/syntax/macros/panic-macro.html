@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>panic!</code> triggers an unrecoverable error in the current thread. With no
 arguments, <code>panic!()</code> panics with a generic default message; with a
@@ -977,7 +978,7 @@ covered in
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1056,25 +1057,81 @@ for a different, wrong reason.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>panic!</code> is <code>core::panic!</code> — invoking it has no <code>std</code>
-dependency. What changes under <code>#![no_std]</code> is what happens afterward:
-there's no default unwind-and-print-a-backtrace behavior, so every
-<code>#![no_std]</code> binary must supply exactly one function marked
-<a href="../../syntax/attributes/panic-handler-attribute.html"><code>#[panic_handler]</code></a>, and most
-embedded targets build with <code>panic = "abort"</code> rather than unwinding at
-all — see
-<a href="../../concepts/error-handling/panic-and-unwinding.html">Panic &amp; unwinding</a>
-for that distinction.</p>
+        <p><code>panic!</code> is <code>core::panic!</code> under the hood, and calling it has no
+dependency on <code>std</code> — the macro's calling convention (no arguments, a
+string literal, or a format string with arguments) is identical on a
+bare-metal target. What's genuinely different is everything that happens
+<em>after</em> it fires. On a hosted target, the default runtime prints the
+message and a backtrace to stderr, then either unwinds the stack —
+running <code>Drop</code> impls on the way out — or, under <code>panic = "abort"</code>,
+terminates the process immediately; either way, there's an operating
+system underneath to catch the unwind or receive the process's exit
+code.</p>
+<p>On bare metal there is no OS process to unwind into and nothing to
+receive an abort — the language handles this by requiring every
+<code>#![no_std]</code> binary to supply exactly one function marked
+<a href="../attributes/panic-handler-attribute.md"><code>#[panic_handler]</code></a>, and
+<em>that</em> function is what actually runs when <code>panic!</code> fires; without one,
+the binary fails to link. Because there's no unwind runtime on most
+bare-metal targets either, embedded crates almost universally build with
+<code>panic = "abort"</code> in the profile, and the panic handler itself typically
+never returns — it does something to report the message, then parks the
+core in an infinite loop or resets the chip. Common choices, pulled in as
+a dependency purely for the <code>#[panic_handler]</code> they provide: <code>panic-halt</code>
+(disables interrupts and loops forever — no logging, smallest footprint),
+<code>panic-itm</code> (writes the formatted message out over ITM/SWO before
+halting), and <code>panic-probe</code> (pairs with <code>defmt</code> to format and transmit
+the panic message over RTT to a debug probe before halting) — see
+<a href="../../concepts/error-handling/panic-and-unwinding.md">Panic &amp; unwinding</a>
+for the unwind-vs-abort distinction itself.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Panicking on an out-of-range peripheral configuration</h3>
+            <pre><code class="rust">fn set_pwm_duty(percent: u8) {
+    if percent &gt; 100 {
+        panic!("PWM duty {percent}% exceeds 100%"); // &lt;- same formatted-message grammar as hosted Rust
+    }
+    // ... write the duty cycle to the timer's compare register
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Selecting a panic handler for a bare-metal binary</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use panic_halt as _; // &lt;- pulled in only for the #[panic_handler] it registers; this is what runs when panic! fires
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -&gt; ! {
+    let sensor_ok = false;
+    if !sensor_ok {
+        panic!("sensor init failed"); // &lt;- with no OS to unwind into, this hands control straight to panic-halt's handler
+    }
+    loop {}
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

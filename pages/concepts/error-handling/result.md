@@ -160,9 +160,97 @@ for the wrong reason or with a broken message — consistent with the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 on writing assertions that check specific outcomes.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Result<T, E>` is `core::result::Result`, works
-identically in `#![no_std]`, and requires no allocator by itself — only
-the choice of `E` (say, a `String`-based error, which needs `alloc`)
-can pull in a dependency the type itself doesn't require.
+`Result<T, E>` is `core::result::Result` — the same two-variant enum, with
+identical semantics and no allocator required by the type itself; only the
+choice of `E` (a `String`-based error, say, which needs `alloc`) can pull
+in a dependency the type itself doesn't demand.
+
+The design weight is higher in embedded code, though, not lower. On a
+hosted program there's usually a person or a log aggregator watching
+stderr, so an occasionally-swallowed error is merely sloppy. On a deployed
+device there is often nobody watching anything: `Result<(), E>` coming back
+from an SPI transaction, an I2C read, or a flash write is frequently the
+*only* signal that something went wrong at all. `embedded_hal`'s traits
+(`I2c`, `SpiDevice`, and the rest) return `Result<T, Self::Error>` from
+every fallible operation for exactly this reason, and consistently
+propagating that `Result` — logging it over UART/RTT, retrying, or falling
+back to a known-safe state — rather than reaching for `.unwrap()` or
+discarding it with `.ok()`, is what actually surfaces a hardware fault
+instead of letting it disappear silently into a wrong reading or a hung
+peripheral.
+
+## Basic usage example (Embedded)
+
+```
+use embedded_hal::i2c::I2c;
+
+fn read_register<I: I2c>(i2c: &mut I, addr: u8, reg: u8) -> Result<u8, I::Error> { // <- explicit "may fail" return type
+    let mut buf = [0u8; 1];
+    i2c.write_read(addr, &[reg], &mut buf)?;
+    Ok(buf[0])
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Handling and propagating errors
+
+A sensor driver turns a low-level SPI transfer failure into its own error
+type with `map_err`, then an averaging function propagates that same error
+across three chained reads with `?` instead of unwrapping past a bus
+fault.
+
+```
+use embedded_hal::spi::SpiDevice;
+
+#[derive(Debug)]
+struct SensorError;
+
+fn read_raw(spi: &mut impl SpiDevice, cmd: u8) -> Result<u16, SensorError> {
+    let mut buf = [0u8; 2];
+    spi.transfer(&mut buf, &[cmd]).map_err(|_| SensorError)?; // <- Result::map_err adapts the low-level SPI error
+    Ok(u16::from_be_bytes(buf))
+}
+
+fn average_of_three(spi: &mut impl SpiDevice, cmd: u8) -> Result<u32, SensorError> {
+    let mut total: u32 = 0;
+    for _ in 0..3 {
+        total += read_raw(spi, cmd)? as u32; // <- propagates instead of unwrapping past a bus fault
+    }
+    Ok(total / 3)
+}
+```
+
+**Why this way:** propagating the `Result` instead of swallowing it with
+`.ok()` or panicking on it matters more here than on a hosted program — a
+bus fault surfaced only as a subtly wrong average is a far harder field bug
+to diagnose than one that halts the call chain immediately at the failing
+transaction.
+
+### Scenario: Validating input
+
+Writing a duty-cycle percentage to a PWM peripheral rejects an
+out-of-range value up front, returning `Result` instead of silently
+clamping it to something the caller never asked for.
+
+```
+#[derive(Debug, PartialEq)]
+struct OutOfRange;
+
+fn set_duty_cycle(percent: u8) -> Result<(), OutOfRange> {
+    if percent > 100 {
+        return Err(OutOfRange);
+    }
+    // ... write `percent` into the timer's compare register
+    Ok(())
+}
+
+assert_eq!(set_duty_cycle(150), Err(OutOfRange));
+```
+
+**Why this way:** rejecting the bad value explicitly, rather than clamping
+it silently to 100%, keeps a caller's logic bug from masquerading as
+normal operation — a real risk on a device where the wrong duty cycle may
+run unnoticed for a long time before anyone checks the output.

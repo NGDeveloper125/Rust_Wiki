@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>Self</code> (capital S) is a placeholder that stands for "the type this
 <code>impl</code> or <code>trait</code> block is currently for." Inside <code>impl Client { ... }</code>,
@@ -986,7 +987,7 @@ would need to be found and updated at every occurrence.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1057,20 +1058,51 @@ trait definition serve unrelated concrete types.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Self</code> is resolved entirely at compile time with no
-runtime representation of its own — no <code>std</code>/allocator dependency, and
-used identically in <code>#![no_std]</code> trait and impl blocks such as
-<code>embedded-hal</code> driver constructors.</p>
+        <p><code>Self</code> resolves exactly the same way under <code>#![no_std]</code> — a compile-time
+placeholder with no runtime representation of its own. It shows up
+constantly in HAL builder-style configuration types, where each setter
+consumes and returns <code>Self</code> so a peripheral's configuration can be
+chained fluently before the peripheral is finally initialized.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">`Self` in a builder-style HAL config type</h3>
+            <pre><code class="rust">struct UartConfig {
+    baud_rate: u32,
+    parity: bool,
+}
+
+impl UartConfig {
+    fn new() -&gt; Self { // &lt;- `Self` means `UartConfig` here
+        Self { baud_rate: 9600, parity: false }
+    }
+
+    fn baud_rate(mut self, rate: u32) -&gt; Self { // &lt;- `Self`: consumes and returns the same config type
+        self.baud_rate = rate;
+        self
+    }
+}
+
+let config = UartConfig::new().baud_rate(115_200);
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

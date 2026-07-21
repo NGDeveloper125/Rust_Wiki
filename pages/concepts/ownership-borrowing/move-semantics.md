@@ -99,7 +99,108 @@ independently-running thread; the
 covers this as the standard way to share owned data with a spawned
 thread.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Move semantics are core-language and allocator-free —
-identical behavior in `#![no_std]`.
+Move semantics are core-language: the compiler's move-vs-copy tracking has
+nothing to do with an allocator, a runtime, or `std`, so the mechanism
+described above is byte-for-byte identical under `#![no_std]`. What
+changes is what gets moved. Embedded code moves ownership of things that
+don't exist in most hosted programs — a peripheral handle, a GPIO pin, a
+DMA channel — and the same use-after-move rule that stops a hosted program
+from reusing a moved `String` is what stops firmware from reusing a
+peripheral handle it has already handed off to a driver.
+
+The most common embedded move is into a driver's constructor: a HAL type
+like `Usart` or `Spi` takes ownership of the raw peripheral/pin types it
+wraps, so once `Usart::new(usart1, tx_pin, rx_pin)` runs, `usart1` is gone
+from the caller's scope — there is no way to accidentally reconfigure the
+same UART directly through the register block while the driver also
+believes it owns it. The second common case is a `move` closure or task
+function capturing a peripheral so it can run independently of the code
+that set it up — an interrupt handler registered through a framework like
+RTIC, or an `async` task spawned on an executor like `embassy` — which
+needs owned, `'static` data for exactly the reason `thread::spawn` does on
+a hosted target: the closure/task may still be running long after the
+function that created it has returned.
+
+## Basic usage example (Embedded)
+
+```
+struct Led { pin: GpioPin }
+
+impl Led {
+    fn new(pin: GpioPin) -> Self { // <- takes ownership: the caller can no longer touch `pin` directly
+        Led { pin }
+    }
+}
+
+let pin = GpioPin::new(5);
+let led = Led::new(pin); // <- `pin` moves into `led`; using `pin` afterward is a compile error
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Transferring ownership
+
+A UART driver should take ownership of the raw peripheral it wraps in its
+constructor, so nothing else in the program can reconfigure the same
+registers behind the driver's back.
+
+```
+struct RawUsart1; // stand-in for a PAC-generated peripheral type
+struct Usart { inner: RawUsart1 }
+
+impl Usart {
+    fn new(usart1: RawUsart1) -> Self { // <- ownership moves in: usart1 is now exclusively the driver's
+        // ... configure baud rate, enable the peripheral clock, etc.
+        Usart { inner: usart1 }
+    }
+
+    fn write_byte(&mut self, byte: u8) {
+        let _ = (&self.inner, byte); // placeholder for a real register write
+    }
+}
+
+let usart1 = RawUsart1;
+let mut usart = Usart::new(usart1); // <- usart1 moved; no other code can construct a second Usart from it
+usart.write_byte(b'A');
+```
+
+**Why this way:** moving the raw peripheral into the driver's constructor
+means the type system — not a runtime check or a comment — guarantees
+there's exactly one `Usart` wrapping this hardware; the
+[Rust Book](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html)'s
+"one owner at a time" rule is precisely what makes a second, conflicting
+`Usart::new(usart1)` a compile error rather than a runtime race over the
+same registers.
+
+### Scenario: Multi-threading
+
+Spawning an `embassy` async task to drive a sensor independently of
+`main` needs the task to own its peripheral handle outright, the same way
+`thread::spawn` needs owned, `'static` data on a hosted target.
+
+```
+struct AdcChannel; // stand-in for a HAL ADC handle
+
+#[embassy_executor::task]
+async fn sample_task(mut adc: AdcChannel) { // <- task owns `adc` for as long as it runs, independent of main
+    loop {
+        // ... await a conversion, publish the reading
+        let _ = &mut adc;
+    }
+}
+
+fn spawn_sampling(spawner: embassy_executor::Spawner, adc: AdcChannel) {
+    spawner.spawn(sample_task(adc)).unwrap(); // <- `adc` moves into the task here
+    // using `adc` in `main` after this point is a compile error
+}
+```
+
+**Why this way:** an async task or interrupt handler can outlive the
+function that set it up, so it can't safely hold a borrow into that
+function's stack frame — moving ownership in is what makes the peripheral
+handle valid for the task's entire, independently-scheduled lifetime,
+mirroring the
+[Rust Book's `move` closure guidance for `thread::spawn`](https://doc.rust-lang.org/book/ch16-01-threads.html#using-move-closures-with-threads)
+applied to an executor instead of an OS thread.

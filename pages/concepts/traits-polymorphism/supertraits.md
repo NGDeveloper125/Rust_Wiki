@@ -100,6 +100,92 @@ implies `T: Named` wherever it's required, as the
 [Rust Reference's section on supertraits](https://doc.rust-lang.org/reference/items/traits.html#supertraits)
 describes.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std`/allocator dependency.
+Supertraits show up throughout `embedded-hal`'s own trait hierarchy, not
+just in illustrative examples: most of its device traits (`OutputPin`,
+`InputPin`, `SpiBus`, `I2c`, …) require an `ErrorType` supertrait that
+declares the associated `Error` type they use, so implementing, say,
+`OutputPin` for a concrete pin type is only possible once `ErrorType` is
+implemented for it too — the exact "implementer promises an extra piece
+first" role a supertrait exists to express.
+
+The same pattern appears one level up, in driver crates built *on*
+`embedded-hal`. A crate providing a higher-level IMU driver trait might
+declare `trait ImuDriver: SpiBus`, requiring any type implementing
+`ImuDriver` to also implement `embedded-hal`'s `SpiBus` — guaranteeing the
+driver trait's own default methods can call `self.transfer(...)` without
+adding a second bound everywhere the trait is used. This is a common
+shape for embedded driver crates that want to layer higher-level
+behavior (parsing sensor registers, managing a device's power state) on
+top of a raw bus capability, without re-declaring the bus methods
+themselves.
+
+## Basic usage example (Embedded)
+
+```
+trait SpiBus {
+    type Error;
+    fn transfer(&mut self, data: &mut [u8]) -> Result<(), Self::Error>;
+}
+
+trait ImuDriver: SpiBus { // <- ImuDriver requires SpiBus too
+    fn read_accel_raw(&mut self) -> Result<[u8; 6], Self::Error> {
+        let mut buf = [0u8; 6];
+        self.transfer(&mut buf)?;
+        Ok(buf)
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Implementing traits
+
+`embedded-hal` itself leans on supertraits: its device traits require an
+`ErrorType` supertrait declaring the associated `Error` type, so a
+vendor's HAL crate must implement `ErrorType` for a pin type before
+`OutputPin` can be implemented for it.
+
+```
+trait ErrorType { // <- embedded-hal's supertrait: declares the associated error type
+    type Error;
+}
+
+trait OutputPin: ErrorType { // <- OutputPin requires ErrorType too
+    fn set_high(&mut self) -> Result<(), Self::Error>;
+}
+
+struct GpioPin5;
+impl ErrorType for GpioPin5 { type Error = core::convert::Infallible; } // required first
+impl OutputPin for GpioPin5 { // only allowed because GpioPin5 already implements ErrorType
+    fn set_high(&mut self) -> Result<(), Self::Error> { Ok(()) }
+}
+```
+
+**Why this way:** splitting the associated error type into its own
+`ErrorType` supertrait, rather than declaring it directly on `OutputPin`,
+is what lets multiple `embedded-hal` traits (`OutputPin`, `InputPin`, …)
+share the same associated `Error` type on one pin, instead of each trait
+declaring a conflicting one of its own.
+
+### Scenario: Writing generic code
+
+A driver function generic over an `ImuDriver` implementation can call the
+`SpiBus` methods `ImuDriver` requires without adding a second bound — the
+supertrait relationship already guarantees `SpiBus` is implemented.
+
+```
+fn read_and_log<T: ImuDriver>(imu: &mut T) -> Result<(), T::Error> {
+    let raw = imu.read_accel_raw()?;           // ImuDriver's own method
+    let mut passthrough = [0u8; 1];
+    imu.transfer(&mut passthrough)?;           // <- SpiBus's method, usable with only the ImuDriver bound
+    let _ = raw;
+    Ok(())
+}
+```
+
+**Why this way:** writing `fn read_and_log<T: ImuDriver + SpiBus>` would be
+redundant — `ImuDriver: SpiBus` already elaborates the `SpiBus` bound
+wherever `T: ImuDriver` is required, so driver code generic over the
+higher-level trait gets the bus-level trait's methods for free.

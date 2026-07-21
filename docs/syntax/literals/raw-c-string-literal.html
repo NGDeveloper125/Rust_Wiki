@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>cr"..."</code> (or <code>cr#"..."#</code>) combines the C-string and raw-string forms: a
 <code>&amp;CStr</code> result with no escape processing, as in <code>cr"C:\path\to\thing"</code>.</p>
@@ -960,7 +961,7 @@ representation and contain literal backslashes.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -995,18 +996,50 @@ nul-termination behavior this form inherits unchanged. Like <code>c"..."</code>,
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> — same <code>core::ffi::CStr</code> basis as
-<a href="../../syntax/literals/c-string-literal.html">C string literal</a>, no <code>std</code> dependency.</p>
+        <p><code>cr"..."</code> inherits both halves unchanged under <code>#![no_std]</code>: the
+<code>core::ffi::CStr</code> result from a C-string literal, and the raw,
+no-escape-processing text from a raw string. That combination is
+genuinely useful in embedded FFI work whenever the fixed, nul-terminated
+string handed to a vendor C HAL or SDK function itself contains
+backslashes — a Windows-style path baked into a host-side
+firmware-flashing tool that calls into a vendor's C flashing library, or
+a fixed pattern string passed to a C library's matching function —
+without needing to double every backslash on top of remembering the nul
+terminator.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Passing a firmware image path to a vendor C flashing SDK</h3>
+            <pre><code class="rust">use core::ffi::{c_char, CStr};
+
+extern "C" {
+    fn vendor_flash_load_image(path: *const c_char) -&gt; i32;
+}
+
+const IMAGE_PATH: &amp;CStr = cr"C:\firmware\images\app.bin"; // &lt;- `cr"..."`: raw (no escapes) + nul-terminated, ready for FFI
+
+fn flash_image() -&gt; i32 {
+    unsafe { vendor_flash_load_image(IMAGE_PATH.as_ptr()) }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

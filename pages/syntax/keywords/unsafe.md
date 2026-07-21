@@ -150,13 +150,63 @@ every other method on `AudioRingBuffer` stays ordinary safe code, and the
 one invariant the module relies on (`len <= samples.len()`) is enforced
 in a single place.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `unsafe` is core-language and, if anything, appears more
-often in embedded code than hosted code: reading a memory-mapped
-peripheral register through a raw pointer, writing an interrupt vector
-table entry, and sharing a mutable `static` between an interrupt handler
-and the main loop are all routine, and every one of them requires
-`unsafe`. HAL crates concentrate these blocks in one low-level layer and
-expose a safe, typed API (the `embedded-hal` traits) to the rest of the
-firmware.
+**Full support.** `unsafe` is core-language and, if anything, shows up
+more densely in embedded code than in hosted code, because two of its
+five gated operations are the primary way firmware talks to hardware at
+all. Reading or writing a memory-mapped peripheral register means
+dereferencing a raw pointer at a fixed address — there's no safe
+language-level concept of "a GPIO register" for the compiler to check,
+only a raw address the datasheet assigns meaning to — so every direct
+register access needs an `unsafe` block. Likewise, many embedded projects
+link against a vendor-supplied C SDK or bootloader routine through
+`unsafe extern "C" { ... }`, for exactly the FFI reasons covered in the
+classic Explanation above: the compiler can verify the declared
+signature but nothing about what the foreign function actually does with
+the pointers it's given.
+
+The difference from a typical hosted `unsafe` block is where it tends to
+live. A well-designed hardware-abstraction-layer (HAL) crate — the
+`embedded-hal` trait ecosystem is built around this — concentrates every
+raw register dereference and every `extern "C"` call in one low-level
+module, and exposes a safe, typed API (`pin.set_high()`,
+`uart.write(&bytes)`, and so on) to the rest of the firmware. Application
+code built on top of a good HAL rarely writes `unsafe` itself; the
+unsafety is real and unavoidable, but it stays contained to the layer
+that actually owns the hardware contract, rather than scattered through
+application logic.
+
+## Usage examples (Embedded)
+
+### Reading a memory-mapped peripheral register
+
+```
+const GPIOA_IDR: *const u32 = 0x4001_0800 as *const u32; // <- fixed peripheral address, from the chip's datasheet
+
+fn read_port_a() -> u32 {
+    unsafe { *GPIOA_IDR } // <- `unsafe` block: required to dereference a raw pointer at a hard-coded address
+}
+```
+
+### Calling into a vendor HAL function
+
+```
+unsafe extern "C" {
+    fn HAL_UART_Transmit(huart: *mut u8, data: *const u8, len: u16, timeout: u32) -> i32; // <- vendor C SDK function
+}
+
+fn send_byte(uart_handle: *mut u8, byte: u8) {
+    unsafe {
+        // SAFETY: `uart_handle` was initialized by the vendor SDK's own
+        // init routine before this call, and `&byte` is a valid pointer
+        // for the single byte being transmitted.
+        HAL_UART_Transmit(uart_handle, &byte, 1, 100); // <- `unsafe` block: calling into the vendor C HAL
+    }
+}
+```
+
+Both blocks above are exactly the kind of code a
+well-layered embedded crate keeps inside its HAL module — application
+code further up the stack calls a safe wrapper method instead of
+touching `GPIOA_IDR` or `HAL_UART_Transmit` directly.

@@ -88,9 +88,143 @@ runtime check to a compile error, and `PhantomData<State>` is what makes
 the state parameter free — it contributes nothing to `Connection`'s
 runtime size.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No allocator dependency — `PhantomData`-based typestate
-is a signature embedded HAL pattern (e.g. `Pin<MODE>` encoding a GPIO
-pin's configuration in its type so misusing it is a compile error, with
-zero runtime representation for the state itself).
+`PhantomData<Mode>` is the mechanism that makes the `embedded-hal`
+typestate pattern possible without paying for it. A generic peripheral
+type like `Pin<MODE>` needs to carry `MODE` as a type parameter so the
+compiler can accept or reject method calls based on which mode the pin is
+currently in — but the pin's actual runtime representation (a port and
+pin number, say) doesn't need to store anything about `MODE` at all; the
+mode only exists to be checked at compile time. Without `PhantomData<MODE>`
+sitting in the struct, using `MODE` purely as a type parameter with no
+field of that type would be a compile error (an unused generic
+parameter), so `PhantomData<MODE>` is what lets the struct legally "hold"
+a `MODE` it never actually stores — contributing exactly zero bytes to
+`size_of::<Pin<MODE>>()` regardless of how many mode types exist. This is
+what lets a HAL crate offer a `Pin<Input>`, a `Pin<Output>`, and a
+`Pin<Analog>` that are all the same size in memory as a pin with no mode
+tracking at all, while still making it a compile error to call an
+output-only method on a `Pin<Input>`. On a target where every byte of RAM
+is accounted for, "type-safety that costs zero bytes" isn't a
+nice-to-have — it's the only way the typestate pattern is viable at all.
+
+## Basic usage example (Embedded)
+
+```
+use core::marker::PhantomData;
+
+struct Input;
+struct Output;
+
+struct Pin<MODE> {
+    pin_number: u8,
+    _mode: PhantomData<MODE>, // <- zero bytes; MODE is tracked only by the compiler
+}
+
+let led: Pin<Output> = Pin { pin_number: 5, _mode: PhantomData };
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Writing generic code
+
+Converting a pin from one mode to another consumes the old typed value
+and returns a new one carrying a different `PhantomData` marker — the
+conversion is real at compile time and free at runtime.
+
+```
+use core::marker::PhantomData;
+
+struct Input;
+struct Output;
+
+struct Pin<MODE> {
+    pin_number: u8,
+    _mode: PhantomData<MODE>,
+}
+
+impl Pin<Input> {
+    fn into_output(self) -> Pin<Output> { // <- consumes an Input pin, returns an Output pin
+        Pin { pin_number: self.pin_number, _mode: PhantomData }
+    }
+}
+
+impl Pin<Output> {
+    fn set_high(&mut self) { /* write to the ODR register here */ }
+}
+```
+
+**Why this way:** `into_output` takes `self` by value, so the old
+`Pin<Input>` can't be used again after conversion — combined with
+`PhantomData` costing zero bytes, the whole mode-tracking mechanism adds
+compile-time-only safety with no runtime footprint, exactly the trade the
+[Rust Book's generics coverage](https://doc.rust-lang.org/book/ch10-01-syntax.html)
+describes for monomorphized generic code in general.
+
+### Scenario: Designing a public API
+
+Restricting a method to only the mode where it's valid — an analog read
+that only exists on `Pin<Analog>` — makes calling it on the wrong mode a
+compile error instead of a runtime error code the caller has to remember
+to check.
+
+```
+use core::marker::PhantomData;
+
+struct Analog;
+struct Digital;
+
+struct Pin<MODE> {
+    pin_number: u8,
+    _mode: PhantomData<MODE>,
+}
+
+impl Pin<Analog> {
+    fn read_raw(&self) -> u16 { 0 /* real code reads the ADC register here */ }
+    // read_raw() simply doesn't exist on Pin<Digital> -- the method isn't
+    // callable at all, rather than returning an error code at runtime
+}
+```
+
+**Why this way:** an ADC read on a pin that isn't wired to the analog
+peripheral is a class of mistake worth catching before the code ever
+runs on hardware — making the method not exist for the wrong mode, via a
+zero-cost `PhantomData` marker, is strictly stronger than a runtime
+`Result` the caller could forget to check, and costs nothing to enforce.
+
+### Scenario: Implementing traits
+
+An `embedded-hal` trait like `OutputPin` is typically implemented only
+for the mode where it's physically valid, so a generic function bounded
+by that trait only ever compiles against a correctly-configured pin.
+
+```
+use core::marker::PhantomData;
+
+struct Output;
+struct Input;
+
+struct Pin<MODE> {
+    pin_number: u8,
+    _mode: PhantomData<MODE>,
+}
+
+trait OutputPin {
+    fn set_high(&mut self);
+}
+
+impl OutputPin for Pin<Output> { // <- only Pin<Output> gets this impl; Pin<Input> does not
+    fn set_high(&mut self) { /* write to the ODR register here */ }
+}
+
+fn blink<P: OutputPin>(pin: &mut P) { // <- generic over any type that implements OutputPin
+    pin.set_high();
+}
+```
+
+**Why this way:** implementing the trait only for `Pin<Output>` means
+`blink` simply won't compile if called with a `Pin<Input>` — the
+trait-bound generic function is checked entirely at compile time, and the
+`PhantomData<MODE>` marker that makes `Output` and `Input` distinct types
+costs nothing in the compiled program.

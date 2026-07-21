@@ -82,6 +82,44 @@ discusses the tradeoff against a newtype wrapper — `impl Trait` is the
 lighter option when callers won't need extra bounds like `Debug` on the
 returned type.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure grammar — no `std` dependency.
+`->` means exactly the same thing under `#![no_std]` — return-type grammar,
+resolved entirely at compile time, with no dependency on `std` or an
+allocator. Two embedded idioms lean on it more than typical hosted code
+does. First, embedded-hal-style drivers are often built around
+non-blocking, `Result`-returning signatures, so `->` is where a HAL
+trait states whether a call is blocking or would-block right now
+(`fn read(&mut self) -> nb::Result<u16, Self::Error>`). Second, a
+firmware entry point commonly returns the never type, `fn main() -> !` —
+a `#[entry]` function isn't allowed to return at all, since there's no OS
+underneath to return *to*.
+
+## Usage examples (Embedded)
+
+### Declaring a HAL trait's non-blocking return type
+
+```
+use nb;
+
+trait AdcChannel {
+    type Error;
+    fn read_raw(&mut self) -> nb::Result<u16, Self::Error>; // <- `->` names the non-blocking return type
+}
+```
+
+### Returning `-> !` from a firmware entry point
+
+```
+#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -> ! { // <- `->` here introduces the never type: main must never return
+    loop {
+        // poll sensors, service the main control loop
+    }
+}
+```

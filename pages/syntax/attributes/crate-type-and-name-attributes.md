@@ -76,12 +76,40 @@ documents these attributes as the source-level equivalent of the
 `--crate-type`/`--crate-name` command-line flags used when Cargo isn't
 involved at all.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support**, with a caveat worth stating plainly: embedded firmware
-projects almost always need `#![crate_type = "bin"]` or `"staticlib"`
-implicitly satisfied through Cargo's own `[[bin]]`/`[lib]` configuration
-and target-specific linker setup, rather than through this attribute
-directly. It behaves identically in `#![no_std]` in the rare cases it is
-used, but idiomatic embedded projects lean on Cargo and a `.cargo/config.toml`
-target/linker setup instead of writing this attribute by hand.
+Both attributes behave identically under `#![no_std]` in the rare cases
+they're used directly — there's nothing about compiling for a bare-metal
+target that changes what `#![crate_type = "..."]` or
+`#![crate_name = "..."]` do. The honest embedded-specific point is that
+idiomatic firmware projects essentially never reach for either: a
+Cargo-managed firmware crate gets its `crate-type`/name from `Cargo.toml`
+exactly like any hosted crate, and the pieces that are genuinely
+embedded-specific — which chip/architecture to compile for, the linker
+script, memory layout — are handled by `.cargo/config.toml`'s
+`[build] target` and a runtime crate's linker arguments, not by anything
+`#![crate_type]`/`#![crate_name]` controls. There's no real embedded
+nuance to add beyond "still applies, and still rarely written by hand."
+
+## Usage examples (Embedded)
+
+### Why a firmware crate doesn't usually write these attributes at all
+
+```
+// src/main.rs — no #![crate_type]/#![crate_name] needed here:
+#![no_std]
+#![no_main]
+
+// Cargo.toml supplies crate-type/name (defaults to "bin" from [[bin]], name from [package]);
+// .cargo/config.toml supplies the target instead:
+//   [build]
+//   target = "thumbv7em-none-eabihf"
+
+use cortex_m_rt::entry;
+use panic_halt as _;
+
+#[entry]
+fn main() -> ! {
+    loop {}
+}
+```

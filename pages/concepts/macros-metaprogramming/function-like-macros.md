@@ -126,12 +126,100 @@ natively — the
 shows the equivalent hand-written pattern this kind of macro is built to
 shorten.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A function-like macro runs entirely at compile time
-and produces ordinary Rust code, so it has no runtime footprint and no
-`std` requirement of its own — support depends only on whether the
-generated code is `no_std`-friendly. Embedded crates use this pattern
-for things like compile-time-checked register addresses or bit-pattern
-literals, where validating a value's shape before it's flashed to a
-device is far cheaper than discovering the mistake on hardware.
+A function-like macro's `#[proc_macro]` function runs on the host at
+compile time exactly like any other procedural macro (see [Procedural
+macros](procedural-macros.md)) — it never touches the target, and only
+the `TokenStream` it returns has to be ordinary, already-`no_std`-
+compatible Rust for the embedded build to succeed; the macro's own
+implementation is free to use full `std` regardless of what the
+consuming crate targets. Where this shape earns its crate-splitting cost
+in embedded code is compile-time validation of values that would
+otherwise only be checked once flashed to hardware: a peripheral base
+address that must land on a word boundary, a CAN identifier that must
+fit inside 11 bits, a checksum byte that must match a computed value —
+anything a fixed set of `macro_rules!` arms can't reject by pattern shape
+alone, because rejecting it requires actually computing something. The
+pattern generalized as `singleton!` in crates like `cortex-m` is a
+related but distinct use: rather than validating a literal, it's a
+function-like macro that expands to a static paired with take-once
+semantics at runtime, so a `'static mut` reference can be handed out
+safely exactly once — a shape that's awkward to write by hand for every
+buffer that needs it, and that a macro can generate uniformly instead.
+As with `vec!`/`format!` (see [`vec!`](../../syntax/macros/vec-macro.md)
+and [`write!`/`writeln!`](../../syntax/macros/write-macros.md)), the one
+caveat worth designing around deliberately is whether the macro's
+expansion assumes a heap: a function-like macro that expands to a `Vec`
+or `String` literal inherits the same `alloc`-plus-allocator requirement
+those macros document, while one that expands to a fixed-size array or a
+`heapless` type avoids that requirement entirely.
+
+## Basic usage example (Embedded)
+
+```
+use proc_macro::TokenStream;
+
+#[proc_macro] // <- ordinary std-using Rust: compiled for, and run on, the host — never the target
+pub fn reg_addr(input: TokenStream) -> TokenStream {
+    let text = input.to_string();
+    let value = usize::from_str_radix(text.trim_start_matches("0x"), 16).unwrap();
+    assert!(value % 4 == 0, "peripheral base address must be 4-byte aligned"); // <- fails the build, not the flash
+    text.parse().unwrap()
+}
+```
+
+and the consuming, `#![no_std]` firmware crate that invokes it:
+
+```
+// Cargo.toml: regkit = { path = "../regkit" }
+use regkit::reg_addr;
+
+const GPIOA_BASE: usize = reg_addr!(0x4800_0000); // <- misalignment would fail to compile, long before any flashing
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Bit manipulation and flags
+
+A CAN bus driver accepts identifiers as compile-time literals; a
+function-like macro rejects any literal that doesn't fit the 11-bit
+standard identifier range before the firmware ever runs, instead of
+silently truncating it at runtime.
+
+```
+// crate "cankit" defines `can_id` as a #[proc_macro]
+use cankit::can_id;
+
+const HEARTBEAT_ID: u16 = can_id!(0x7FF); // <- rejected at compile time if it doesn't fit 11 bits
+```
+
+**Why this way:** a plain `u16` constant would accept and silently mask
+any out-of-range value, turning a protocol violation into a bug that
+only shows up on the bus — [Effective Rust](https://effective-rust.com/)
+cites exactly this kind of compile-time validation of a domain-specific
+literal as the strongest case for a function-like macro over a plain
+constant.
+
+### Scenario: Designing a public API
+
+A calibration table needs to be macro-generated from a short list of
+readings, but expanding it into a `Vec` would drag `alloc` and a
+`#[global_allocator]` into every crate that just wants a handful of
+constants.
+
+```
+// crate "calkit" defines `lookup_table` as a #[proc_macro]
+use calkit::lookup_table;
+
+// AVOID: expanding to `vec![...]` would require `alloc` + a #[global_allocator] just to hold constants
+// PREFER: expanding to a plain array needs neither, and the table lives in .rodata
+const GAIN_CURVE: [u16; 4] = lookup_table!(100, 205, 410, 820); // <- macro-generated, but an ordinary const array
+```
+
+**Why this way:** the same `alloc`-vs-heapless design choice documented
+for [`vec!`](../../syntax/macros/vec-macro.md) and
+[`write!`](../../syntax/macros/write-macros.md) applies to any macro a
+crate author writes, not just the standard library's — expanding to a
+fixed-size array sidesteps the allocator requirement altogether rather
+than merely offering a `heapless` alternative alongside it.

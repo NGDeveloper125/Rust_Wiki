@@ -74,7 +74,19 @@ lint flags matching on a single lone `bool` in favor of `if`/`else`, but
 that lint doesn't apply once several booleans are matched together — the
 tuple match above is the case where `match` genuinely reads better.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `bool` is a primitive type defined in `core`, not `std`
-— identical representation and behavior on embedded targets.
+There's no genuine embedded-specific angle to `true` itself — it's a
+`core` primitive literal, identical in representation and behavior under
+`#![no_std]`, and nothing about the Classic/Embedded toggle changes here.
+The only thing worth naming is what kind of `bool` tends to show up in
+embedded code: a GPIO pin's output level, or a "ready"/"done" flag read
+back from a peripheral, is `true`/`false` exactly like any other boolean.
+
+## Usage examples (Embedded)
+
+### Setting a GPIO output level
+
+```
+led.set_state(true); // <- `true` drives the pin to its "high" output level
+```

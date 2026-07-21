@@ -85,11 +85,42 @@ rather than `#[macro_use]`, is exactly the improvement the
 describe as the 2018-edition path-based alternative to the older,
 attribute-based import.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both attributes are resolved entirely at compile time
-as part of name resolution, with no runtime footprint — identical under
-`#![no_std]`. Embedded HAL and `heapless`-adjacent crates commonly use
-`#[macro_export]` to let firmware crates use their register- or
-pin-definition macros; `#[macro_use]` still turns up in older,
-edition-2015-pinned embedded example code, but current crates use `use`.
+Both attributes work exactly as described above under `#![no_std]` —
+they're resolved entirely during name resolution, before any code
+generation happens, so there's no runtime or allocator dependency to
+speak of. The pattern shows up concretely in the embedded ecosystem in
+register-definition and peripheral-access crates: a low-level crate that
+defines a `define_register!`-style `macro_rules!` helper for declaring
+memory-mapped register accessors marks it `#[macro_export]` so downstream
+HAL crates — and the application firmware built on top of them — can
+pull the macro in with an ordinary `use`, the same way they'd import any
+other item, rather than needing the macro's logic duplicated in every
+consuming crate. `#[macro_use]` still turns up in older peripheral-access
+crates generated before the 2018 edition's path-based macro scoping, but
+current `svd2rust` output and hand-written HALs use `use`.
+
+## Usage examples (Embedded)
+
+### Exporting a register-definition macro for HAL crates to consume
+
+```
+// crate "chip-pac", src/lib.rs
+#[macro_export] // <- required: without it, define_register! stays private to chip-pac
+macro_rules! define_register {
+    ($name:ident, $addr:expr) => {
+        pub struct $name;
+        impl $name {
+            pub unsafe fn read() -> u32 {
+                core::ptr::read_volatile($addr as *const u32)
+            }
+        }
+    };
+}
+
+// downstream HAL crate, Cargo.toml: chip-pac = { path = "../chip-pac" }
+use chip_pac::define_register; // <- imported like any ordinary item
+
+define_register!(GpioaIdr, 0x4002_0010);
+```

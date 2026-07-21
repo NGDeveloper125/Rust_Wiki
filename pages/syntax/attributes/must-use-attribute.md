@@ -127,11 +127,61 @@ lint at one specific, reviewed call site — see [`_`](../punctuation/underscore
 for why this differs from a bare statement, which doesn't reliably
 suppress the warning at all.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[must_use]` is a pure compile-time diagnostic with no
-runtime cost, so it applies identically in `#![no_std]` — `Result` is
-`#[must_use]` in `core` exactly as it is in `std`, which matters
-particularly in embedded code where an ignored peripheral-write error
-(say, an I2C transaction that silently failed) can be far harder to debug
-after the fact than on a hosted system with more visible failure modes.
+`#[must_use]` is a pure compile-time diagnostic with no runtime cost, so
+it applies identically under `#![no_std]` — `Result` and `Option` are
+`#[must_use]` in `core` exactly as they are in `std`. It matters more, not
+less, in embedded code: a hosted program that ignores a `Result` still
+often produces some visible symptom (a crash, a log line, an OS-level
+error surfaced some other way), while a microcontroller that silently
+continues past a failed SPI or I2C transaction can just keep running on
+stale or garbage data with no obvious sign anything went wrong — there's
+no OS underneath to surface the failure any other way. Marking every
+fallible peripheral-transaction function `#[must_use]` (which most HAL
+crates already do, since nearly all of them return `Result`) turns "the
+write failed and nobody checked" into a compile-time warning instead of a
+bug found later on a bench with a logic analyzer.
+
+## Usage examples (Embedded)
+
+### Warning when an I2C transaction's Result is silently dropped
+
+```
+struct I2cError;
+
+struct I2cBus;
+
+impl I2cBus {
+    fn write(&mut self, _addr: u8, _bytes: &[u8]) -> Result<(), I2cError> {
+        // ... transmit bytes over the bus
+        Ok(())
+    }
+}
+
+#[must_use] // <- warns if the caller doesn't check whether the transaction succeeded
+fn write_register(i2c: &mut I2cBus, addr: u8, reg: u8, value: u8) -> Result<(), I2cError> {
+    i2c.write(addr, &[reg, value])
+}
+
+fn configure_sensor(i2c: &mut I2cBus) {
+    // AVOID: write_register(i2c, 0x68, 0x6B, 0x00); — a failed write here goes unnoticed
+    write_register(i2c, 0x68, 0x6B, 0x00).ok(); // <- explicit: acknowledged, not silently ignored
+}
+```
+
+### Propagating a failed sensor read instead of discarding it
+
+```
+struct SensorError;
+
+fn read_temperature_raw(i2c: &mut I2cBus) -> Result<u16, SensorError> {
+    let _ = i2c; // a real implementation reads two bytes back over the bus here
+    Ok(0x0140)
+}
+
+fn read_temperature_celsius(i2c: &mut I2cBus) -> Result<f32, SensorError> {
+    let raw = read_temperature_raw(i2c)?; // <- `Result` is `#[must_use]` in `core`; `?` uses it, doesn't drop it
+    Ok(raw as f32 * 0.0625)
+}
+```

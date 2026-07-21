@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>The command pattern turns a request or action into a value, so it can be
 stored, passed around, queued, logged, or undone independently of
@@ -985,7 +986,7 @@ undo-specific machinery beyond the trait itself.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">trait Command {
     fn execute(&amp;self);
@@ -1014,7 +1015,7 @@ for command in &amp;queue {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1174,24 +1175,174 @@ entire queued batch, matching the propagate-don't-panic guidance in the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> The <code>Command</code> trait itself, and calling <code>execute</code>
-through a reference, cost nothing and need no allocator. The common
-shape shown here — a <code>Vec&lt;Box&lt;dyn Command&gt;&gt;</code> queue or undo stack — needs
-the <code>alloc</code> crate, since both the <code>Vec</code> and each <code>Box</code> allocate. Where no
-allocator is available at all, the same decoupling works with static
-dispatch instead: a fixed <code>enum Command { TurnOnLight, TurnOffLight }</code>
-matched in one <code>execute</code> function, giving up runtime extensibility in
-exchange for zero allocation.</p>
+        <p><strong>Partial support — the caveat is specifically about ownership and heap
+allocation, not about the pattern's decoupling idea.</strong> The classic shape
+shown above — <code>Vec&lt;Box&lt;dyn Command&gt;&gt;</code> as a queue or undo stack — needs
+the <code>alloc</code> crate for two independent reasons: the <code>Vec</code> itself grows on
+the heap, and each <code>Box&lt;dyn Command&gt;</code> stores its command behind a heap
+allocation so the queue can hold different concrete command types side
+by side (the same <code>Box&lt;dyn Trait&gt;</code> mechanism the
+<a href="../../syntax/keywords/box.md"><code>box</code> keyword page</a> covers — see that page
+for why there's no fixed-capacity substitute for <code>Box&lt;T&gt;</code> itself, unlike
+<code>heapless::Vec&lt;T, N&gt;</code> for <code>Vec</code>). Neither requirement disappears just
+because the target is embedded, but there are two genuinely idiomatic
+no-heap alternatives, chosen by whether the command set is closed and
+whether the invoker needs to <em>own</em> the command:</p>
+<p>If the set of commands a firmware image will ever issue is fixed and
+known at compile time — set a GPIO pin, start an ADC conversion, toggle
+a PWM channel — the idiomatic no-heap shape is a fixed-size <code>enum Command { ... }</code> dispatched with one <code>match</code>, stored in an ordinary
+array or a <code>heapless::spsc::Queue&lt;Command, N&gt;</code> instead of a <code>Vec</code>. This
+gives up the ability for downstream/plugin crates to add new command
+types (the enum has to be extended in this crate), which is exactly the
+tradeoff the <a href="the-visitor-pattern.md">visitor</a> and
+<a href="the-strategy-pattern.md">strategy</a> pages make the same way — but it's
+usually the right one for firmware, where the full command set really is
+closed at build time anyway.</p>
+<p>If the command set genuinely needs to stay open (a plugin-style
+architecture is unusual but not impossible in embedded, e.g. a scripting
+layer registering handlers), and the invoker only needs to <em>call</em> the
+command rather than <em>own and store</em> it for later, <code>&amp;dyn Command</code>/<code>&amp;mut dyn FnMut()</code> gets runtime polymorphism with no allocation at all — the
+same <a href="on-stack-dynamic-dispatch.md">on-stack dynamic dispatch</a> trick
+applied to actions instead of data. This only works when something else
+already owns the command for the reference's whole lifetime; an undo
+stack that needs to <em>keep</em> commands around after the call that created
+them still needs either <code>alloc</code> or a fixed-capacity array of a single
+concrete command enum, since a reference alone can't outlive its
+referent.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">enum Command { // &lt;- fixed-size enum in place of Box&lt;dyn Command&gt;: no allocator needed
+    SetPin { pin: u8, high: bool },
+    StartAdcConversion { channel: u8 },
+}
+
+fn execute(cmd: Command) {
+    match cmd { // &lt;- static dispatch via match, standing in for Command::execute
+        Command::SetPin { pin, high } =&gt; { let _ = (pin, high); }
+        Command::StartAdcConversion { channel } =&gt; { let _ = channel; }
+    }
+}
+
+execute(Command::SetPin { pin: 13, high: true });
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A motor-control firmware image issues only a handful of command kinds,
+all known at build time, queued from an interrupt handler and drained in
+the main loop — a closed set that never needs a new command type without
+a firmware rebuild anyway.</p>
+<pre><code class="rust">enum MotorCommand {
+    SetSpeed { rpm: u16 },
+    Stop,
+    ReverseDirection,
+}
+
+const QUEUE_LEN: usize = 8;
+
+struct CommandQueue {
+    items: [Option&lt;MotorCommand&gt;; QUEUE_LEN], // &lt;- fixed-capacity queue: no Vec, no allocator
+    len: usize,
+}
+
+impl CommandQueue {
+    fn push(&amp;mut self, cmd: MotorCommand) {
+        if self.len &lt; QUEUE_LEN {
+            self.items[self.len] = Some(cmd);
+            self.len += 1;
+        }
+    }
+
+    fn drain(&amp;mut self) {
+        for slot in self.items.iter_mut().take(self.len) {
+            if let Some(cmd) = slot.take() {
+                match cmd { // &lt;- match plays Command::execute's role, dispatched statically
+                    MotorCommand::SetSpeed { rpm } =&gt; { let _ = rpm; }
+                    MotorCommand::Stop =&gt; {}
+                    MotorCommand::ReverseDirection =&gt; {}
+                }
+            }
+        }
+        self.len = 0;
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> every command kind this firmware will ever issue is
+known at compile time, so a fixed-size enum matched exhaustively gives
+the same "decouple what happens from when it happens" benefit as
+<code>Box&lt;dyn Command&gt;</code> with zero heap allocation and zero vtable indirection
+— per the <a href="../../syntax/keywords/box.md"><code>box</code> keyword's embedded notes</a>,
+there is no fixed-capacity substitute for <code>Box&lt;dyn Trait&gt;</code> itself, so a
+closed command set is precisely the case where reaching for an enum
+instead is the right call, not a workaround.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Runtime polymorphism</h3>
+            <p>A firmware image supports a small scripting layer where a handler can be
+registered for the duration of a single command dispatch pass; the
+handler set isn't a fixed enum the core crate can enumerate, but nothing
+needs to <em>own</em> the handler past the call that runs it, so a reference
+avoids allocating entirely.</p>
+<pre><code class="rust">trait Command {
+    fn execute(&amp;self);
+}
+
+struct SetPinCommand { pin: u8 }
+impl Command for SetPinCommand {
+    fn execute(&amp;self) {
+        let _ = self.pin; // stand-in for a real register write
+    }
+}
+
+fn dispatch(cmd: &amp;dyn Command) { // &lt;- reference, not Box: no heap allocation required
+    cmd.execute();
+}
+
+let set_pin = SetPinCommand { pin: 5 }; // &lt;- an ordinary stack value, not boxed
+dispatch(&amp;set_pin);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>&amp;dyn Command</code> gets the same "invoker doesn't know the
+concrete type" decoupling as <code>Box&lt;dyn Command&gt;</code> without needing <code>alloc</code>,
+as long as something else keeps the command alive for the call — the
+<a href="on-stack-dynamic-dispatch.md">on-stack dynamic dispatch</a> idiom is this
+exact technique applied to commands specifically; once a command needs
+to <em>outlive</em> the call that dispatches it (a real undo stack), a
+reference alone is no longer enough and either <code>alloc</code> or a closed enum
+is the honest choice instead.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

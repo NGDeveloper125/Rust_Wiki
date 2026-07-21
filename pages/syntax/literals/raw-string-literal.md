@@ -54,7 +54,31 @@ quickly becomes hard to both write correctly and review; see
 [string literal](string-literal.md) for the general escape-processing
 rules a raw string opts out of.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Same as an ordinary string literal — no allocator
-needed, no `std` dependency.
+A raw string is unaffected by `#![no_std]` in exactly the same way an
+ordinary string literal is — it's still `&'static str` rodata, resolved
+entirely at compile time, no allocator involved. There isn't much
+genuinely new to say for embedded specifically: the backslash-heavy
+content a raw string is built for — regex patterns, Windows-style paths
+— shows up on the host-tooling side of embedded work (build scripts,
+flashing utilities, config parsers) more often than in on-target
+firmware code, which tends to deal in byte buffers rather than
+backslash-laden text. Where it does help on-target is the same
+readability win as on desktop: a fixed pattern or path string with
+several backslashes is easier to write and review without doubling each
+one.
+
+## Usage examples (Embedded)
+
+### A path constant for a host-side firmware-flashing tool
+
+```
+// AVOID: every backslash must be doubled, easy to miscount
+let firmware_dir = "C:\\Users\\dev\\firmware\\builds";
+
+// PREFER: raw string, backslashes are literal, no escaping needed
+let firmware_dir = r"C:\Users\dev\firmware\builds"; // <- raw string literal: backslashes taken literally
+
+assert_eq!(firmware_dir.len(), 27);
+```

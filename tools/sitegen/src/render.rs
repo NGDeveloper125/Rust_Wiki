@@ -92,6 +92,50 @@ fn embedded_badge(support: &str) -> &'static str {
     }
 }
 
+fn render_examples(examples: &[crate::model::Example]) -> String {
+    examples
+        .iter()
+        .map(|ex| {
+            format!(
+                r#"<div class="card">
+            <h3 class="scenario-title">{title}</h3>
+            {body}
+          </div>"#,
+                title = html_escape(&ex.title),
+                body = ex.body_html,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n        ")
+}
+
+fn render_scenarios(scenarios: &[crate::model::Scenario]) -> String {
+    scenarios
+        .iter()
+        .map(|s| {
+            let rationale = s
+                .rationale_html
+                .as_ref()
+                .map(|r| format!("<div class=\"rationale\">{r}</div>"))
+                .unwrap_or_default();
+            format!(
+                r#"<div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">{title}</h3>
+            {body}
+            {rationale}
+          </div>"#,
+                title = html_escape(&s.title),
+                body = s.body_html,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n        ")
+}
+
 pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
     let depth = page.href.matches('/').count();
     let home = href_from(depth, "index.html");
@@ -114,7 +158,6 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
     );
 
     let support = page.embedded_support();
-    let embedded_disabled = if support == "none" { " disabled" } else { "" };
 
     let page_head = format!(
         r#"<div class="page-head">
@@ -126,7 +169,7 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
             Classic Rust
           </button>
-          <button id="seg-embedded" role="tab" aria-selected="false"{embedded_disabled}>
+          <button id="seg-embedded" role="tab" aria-selected="false">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>
             Embedded Rust
           </button>
@@ -160,91 +203,95 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
         )
     };
 
-    let (tabs_html, body_sections_html, core_section_word) = if page.section == Section::Syntax {
-        let examples_html: String = page
-            .usage_examples
-            .iter()
-            .map(|ex| {
-                format!(
-                    r#"<div class="card">
-            <h3 class="scenario-title">{title}</h3>
-            {body}
-          </div>"#,
-                    title = html_escape(&ex.title),
-                    body = ex.body_html,
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("\n        ");
+    let badge_class = match support {
+        "none" => "level-none",
+        "partial" => "level-partial",
+        _ => "level-full",
+    };
+    let support_badge_html = format!(
+        r#"<span class="support-badge {badge_class}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Embedded support: {support_label}
+        </span>"#,
+        support_label = embedded_badge(support),
+    );
 
-        let tabs = r#"<nav class="section-tabs" id="section-tabs">
+    let tabs_class = if support == "none" { " no-embedded-tabs" } else { "" };
+
+    let (tabs_html, classic_sections_html, embedded_sections_html) = if page.section == Section::Syntax
+    {
+        let tabs = format!(
+            r#"<nav class="section-tabs{tabs_class}" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>"#
-            .to_string();
+        );
 
-        let sections = format!(
-            r#"<section class="doc" id="explanation">
+        let classic = format!(
+            r#"<section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         {explanation}
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         {examples}
         </div>
       </section>"#,
             explanation = page.explanation_html,
-            examples = examples_html,
+            examples = render_examples(&page.usage_examples),
         );
-        (tabs, sections, "two")
-    } else {
-        let scenarios_html: String = page
-            .scenarios
-            .iter()
-            .map(|s| {
-                let rationale = s
-                    .rationale_html
-                    .as_ref()
-                    .map(|r| format!("<div class=\"rationale\">{r}</div>"))
-                    .unwrap_or_default();
-                format!(
-                    r#"<div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
-            <h3 class="scenario-title">{title}</h3>
-            {body}
-            {rationale}
-          </div>"#,
-                    title = html_escape(&s.title),
-                    body = s.body_html,
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("\n        ");
 
-        let tabs = r#"<nav class="section-tabs" id="section-tabs">
+        let embedded = if support == "none" {
+            format!(
+                r#"<div class="unsupported-note">
+        {support_badge_html}
+        {notes}
+      </div>"#,
+                notes = page.embedded_notes_html,
+            )
+        } else {
+            format!(
+                r#"<section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        {support_badge_html}
+        {explanation}
+      </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        {examples}
+        </div>
+      </section>"#,
+                explanation = page.embedded_explanation_html,
+                examples = render_examples(&page.embedded_usage_examples),
+            )
+        };
+
+        (tabs, classic, embedded)
+    } else {
+        let tabs = format!(
+            r#"<nav class="section-tabs{tabs_class}" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
         <button class="tab" data-target="basic">Basic usage example</button>
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>"#
-            .to_string();
+        );
 
-        let sections = format!(
-            r#"<section class="doc" id="explanation">
+        let classic = format!(
+            r#"<section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         {explanation}
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         {basic_usage}
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         {intro}
         <div class="scenarios">
@@ -254,9 +301,45 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
             explanation = page.explanation_html,
             basic_usage = page.basic_usage_html,
             intro = page.best_practices_intro_html,
-            scenarios = scenarios_html,
+            scenarios = render_scenarios(&page.scenarios),
         );
-        (tabs, sections, "three")
+
+        let embedded = if support == "none" {
+            format!(
+                r#"<div class="unsupported-note">
+        {support_badge_html}
+        {notes}
+      </div>"#,
+                notes = page.embedded_notes_html,
+            )
+        } else {
+            format!(
+                r#"<section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        {support_badge_html}
+        {explanation}
+      </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        {basic_usage}
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        {intro}
+        <div class="scenarios">
+        {scenarios}
+        </div>
+      </section>"#,
+                explanation = page.embedded_explanation_html,
+                basic_usage = page.embedded_basic_usage_html,
+                intro = page.embedded_best_practices_intro_html,
+                scenarios = render_scenarios(&page.embedded_scenarios),
+            )
+        };
+
+        (tabs, classic, embedded)
     };
 
     format!(
@@ -270,25 +353,19 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
 
       {tabs_html}
 
-      {body_sections_html}
+      <div class="flavor flavor-classic">
+      {classic_sections_html}
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          Embedded support: {support_label}
-        </span>
-        {embedded}
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The {core_section_word} core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
-      </section>
+      <div class="flavor flavor-embedded">
+      {embedded_sections_html}
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
         <span>Targets current stable Rust &middot; edition 2021</span>
       </div>
 "#,
-        embedded = page.embedded_notes_html,
-        support_label = embedded_badge(support),
     )
 }
 

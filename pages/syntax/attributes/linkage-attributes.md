@@ -109,13 +109,80 @@ C caller; the [Rustonomicon's FFI chapter](https://doc.rust-lang.org/nomicon/ffi
 and the [Rust Reference on linkage](https://doc.rust-lang.org/reference/linkage.html)
 cover this combination as the standard shape for a two-way FFI boundary.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — this whole family exists largely *for* embedded and
-freestanding contexts. `#[link_section = "..."]` is the mechanism behind
-placing an interrupt vector table or boot code at an address a linker
-script expects, and `#[link(name = "...")]`/`#[link_name]` are exactly how
-embedded HAL crates link against vendor C SDKs. See
+This whole attribute family is close to the load-bearing core of how a
+`#![no_std]` binary comes together at all, not a peripheral feature of
+it. `cortex-m-rt` finds an application's entry point and every interrupt
+handler purely by symbol name: its `#[entry]` macro expands to
+(approximately) a `#[unsafe(no_mangle)]` `extern "C" fn main`, and its
+`#[interrupt]` macro expands each handler to a `#[unsafe(no_mangle)]`
+function whose exact name must match one of the interrupt names the
+runtime crate's own vector table already reserved a slot for (`USART1`,
+`TIMER0`, `SPI0`, and so on, per the target's SVD-derived interrupt
+list) — get the name wrong and the linker reports an undefined reference
+to that vector-table slot, not a Rust-level type error. `#[unsafe(link_section = "...")]`
+is what places that vector table itself — and other fixed-address
+structures a boot ROM expects, like NXP's i.MX RT `FlexSPI` NOR boot
+configuration block — at the exact flash offset the linker script or the
+chip's boot ROM requires, rather than wherever the linker would otherwise
+choose to put it.
+
+`#[link(name = "...")]`/`#[link_name]` carry over unchanged from hosted
+FFI, just against a different kind of library: instead of a general-
+purpose system library, the "vendor library" in embedded FFI is typically
+a chip maker's C SDK or HAL — ST's STM32Cube HAL, Nordic's `nrfx`, TI's
+DriverLib — linked in as a prebuilt static library the Rust side calls
+into through an `unsafe extern "C"` block, exactly as with any other C
+FFI boundary; see
 [FFI (foreign function interface)](../../concepts/memory-unsafe/ffi.md)
-for how these attributes fit into the broader FFI picture in `#![no_std]`
-firmware.
+for that broader picture.
+
+## Usage examples (Embedded)
+
+### Naming a hardware interrupt handler for the vector table
+
+```
+#![no_std]
+#![no_main]
+
+use panic_halt as _;
+use cortex_m_rt::{entry, interrupt};
+
+#[entry]
+fn main() -> ! {
+    loop {}
+}
+
+#[interrupt] // <- expands to a #[unsafe(no_mangle)] fn named exactly "USART1"
+fn USART1() {
+    // this exact symbol name is what the vector table's USART1 slot expects;
+    // a typo here becomes an undefined-reference link error, not a Rust error
+}
+```
+
+### Linking directly against a vendor's C HAL
+
+```
+#![no_std]
+
+#[link(name = "stm32f4xx_hal")] // <- tells the linker to search the prebuilt vendor HAL library
+unsafe extern "C" {
+    #[link_name = "HAL_GPIO_TogglePin"] // <- renames only this item's resolved C symbol
+    fn hal_gpio_toggle_pin(port: *mut core::ffi::c_void, pin: u16);
+}
+
+#[unsafe(no_mangle)] // <- exported under a stable name a C-side test harness or bootloader can call
+pub extern "C" fn toggle_status_led(gpio_port: *mut core::ffi::c_void) {
+    unsafe {
+        // SAFETY: `gpio_port` is a valid GPIO peripheral base address,
+        // guaranteed by this function's documented C-side contract.
+        hal_gpio_toggle_pin(gpio_port, 1u16 << 5);
+    }
+}
+```
+
+Both examples are the same two attributes doing the same jobs as in the
+classic section — naming a symbol precisely, and telling the linker where
+a foreign implementation lives — just against a vector table slot and a
+chip vendor's HAL instead of a generic OS library.

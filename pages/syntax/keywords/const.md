@@ -84,9 +84,68 @@ and publishing the constant lets downstream code refer to
 `DEFAULT_TIMEOUT_SECS` by name instead of duplicating the literal `30` at
 every call site.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `const` is especially valuable in embedded code:
-register addresses, buffer sizes, and lookup tables computed entirely at
-compile time cost zero flash/RAM beyond the value itself, with no runtime
-initialization needed.
+`const` means exactly the same thing under `#![no_std]` as on a hosted
+target — a value computed entirely at compile time and inlined at every
+use site, with no fixed memory address of its own. This is, if
+anything, more consequential in embedded code than in hosted code,
+because so much of a firmware crate's numeric vocabulary — peripheral
+register addresses, bitmasks for individual fields inside a register,
+fixed buffer/queue capacities, timing constants derived from a clock
+frequency — is known completely at compile time and never needs the
+indirection of a runtime-computed value or the storage a `static` sets
+aside.
+
+The distinction from [`static`](static.md) matters more here than almost
+anywhere else, because the two are reached for in genuinely different
+embedded situations, not just as a style preference. A `const` has no
+address: `const GPIOA_BASE: u32 = 0x4001_0800;` is inlined as the literal
+`0x4001_0800` everywhere it's written, the same as if the number had
+been typed by hand at each call site — exactly right for a register
+address, since nothing about "the address of GPIOA" needs to be an
+addressable object in memory; the addressed object is the *peripheral*,
+not the constant naming it. A `static`, by contrast, is the right tool
+the moment something needs its own fixed storage that more than one part
+of the program points at the *same* location of — a lookup table shared
+by every caller, or state an interrupt handler and `main` both need to
+reach through one shared address. For a raw scalar like an address or a
+bitmask, `const` is the strictly correct choice: no embedded codebase
+gains anything by giving `0x4001_0800` its own RAM/flash address.
+
+One genuine embedded-specific wrinkle: a `const` whose value is an
+*aggregate* (an array, a struct) is inlined at *every* use site, not
+shared — referencing the same array-valued `const` from several
+different functions can genuinely materialize several separate copies of
+that array in the compiled binary, one per call site, unlike a `static`
+array, which is placed once. For a small address or bitmask this never
+matters; for a sizable lookup table it's exactly why the CRC-table
+example on the [`static`](static.md) page uses `static`, not `const`,
+despite the table itself being computed at compile time by a `const fn`.
+
+## Usage examples (Embedded)
+
+### Defining register addresses and bit-field masks as compile-time constants
+
+```
+const GPIOA_BASE: u32 = 0x4001_0800; // <- `const`: inlined at every use site, no storage of its own
+const ODR_OFFSET: u32 = 0x14;
+const PIN5_MASK: u32 = 1 << 5;
+
+fn set_pa5() {
+    let odr = (GPIOA_BASE + ODR_OFFSET) as *mut u32;
+    unsafe { odr.write_volatile(odr.read_volatile() | PIN5_MASK) } // <- both consts inlined directly here
+}
+```
+
+### Sizing a fixed sample buffer at compile time
+
+```
+const SAMPLE_RATE_HZ: u32 = 8_000;
+const WINDOW_MS: u32 = 100;
+const BUFFER_LEN: usize = (SAMPLE_RATE_HZ * WINDOW_MS / 1000) as usize; // <- `const`: computed entirely at compile time
+
+fn window_sum(samples: &[u16; BUFFER_LEN]) -> u32 {
+    samples.iter().map(|&s| s as u32).sum()
+}
+```

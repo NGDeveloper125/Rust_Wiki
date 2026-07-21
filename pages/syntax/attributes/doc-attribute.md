@@ -117,10 +117,49 @@ documents `inline` as the way to make a re-export's documentation page
 self-contained when the internal path it came from isn't meant to be
 navigated to directly.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[doc(...)]` generation is a `cargo doc`/rustdoc-time
-concern with no dependency on `std` or an allocator, so it works
-identically for `#![no_std]` crates — a HAL crate's macro-generated
-register-access internals are exactly the kind of thing `#[doc(hidden)]`
-is reached for in embedded codebases specifically.
+`#[doc(...)]` generation itself is a `cargo doc`/rustdoc-time concern,
+entirely on the host, with no dependency on `std`, an allocator, or the
+target having anything at all — `#[doc(hidden)]`, `#[doc(alias = "...")]`,
+and `#[doc(inline)]` all behave identically whether the crate is
+`#![no_std]` or not. The host-vs-target distinction that matters for
+embedded documentation belongs to the fenced-code-block doc tests inside
+`///`/`//!` comments, not to these attribute forms — see the
+[`///`](../comments/outer-line-doc-comment.md) page's Embedded Rust Notes
+for that point, since none of `hidden`/`alias`/`inline` carry an
+executable example of their own to run anywhere.
+
+If anything is genuinely more common in embedded crates, it's
+`#[doc(hidden)]`: peripheral-access crates generated from an SVD file (via
+svd2rust) or macro-heavy register-definition helpers routinely need to
+make internal types `pub` purely so generated code compiles, without
+wanting those internals to show up as real API surface in the crate's
+docs.
+
+## Usage examples (Embedded)
+
+### Hiding a macro-generated register type from a HAL crate's docs
+
+```
+// Generated (conceptually) by a register-definition macro:
+#[doc(hidden)] // <- must stay pub for the generated field-accessor code to reference it, not real API surface
+pub struct Usart1RegisterBlock {
+    pub cr1: u32,
+    pub cr2: u32,
+    pub dr: u32,
+}
+```
+
+### Inlining a re-exported peripheral type's docs at the HAL crate root
+
+```
+mod gpio_internal {
+    pub struct Pin {
+        pub number: u8,
+    }
+}
+
+#[doc(inline)] // <- shows Pin's full docs at the crate root, not just a link to gpio_internal
+pub use gpio_internal::Pin;
+```

@@ -144,10 +144,95 @@ parameter, which the
 note gets monomorphized separately per distinct closure or function
 passed in.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A function pointer is a plain address-sized value with
-no dependency on an allocator, `std`, or an OS — it works identically in
-`#![no_std]`, including as the concrete type behind a vendor HAL's
-callback/interrupt-table entries, a common pattern in embedded C-interop
-code carried straight over into Rust.
+A hardware interrupt/exception vector table is, at the machine level,
+nothing more than a fixed-size array of addresses the CPU jumps to
+directly on reset or interrupt — which is exactly what a Rust `fn()`
+pointer is: an address with no captured environment attached. This makes
+`fn` pointers (never closures) the natural, and often mandatory, type
+behind a `#[link_section = ".vector_table"]` static array of handlers:
+the linker script expects a table of fixed-width words at a fixed
+address, and only a non-capturing function pointer has the fixed, known
+size (and `'static`, `Copy` nature) that shape requires. A capturing
+closure couldn't go in that table at all — there's no environment slot
+in a bare machine word for it to live in.
+
+This is the same property that makes `fn` pointers useful in hosted
+dispatch tables (see this page's classic Best practices), just with the
+stakes raised: on embedded targets the array isn't a convenience, it's
+read directly by hardware, so its element type is constrained by the
+CPU's vector-table ABI rather than by API taste.
+
+## Basic usage example (Embedded)
+
+```
+#[link_section = ".vector_table.reset"]
+#[used]
+static RESET_HANDLER: fn() -> ! = reset; // <- `fn() -> !`: fixed-size, no captured environment, placed at a fixed address
+
+fn reset() -> ! {
+    loop {}
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+A microcontroller's interrupt vector table is a static array read
+directly by hardware, so every entry must be a plain, fixed-size `fn()`
+pointer — never a closure, since a closure's size and layout can vary and
+aren't part of the vector-table ABI the silicon expects.
+
+```
+#[link_section = ".vector_table.exceptions"]
+#[used]
+static EXCEPTIONS: [fn(); 2] = [
+    // <- an array of bare `fn()` pointers: exactly what the hardware vector table's layout requires
+    nmi_handler,
+    hard_fault_handler,
+];
+
+fn nmi_handler() {
+    loop {}
+}
+
+fn hard_fault_handler() {
+    loop {}
+}
+```
+
+**Why this way:** the vector table's address and layout are dictated by
+the CPU vendor's reference manual, not by Rust — only a non-capturing
+`fn()` pointer has the fixed word size and absence of an environment that
+a linker-placed table of raw addresses can hold; the
+[embedded Rust book's exception-handling chapter](https://doc.rust-lang.org/stable/embedded-book/start/exceptions.html)
+builds vector tables from exactly this shape.
+
+### Scenario: Designing a public API
+
+A HAL's interrupt-registration slot for a peripheral that's set up once
+at boot and never needs surrounding context is typed as a plain `fn()`
+pointer field, keeping the peripheral driver itself free of any generic
+parameter or heap allocation.
+
+```
+struct TimerConfig {
+    on_tick: fn(), // <- fn pointer: fixed ABI, no capture, matches what the timer peripheral's ISR table expects
+}
+
+fn default_tick_handler() {
+    // increment a tick counter
+}
+
+fn configure_timer() -> TimerConfig {
+    TimerConfig { on_tick: default_tick_handler }
+}
+```
+
+**Why this way:** a non-capturing handler set once at startup has nothing
+to gain from a generic `Fn` bound or a boxed trait object — a bare
+`fn()` field is the smallest, `Copy`, allocation-free type that satisfies
+the requirement, and it composes directly with the vector-table pattern
+above if the handler ever needs to be installed into hardware directly.

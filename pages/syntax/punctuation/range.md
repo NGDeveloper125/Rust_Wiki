@@ -127,10 +127,35 @@ reader to double-check whether the endpoint is included — the
 [Rust Reference on range patterns](https://doc.rust-lang.org/reference/patterns.html#range-patterns)
 requires `..=`, not `..`, for exactly this inclusive case.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Range`/`RangeInclusive` and range patterns are
-core-language and allocator-free; range-driven iteration compiles down to a
-simple counter and comparison. Common for walking a fixed set of register
-indices or classifying a raw ADC value into a named band via range
-patterns, with no runtime cost beyond the comparisons themselves.
+`..`/`..=`/`...` mean exactly the same thing under `#![no_std]` —
+allocator-free, compiling down to a plain counter and comparison. One
+nuance worth flagging: "slicing bits out of a register" is a common
+phrase in embedded code, but that isn't what the `..` *index* form does —
+pulling bits 4 through 7 out of a `u32` register value is a shift-and-mask
+operation (or a `bitflags`/bitfield crate), not a range expression. What
+`..` genuinely indexes is a *buffer* — a fixed-size sample or DMA buffer —
+which is exactly as common in firmware as it is in hosted code.
+
+## Usage examples (Embedded)
+
+### Slicing a fixed sample buffer
+
+```
+fn moving_average(samples: &[u16; 32], start: usize, window: usize) -> u32 {
+    let window_slice = &samples[start..start + window]; // <- `..` exclusive range slices the buffer
+    window_slice.iter().map(|&s| s as u32).sum::<u32>() / window as u32
+}
+```
+
+### Validating a baud-rate divisor with an inclusive range pattern
+
+```
+fn configure_baud(divisor: u16) -> Result<(), &'static str> {
+    match divisor {
+        1..=0xFFFF => Ok(()), // <- `..=` inclusive range pattern: 0 is the one invalid divisor
+        _ => Err("divisor must be nonzero"),
+    }
+}
+```

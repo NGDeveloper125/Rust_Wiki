@@ -953,7 +953,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>In Rust, almost everything evaluates to a value: <code>if</code>/<code>else</code>, <code>match</code>,
 <code>loop</code>, and even a plain <code>{ }</code> block are expressions, not statements. This
@@ -985,7 +986,7 @@ default, even though Rust itself is not a purely functional language.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let score = 82;
 let grade = if score &gt;= 90 { "A" } else if score &gt;= 80 { "B" } else { "C" };
@@ -994,7 +995,7 @@ let grade = if score &gt;= 90 { "A" } else if score &gt;= 80 { "B" } else { "C" 
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1090,20 +1091,80 @@ calls out directly as an idiom to prefer over temporary mutability.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Being expression-oriented is a compile-time property of
-the language's grammar — <code>if</code>/<code>match</code>/block expressions compile to the
-same branching code on a microcontroller as they would on a server, with
-no dependency on <code>std</code>, an allocator, or an OS.</p>
+        <p>There is genuinely little to add here beyond: it's still true, and used
+exactly the same way. Being expression-oriented is a property of Rust's
+grammar, resolved entirely at compile time — <code>if</code>/<code>match</code>/block
+expressions produce values and lower to the same branching code whether
+the target is a hosted server or a microcontroller with no <code>std</code>, no
+allocator, and no OS. Embedded code leans on this just as much as any
+other Rust code, most visibly for picking a configuration constant based
+on a compile-time or boot-time condition (a baud rate, a clock-prescaler
+value, a register bit pattern) in one expression, rather than declaring a
+<code>mut</code> variable and assigning it in each branch.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">const HIGH_SPEED: bool = true;
+let baud_rate = if HIGH_SPEED { 115_200 } else { 9_600 };
+// &lt;- `if`/`else` is an expression here: it produces `baud_rate` directly, no `mut` needed
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Creating a new object</h3>
+            <p>Building a UART configuration where the baud rate depends on which
+crystal frequency the board was fitted with reads more clearly when that
+field is computed by an <code>if</code> expression bound once, rather than declared
+<code>mut</code> and reassigned before the struct literal — exactly the same idiom
+as in hosted code, just choosing a hardware constant instead of an app
+setting.</p>
+<pre><code class="rust">struct UartConfig {
+    baud_rate: u32,
+    data_bits: u8,
+}
+
+fn build_uart_config(high_speed_crystal: bool) -&gt; UartConfig {
+    let baud_rate = if high_speed_crystal { 115_200 } else { 9_600 };
+    // &lt;- expression assigns the final value directly; `baud_rate` is never `mut`
+
+    UartConfig {
+        baud_rate,
+        data_bits: 8,
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> binding the result of an expression once, instead of
+mutating a placeholder, keeps the binding as short-lived and immutable as
+possible — the same
+<a href="https://rust-unofficial.github.io/patterns/idioms/temporary-mutability.html">Rust Design Patterns temporary-mutability idiom</a>
+cited in this page's classic Best practices applies unchanged to a
+hardware-configuration value.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

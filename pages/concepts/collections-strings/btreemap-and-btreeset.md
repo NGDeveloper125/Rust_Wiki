@@ -112,15 +112,84 @@ declaration order until one differs — the
 document this lexicographic behavior, which is why the tie-breaking
 field belongs after the primary sort key, not before it.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Unlike `HashMap`/`HashSet`, `BTreeMap`/`BTreeSet`
-*are* part of the `alloc` crate (`alloc::collections::BTreeMap`) — since
-ordering only needs `Ord`, not a hasher or a source of randomness, they
-carry none of the std-only baggage that keeps `HashMap` out of `alloc`.
-That makes them usable in `#![no_std]` code the moment a
-`#[global_allocator]` is configured, with no extra crate needed the way
-`hashbrown` is needed for hash-based lookups. They still require a heap,
-though — on allocator-free targets, a fixed-capacity, sorted
-`heapless`-style structure or a plain sorted array with binary search is
-the usual substitute.
+Unlike `HashMap`/`HashSet`, `BTreeMap`/`BTreeSet` *are* part of `alloc`
+(`alloc::collections::BTreeMap`) — ordering only needs `Ord`, not a
+hasher or a source of randomness, so they carry none of the std-only
+baggage that keeps `HashMap` out of `alloc`. The moment `extern crate
+alloc` plus a `#[global_allocator]` are in place, `alloc::collections::
+BTreeMap` behaves exactly like `std`'s version, sorted iteration and
+`.range()` included, with no extra crate needed the way `hashbrown` is
+needed for hash-based lookups.
+
+It's worth being direct, though: of this batch of collection pages, this
+is the least central embedded story. The sorted-order/range-query
+use case this page's Explanation builds around — leaderboards,
+time-ordered logs, "everything between X and Y" — shows up less often in
+typical firmware, where the data sets tend to be small and either fixed
+at compile time (a calibration table) or better served by a
+`heapless`-style fixed-capacity map that drops the ordering guarantee
+entirely because nothing downstream needs it. And `BTreeMap` still needs
+a heap regardless — for a data set that's genuinely fixed and known
+ahead of time, paying for an allocator at all is often unnecessary: a
+`const` sorted array searched with `.binary_search_by_key()` gives the
+same ordered lookup `BTreeMap` would, using only `core`.
+
+## Basic usage example (Embedded)
+
+```
+extern crate alloc;
+use alloc::collections::BTreeMap;
+
+fn build_sensor_log() -> BTreeMap<u64, f32> {
+    let mut log = BTreeMap::new(); // <- behaves exactly like std's BTreeMap once alloc + a #[global_allocator] are configured
+    log.insert(1_700_000_010, 20.9);
+    log.insert(1_700_000_030, 21.4);
+    log
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+A small set of calibration points that never changes at runtime is a
+case where reaching for `BTreeMap` costs a heap allocation for data that
+was already known at compile time; a `const` sorted array searched with
+`.binary_search_by_key()` gives the same ordered lookup without ever
+needing an allocator.
+
+```
+use alloc::collections::BTreeMap; // AVOID for a fixed, compile-time-known point set: needs alloc + a configured allocator
+
+fn calibration_lookup_alloc() -> BTreeMap<u16, f32> { // <- BTreeMap: correct, but pays for a heap allocation for 4 fixed points
+    let mut points = BTreeMap::new();
+    points.insert(0, -40.0);
+    points.insert(512, 0.0);
+    points.insert(1024, 20.0);
+    points.insert(2047, 85.0);
+    points
+}
+
+// PREFER on a no-heap (or heap-avoiding) target: the same points as a sorted const array
+const CALIBRATION_POINTS: [(u16, f32); 4] = [
+    (0, -40.0),
+    (512, 0.0),
+    (1024, 20.0),
+    (2047, 85.0),
+];
+
+fn calibration_lookup_array(raw: u16) -> Option<f32> {
+    CALIBRATION_POINTS
+        .binary_search_by_key(&raw, |&(k, _)| k) // <- binary_search_by_key: the ordered lookup BTreeMap.get() gives, no heap
+        .ok()
+        .map(|i| CALIBRATION_POINTS[i].1)
+}
+```
+
+**Why this way:** `BTreeMap`'s ordering guarantee is only worth its
+heap allocation when the key set genuinely changes at runtime; for a
+fixed point set known at compile time, a sorted array plus binary search
+gives the same O(log n) ordered lookup through `core` alone, with
+nothing to allocate at all.

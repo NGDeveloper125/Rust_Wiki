@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A future is a value representing work that hasn't finished yet — the
 async equivalent of a promise or deferred computation. Concretely, it's
@@ -997,7 +998,7 @@ dynamic dispatch over otherwise-unrelated future types.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">use std::future::Future;
 use std::pin::Pin;
@@ -1020,7 +1021,7 @@ runtime</a>'s executor.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1102,24 +1103,142 @@ concrete <code>Future</code> type isn't expressible.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> The <code>Future</code> trait itself lives in <code>core::future</code> and
-needs neither <code>std</code> nor an allocator, so <code>#![no_std]</code> code can implement
-and hold futures directly — the trait definition works identically on any
-target. What's missing on bare-metal targets is a hosted executor: there's
-no <code>tokio</code> to poll anything, so day-to-day use of futures in embedded code
-depends on an <code>alloc</code>-friendly (or fully allocation-free) embedded
-executor like <code>embassy</code>, which polls <code>core::future::Future</code>s the same way
-<code>tokio</code> does on a hosted OS.</p>
+        <p>The <code>Future</code> trait itself is core-language: it lives in <code>core::future</code>, not
+<code>std::future</code>, so defining a type that implements <code>poll</code> and returning
+<code>Poll::Ready</code>/<code>Poll::Pending</code> works identically under <code>#![no_std]</code> — a
+future is just as lazy and just as much an inert value on a
+microcontroller as on a hosted target. That's the <code>full</code>-equivalent half
+of the story; the <code>partial</code> caveat is entirely about the other half: a
+future is only ever <em>data describing</em> work, and something external has to
+call <code>poll</code> on it, repeatedly, for that work to actually happen. On a
+hosted target that "something" is an executor like <code>tokio</code>'s, built on an
+OS scheduler and an OS I/O reactor that wakes tasks when their socket or
+timer is ready. Bare metal has no OS underneath it to provide any of that,
+so <code>#![no_std]</code> code that only defines a <code>Future</code> compiles fine but never
+runs on its own.</p>
+<p>The practical answer is the same one the sibling Async/await page reaches:
+an embedded async executor such as <code>embassy</code> provides the missing engine,
+polling <code>core::future::Future</code>s the same way <code>tokio</code> does, just built to
+run without an OS — typically single-threaded per core, woken by
+interrupts rather than by an OS-level I/O reactor. It's worth being modest
+here rather than asserting specifics: <code>embassy</code>'s waking mechanism is
+tied to its own timer queue and interrupt-driven peripheral drivers, and
+the exact plumbing is an implementation detail this page doesn't need to
+get into — the load-bearing fact is only that <em>some</em> executor has to
+exist to drive a future to completion, and on <code>no_std</code> that executor is
+not <code>tokio</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use core::future::Future;
+use core::pin::Pin;
+use core::task::{Context, Poll};
+
+struct ReadyNow&lt;T&gt;(Option&lt;T&gt;); // &lt;- a minimal Future, no_std-compatible: core::future::Future only
+
+impl&lt;T: Unpin&gt; Future for ReadyNow&lt;T&gt; { // &lt;- same trait as on a hosted target, imported from core instead of std
+    type Output = T;
+
+    fn poll(mut self: Pin&lt;&amp;mut Self&gt;, _cx: &amp;mut Context&lt;'_&gt;) -&gt; Poll&lt;T&gt; {
+        Poll::Ready(self.0.take().expect("polled after completion"))
+    }
+}
+</code></pre>
+<p><strong>Note:</strong> this compiles under <code>#![no_std]</code> as-is because it only defines a
+<code>Future</code> — actually polling <code>ReadyNow</code> to get its value still needs a
+driver, whether that's <code>.await</code> inside an executor-spawned task (e.g. an
+<code>embassy_executor::task</code>) or a hand-rolled minimal executor.</p>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Async tasks</h3>
+            <p>A sensor task that needs to wait on both a timer and an interrupt-driven
+data-ready signal should combine both as futures polled together, rather
+than blocking on one before checking the other, so a slow timer doesn't
+delay noticing the sensor is already ready.</p>
+<pre><code class="rust">use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+async fn wait_for_reading() -&gt; u16 {
+    Timer::after(Duration::from_millis(50)).await; // &lt;- an embassy-provided Future; this task only owns the .await point
+    // ... read the conversion result register here
+    512
+}
+
+#[embassy_executor::task]
+async fn sample_loop() {
+    loop {
+        let reading = wait_for_reading().await; // &lt;- polling happens inside embassy's executor, not this code
+        // ... use `reading`
+        let _ = reading;
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    spawner.spawn(sample_loop()).unwrap();
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> because <code>wait_for_reading</code>'s future is inert until
+something polls it, embassy's executor is free to poll it only when the
+underlying timer future indicates progress is possible, rather than this
+code having to busy-poll a register itself — the same lazy-until-polled
+property that makes <code>tokio::join!</code> work concurrently on a hosted target is
+what lets embassy avoid wasting cycles here.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A sensor-driver crate that performs async reads but shouldn't force
+callers onto a specific embedded executor should return <code>impl Future</code>
+from its API, the same choice a hosted async library makes to stay
+executor-agnostic.</p>
+<pre><code class="rust">use core::future::Future;
+
+pub fn read_temperature() -&gt; impl Future&lt;Output = i16&gt; { // &lt;- concrete future type hidden, still no_std, still zero-cost
+    async {
+        // ... trigger a conversion and await its completion
+        21
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Future&lt;Output = i16&gt;</code> keeps the driver
+usable from any executor that can poll a <code>core::future::Future</code> —
+<code>embassy</code> or a hand-rolled one — instead of hard-coding a dependency on
+one specific executor's task-spawning API, the same executor-agnostic
+reasoning the classic Explanation applies to <code>impl Future</code> on a hosted
+target.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

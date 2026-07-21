@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>The typestate pattern encodes a value's state as part of its <em>type</em>, so
 a method that's illegal in a given state simply doesn't exist for that
@@ -977,7 +978,7 @@ idea applied to object construction specifically.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct Disconnected;
 struct Connected { session_id: u32 }
@@ -1006,7 +1007,7 @@ conn.send("hello");
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1125,23 +1126,210 @@ honest tool, not a workaround.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Typestate costs nothing at runtime — the marker types
-for each state are typically zero-sized and optimize away entirely, and
-the checking happens purely at compile time. The pattern is especially
-popular in embedded HAL crates, where a GPIO pin's mode (<code>Input</code>,
-<code>Output</code>, <code>Analog</code>) is encoded as a type parameter so configuring a pin
-incorrectly for how it's used is a compile error rather than a runtime
-hardware fault.</p>
+        <p>Typestate is one of the strongest, most genuinely idiomatic fits between
+a design pattern and the embedded domain in this entire catalog — not a
+stretch application of a hosted-Rust idea, but a pattern the
+<code>embedded-hal</code> ecosystem actively builds around. The canonical example is
+a GPIO pin: a microcontroller pin can be configured as a floating input,
+a pulled-up input, a push-pull output, an open-drain output, or an analog
+input, and writing to a pin that's currently configured as an input, or
+reading an ADC-style analog value from a pin configured as a digital
+output, isn't a logic error a test suite might happen to catch — it's a
+category of bug that shows up as a runtime hardware fault: a bus fault,
+a pin that silently never toggles, a floating input read as noise. HAL
+crates like <code>stm32f4xx-hal</code>, <code>rp2040-hal</code>, and others encode the pin's
+mode as a type parameter — <code>Pin&lt;'A', 5, Input&gt;</code>, <code>Pin&lt;'A', 5, Output&gt;</code> —
+so that the <em>type itself</em> records which mode the pin is in, and mode-
+specific methods (<code>set_high</code>/<code>set_low</code> on an output, <code>is_high</code> on an
+input) simply don't exist on the wrong type. A pin-mode-change method
+like <code>into_output()</code> takes the input-mode pin by value and returns a
+new, output-typed pin, both performing the underlying register write
+that reconfigures the mode <em>and</em> consuming the old typed handle so it
+can't be used in its former mode afterward. Because the marker types
+(<code>Input</code>, <code>Output</code>, <code>Analog</code>, and similar) are zero-sized, none of this
+costs anything at runtime beyond the register write the transition
+method actually performs — the type-level bookkeeping vanishes entirely
+after compilation, leaving only the actual hardware configuration
+instruction. The same idea extends past GPIO to peripheral
+initialization generally: a timer, ADC, or DMA channel's "configured but
+not yet started" versus "running" states are a natural typestate split,
+turning "started a peripheral twice" or "read from an unconfigured ADC"
+into compile errors instead of undefined hardware behavior.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct Input;
+struct Output;
+
+struct Pin&lt;MODE&gt; {
+    number: u8,
+    _mode: core::marker::PhantomData&lt;MODE&gt;,
+}
+
+impl Pin&lt;Input&gt; {
+    fn into_output(self) -&gt; Pin&lt;Output&gt; { // &lt;- consumes the input-mode pin: the only way to obtain an output-mode one
+        Pin { number: self.number, _mode: core::marker::PhantomData }
+    }
+}
+
+impl Pin&lt;Output&gt; {
+    fn set_high(&amp;self) {
+        // volatile write to the pin's output-data register
+    }
+}
+
+let pin: Pin&lt;Input&gt; = Pin { number: 5, _mode: core::marker::PhantomData };
+let pin = pin.into_output();
+pin.set_high();
+// pin.is_high(); // would fail to compile: Pin&lt;Output&gt; has no `is_high` method
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL crate's GPIO pin type should make it impossible to call
+<code>set_high</code> on a pin still configured as an input — encoding the mode as
+a type parameter means there is no <code>set_high</code> method to accidentally
+reach for on an <code>Input</code>-typed pin at all.</p>
+<pre><code class="rust">struct Input;
+struct Output;
+
+struct Pin&lt;MODE&gt; {
+    number: u8,
+    _mode: core::marker::PhantomData&lt;MODE&gt;,
+}
+
+impl Pin&lt;Input&gt; {
+    fn into_output(self) -&gt; Pin&lt;Output&gt; { // &lt;- reconfigures the pin's mode register and changes its type together
+        Pin { number: self.number, _mode: core::marker::PhantomData }
+    }
+}
+
+impl Pin&lt;Output&gt; {
+    fn set_high(&amp;self) {
+        // volatile write to the pin's output-data register
+    }
+    fn into_input(self) -&gt; Pin&lt;Input&gt; {
+        Pin { number: self.number, _mode: core::marker::PhantomData }
+    }
+}
+
+let led: Pin&lt;Input&gt; = Pin { number: 13, _mode: core::marker::PhantomData };
+let led = led.into_output();
+led.set_high(); // &lt;- only reachable once into_output() has actually run
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> there is no <code>set_high</code> method on <code>Pin&lt;Input&gt;</code> at all,
+so "write to a pin still wired as an input" isn't a bug that can even be
+written, let alone one caught only by testing on real hardware — this is
+the exact guarantee the
+<a href="https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html">Rust Design Patterns' typestate entry</a>
+describes, and it's why typestate is the default way <code>embedded-hal</code>-
+ecosystem crates model pin modes today.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>An ADC needs a one-time calibration step before any reading from it can
+be trusted; typestate expresses "calibrated" as a distinct type instead
+of a boolean flag next to the raw peripheral handle, so a reading can't
+be taken from an uncalibrated ADC by mistake.</p>
+<pre><code class="rust">struct Uncalibrated;
+struct Calibrated { offset: i16 }
+
+struct Adc&lt;STATE&gt; {
+    _state: STATE,
+}
+
+impl Adc&lt;Uncalibrated&gt; {
+    fn calibrate(self) -&gt; Adc&lt;Calibrated&gt; {
+        let offset = 0; // stand-in for a real calibration routine
+        Adc { _state: Calibrated { offset } } // &lt;- downstream code only ever sees a Calibrated Adc
+    }
+}
+
+impl Adc&lt;Calibrated&gt; {
+    fn read(&amp;self) -&gt; i16 { // &lt;- signature alone guarantees calibration already happened
+        1024 - self._state.offset
+    }
+}
+
+let adc = Adc { _state: Uncalibrated };
+let adc = adc.calibrate();
+let _reading = adc.read();
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> because <code>read</code> only exists on <code>Adc&lt;Calibrated&gt;</code>, every
+caller gets the calibration guarantee for free without re-checking a
+flag at every call site — the same parse-don't-validate argument
+<a href="https://effective-rust.com/">Effective Rust</a> makes for pushing
+correctness checks into the type system instead of scattering <code>if</code>
+checks through firmware code that reads the ADC.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A pin's alternate-function mux (UART TX vs. SPI MOSI vs. plain GPIO) is
+selected by a byte loaded from external configuration at boot, so the
+choice genuinely isn't known at compile time — an enum with a <code>match</code> is
+the honest tool here, not typestate.</p>
+<pre><code class="rust">enum PinFunction {
+    Gpio,
+    UartTx,
+    SpiMosi,
+}
+
+fn configure_mux(function: PinFunction) { // &lt;- function is only known once configuration is loaded at boot
+    match function { // &lt;- runtime branching plays typestate's role, since the type can't vary with loaded config
+        PinFunction::Gpio =&gt; { /* set mux bits for GPIO */ }
+        PinFunction::UartTx =&gt; { /* set mux bits for UART TX */ }
+        PinFunction::SpiMosi =&gt; { /* set mux bits for SPI MOSI */ }
+    }
+}
+
+configure_mux(PinFunction::UartTx);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> typestate's compile-time guarantee only helps when the
+compiler can see the transition at each call site; once the legal pin
+function depends on a byte read from configuration at boot, matching an
+exhaustive <a href="../types-data-modeling/enums-algebraic-data-types.md">enum</a>
+is the honest tool — reaching for typestate here would just mean writing
+a runtime <code>if</code>/<code>match</code> to pick which typestate method to call, with no
+compile-time benefit left to show for it.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

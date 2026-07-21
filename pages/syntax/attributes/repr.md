@@ -141,13 +141,72 @@ more than one non-zero-sized field is a compile error, which is the
 signal that the type no longer qualifies, per the
 [Rust Reference](https://doc.rust-lang.org/reference/type-layout.html#the-transparent-representation).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[repr(...)]` is core-language and works identically
-without `std` — embedded code depends on it constantly for memory-mapped
-peripheral structs (`#[repr(C)]` register blocks matching a
-manufacturer's datasheet byte-for-byte) and packed protocol frames.
-`#[repr(packed)]` in particular shows up far more in embedded contexts
-than hosted ones, since removing all padding to match a wire format is
-more often worth the unaligned-access cost on a microcontroller than on a
-desktop CPU.
+`#[repr(...)]` is arguably as central to embedded Rust as
+[`#[cfg(...)]`](cfg-attribute.md), because it's the mechanism that pins a
+Rust type's memory layout to a hardware memory map that Rust itself has
+no say over. A microcontroller's peripherals expose their registers at
+fixed byte offsets from a base address, documented in the vendor's
+datasheet/SVD file — a `GPIOA` register block might place `MODER` at
+offset `0x00`, `OTYPER` at `0x04`, `IDR` at `0x10`, and so on. A Rust
+struct meant to overlay that block field-for-field only overlays it
+correctly if the compiler is told not to reorder or pad those fields the
+way `#[repr(Rust)]` (the implicit default) is explicitly free to do —
+`#[repr(C)]` is what makes the struct's actual layout something the code
+can rely on: fields in declaration order, at the memory-mapped offsets
+the register block was already documented as having. This is exactly
+what `svd2rust` — the tool that generates peripheral-access crates (PACs)
+from a chip's SVD file — emits: nearly every register-block struct in a
+generated PAC crate carries `#[repr(C)]` for this reason, and
+reading/writing a peripheral through the generated struct only works
+because that layout guarantee holds.
+
+`#[repr(transparent)]` shows up constantly in the same neighborhood for a
+different reason: wrapping a single raw register value (a `u32`, say) in
+a newtype for type safety — a `Millivolts(u32)` or `GpioPin(u8)` —
+without paying any cost for the wrapper. Because `#[repr(transparent)]`
+guarantees identical layout, size, and ABI to the single inner field, the
+newtype can be passed to/from an `extern "C"` HAL function, transmuted
+from a raw memory-mapped read, or stored directly in a register-block
+field with zero runtime overhead — it's a genuinely zero-cost abstraction
+specifically because the repr makes that guarantee load-bearing rather
+than incidental.
+
+`#[repr(packed)]` also appears more often in embedded code than in most
+hosted code, for the same reason it does in FFI: a radio or bus protocol
+frame that must match an exact byte layout with no compiler-inserted
+padding.
+
+## Usage examples (Embedded)
+
+### A peripheral register block laid out to match a datasheet's memory map
+
+```
+#[repr(C)] // <- pins field order/offsets to match the GPIOA register block's documented layout
+pub struct GpioARegisterBlock {
+    pub moder: u32,   // offset 0x00
+    pub otyper: u32,  // offset 0x04
+    pub ospeedr: u32, // offset 0x08
+    pub idr: u32,     // offset 0x10
+}
+
+const GPIOA_BASE: usize = 0x4002_0000;
+
+fn gpioa() -> &'static mut GpioARegisterBlock {
+    unsafe { &mut *(GPIOA_BASE as *mut GpioARegisterBlock) }
+}
+```
+
+### A zero-cost newtype around a raw register value
+
+```
+#[repr(transparent)] // <- guarantees identical layout/ABI to the inner u16, zero cost over the raw value
+pub struct AdcReading(u16);
+
+impl AdcReading {
+    pub fn millivolts(self, vref_mv: u32) -> u32 {
+        (self.0 as u32 * vref_mv) / 4095
+    }
+}
+```

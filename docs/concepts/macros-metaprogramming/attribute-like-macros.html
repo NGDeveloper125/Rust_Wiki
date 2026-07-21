@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An attribute-like macro is a function marked <code>#[proc_macro_attribute]</code>
 with the signature <code>fn(TokenStream, TokenStream) -&gt; TokenStream</code>. The
@@ -988,7 +989,7 @@ kinds.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <p>The attribute-like macro's definition, in its own <code>proc-macro = true</code>
 crate:</p>
@@ -1015,7 +1016,7 @@ fn main() {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1086,23 +1087,146 @@ not the tests themselves.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> An attribute-like macro runs entirely at compile time
-and produces ordinary Rust code, so it has no runtime cost of its own —
-support depends only on whether the code it generates is <code>no_std</code>-
-friendly. The embedded ecosystem relies on this heavily: <code>cortex-m-rt</code>'s
-<code>#[entry]</code> is a real-world attribute-like macro that rewrites an
-ordinary <code>fn main() -&gt; !</code> into the exact form the reset handler expects,
-with no <code>std</code> runtime involved anywhere in that expansion.</p>
+        <p>An attribute-like macro's transformation happens entirely on the host
+during compilation, the same host/target split every procedural macro
+follows (see <a href="procedural-macros.md">Procedural macros</a>) — but embedded
+Rust leans on this specific macro kind for something genuinely
+load-bearing: turning an ordinary function or module into the exact code
+the hardware's startup and interrupt-dispatch conventions require.
+<code>cortex-m-rt</code>'s <code>#[entry]</code> rewrites a plain <code>fn main() -&gt; !</code> into the
+function the reset handler actually calls, enforcing at compile time
+that there is exactly one entry point and that it never returns;
+<code>#[interrupt]</code> does the analogous rewrite for a specific interrupt
+vector, wiring the annotated function into the vector table under the
+compiler's control rather than the programmer's. RTIC's <code>#[app]</code> goes
+further still, expanding an entire annotated module into the scheduling,
+resource-locking (<code>#[shared]</code>/<code>#[local]</code>), and task-dispatch code an RTIC
+application runs on — code that would be substantial, error-prone
+boilerplate to hand-write per project. In every case the expansion is
+ordinary, already-<code>no_std</code>-compatible Rust; nothing about the macro
+itself needs a heap or <code>std</code>, and the transformation is exactly as total
+as the classic Explanation describes — return the wrong tokens and the
+annotated function or module simply isn't there anymore, which is why
+these crates test their macro output carefully rather than trusting it
+by inspection alone.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry;
+
+#[entry] // &lt;- rewrites this function into the shape the reset handler calls; enforces exactly one entry point
+fn main() -&gt; ! {
+    loop {}
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A firmware project with several interrupt-driven tasks and shared state
+uses RTIC's <code>#[app]</code> to get resource-locking and scheduling generated
+from a declarative module, instead of hand-writing a critical-section-
+guarded dispatcher.</p>
+<pre><code class="rust">#[rtic::app(device = pac)] // &lt;- expands this whole module into scheduling + resource-locking code
+mod app {
+    #[shared]
+    struct Shared {
+        counter: u32,
+    }
+
+    #[local]
+    struct Local {}
+
+    #[init]
+    fn init(_cx: init::Context) -&gt; (Shared, Local) {
+        (Shared { counter: 0 }, Local {})
+    }
+
+    #[task(binds = TIM2, shared = [counter])]
+    fn on_timer(mut cx: on_timer::Context) {
+        cx.shared.counter.lock(|c| *c += 1); // &lt;- lock/scheduling code is macro-generated, not hand-written
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the critical-section-guarded dispatcher this expands
+into is exactly the code the <a href="https://rtic.rs/">RTIC book</a> argues is
+harder to get right, and harder to review, by hand than the declarative
+<code>#[shared]</code>/<code>#[task]</code> module the macro expands from — the attribute
+macro's job is precisely to keep that generated dispatcher consistent as
+tasks and resources are added.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>An <code>#[entry]</code>-annotated function is awkward to unit test directly — it
+never returns and assumes real hardware — so firmware logic is kept in
+ordinary functions the macro-generated entry point calls into.</p>
+<pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry;
+
+fn compute_next_state(count: u32) -&gt; u32 { // &lt;- plain function: testable with ordinary #[test] on the host
+    count.wrapping_add(1)
+}
+
+#[entry] // &lt;- stays a thin wrapper; the logic worth testing lives outside it
+fn main() -&gt; ! {
+    let mut count = 0;
+    loop {
+        count = compute_next_state(count);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::compute_next_state;
+
+    #[test]
+    fn wraps_on_overflow() {
+        assert_eq!(compute_next_state(u32::MAX), 0);
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the attribute macro's rewritten entry point only ever
+runs on target hardware, so the
+<a href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html">Rust Book's testing guidance</a>
+can only reach it if the logic worth checking is factored into plain
+functions the host's own test harness can call directly.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

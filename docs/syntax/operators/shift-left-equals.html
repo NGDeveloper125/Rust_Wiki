@@ -950,14 +950,15 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&lt;&lt;=</code> left-shifts the left operand by the right operand's amount, in
 place, overloadable via <code>std::ops::ShlAssign</code>.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -990,17 +991,50 @@ specialized to <code>ShlAssign</code>.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>ShlAssign</code> lives in <code>core::ops</code> — no <code>std</code> dependency.</p>
+        <p><code>&lt;&lt;=</code> shows up in embedded code anywhere a byte (or word) is being
+assembled one bit at a time from a hardware source that only exposes a
+single bit per sample. The classic case is bit-banging a serial
+protocol in software rather than through a dedicated peripheral: on
+each clock edge, the code samples a data pin, shifts the value built so
+far one place to the left to make room, and ORs the new bit into the
+now-empty low position.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Bit-banging a byte in over a software SPI line</h3>
+            <pre><code class="rust">fn read_bit_from_miso() -&gt; u32 {
+    // in real firmware this samples the MISO GPIO pin
+    1
+}
+
+fn bitbang_receive_byte() -&gt; u8 {
+    let mut value: u8 = 0;
+    for _ in 0..8 {
+        value &lt;&lt;= 1; // &lt;- `&lt;&lt;=` makes room for the next incoming bit, MSB first
+        value |= read_bit_from_miso() as u8;
+        // toggle_clock_pin();
+    }
+    value
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

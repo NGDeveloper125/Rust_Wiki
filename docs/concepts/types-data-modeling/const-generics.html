@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Const generics parameterize a type by a <em>value</em>, not just another type —
 most commonly an array length. For example, a
@@ -969,7 +970,7 @@ checking of what operations on <code>N</code> are actually valid.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn sum&lt;const N: usize&gt;(arr: [i32; N]) -&gt; i32 { // &lt;- N is a value, known at compile time
     arr.iter().sum()
@@ -984,7 +985,7 @@ at runtime (like a <code>Vec</code>'s length).</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1025,21 +1026,140 @@ guarantee <a href="../../concepts/types-data-modeling/generics.html">generics</a
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No allocator dependency — const generics are
-especially valuable in embedded/<code>no_std</code> code, since they let
-fixed-capacity, stack-allocated buffer types (like <code>heapless::Vec&lt;T, N&gt;</code>)
-express their capacity in the type system instead of needing heap
-allocation at all.</p>
+        <p>Const generics are not just <em>compatible</em> with no-heap embedded code —
+they are the mechanism that makes no-heap collections work at all.
+<code>heapless::Vec&lt;T, N&gt;</code>, <code>heapless::String&lt;N&gt;</code>, <code>heapless::spsc::Queue&lt;T, N&gt;</code>,
+and every other fixed-capacity collection in that ecosystem are ordinary
+generic structs parameterized by a const <code>N</code>, storing their backing data
+as <code>[MaybeUninit&lt;T&gt;; N]</code> (or equivalent) inline — on the stack or in
+<code>static</code> memory — plus a small runtime field tracking how much of that
+fixed space is currently in use. Without const generics, a crate wanting
+a "growable, but bounded, no-heap" type would have no way to express the
+bound in the type system at all: either every possible capacity needs its
+own hand-written struct, or the capacity becomes a runtime-only
+convention nobody's checking, which is exactly the unenforced-assumption
+problem const generics close.</p>
+<p>Because <code>N</code> is part of the type, mismatched capacities are caught at
+compile time, at the call site, rather than surfacing as a runtime panic
+or a silently truncated buffer on hardware where a debugger may not even
+be attached: a function expecting a <code>heapless::Vec&lt;u8, 64&gt;</code> genuinely
+cannot be called with a <code>heapless::Vec&lt;u8, 32&gt;</code>, the same way <code>Buffer&lt;64&gt;</code>
+and <code>Buffer&lt;128&gt;</code> are unrelated types on the classic Explanation. Each
+distinct <code>N</code> monomorphizes into its own specialized code, so a <code>[u8; 64]</code>
+DMA buffer and a <code>[u8; 256]</code> one cost nothing beyond the storage each
+actually occupies — there is no generic runtime indirection paying for
+the abstraction.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct RxBuffer&lt;const N: usize&gt; { // &lt;- N fixed at compile time: no allocator, no runtime capacity check
+    data: [u8; N],
+    len: usize,
+}
+
+impl&lt;const N: usize&gt; RxBuffer&lt;N&gt; {
+    fn new() -&gt; Self {
+        RxBuffer { data: [0; N], len: 0 }
+    }
+
+    fn push_byte(&amp;mut self, byte: u8) -&gt; Result&lt;(), u8&gt; {
+        if self.len == N {
+            return Err(byte); // &lt;- buffer full: caught here, not by overrunning a fixed-size array
+        }
+        self.data[self.len] = byte;
+        self.len += 1;
+        Ok(())
+    }
+}
+
+let mut uart_rx: RxBuffer&lt;64&gt; = RxBuffer::new(); // &lt;- 64-byte receive buffer, stack/static storage only
+uart_rx.push_byte(0xAA).ok();
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A UART receive buffer's right size depends on the peripheral and use
+case — a console UART might need 256 bytes, a low-rate sensor link only
+16 — so writing the buffer type once, generic over its capacity, avoids
+either hand-duplicating a struct per size or falling back to a heap that
+may not exist on the target at all.</p>
+<pre><code class="rust">struct RingBuffer&lt;const N: usize&gt; { // &lt;- same struct serves every peripheral instance, at whatever size it needs
+    data: [u8; N],
+    head: usize,
+    tail: usize,
+}
+
+impl&lt;const N: usize&gt; RingBuffer&lt;N&gt; {
+    fn new() -&gt; Self {
+        RingBuffer { data: [0; N], head: 0, tail: 0 }
+    }
+}
+
+let console_rx: RingBuffer&lt;256&gt; = RingBuffer::new(); // &lt;- sized for a chatty console UART
+let sensor_rx: RingBuffer&lt;16&gt; = RingBuffer::new();   // &lt;- sized for a low-rate sensor link, same code
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> each instantiation is monomorphized into its own
+specialized, stack/<code>static</code>-allocated code path, so picking a larger <code>N</code>
+for the console UART costs exactly the extra bytes of storage it uses —
+nothing is paid in indirection or runtime capacity tracking that a
+hand-written per-size struct wouldn't already need.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A driver crate that hands back a fixed-capacity buffer type should encode
+the capacity in the return type itself, so a caller wiring the wrong-size
+buffer into a peripheral expecting a specific length fails to compile
+instead of corrupting a transfer at runtime.</p>
+<pre><code class="rust">fn make_spi_tx_buffer&lt;const N: usize&gt;() -&gt; heapless::Vec&lt;u8, N&gt; {
+    heapless::Vec::new() // &lt;- capacity N is part of the returned type, decided by the caller's type annotation
+}
+
+fn send_frame(bus: &amp;mut impl embedded_hal::spi::SpiBus, frame: heapless::Vec&lt;u8, 32&gt;) {
+    let _ = (bus, frame); // a 32-byte-capacity frame, enforced by the parameter's own type
+}
+
+let frame: heapless::Vec&lt;u8, 32&gt; = make_spi_tx_buffer(); // &lt;- N inferred as 32 from send_frame's parameter type
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> encoding the capacity in the type means a
+<code>heapless::Vec&lt;u8, 16&gt;</code> accidentally passed where a <code>heapless::Vec&lt;u8, 32&gt;</code>
+is required is rejected by the compiler, the same guarantee the classic
+Explanation describes for <code>RingBuffer&lt;8&gt;</code> vs <code>RingBuffer&lt;256&gt;</code> — on
+hardware where a buffer-size mismatch is a silent memory-safety bug
+rather than a caught exception, that compile-time check is doing real
+work.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

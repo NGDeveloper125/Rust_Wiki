@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A trait object almost always shows up behind <code>Box</code> in introductory
 examples — <code>Box&lt;dyn Trait&gt;</code> — which quietly bundles a heap allocation
@@ -981,7 +982,7 @@ be dropped at the very same point regardless.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">trait Logger {
     fn log(&amp;self, message: &amp;str);
@@ -1004,7 +1005,7 @@ run(&amp;console);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1094,22 +1095,223 @@ of the allocation cost.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support — this is the whole point of the idiom.</strong> <code>&amp;dyn Trait</code>/<code>&amp;mut dyn Trait</code> need only a reference to existing data, so they
-work unchanged in <code>#![no_std]</code> with no allocator configured at all.
-<code>Box&lt;dyn Trait&gt;</code> needs the <code>alloc</code> crate plus a <code>#[global_allocator]</code>;
-on-stack dynamic dispatch is precisely the technique that gets the same
-runtime polymorphism without either requirement, which is why it shows
-up throughout embedded and other allocator-free Rust code.</p>
+        <p>This idiom is arguably more load-bearing in embedded Rust than anywhere
+else in the language, because it resolves a tension that's mostly
+theoretical on a hosted target into a genuinely hard constraint on a
+microcontroller: static dispatch (generics, monomorphized per concrete
+type) costs flash space per instantiation, while <code>Box&lt;dyn Trait&gt;</code> costs
+an allocator that most <code>#![no_std]</code> targets don't have configured at
+all. <code>&amp;dyn Trait</code> is the one technique that avoids both costs at once —
+no heap allocation (it's a fat pointer to a reference, and references can
+point at the stack, a <code>'static</code>, or anywhere else that isn't the heap),
+and no code duplication (one non-generic function processes the trait
+object regardless of how many concrete types implement the trait).</p>
+<p>The monomorphization side is the one that's easy to underrate: a generic
+driver function (<code>fn run&lt;D: Driver&gt;(driver: &amp;mut D)</code>) gets compiled
+fresh, in full, for every distinct concrete <code>D</code> the firmware instantiates
+it with. That's usually fine on a desktop where flash isn't a constraint
+anyone tracks; on a target with, say, 128 KB of flash shared across an
+entire application, instantiating the same generic driver logic for five
+sensor variants, three of which are nearly identical, can measurably move
+the needle on whether an image fits at all. <code>&amp;dyn Driver</code> collapses all
+five into one non-generic function using one vtable-dispatched call per
+method — trading a small, predictable indirection cost (one pointer
+load, one indirect call) for a single compiled copy of the logic instead
+of five.</p>
+<p>None of this makes generics wrong for embedded code — a driver that's
+only ever instantiated once, or where the compiler can inline through the
+generic anyway, gets zero benefit from <code>dyn</code> and pays the vtable
+indirection for nothing. The idiom is choosing <code>&amp;dyn Trait</code> specifically
+at points with genuine runtime variation (which concrete logger, which
+concrete transport) where the alternative really would be code
+duplicated across several call sites, not reaching for it as a default.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">trait Transport {
+    fn send(&amp;mut self, byte: u8);
+}
+
+struct Uart;
+impl Transport for Uart {
+    fn send(&amp;mut self, byte: u8) {
+        let _ = byte; // stands in for a real UART TX register write
+    }
+}
+
+fn send_all(transport: &amp;mut dyn Transport, data: &amp;[u8]) { // &lt;- &amp;dyn: no heap, works with no allocator configured
+    for &amp;byte in data {
+        transport.send(byte);
+    }
+}
+
+let mut uart = Uart; // &lt;- an ordinary stack value, never boxed
+send_all(&amp;mut uart, b"boot");
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Runtime polymorphism</h3>
+            <p>A board reads a hardware strap pin at boot to decide whether debug output
+should go over UART or a semihosting/RTT channel, and needs one logging
+call site that works regardless of which was selected — with no heap
+allocator configured on this target at all.</p>
+<pre><code class="rust">trait Logger {
+    fn log(&amp;mut self, message: &amp;str);
+}
+
+struct UartLogger;
+impl Logger for UartLogger {
+    fn log(&amp;mut self, message: &amp;str) {
+        let _ = message; // stands in for a real UART write
+    }
+}
+
+struct RttLogger;
+impl Logger for RttLogger {
+    fn log(&amp;mut self, message: &amp;str) {
+        let _ = message; // stands in for a real RTT channel write
+    }
+}
+
+fn select_logger(debug_strap_high: bool) {
+    let mut uart = UartLogger; // &lt;- both candidates live on the stack, never boxed
+    let mut rtt = RttLogger;
+
+    let logger: &amp;mut dyn Logger = if debug_strap_high { &amp;mut uart } else { &amp;mut rtt };
+    logger.log("boot complete");
+}
+
+select_logger(true);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the strap pin's state is only known at runtime, so the
+choice between <code>UartLogger</code> and <code>RttLogger</code> can't be resolved by the
+compiler at a single call site the way a generic parameter would be —
+<code>&amp;mut dyn Logger</code> gets that runtime decision with no allocator, exactly
+the technique the <a href="https://rust-unofficial.github.io/patterns/idioms/on-stack-dyn-dispatch.html">Rust Design Patterns' on-stack dynamic dispatch
+idiom</a>
+describes, applied where <code>Box&lt;dyn Logger&gt;</code> would need <code>alloc</code> this
+target doesn't have configured.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Boxing and heap allocation</h3>
+            <p>On a <code>#![no_std]</code> crate with no <code>alloc</code> crate linked in at all, <code>Box&lt;dyn Trait&gt;</code> isn't merely discouraged — it doesn't compile, because there is
+no global allocator for it to allocate from. On-stack dynamic dispatch is
+the direct substitute, not just an optimization over boxing.</p>
+<pre><code class="rust">#![no_std]
+
+trait Sensor {
+    fn read(&amp;self) -&gt; i16;
+}
+
+struct Thermistor;
+impl Sensor for Thermistor {
+    fn read(&amp;self) -&gt; i16 { 215 } // stands in for a real ADC read
+}
+
+// Box&lt;dyn Sensor&gt; would require the `alloc` crate plus a #[global_allocator] —
+// unavailable on this target, so it isn't an option here, not just a discouraged one.
+
+fn print_reading(sensor: &amp;dyn Sensor) { // &lt;- PREFER: &amp;dyn Trait compiles with zero allocator configured
+    let _ = sensor.read();
+}
+
+let thermistor = Thermistor;
+print_reading(&amp;thermistor);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a <code>#![no_std]</code> firmware image with no
+<code>#[global_allocator]</code> has no heap to allocate <code>Box&lt;dyn Sensor&gt;</code> from in
+the first place, so <code>&amp;dyn Sensor</code> isn't a style preference here — it's
+the only way to get runtime polymorphism at all; the <a href="https://rust-unofficial.github.io/patterns/idioms/on-stack-dyn-dispatch.html">Rust Design
+Patterns' on-stack dynamic dispatch
+idiom</a>
+frames this as the general no-allocation-cost technique, and embedded
+<code>#![no_std]</code> code is the setting where it stops being optional.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A firmware image supports several nearly-identical sensor variants
+through one shared trait; instantiating a generic driver function once
+per concrete sensor type duplicates the driver's logic in flash for each
+one, where a single <code>&amp;dyn Sensor</code>-based function compiles once.</p>
+<pre><code class="rust">trait Sensor {
+    fn read_raw(&amp;self) -&gt; u16;
+}
+
+struct Bme280;
+impl Sensor for Bme280 {
+    fn read_raw(&amp;self) -&gt; u16 { 4200 }
+}
+
+struct Sht31;
+impl Sensor for Sht31 {
+    fn read_raw(&amp;self) -&gt; u16 { 3900 }
+}
+
+// AVOID: a generic function is monomorphized separately for every concrete Sensor it's called with,
+// duplicating this logic in flash once per sensor type used in the firmware image.
+fn log_reading_generic&lt;S: Sensor&gt;(sensor: &amp;S) {
+    let _ = sensor.read_raw();
+}
+
+// PREFER: one non-generic function, compiled once, dispatched through a vtable
+fn log_reading(sensor: &amp;dyn Sensor) {
+    let _ = sensor.read_raw();
+}
+
+let bme = Bme280;
+let sht = Sht31;
+log_reading(&amp;bme); // &lt;- both calls share the same compiled function
+log_reading(&amp;sht);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>log_reading_generic::&lt;Bme280&gt;</code> and
+<code>log_reading_generic::&lt;Sht31&gt;</code> are two separate copies of identical
+logic in the final binary, while <code>log_reading</code> compiles once regardless
+of how many <code>Sensor</code> implementors call into it — trading one indirect
+call per invocation for a single copy of the function is a straight
+flash-budget win whenever the logic behind the trait is nontrivial and
+several concrete types share it, which is exactly the tradeoff <a href="../traits-polymorphism/static-dispatch-monomorphization.md">Static
+dispatch &amp;
+monomorphization</a>
+covers from the generics side.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A declarative macro is defined with <code>macro_rules!</code> and generates code by
 matching the tokens of a macro call against a set of patterns and
@@ -992,7 +993,7 @@ exactly the limitation that pushes authors toward a derive macro instead.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">macro_rules! max_of { // &lt;- defines a declarative macro via pattern matching on token trees
     ($x:expr) =&gt; { $x };
@@ -1009,7 +1010,7 @@ fn main() {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1089,24 +1090,136 @@ the tests themselves.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>macro_rules!</code> is a pure compile-time construct — it
-produces ordinary Rust code before the compiler ever reaches code
-generation, so it works identically with <code>#![no_std]</code> and costs nothing
-at runtime. It's also heavily used <em>in</em> the embedded ecosystem itself:
-crates like <code>embedded-hal</code> implementations and <code>heapless</code> lean on
-<code>macro_rules!</code> to generate repetitive register, pin, and peripheral
-definitions (one macro invocation per GPIO pin or timer instance) rather
-than hand-writing dozens of nearly identical impls.</p>
+        <p>Everything about <code>macro_rules!</code> matching and expansion happens purely at
+compile time, before the compiler has generated any code at all, so it
+behaves identically in a <code>#![no_std]</code> binary and a hosted one — there is
+no runtime component to a declarative macro on any target. What changes
+in embedded code isn't the mechanism but how often reaching for it is the
+right call: peripheral and register access is one of the most repetitive
+corners of embedded Rust, with dozens of GPIO pins, UART instances, or
+timer channels that each need a near-identical accessor function or
+wrapper <code>impl</code>, differing only in a base address, bit position, or type
+name. Hand-writing each one invites the exact class of bug a compiler
+can't catch on its own — a copy-pasted accessor that reads the wrong
+register because the address wasn't updated — while a single
+<code>macro_rules!</code> definition expanded once per peripheral guarantees every
+instance has the same shape by construction. This is precisely the
+technique tools like <code>svd2rust</code> are built around: generating an entire
+chip's register-access API from its hardware description by expanding
+one macro-shaped code generator once per register, rather than by hand.</p>
+<p>The token-level mechanics of writing such a macro — capturing names and
+addresses as metavariables, repeating a template over a list of pins —
+are covered on the syntax pages for <a href="../../syntax/macros/metavariable.md"><code>$ident</code></a>,
+<a href="../../syntax/macros/fragment-specifier.md"><code>$ident:kind</code></a>, and
+<a href="../../syntax/macros/repetition.md"><code>$(...)…</code></a>. This page is about the
+design decision sitting above those mechanics: reaching for <code>macro_rules!</code>
+specifically, ahead of a proc-macro or hand-written code, whenever the
+pattern is "many near-identical items differing only in a few
+substituted tokens" — which describes an unusually large fraction of
+register- and peripheral-facing embedded code.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">macro_rules! gpio_output_pin { // &lt;- one macro definition stands in for many hand-written pin wrappers
+    ($name:ident, $bit:expr) =&gt; {
+        struct $name;
+        impl $name {
+            fn set_high(&amp;self, odr: &amp;mut u32) {
+                *odr |= 1 &lt;&lt; $bit;
+            }
+        }
+    };
+}
+
+gpio_output_pin!(Pa5, 5); // &lt;- expands into a full `Pa5` type with its own `set_high`
+gpio_output_pin!(Pa6, 6);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A driver needs a <code>set</code>/<code>clear</code> pair of bit-level accessors for every GPIO
+pin on a port, each pin differing only in which bit of the output-data
+register it touches.</p>
+<pre><code class="rust">macro_rules! gpio_bit { // &lt;- generates one set/clear pair per pin, differing only in $bit
+    ($set_fn:ident, $clear_fn:ident, $bit:expr) =&gt; {
+        fn $set_fn(odr: &amp;mut u32) {
+            *odr |= 1 &lt;&lt; $bit; // &lt;- $bit is the only thing that changes between pins
+        }
+        fn $clear_fn(odr: &amp;mut u32) {
+            *odr &amp;= !(1 &lt;&lt; $bit);
+        }
+    };
+}
+
+gpio_bit!(set_pa5, clear_pa5, 5);
+gpio_bit!(set_pa6, clear_pa6, 6);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> writing the mask/shift logic once and substituting only
+the bit position keeps every pin's accessor byte-for-byte identical in
+shape, which is what makes a copy-paste-introduced wrong bit position
+impossible rather than merely unlikely — the same discipline the <a href="https://docs.rust-embedded.org/book/start/registers.html">Rust
+Embedded Book's registers chapter</a>
+describes for register access, whether written by hand or generated.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A small HAL exposes a consistent constructor-plus-accessor shape for
+several peripheral instances (UART1, UART2, UART3) sitting at different
+base addresses; the macro is the single source of truth for that shape.</p>
+<pre><code class="rust">macro_rules! uart_peripheral { // &lt;- one definition; the API shape can't drift between instances
+    ($ty:ident, $base:expr) =&gt; {
+        pub struct $ty;
+        impl $ty {
+            pub fn new() -&gt; Self { $ty }
+            pub fn status(&amp;self) -&gt; u32 {
+                unsafe { core::ptr::read_volatile(($base + 0x00) as *const u32) }
+            }
+        }
+    };
+}
+
+uart_peripheral!(Uart1, 0x4001_3800);
+uart_peripheral!(Uart2, 0x4000_4400);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> expanding every instance from one macro guarantees
+<code>Uart1::new().status()</code> and <code>Uart2::new().status()</code> share the exact same
+method surface, which matters more in a public HAL crate than in
+application code — <a href="https://effective-rust.com/">Effective Rust</a>
+recommends a macro precisely when the alternative is several hand-written
+impls that must be kept in lockstep.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

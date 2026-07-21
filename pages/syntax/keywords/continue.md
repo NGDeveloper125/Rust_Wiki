@@ -89,6 +89,40 @@ that returns `Result` instead, per the
 [Rust Design Patterns](https://rust-unofficial.github.io/patterns/) idea
 of making invalid states unrepresentable rather than filtered out ad hoc.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency; works identically in `#![no_std]`.
+`continue` behaves identically under `#![no_std]` — no `std` dependency,
+same core-language skip-to-next-iteration semantics. It shows up
+naturally in two embedded shapes: filtering out a known-bad sample from a
+burst read without nesting the rest of the loop body in an `if`, and
+skipping over an address that didn't respond during a bus scan so the
+scan keeps going instead of aborting.
+
+## Usage examples (Embedded)
+
+### Skipping a bad reading from a burst of ADC samples
+
+```
+let raw_samples: [u16; 8] = read_adc_burst();
+let mut total: u32 = 0;
+let mut count = 0;
+
+for sample in raw_samples {
+    if sample == ADC_INVALID_READING {
+        continue; // <- skip a known-bad sample, move to the next one
+    }
+    total += sample as u32;
+    count += 1;
+}
+```
+
+### Skipping an address that didn't respond during a bus scan
+
+```
+for addr in 0x08..0x78 {
+    if i2c.ping(addr).is_err() {
+        continue; // <- this address didn't ack; move on to the next candidate
+    }
+    register_device(addr);
+}
+```

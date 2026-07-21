@@ -137,13 +137,91 @@ for the tests' sake — the layout the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 uses throughout.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Modules are a purely compile-time organizational
-construct with no runtime representation — they cost nothing and require
-no allocator or OS, so the module tree of a `#![no_std]` crate works
-exactly the same as a hosted one. Embedded codebases lean on this just as
-much as any other Rust project, often more: splitting hardware drivers,
-protocol parsing, and application logic into separate modules keeps
-low-level `unsafe` register access contained to a small, clearly-named
-module instead of spread throughout the crate.
+Modules are a purely compile-time organizational construct with no
+runtime representation, so the mechanism is unchanged under
+`#![no_std]`. The typical structure is worth grounding concretely: a HAL
+crate's `lib.rs` commonly declares one module per peripheral family —
+`gpio`, `spi`, `i2c`, `uart` — mirroring the chip's own peripheral set,
+each module wrapping that peripheral's register block in a small,
+focused API before the crate re-exports a curated set of types drawn
+from each of them.
+
+## Basic usage example (Embedded)
+
+```
+// hal/src/lib.rs
+mod gpio;   // <- src/gpio.rs: general-purpose I/O pins
+mod spi;    // <- src/spi.rs: SPI peripheral driver
+mod i2c;    // <- src/i2c.rs: I2C peripheral driver
+mod uart;   // <- src/uart.rs: UART peripheral driver
+
+pub use gpio::Pin;
+pub use spi::Spi;
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL crate's peripheral modules (`gpio`, `spi`, `i2c`, `uart`) each keep
+their own register-level details private, and the crate root curates one
+flat, public set of types drawn from all of them.
+
+```
+// hal/src/lib.rs
+mod gpio;  // <- private module: internal register layout stays hidden
+mod spi;
+mod i2c;
+mod uart;
+
+pub use gpio::Pin;    // <- curated re-export: callers use `hal::Pin`, never `hal::gpio::Pin`
+pub use spi::Spi;
+pub use i2c::I2c;
+pub use uart::Uart;
+```
+
+**Why this way:** re-exporting a flat set of driver types from the crate
+root, rather than making callers dig into `hal::gpio::Pin`, keeps the
+HAL's internal peripheral-module layout free to change as chip variants
+are added, the same curation the
+[API Guidelines' future-proofing chapter](https://rust-lang.github.io/api-guidelines/future-proofing.html)
+recommends generally.
+
+### Scenario: Testing
+
+A HAL's `i2c` module mixes register-twiddling logic with pure
+protocol-encoding logic (building the byte sequence for a given
+command); splitting the pure part into its own function lets it be
+unit-tested on the host, without any real I2C bus involved.
+
+```
+// hal/src/i2c.rs
+pub fn encode_write_command(register: u8, value: u8) -> [u8; 2] {  // <- pure logic: no register access
+    [register, value]
+}
+
+pub fn write_register(&mut self, register: u8, value: u8) {  // <- touches real hardware, not unit-tested here
+    let bytes = encode_write_command(register, value);
+    // ... unsafe register/bus write using `bytes`
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encodes_register_and_value_as_two_bytes() {
+        assert_eq!(encode_write_command(0x6B, 0x00), [0x6B, 0x00]);
+    }
+}
+```
+
+**Why this way:** unit tests for a `#![no_std]` crate still compile and
+run for the host by default (`cargo test` targets the host unless
+configured otherwise), so isolating protocol/encoding logic from actual
+register access into its own module-level function is what makes that
+logic testable at all without hardware in the loop, an approach the
+[Embedded Rust Book](https://docs.rust-embedded.org/book/) recommends
+for driver crates.

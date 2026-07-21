@@ -94,16 +94,84 @@ assertion failure further down; the
 documents `()` and `Result<(), E>` (with `E: Debug`) as the two accepted
 return types for a `#[test]` function.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** The `#[test]` harness depends on `std` — catching
-unwinding panics per-test and printing a pass/fail report both assume an
-OS underneath. This doesn't stop most embedded logic from being unit
-tested in the ordinary way: hardware-independent code (parsing, math,
-protocol encoding) is typically tested with `cargo test` running on the
-**host** development machine, compiled without the target's `#![no_std]`
-restriction, exactly as described in [Unit tests](../../concepts/testing-tooling/unit-tests.md)'s
-Embedded Rust Notes. Code that genuinely depends on real hardware needs a
-different tool — an on-target framework like `defmt-test` runs
-`#[test]`-like functions on the microcontroller itself and reports
-results over a debug probe.
+`#[test]` itself is ordinary attribute syntax, but the harness `cargo
+test` builds around it is squarely a `std` feature: each discovered test
+is run on its own OS thread (`std::thread`), and the harness catches
+per-test unwinding panics and prints a pass/fail summary from a hosted
+process — none of which exists on a bare `#![no_std]` target, which has no
+thread scheduler, no unwinding-catching runtime, and typically no
+attached terminal to print a report to. This is why on-target unit
+testing normally isn't done by compiling the ordinary `#[test]` harness
+for the microcontroller itself.
+
+Two complementary answers cover the resulting gap, and most real embedded
+crates lean on both:
+
+**Host-testing split.** The majority of a typical embedded crate's
+genuinely *testable* logic — protocol/frame parsing, checksum/CRC
+computation, state-machine transitions, unit conversions — doesn't
+actually touch hardware, and is written so it also compiles for the host:
+kept dependent only on `core`/`alloc` rather than a specific chip's
+peripherals, or placed behind a `#[cfg(test)]` module that pulls in `std`
+only for the test build. That code is then tested with a completely
+ordinary `cargo test`, run on the development machine's own architecture,
+with the full `#[test]`/`#[ignore]`/`#[should_panic]` machinery available
+exactly as on any other crate — nothing about the code eventually running
+on an ARM Cortex-M or RISC-V target changes how it's tested.
+
+**`defmt-test` (or `embedded-test`) for genuinely on-target tests.** For
+code that *can't* be meaningfully tested without real hardware — a
+driver's actual register writes, timing against a real peripheral, an
+interrupt handler — `defmt-test` provides a `#[test]`-shaped attribute
+macro of its own: functions marked with it run for real on the target
+microcontroller, flashed and executed via a debug probe (`probe-rs`), with
+pass/fail results and any logged output sent back to the host over RTT
+(or semihosting) rather than printed by a hosted process. It deliberately
+mirrors `cargo test`'s shape — a `#[tests]` module, `#[test]` functions
+inside it, an optional `#[init]` fixture — so the authoring experience is
+close to ordinary unit testing, but every test genuinely executes on the
+chip rather than the host CPU. `embedded-test` fills the same niche with
+a similar model. Both need a debug probe physically attached to real
+hardware to run at all, which is a meaningfully different CI/development
+story than `cargo test`'s "just run it, no hardware needed."
+
+## Usage examples (Embedded)
+
+### Host-testing hardware-independent logic with plain #[test]
+
+```
+// This function only manipulates bytes — no peripheral access — so it's tested on the host.
+pub fn parse_frame_length(header: [u8; 2]) -> u16 {
+    u16::from_be_bytes(header)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // <- runs with an ordinary `cargo test` on the host, not on the target
+    fn parses_a_two_byte_length_header() {
+        assert_eq!(parse_frame_length([0x01, 0x2C]), 0x012C);
+    }
+}
+```
+
+### Running a test on real hardware with defmt-test
+
+```
+#![no_std]
+#![no_main]
+
+#[defmt_test::tests] // <- marks this module's functions as on-target tests, run via a debug probe
+mod tests {
+    use defmt::assert_eq;
+
+    #[test] // <- executes for real on the microcontroller; pass/fail reported back over RTT
+    fn adc_reads_within_expected_range() {
+        let sample = read_adc_channel(0);
+        assert_eq!(sample <= 4095, true, "12-bit ADC sample out of range");
+    }
+}
+```

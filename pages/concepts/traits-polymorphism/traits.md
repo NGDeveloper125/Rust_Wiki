@@ -143,10 +143,127 @@ clock — a standard use of trait seams for testability, as the
 [Rust Book's mock-object example](https://doc.rust-lang.org/book/ch15-05-interior-mutability.html#a-use-case-for-interior-mutability-mock-objects)
 illustrates with the same trait-double approach.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Traits are core-language and allocator-free. The
-`embedded-hal` crate is the clearest real-world proof of how central this
-is to embedded Rust: an entire ecosystem of hardware-agnostic driver
-crates is built purely on trait abstractions, letting one driver crate
-work across dozens of unrelated vendors' microcontrollers.
+Traits are the mechanism that makes `embedded-hal` possible, and
+`embedded-hal` is the single clearest proof of how central traits are to
+embedded Rust. `embedded-hal` (and its async sibling, `embedded-hal-async`)
+ships almost no implementation code at all — it's a collection of trait
+definitions (`OutputPin`, `InputPin`, `SpiBus`, `I2c`, `DelayNs`, …), full
+stop. See [`trait`](../../syntax/keywords/trait.md) for the mechanics of
+how those declarations are written; this page is about the design payoff.
+
+Because a trait separates "the contract" from "who implements it," a chip
+vendor's HAL crate (typically layered over a peripheral-access crate
+generated from that chip's SVD file) can implement `embedded-hal`'s traits
+for its own concrete register types, while a sensor or display driver
+crate is written entirely against the traits — never against any vendor's
+concrete pin, bus, or timer type. Neither side has to know about the
+other in advance: the trait is the sole point of coordination. The result
+is an ecosystem where one driver crate (say, a BME280 humidity sensor
+driver) compiles and runs unmodified on an STM32 board, an RP2040 board,
+and a nRF52 board, purely because all three vendors' HALs implement the
+same `embedded-hal` traits. Without traits, this would require either
+per-vendor forks of every driver, or a runtime abstraction layer with the
+dispatch and code-size costs that come with it — traits get the same
+decoupling for free, resolved entirely at compile time.
+
+## Basic usage example (Embedded)
+
+```
+trait OutputPin {
+    type Error;
+    fn set_high(&mut self) -> Result<(), Self::Error>;
+}
+
+struct GpioPin5; // a concrete pin type, as a vendor's HAL crate would define it
+
+impl OutputPin for GpioPin5 { // <- the vendor HAL implements the shared trait for its own pin type
+    type Error = core::convert::Infallible;
+    fn set_high(&mut self) -> Result<(), Self::Error> {
+        // write to the peripheral's GPIO register here
+        Ok(())
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Implementing traits
+
+A vendor HAL crate makes its concrete I2C peripheral usable by every
+`embedded-hal`-based driver crate simply by implementing the shared `I2c`
+trait for its own bus type — no coordination with any driver author
+required.
+
+```
+trait I2c {
+    type Error;
+    fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error>;
+}
+
+struct Bus1; // the vendor's concrete I2C peripheral handle
+
+impl I2c for Bus1 { // <- one impl unlocks every driver crate written against I2c
+    type Error = core::convert::Infallible;
+    fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error> {
+        let _ = (addr, bytes); // send over the real peripheral here
+        Ok(())
+    }
+}
+```
+
+**Why this way:** the HAL author and every driver author never need to
+meet — the trait is the entire coordination surface, which is exactly why
+`embedded-hal` chose "implement these traits" as its integration model
+instead of a shared concrete bus type.
+
+### Scenario: Designing a public API
+
+A sensor driver crate's public constructor should ask for "anything
+implementing the `embedded-hal` trait it needs," not a specific vendor's
+concrete peripheral type — otherwise the driver silently becomes
+single-vendor.
+
+```
+pub struct TemperatureSensor<I2C> { // <- generic over the trait, not any one vendor's I2C type
+    bus: I2C,
+}
+
+impl<I2C: I2c> TemperatureSensor<I2C> {
+    pub fn new(bus: I2C) -> Self {
+        TemperatureSensor { bus }
+    }
+}
+```
+
+**Why this way:** a driver crate that names a concrete vendor type in its
+public API can only ever be used with that vendor's chips; bounding by
+the trait instead is what lets the same driver crate serve every board
+whose HAL implements `I2c`.
+
+### Scenario: Testing
+
+A sensor driver's trait boundary doubles as a test seam: implementing the
+same trait with an in-memory stand-in lets the driver's parsing/decoding
+logic run in a regular host-side test, with no real bus and no target
+hardware attached.
+
+```
+struct MockBus { canned_reply: Vec<u8> }
+
+impl I2c for MockBus {
+    type Error = core::convert::Infallible;
+    fn write(&mut self, _addr: u8, _bytes: &[u8]) -> Result<(), Self::Error> {
+        Ok(())
+    }
+}
+
+// TemperatureSensor::new(MockBus { canned_reply: vec![0x1a, 0x02] }) exercises
+// the driver's own logic without ever touching real hardware
+```
+
+**Why this way:** this is precisely the role the `embedded-hal-mock` crate
+plays in the ecosystem — driver crates are tested against a mock
+implementation of the same traits real hardware satisfies, so CI can run
+a board's driver logic without the board.

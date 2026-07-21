@@ -138,14 +138,124 @@ impl FixedBuffer {
 recommends exactly this shape: a small unsafe core with a safe API around
 it, so a caller can never observe or trigger the broken invariant.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Unsafe Rust is core-language and works identically in
-`#![no_std]` — if anything, it is used more often in embedded code, since
-memory-mapped registers, interrupt vector tables, and DMA buffers are
-usually accessed through raw pointers or mutable statics that only
-`unsafe` can touch. Hardware abstraction layer (HAL) crates typically
-concentrate all of a project's `unsafe` blocks in one low-level module,
-exposing a safe, typed API (`embedded-hal` traits) to application code —
-the same "contain unsafety in small modules" idiom shown above, applied
-to a microcontroller instead of a buffer.
+The [`unsafe` keyword page](../../syntax/keywords/unsafe.md) already
+covers *why* embedded code reaches for `unsafe` constantly — register
+access and vendor FFI calls are two of its five gated operations doing
+real, unavoidable work. What belongs here, at the concept level, is the
+design discipline that keeps that unavoidable `unsafe` from spreading
+through an entire firmware codebase: contain it to a thin, deliberately
+narrow hardware-abstraction-layer (HAL) module, and let every line of
+application code above that module stay entirely safe.
+
+This containment matters more in embedded Rust than almost anywhere
+else, because the invariant an embedded `unsafe` block relies on is
+often *physical*, not just logical: a raw pointer dereference is sound
+only if the address is really mapped to the peripheral the code thinks
+it is, a `static mut` is sound only if the interrupt that can also touch
+it is masked or the access is genuinely atomic, and a vendor FFI call is
+sound only if the C library's undocumented assumptions about calling
+context are actually met. None of that is checkable by the compiler, and
+re-deriving it at every call site multiplies the chance of getting it
+wrong. The `embedded-hal` ecosystem's whole design point is this
+containment done well: a chip-specific HAL crate owns every raw register
+dereference and every `unsafe extern "C"` call, and exposes a small set
+of safe, trait-based methods (`set_high()`, `read()`, `write(&bytes)`)
+that the rest of the firmware — sensor drivers, application logic, RTOS
+tasks — builds on without ever writing `unsafe` itself. A firmware
+project where `unsafe` is scattered through business logic instead of
+concentrated in one audited layer has usually skipped this discipline,
+not encountered some embedded-specific necessity for it.
+
+## Basic usage example (Embedded)
+
+```
+const TIMER_CTRL: *mut u32 = 0x4000_0000 as *mut u32;
+
+/// Starts the hardware timer. Contained to this one function; callers
+/// elsewhere in the firmware never touch TIMER_CTRL directly.
+pub fn start_timer() {
+    unsafe {
+        // SAFETY: TIMER_CTRL is the timer peripheral's real control
+        // register on this chip, and setting bit 0 is its documented
+        // "enable" operation.
+        core::ptr::write_volatile(TIMER_CTRL, 0x1);
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A temperature sensor driver's entire unsafe surface is one raw pointer
+read; everything a caller sees is a safe function returning a typed
+value.
+
+```
+mod sys {
+    pub const SENSOR_DATA: *const u32 = 0x4003_4000 as *const u32; // <- raw address stays private to this module
+}
+
+pub struct TemperatureSensor;
+
+impl TemperatureSensor {
+    pub fn read_celsius(&self) -> f32 {
+        let raw = unsafe {
+            // SAFETY: SENSOR_DATA is always mapped on this chip; a plain
+            // volatile read has no other preconditions.
+            core::ptr::read_volatile(sys::SENSOR_DATA) // <- the only unsafe operation in the whole driver
+        };
+        (raw as f32) * 0.0625 // datasheet's raw-to-Celsius conversion
+    }
+}
+```
+
+**Why this way:** `sys::SENSOR_DATA` never leaves the module, so
+`TemperatureSensor::read_celsius` is the *only* place in the entire crate
+an auditor needs to check against the datasheet — the same "thin unsafe
+core, safe API" idiom the
+[Rustonomicon](https://doc.rust-lang.org/nomicon/working-with-unsafe.html)
+describes for any unsafe module, applied to a register instead of a data
+structure.
+
+### Scenario: Sharing state across threads
+
+A tick counter incremented by a timer interrupt and read from the main
+loop is embedded Rust's closest analogue to sharing state across
+threads — the interrupt handler is a genuinely concurrent execution
+context, just one triggered by hardware instead of `thread::spawn`.
+
+```
+static mut TICK_COUNT: u32 = 0;
+
+// Registered as the timer interrupt handler; runs at any point, preempting main.
+#[allow(non_snake_case)]
+fn TIM2() {
+    unsafe {
+        // SAFETY: interrupts of the same priority don't nest on this
+        // chip, so no other write to TICK_COUNT can be in progress here.
+        let ptr = &raw mut TICK_COUNT;
+        *ptr = ptr.read_volatile().wrapping_add(1);
+    }
+}
+
+pub fn ticks() -> u32 {
+    cortex_m::interrupt::free(|_| unsafe {
+        // SAFETY: interrupts are masked for the duration of this closure,
+        // so TIM2 cannot preempt this read.
+        core::ptr::read_volatile(&raw const TICK_COUNT)
+    })
+}
+```
+
+**Why this way:** without masking interrupts around the main-loop read,
+`ticks()` could observe `TICK_COUNT` mid-update if `TIM2` fires between a
+load and a store elsewhere in the program — `cortex_m::interrupt::free`
+is the embedded equivalent of a mutex critical section, and `&raw
+mut`/`&raw const` (see [`&raw const`/`&raw
+mut`](../../syntax/operators/raw-borrow.md)) form the pointer without
+ever asserting the `static mut` is exclusively borrowed, which a plain
+`&mut TICK_COUNT` cannot honestly claim from inside an interrupt
+handler.

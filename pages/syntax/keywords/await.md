@@ -106,11 +106,37 @@ see [Futures](../../concepts/concurrency-async/futures.md) and the
 [Tokio tutorial](https://tokio.rs/tokio/tutorial/select#join) for
 `join!`'s own mechanics, which this page doesn't re-explain.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** `.await`'s grammar and suspension semantics are
-core-language, working identically under `#![no_std]` since they only
-require `core::future::Future`. What's missing on bare-metal targets is
-anything to actually drive the poll loop: there's no `tokio` executor, so
-`#![no_std]` code needs an embedded async executor such as `embassy` to
-poll the futures that `.await` points suspend on.
+**Partial support.** `.await`'s grammar and its polling/suspension
+semantics are core-language, resting only on `core::future::Future` —
+none of that requires `std`. What's missing under `#![no_std]` is
+anything to actually drive the poll loop: there's no `tokio` reactor
+waking tasks on I/O readiness or timer expiry. The idiomatic embedded
+substitute is an executor like `embassy`, whose own timer and peripheral
+futures — `embassy_time::Timer::after` being the simplest example — are
+exactly the kind of `Future` that `.await` suspends on. The postfix
+`.await` syntax itself doesn't change at all; only what's on the other
+end of it does.
+
+## Usage examples (Embedded)
+
+### Awaiting an embassy timer inside a task
+
+```
+use embassy_time::{Duration, Timer};
+
+#[embassy_executor::task]
+async fn sample_sensor() {
+    loop {
+        // ... trigger an ADC conversion here
+        Timer::after(Duration::from_millis(100)).await; // <- `.await`: suspends this task only; embassy's executor runs other tasks meanwhile
+        // ... read the conversion result here
+    }
+}
+```
+
+`Timer::after(...).await` plays the same role
+`tokio::time::sleep(...).await` played in the classic example — a
+future that resolves once its duration has elapsed — just backed by
+embassy's own timer queue instead of an OS-provided timer.

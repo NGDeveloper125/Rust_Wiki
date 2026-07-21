@@ -112,9 +112,34 @@ implementation at all — `Self` is the only way to express "return the
 implementer's own type" in a trait signature, which is what lets a single
 trait definition serve unrelated concrete types.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Self` is resolved entirely at compile time with no
-runtime representation of its own — no `std`/allocator dependency, and
-used identically in `#![no_std]` trait and impl blocks such as
-`embedded-hal` driver constructors.
+`Self` resolves exactly the same way under `#![no_std]` — a compile-time
+placeholder with no runtime representation of its own. It shows up
+constantly in HAL builder-style configuration types, where each setter
+consumes and returns `Self` so a peripheral's configuration can be
+chained fluently before the peripheral is finally initialized.
+
+## Usage examples (Embedded)
+
+### `Self` in a builder-style HAL config type
+
+```
+struct UartConfig {
+    baud_rate: u32,
+    parity: bool,
+}
+
+impl UartConfig {
+    fn new() -> Self { // <- `Self` means `UartConfig` here
+        Self { baud_rate: 9600, parity: false }
+    }
+
+    fn baud_rate(mut self, rate: u32) -> Self { // <- `Self`: consumes and returns the same config type
+        self.baud_rate = rate;
+        self
+    }
+}
+
+let config = UartConfig::new().baud_rate(115_200);
+```

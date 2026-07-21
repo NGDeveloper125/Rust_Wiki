@@ -132,10 +132,29 @@ which is technically accurate but unhelpful — the underlying gap is
 documents this exact "blanket impl technically applies but isn't the
 useful thing to suggest" scenario as its intended use.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both attributes are pure compile-time diagnostic
-metadata with zero runtime footprint, so they behave identically in
-`#![no_std]` crates — a `core`-only trait used heavily across a HAL
-crate's public API benefits from a custom `on_unimplemented` message the
-same way any hosted crate's trait would.
+Both `#[diagnostic::on_unimplemented]` and `#[diagnostic::do_not_recommend]`
+are purely compile-time diagnostic metadata, read only by the compiler
+while producing an error message — they have no runtime behavior to
+differ in the first place, so there's no genuine embedded angle beyond
+confirming they work exactly the same way in `#![no_std]` code. A
+`core`-only trait that's central to a HAL's public API (something
+implemented by every GPIO pin type, say) benefits from a custom
+`on_unimplemented` message for exactly the same reason a hosted crate's
+trait would: a clearer error the moment someone reaches for a type that
+doesn't implement it.
+
+## Usage examples (Embedded)
+
+### A HAL trait with a custom message for unimplemented pin types
+
+```
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is not configured as an output pin",
+    label = "missing `OutputPin` implementation"
+)]
+trait OutputPin {
+    fn set_high(&mut self);
+}
+```

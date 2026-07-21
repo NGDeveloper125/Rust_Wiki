@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>std::error::Error</code> (now <code>core::error::Error</code>, stabilized there since
 Rust 1.81) is the standard interface an error type is expected to
@@ -992,7 +993,7 @@ ergonomic wrapper around for application code.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">use std::fmt;
 
@@ -1010,7 +1011,7 @@ impl std::error::Error for EmptyQueueError {} // &lt;- the trait itself: no meth
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1146,22 +1147,160 @@ automate it.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>core::error::Error</code> has been part of <code>core</code> since Rust
-1.81, so implementing it — by hand, as shown above, or via a <code>no_std</code>-
-compatible derive — works identically in <code>#![no_std]</code>. The one caveat is
-<code>Box&lt;dyn Error&gt;</code>: <code>Box</code> needs the <code>alloc</code> crate and a
-<code>#[global_allocator]</code>, so that specific pattern requires <code>alloc</code> even
-though the <code>Error</code> trait itself does not.</p>
+        <p><code>std::error::Error</code> historically lived only in <code>std</code>, so a <code>#![no_std]</code>
+crate either skipped implementing the standard trait entirely — defining
+its own ad hoc "this is an error" shadow trait, or no trait at all — or
+left that job to whatever <code>std</code>-level application eventually consumed it.
+As the classic Explanation already notes, the trait has since been
+stabilized in <code>core</code> as <code>core::error::Error</code>; the practical consequence for
+embedded code is that a no_std error enum can now implement the <em>real</em>
+<code>Error</code> trait directly, the same trait hosted code implements, with no
+shadow substitute and no need to wait for a <code>std</code> boundary. <code>Display</code> and
+<code>Debug</code>, the trait's two supertrait requirements, are core-language
+already, so nothing about implementing <code>Error</code> itself needs an allocator —
+the one piece that still does is <code>Box&lt;dyn Error&gt;</code>, which needs <code>alloc</code>
+plus a <code>#[global_allocator]</code>. A no_std driver crate can implement <code>Error</code>,
+and even override <code>source()</code>, without ever reaching for that: <code>source()</code>
+can return a plain <code>&amp;dyn Error</code> reference instead of a boxed one.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#![no_std]
+
+use core::fmt;
+use core::error::Error;
+
+#[derive(Debug)]
+struct BusFault;
+
+impl fmt::Display for BusFault {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        write!(f, "sensor bus fault")
+    }
+}
+
+impl Error for BusFault {} // &lt;- the real core::error::Error, no shadow trait needed
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>A sensor error wraps an underlying bus fault and overrides <code>source()</code> to
+expose it — entirely without <code>Box</code>, so the whole cause chain stays
+allocation-free.</p>
+<pre><code class="rust">use core::fmt;
+use core::error::Error;
+
+#[derive(Debug)]
+struct BusFault;
+
+impl fmt::Display for BusFault {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        write!(f, "bus fault")
+    }
+}
+
+impl Error for BusFault {}
+
+#[derive(Debug)]
+struct SensorError {
+    cause: BusFault,
+}
+
+impl fmt::Display for SensorError {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        write!(f, "sensor read failed")
+    }
+}
+
+impl Error for SensorError {
+    fn source(&amp;self) -&gt; Option&lt;&amp;(dyn Error + 'static)&gt; {
+        Some(&amp;self.cause) // &lt;- a plain reference, not a Box: no alloc needed
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> overriding <code>source()</code> with a borrowed reference rather
+than a boxed trait object keeps the entire cause chain allocation-free, so
+a no_std driver gets the same "walk the cause chain" ergonomics as hosted
+code without pulling in <code>alloc</code> just for error reporting.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Converting between types</h3>
+            <p>Pairing a manual <code>Error</code> impl with a manual <code>From</code> impl is what lets <code>?</code>
+convert a display's SPI failure into the driver's own error type, without
+<code>thiserror</code>'s <code>#[from]</code> available to generate it.</p>
+<pre><code class="rust">use core::fmt;
+use core::error::Error;
+
+#[derive(Debug)]
+struct SpiFault;
+
+#[derive(Debug)]
+enum DisplayError {
+    Spi(SpiFault),
+}
+
+impl fmt::Display for DisplayError {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        match self {
+            DisplayError::Spi(_) =&gt; write!(f, "display SPI transaction failed"),
+        }
+    }
+}
+
+impl Error for DisplayError {}
+
+impl From&lt;SpiFault&gt; for DisplayError { // &lt;- written by hand: no #[from] derive without thiserror
+    fn from(e: SpiFault) -&gt; Self {
+        DisplayError::Spi(e)
+    }
+}
+
+fn raw_spi_read() -&gt; Result&lt;u8, SpiFault&gt; {
+    Ok(0x42) // ... perform the actual SPI transfer
+}
+
+fn read_display_id() -&gt; Result&lt;u8, DisplayError&gt; {
+    let id = raw_spi_read()?; // &lt;- `?` converts SpiFault into DisplayError via the From impl above
+    Ok(id)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> with <code>thiserror</code> unavailable in a no_std crate, the
+<code>From</code> impl has to be written by hand rather than generated by <code>#[from]</code> —
+the same manual mechanism as the classic page's <code>CacheError</code> example, just
+without <code>std::error::Error</code> requiring a <code>std</code> boundary to reach.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

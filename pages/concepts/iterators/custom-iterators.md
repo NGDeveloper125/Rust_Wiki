@@ -190,12 +190,119 @@ extensibility the
 [API Guidelines' future-proofing section](https://rust-lang.github.io/api-guidelines/future-proofing.html)
 recommends designing for up front.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Implementing `Iterator` for a plain struct is core
-language and requires no allocator — a countdown, a fixed-size buffer
-cursor, or a hardware register scanner can all implement it directly on
-a `#![no_std]` target. The caveat is in the *contents* of the iterator,
-not the trait itself: an iterator struct that owns a heap-allocated `Vec`
-(as in the ring buffer example) needs `alloc` or a `heapless`-style
-fixed-capacity equivalent.
+Implementing `Iterator` directly on a type — declaring `Item` and writing
+`next(&mut self) -> Option<Self::Item>` — is core language and requires
+no allocator, which makes it a genuinely common embedded pattern rather
+than a hosted-only convenience. A ring buffer over a fixed-capacity
+array, a cursor that scans a bank of memory-mapped registers, or a
+bit-scanner walking the set bits of a status word can all implement
+`Iterator` by holding nothing more than a position or a remaining-count
+field — the same "where am I" bookkeeping a hand-written `for` loop over
+indices would otherwise track, just packaged behind `next()`. The moment
+`next` exists, every adaptor and consumer covered elsewhere on this wiki
+becomes available on the type for free, with no additional code and no
+heap dependency, provided the type's own fields don't themselves need
+one.
+
+## Basic usage example (Embedded)
+
+```
+struct RegisterScan {
+    remaining_mask: u8, // bits still to report
+}
+
+impl Iterator for RegisterScan {
+    type Item = u8; // the bit position of the next set bit
+
+    fn next(&mut self) -> Option<u8> { // <- the one method a custom iterator must implement
+        if self.remaining_mask == 0 {
+            return None;
+        }
+        let bit = self.remaining_mask.trailing_zeros() as u8;
+        self.remaining_mask &= !(1 << bit); // clear the bit we just reported
+        Some(bit)
+    }
+}
+
+let set_bits: [u8; 2] = {
+    let mut scan = RegisterScan { remaining_mask: 0b0000_1010 };
+    [scan.next().unwrap(), scan.next().unwrap()]
+};
+assert_eq!(set_bits, [1, 3]);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Implementing traits
+
+Walking a fixed-capacity ring buffer of recent samples front-to-back is a
+natural fit for a hand-written `Iterator`, since the buffer only needs to
+track a cursor and a remaining count — no allocation, and no dependency
+on the buffer's own backing store beyond a borrow.
+
+```
+struct RingBufferIter<'a> {
+    items: &'a [i16],
+    start: usize,
+    remaining: usize,
+}
+
+impl<'a> Iterator for RingBufferIter<'a> { // <- Iterator implemented directly, no allocator involved
+    type Item = i16;
+
+    fn next(&mut self) -> Option<i16> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let item = self.items[self.start];
+        self.start = (self.start + 1) % self.items.len();
+        self.remaining -= 1;
+        Some(item)
+    }
+}
+
+let backing: [i16; 4] = [10, 20, 30, 40];
+let walk = RingBufferIter { items: &backing, start: 2, remaining: 4 };
+let ordered: [i16; 4] = {
+    let mut it = walk;
+    [it.next().unwrap(), it.next().unwrap(), it.next().unwrap(), it.next().unwrap()]
+};
+assert_eq!(ordered, [30, 40, 10, 20]);
+```
+
+**Why this way:** the iterator only borrows the backing array and tracks
+two `usize` fields, so wrapping the buffer's read order this way costs
+nothing beyond the struct itself — no `Vec`, no `alloc`, and it
+immediately gains every adaptor and consumer covered on this wiki.
+
+### Scenario: Working with collections
+
+A bit-scanner over a hardware status register shouldn't allocate a `Vec`
+of set bit positions just to iterate them — implementing `Iterator`
+directly over the raw mask, as in the basic example, lets every set bit
+be visited one at a time with no intermediate collection at all.
+
+```
+let interrupt_mask: u8 = 0b0010_0101;
+
+struct SetBits(u8);
+impl Iterator for SetBits {
+    type Item = u8;
+    fn next(&mut self) -> Option<u8> {
+        if self.0 == 0 { return None; }
+        let bit = self.0.trailing_zeros() as u8;
+        self.0 &= !(1 << bit);
+        Some(bit)
+    }
+}
+
+let handled: u32 = SetBits(interrupt_mask).count() as u32; // <- count: works for free once Iterator is implemented
+assert_eq!(handled, 3);
+```
+
+**Why this way:** once `next()` exists, `.count()` (and every other
+adaptor/consumer) works on `SetBits` for free — the same mechanism that
+lets `Vec<T>`'s `.iter()` support the whole ecosystem applies identically
+to a hand-written, allocation-free register scanner.

@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An edition is a named, opt-in snapshot of the language's syntax and a
 handful of default behaviors — Rust 2015, 2018, 2021, and 2024 so far —
@@ -1003,7 +1004,7 @@ didn't ask for."</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">[package]
 name = "telemetry-agent"
@@ -1013,7 +1014,7 @@ edition = "2024" # &lt;- opts this crate into 2024-edition syntax and defaults; 
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1052,22 +1053,86 @@ imposed on every crate at once.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> The edition system is a build-time, front-end compiler
-concept entirely independent of target — a <code>#![no_std]</code> firmware crate
-declares its edition in <code>Cargo.toml</code> exactly the same way a hosted
-application does, and edition-gated syntax and default changes apply
-identically regardless of whether the final binary runs under an OS or on
-bare metal.</p>
+        <p>There is honestly very little embedded-specific to say here, and it's
+worth stating that plainly rather than stretching for an angle that isn't
+there: the edition system is resolved entirely in the compiler's front
+end, before code generation ever begins, so it has no way to know or care
+whether the crate it's parsing will end up running under an OS or on a
+microcontroller with no OS at all. A <code>#![no_std]</code> peripheral-access crate
+or HAL declares <code>edition = "2021"</code> (or whichever) in its <code>Cargo.toml</code>
+exactly the same way a hosted web service does, and every edition-gated
+syntax and default-behavior change applies identically either way.</p>
+<p>The one place edition specifics are genuinely worth knowing in an embedded
+codebase is reserved syntax: register-definition and peripheral-access
+code — hand-written <code>macro_rules!</code> helpers, and especially the code
+<code>svd2rust</code> generates from a chip's SVD file — pastes identifiers and
+literals together more aggressively than most application code, which is
+exactly the pattern that can accidentally produce a 2021-reserved-prefix
+or 2024-reserved-guard shape. That's covered in full, with the actual
+register-macro example, on
+<a href="../../syntax/punctuation/reserved-syntax-and-edition-gotchas.md">Reserved syntax &amp; edition gotchas</a>
+— it applies to embedded macro-heavy code exactly as written there, with
+nothing to add beyond a pointer to it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">[package]
+name = "sensor-driver"
+version = "0.1.0"
+edition = "2024" # &lt;- same field, same meaning, whether the crate targets an OS or bare metal
+
+[dependencies]
+cortex-m-rt = "0.7"
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A register-definition macro used across a peripheral-access crate needs
+to keep pasting identifiers, addresses, and bit-mask literals together
+without ever producing a 2021-reserved <code>ident"..."</code> shape — the fix is the
+same mechanical one that applies outside embedded code, just more likely
+to come up here given how much of a PAC's source is macro-generated.</p>
+<pre><code class="rust">macro_rules! define_register {
+    ($name:ident, $addr:expr) =&gt; {
+        const $name: u32 = $addr; // &lt;- kept as two separate tokens, never pasted into an ident"..." shape
+    };
+}
+
+define_register!(GPIOA_BASE, 0x4001_0800);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> this is the same register-definition example covered on
+<a href="../../syntax/punctuation/reserved-syntax-and-edition-gotchas.md">Reserved syntax &amp; edition gotchas</a>,
+included here only to make the point concrete: the edition-gated reserved
+prefix rule is a lexer-level restriction that shows up in embedded code
+through ordinary macro hygiene, not through anything the edition system
+does differently for a bare-metal target.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

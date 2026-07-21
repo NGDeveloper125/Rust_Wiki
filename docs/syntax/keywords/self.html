@@ -957,7 +957,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>self</code> (lowercase) has two unrelated meanings, separated entirely by
 position — the same by-position-disambiguation as <code>&amp;</code>/<code>*</code>.</p>
@@ -994,7 +995,7 @@ from within a module, meaning "look in this same module"), though <code>use {sel
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1069,20 +1070,42 @@ statements, as shown throughout the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> for both senses. Method receivers (<code>self</code>/<code>&amp;self</code>/
-<code>&amp;mut self</code>) are core-language and central to <code>embedded-hal</code> driver APIs;
-the module-path sense of <code>self</code> in <code>use</code> statements is likewise pure
-compile-time name resolution, with no <code>std</code> dependency either way.</p>
+        <p>Both senses of <code>self</code> mean exactly the same thing under <code>#![no_std]</code>.
+The method-receiver sense is what nearly every <code>embedded-hal</code> driver
+method uses to talk to a peripheral — <code>&amp;mut self</code> on a method that needs
+to change the peripheral's state (write a register, toggle a pin),
+<code>&amp;self</code> on one that only reads it — with no difference in meaning or
+runtime cost from the hosted case.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A driver method taking `&amp;mut self` to talk to a peripheral</h3>
+            <pre><code class="rust">struct Led&lt;P&gt; { pin: P }
+
+impl&lt;P: embedded_hal::digital::OutputPin&gt; Led&lt;P&gt; {
+    fn toggle_on(&amp;mut self) -&gt; Result&lt;(), P::Error&gt; { // &lt;- `&amp;mut self`: mutates the driver's peripheral state
+        self.pin.set_high()
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

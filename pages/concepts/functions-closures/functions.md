@@ -129,11 +129,110 @@ pub fn total_with_tax(order: &Order, tax_rate: f64) -> u64 {
 ownership is genuinely needed gives callers the most flexibility, per the
 [API Guidelines' flexibility checklist](https://rust-lang.github.io/api-guidelines/flexibility.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Functions are a core-language construct with zero
-runtime cost beyond the call itself, and they compile identically whether
-or not `std` is available. Free functions, methods, and associated
-functions all work unchanged in `#![no_std]`; even interrupt handlers on
-embedded targets are ordinary functions marked with a target-specific
-attribute, not special syntax.
+Functions are a core-language construct with zero built-in runtime
+dependency, so everything about them — named parameters with explicit
+types, a declared return type, monomorphization for generics — is
+identical whether the target is a server or a microcontroller with no
+operating system at all. The place this shows up constantly in embedded
+code is HAL and driver method signatures: a peripheral driver's methods
+look exactly like any other Rust function, e.g. a register-write method
+that borrows `&mut self` (exclusive access to the peripheral), takes a
+register address and a value, and returns a `Result` so a bus failure is
+part of the function's contract rather than a panic.
+
+Embedded code also has two special-purpose kinds of function that are
+still, syntactically and semantically, ordinary functions: the
+reset/entry-point function a `#![no_main]` firmware crate supplies
+(typically via `cortex-m-rt`'s `#[entry]`, itself a
+`#[no_mangle] extern "C" fn` under the hood) and interrupt handlers
+registered into a vector table. Neither needs new syntax to exist — see
+[`#[no_main]`](../../syntax/attributes/no-main-attribute.md) for how a
+firmware crate's entry point is wired up; this page's Explanation focuses
+on the ordinary driver-method case, since the entry-point angle is
+already covered there.
+
+## Basic usage example (Embedded)
+
+```
+struct Error;
+
+struct Bus;
+
+impl Bus {
+    fn write_register(&mut self, addr: u8, value: u8) -> Result<(), Error> {
+        // <- ordinary function: typed parameters, declared return type, borrows `&mut self`
+        Ok(())
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A driver's register-write method borrows `&mut self` (since writing a
+register is a mutating operation on shared hardware state) and takes the
+address and value as plain typed parameters, rather than bundling them
+into a struct or taking ownership of the bus.
+
+```
+struct Error;
+
+struct I2cBus;
+
+impl I2cBus {
+    fn write_register(&mut self, addr: u8, value: u8) -> Result<(), Error> {
+        // <- `&mut self`: exclusive access to the bus for the duration of the write
+        // pretend this issues the actual I2C transaction
+        Ok(())
+    }
+}
+
+fn configure_sensor(bus: &mut I2cBus) -> Result<(), Error> {
+    bus.write_register(0x20, 0x07)?;
+    bus.write_register(0x21, 0x01)
+}
+```
+
+**Why this way:** borrowing `&mut self` instead of consuming the bus by
+value lets a caller keep using it for the next register write, the same
+borrow-first guidance the
+[API Guidelines' flexibility checklist](https://rust-lang.github.io/api-guidelines/flexibility.html)
+gives for any method whose receiver the caller needs again.
+
+### Scenario: Handling and propagating errors
+
+A register write over a real bus (I2C, SPI) can fail — a NACK, a bus
+timeout — so the driver function's signature declares that failure
+explicitly with `Result`, instead of panicking or silently ignoring a
+failed transaction.
+
+```
+enum BusError {
+    Nack,
+    Timeout,
+}
+
+fn write_register(addr: u8, value: u8) -> Result<(), BusError> {
+    // <- the signature makes bus failure part of the function's contract, not a surprise panic
+    if addr > 0x7F {
+        return Err(BusError::Nack);
+    }
+    Ok(())
+}
+
+fn init_device() -> Result<(), BusError> {
+    write_register(0x00, 0x01)?;
+    write_register(0x01, 0x00)
+}
+```
+
+**Why this way:** a firmware panic on a failed bus transaction typically
+halts the whole device with no operator present to see a message, so
+returning `Result` and propagating with `?` lets calling code retry, fall
+back, or report the failure through whatever channel the application has
+— the same
+[Book error-handling](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html)
+discipline, applied to a failure mode that's routine on real hardware.

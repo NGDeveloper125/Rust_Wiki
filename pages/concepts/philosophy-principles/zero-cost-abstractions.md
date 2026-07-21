@@ -149,13 +149,149 @@ wouldn't need either; the
 measures this directly and finds iterator chains compiling to code as fast
 as the equivalent manual loop.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — and arguably the principle that matters most on
-constrained hardware. Flash and RAM budgets leave no room for a hidden
-runtime cost, so the fact that generics, iterator chains, and trait
-dispatch (when chosen as static dispatch) compile away to the same code a
-hand-written C-style loop would produce is precisely why embedded Rust can
-offer high-level ergonomics — the `embedded-hal` ecosystem chief among
-them — without the overhead that would rule out a garbage-collected or
-heavily runtime-typed language on the same device.
+Of every principle on this site, this is arguably the one that matters
+most to whether embedded Rust is usable at all. A microcontroller's flash
+and RAM budget is measured in kilobytes, not gigabytes, and its clock
+budget for a control loop or interrupt handler is measured in a handful of
+microseconds — there is no room to pay even a small, "acceptable on a
+server" tax for writing readable code. If iterator chains, generics, and
+`Option`/`Result` carried any real overhead compared to a hand-rolled C
+loop and a raw integer flag, embedded developers simply couldn't use them,
+the same way they mostly can't reach for a garbage-collected language's
+convenience features on this hardware. Zero-cost abstractions are what
+make that tradeoff not exist in the first place: a `for reading in
+sensor_readings.iter().filter(...)` chain compiles to the identical
+machine code a hand-written indexing loop would produce, so choosing the
+readable version costs nothing measurable in flash size or cycle count.
+
+The same story extends past iterators. `Option<T>` and `Result<T, E>` are
+ordinary enums, and the compiler's niche-optimization pass frequently
+stores their discriminant in an already-unused bit pattern of `T` rather
+than adding a separate tag byte — `Option<&T>` and `Option<NonZeroU8>` are
+each exactly the size of the value they wrap, with `None` represented by
+the one bit pattern (null, zero) the wrapped type can't otherwise take.
+That matters concretely on a device where a handful of extra bytes per
+struct, multiplied across every peripheral-configuration value in a
+firmware image, is a real fraction of the RAM budget. Generics compiled
+via monomorphization are what let the `embedded-hal` ecosystem exist at
+all: a HAL trait like `OutputPin` can be implemented identically for a
+dozen different chip families, and code written generically against
+`impl OutputPin` compiles, per concrete pin type, down to the exact
+sequence of register writes a hand-specialized function for that one chip
+would have used — no vtable, no indirect call, unless a driver explicitly
+opts into `dyn OutputPin` for real runtime polymorphism (e.g. a bootloader
+that genuinely doesn't know which board variant it's running on until
+runtime).
+
+The honest caveat from the classic explanation applies with extra force
+here, too: monomorphization means every concrete instantiation of a
+generic HAL function is a separate copy of machine code, and on a chip
+with 32 or 64 KB of flash total, leaning on generics across many
+peripheral types can grow the binary enough to matter in a way it simply
+wouldn't on a hosted target with gigabytes of storage. Choosing `dyn Trait`
+over a generic parameter is the same explicit, opt-in tradeoff described
+above — one real vtable indirection per call, worth it only when the
+flash savings from a single non-duplicated function body outweigh the
+cycle cost of the indirect call, which on some peripheral-heavy firmware
+it genuinely does.
+
+## Basic usage example (Embedded)
+
+```
+let readings: [i16; 4] = [212, -999, 198, 205]; // raw ADC counts; -999 marks a faulty sample
+
+let total: i32 = readings
+    .iter()
+    .copied()
+    .filter(|&r| r != -999) // <- adaptor: drops the fault sentinel, allocates nothing
+    .map(i32::from)          // <- adaptor: widens before summing, still zero-cost
+    .sum();                  // <- consumer: single pass, compiles to the same loop a hand-rolled `for` would
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+Averaging a fixed array of ADC samples, skipping any that read as a fault
+sentinel, needs to run inside a tight interrupt handler with no
+allocation and no wasted cycles — an iterator chain over the raw array
+gets there without hand-writing the loop.
+
+```
+const FAULT_SENTINEL: i16 = -999;
+
+fn average_valid_readings(samples: &[i16; 8]) -> Option<i32> { // <- fixed-size array: no heap, no Vec, no allocation
+    let (sum, count) = samples
+        .iter()
+        .copied()
+        .filter(|&s| s != FAULT_SENTINEL) // <- adaptor: lazily skips faults, no intermediate buffer allocated
+        .fold((0i32, 0i32), |(sum, count), s| (sum + s as i32, count + 1)); // <- consumer: one pass over the array
+
+    if count == 0 { None } else { Some(sum / count) }
+}
+```
+
+**Why this way:** the compiled loop here is indistinguishable from a
+hand-written `for i in 0..8 { ... }` version — the
+[Rust Book's loops-vs-iterators comparison](https://doc.rust-lang.org/book/ch13-04-performance.html)
+measures exactly this equivalence on hosted targets, and the same
+monomorphized-adaptor compilation applies under `#![no_std]`, which is why
+this idiom shows up throughout `embedded-hal`-based sensor-processing code
+without a size or speed tax.
+
+### Scenario: Writing generic code
+
+A single "blink" routine should work against any GPIO pin type from any
+supported chip family, compiling down to the same direct register writes
+a version hand-written for one specific chip would use.
+
+```
+use embedded_hal::digital::OutputPin;
+
+fn blink<P: OutputPin>(pin: &mut P, delay_ms: impl Fn(u32)) { // <- generic: monomorphized per concrete pin type
+    pin.set_high().ok();
+    delay_ms(200);
+    pin.set_low().ok();
+    delay_ms(200);
+}
+```
+
+**Why this way:** calling `blink` with an `stm32`-family pin and, in a
+different build, with an `nrf`-family pin produces two separate,
+independently-optimized copies of the function — each compiling to that
+chip's own direct register-write instructions, with no vtable and no
+runtime dispatch — which is exactly why the `embedded-hal` trait
+ecosystem can offer one portable API across chip families without
+imposing a per-call indirection cost on any of them.
+
+### Scenario: Bit manipulation and flags
+
+A sensor's calibration offset register is either "not yet calibrated" or
+holds a nonzero calibration value — modeling that as `Option<NonZeroU16>`
+instead of a separate `bool` flag plus a `u16` keeps the struct at exactly
+2 bytes, with no discriminant byte spent on the tag.
+
+```
+use core::num::NonZeroU16;
+
+struct Calibration {
+    offset: Option<NonZeroU16>, // <- niche-optimized: None reuses the all-zero bit pattern NonZeroU16 can't hold
+}
+
+fn apply_calibration(raw_reading: u16, cal: &Calibration) -> u16 {
+    match cal.offset {
+        Some(offset) => raw_reading.wrapping_add(offset.get()),
+        None => raw_reading, // not yet calibrated: pass the raw reading through unchanged
+    }
+}
+```
+
+**Why this way:** `size_of::<Option<NonZeroU16>>()` is 2, identical to
+`size_of::<NonZeroU16>()` and to `size_of::<u16>()`, because the compiler
+stores `None` in the all-zero pattern `NonZeroU16` is guaranteed never to
+hold — a `bool` flag alongside a plain `u16` would cost at least one extra
+byte (likely more once alignment padding is counted) per calibration
+value, real savings once a firmware image tracks calibration state for
+several sensors on a RAM-constrained target.

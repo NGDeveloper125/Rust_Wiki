@@ -72,9 +72,38 @@ comparing against an epsilon threshold is the standard workaround, which
 is why [Clippy's `float_cmp` lint](https://rust-lang.github.io/rust-clippy/master/index.html#float_cmp)
 flags direct float equality checks in the first place.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support**, but worth checking your target: many microcontrollers
-have no hardware floating-point unit, so `f32`/`f64` arithmetic compiles
-to (much slower) software emulation routines. Fixed-point integer
-arithmetic is a common alternative on FPU-less targets.
+A float literal lexes and defaults to `f64` exactly the same way under
+`#![no_std]` — this is a compile-time parsing rule, unaffected by
+whether the target has an operating system. What genuinely differs is
+the *cost* of the arithmetic that literal feeds into, and it depends on
+the target's hardware: a Cortex-M0/M0+/M3 has no FPU at all, so every
+float operation — including one as simple as `1.0 + 2.0` — is compiled
+to a call into a software floating-point emulation routine, which is
+dramatically slower than the equivalent integer op. A Cortex-M4F/M7,
+by contrast, has a hardware FPU, but on most Cortex-M parts that FPU is
+single-precision only, so `f32` arithmetic runs in hardware while `f64`
+arithmetic still falls back to software emulation even there. None of
+this makes float literals *unsupported* — they still work everywhere via
+softfp — but it's a real, common reason embedded code prefers `f32` over
+the `f64` default, or avoids floating-point arithmetic altogether in
+favor of fixed-point integer math on FPU-less targets.
+
+## Usage examples (Embedded)
+
+### Scaling a sensor reading with hardware-accelerated f32 math
+
+```
+fn scale_reading(raw: u16, gain: f32) -> f32 {
+    raw as f32 * gain // <- float literal-typed arithmetic: maps directly onto a Cortex-M4F's single-precision FPU
+}
+```
+
+### Preferring fixed-point math on an FPU-less target
+
+```
+fn scale_reading_fixed(raw: u16, gain_q8: i32) -> i32 {
+    (raw as i32 * gain_q8) >> 8 // <- plain integer/fixed-point math: avoids software float emulation on a Cortex-M0
+}
+```

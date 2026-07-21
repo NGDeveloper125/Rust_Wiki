@@ -49,6 +49,28 @@ byte sequence that's naturally full of them — see
 [byte string literal](byte-string-literal.md) for the escape-processing
 rules this form opts out of.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency, no allocation required.
+Nothing about `br"..."` changes under `#![no_std]` — it produces the
+same `'static &[u8; N]` rodata placement as an ordinary byte string, with
+no allocator involved. There isn't much genuinely embedded-specific to
+add beyond that: the case where this form actually helps — a fixed byte
+sequence with several literal backslashes — comes up only occasionally
+in embedded code, such as a short binary command sequence that happens
+to contain `0x5C` bytes, or a Windows-style path baked into a build-time
+constant for a host-side flashing tool. It's a narrow, incidental win
+rather than a mainstream embedded idiom; most real firmware binary blobs
+are large enough that they come from `include_bytes!` rather than a
+hand-written literal at all.
+
+## Usage examples (Embedded)
+
+### A device command sequence that happens to contain literal backslash bytes
+
+```
+// AVOID: every 0x5C (backslash) byte needs doubling in an ordinary byte string
+let escaped: &[u8] = b"\\CFG\\SET\\baud=115200";
+
+// PREFER: raw byte string, backslash bytes are literal, no escaping needed
+let cmd: &[u8] = br"\CFG\SET\baud=115200"; // <- raw byte string literal: backslash bytes taken literally
+```

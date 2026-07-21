@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>"Compose structs" is the data-modeling half of
 <a href="../../concepts/design-patterns-idioms/composition-over-inheritance.html">composition over inheritance</a>: break a
@@ -977,7 +978,7 @@ place to attach its own methods.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct NetworkConfig {
     host: String,
@@ -1003,7 +1004,7 @@ println!("{}:{}", config.network.host, config.network.port);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1089,23 +1090,160 @@ produces, per the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Grouping fields into smaller structs is a pure
-compile-time reorganization with no runtime cost, so it applies
-identically under <code>#![no_std]</code>. Whether a given field needs the <code>alloc</code>
-crate (a <code>String</code>, a <code>Vec</code>) is a property of that individual field's
-type, not of composing structs together — a <code>#![no_std]</code> config could
-compose the same way using fixed-size arrays or <code>heapless</code> types
-instead.</p>
+        <p>This idiom fits embedded driver design about as directly as any pattern
+in this catalog: a peripheral driver is almost always, structurally, a
+composition of a HAL handle plus whatever configuration or state the
+driver layers on top of it. A <code>Sensor</code> struct isn't one flat bag of
+fields — it's naturally <code>Sensor { i2c: I2c, config: SensorConfig, calibration: Calibration }</code>, where <code>i2c</code> is an owned HAL peripheral
+handle, <code>config</code> is the sensor's own settings (sample rate, resolution),
+and <code>calibration</code> is data read back from the device itself. Splitting
+these into their own small structs gives each one an obvious owner and
+an obvious <code>impl</code> block: <code>SensorConfig</code> can validate its own sample-rate
+range independently of anything the I2C bus is doing, and <code>Calibration</code>
+can be swapped out or reset without touching the bus handle at all.</p>
+<p>The same instinct scales up to a whole board: a <code>Board</code> struct composed
+of <code>Led</code>, <code>Button</code>, and <code>Uart</code> fields — each itself perhaps composed
+further (a <code>Led</code> wrapping an <code>OutputPin</code>) — reads far more clearly than
+one flat struct holding every raw pin and peripheral register the board
+exposes, and each composed piece can be handed off independently to the
+part of the firmware that actually owns that concern (the button to an
+input task, the UART to a logging task), which a single monolithic board
+struct would make far more awkward.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct I2cHandle; // stands in for a HAL I2c peripheral type
+
+struct SensorConfig {
+    sample_rate_hz: u16,
+}
+
+struct Sensor { // &lt;- composed of a HAL handle and its own config, not one flat struct
+    i2c: I2cHandle,
+    config: SensorConfig,
+}
+
+let sensor = Sensor {
+    i2c: I2cHandle,
+    config: SensorConfig { sample_rate_hz: 100 },
+};
+println!("{} Hz", sensor.config.sample_rate_hz);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A temperature-and-humidity sensor driver is composed from the I2C handle
+it talks over and its own settings, so the settings can be validated and
+reused independently of the specific bus instance the sensor happens to
+be wired to.</p>
+<pre><code class="rust">struct I2cHandle; // stands in for embedded-hal's I2c trait type
+
+struct SensorConfig {
+    sample_rate_hz: u16,
+    oversampling: u8,
+}
+
+impl SensorConfig {
+    fn validated(sample_rate_hz: u16, oversampling: u8) -&gt; Option&lt;Self&gt; {
+        if sample_rate_hz == 0 || oversampling &gt; 8 {
+            return None; // &lt;- a method that only makes sense on this one focused concern
+        }
+        Some(Self { sample_rate_hz, oversampling })
+    }
+}
+
+struct TempHumiditySensor { // &lt;- composed of two focused pieces instead of one flat struct
+    i2c: I2cHandle,
+    config: SensorConfig,
+}
+
+impl TempHumiditySensor {
+    fn new(i2c: I2cHandle, config: SensorConfig) -&gt; Self {
+        Self { i2c, config }
+    }
+}
+
+let config = SensorConfig::validated(100, 4).expect("valid sample config");
+let sensor = TempHumiditySensor::new(I2cHandle, config);
+println!("{} Hz", sensor.config.sample_rate_hz);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>SensorConfig</code> can be constructed, validated, and unit
+tested with no I2C bus present at all, and a second sensor on a
+different bus can reuse the exact same <code>SensorConfig</code> type — grouping
+the driver's own settings separately from the HAL handle it happens to
+be wired to is the same "group by what changes together" reasoning the
+classic page applies to a <code>ServerConfig</code>, just with a peripheral handle
+standing in for a database URL.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing data with multiple references</h3>
+            <p>A board-support struct composed of independent peripheral fields lets
+each one be borrowed and handed to a different part of firmware without
+those parts needing to know about each other or about the board struct
+itself.</p>
+<pre><code class="rust">struct Led;
+struct Button;
+struct Uart;
+
+struct Board { // &lt;- composed of independent peripherals, not one flat register-access struct
+    status_led: Led,
+    user_button: Button,
+    debug_uart: Uart,
+}
+
+fn poll_button(button: &amp;Button) -&gt; bool {
+    let _ = button;
+    false // stands in for a real GPIO read
+}
+
+fn log_line(uart: &amp;Uart, message: &amp;str) {
+    let _ = (uart, message); // stands in for a real UART write
+}
+
+let board = Board { status_led: Led, user_button: Button, debug_uart: Uart };
+let pressed = poll_button(&amp;board.user_button); // &lt;- borrows only the field this task needs
+log_line(&amp;board.debug_uart, "boot complete");
+println!("{pressed}");
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> because each peripheral is its own field, one task can
+hold <code>&amp;board.user_button</code> while another holds <code>&amp;board.debug_uart</code> at the
+same time with no borrow conflict — a flat struct doesn't change what's
+possible here, but composing by peripheral makes each task's actual
+dependency explicit in its function signature instead of "the whole
+board."</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

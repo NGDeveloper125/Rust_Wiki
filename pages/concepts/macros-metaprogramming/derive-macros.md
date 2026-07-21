@@ -165,13 +165,96 @@ serde's own `Serialize` trait and derive share, which
 [Effective Rust](https://effective-rust.com/) points to as the
 idiomatic way to ship a derivable trait.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A derive macro runs entirely at compile time and
-produces ordinary Rust code, so it has no runtime cost and no `std`
-requirement of its own — support depends only on whether the *generated*
-code (and any trait bounds it relies on) is `no_std`-friendly. The
-`no_std`-oriented logging crate `defmt` ships `#[derive(Format)]` as a
-real-world embedded derive macro, generating a `defmt::Format`
-implementation the same way `#[derive(Debug)]` would, but wire-efficient
-for constrained targets instead of routing through `core::fmt`.
+A derive macro is exactly as host-side as every other procedural macro
+(see [Procedural macros](procedural-macros.md) for the general
+host/target split): `#[proc_macro_derive(...)]` is a plain function that
+runs during the *embedded* crate's compilation, on the machine doing the
+compiling, and never executes on the microcontroller itself — only the
+`TokenStream` it returns, which the compiler splices in as ordinary
+source, ends up in the firmware image. That means a derive macro has no
+special embedded story at the mechanism level; what matters is whether
+the code it generates is itself `no_std`-compatible. Several real derive
+macros are written specifically for that constraint: `defmt`'s
+`#[derive(Format)]` generates an implementation of `defmt::Format` — a
+`no_std`-oriented stand-in for `Debug`/`Display` that encodes values
+compactly for transmission over a debug probe, rather than by formatting
+a `core::fmt`-built string — and serde's ordinary `#[derive(Serialize,
+Deserialize)]` is what crates like `postcard` build on to generate
+wire-format code that itself never allocates. In both cases the derive
+*author* had to design the generated impl to avoid assuming a heap or
+`std::fmt`; the derive mechanism supplying that impl is unchanged.
+
+## Basic usage example (Embedded)
+
+```
+#![no_std]
+
+use defmt::Format;
+
+#[derive(Format)] // <- proc-macro derive; runs on the host, generates a no_std-compatible impl
+struct SensorReading {
+    id: u8,
+    celsius: f32,
+}
+
+fn log_reading(reading: &SensorReading) {
+    defmt::info!("reading: {}", reading); // <- uses the generated Format impl, no core::fmt::Display involved
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL crate's public error type needs to be loggable over RTT without
+pulling in `core::fmt`'s heavier formatting machinery; deriving
+`defmt::Format` gives it that for free, the same way `#[derive(Debug)]`
+would in a hosted crate.
+
+```
+#[derive(defmt::Format)] // <- generates a no_std, wire-efficient Format impl, not a core::fmt one
+pub enum SensorError {
+    NotResponding,
+    OutOfRange { celsius: f32 },
+}
+
+fn report(err: &SensorError) {
+    defmt::warn!("sensor error: {}", err); // <- consumes the derived impl directly
+}
+```
+
+**Why this way:** a hand-written `core::fmt::Display` impl still routes
+through the same formatting machinery `println!` does, which is heavier
+than most constrained targets want just for diagnostic logging — the
+[`defmt` documentation](https://defmt.ferrous-systems.com/) describes
+`Format` as deliberately built to avoid that cost, which is exactly what
+the derive gives a HAL's error types for free.
+
+### Scenario: Serializing and deserializing
+
+A sensor packet transmitted over a wire link needs a compact,
+allocation-free encoding; deriving serde's `Serialize`/`Deserialize` and
+encoding through `postcard` gives that without needing `alloc` at all.
+
+```
+// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }, postcard = "1"
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)] // <- serde's derive; the generated code itself never allocates
+struct SensorPacket {
+    id: u8,
+    celsius: f32,
+}
+
+fn encode(packet: &SensorPacket) -> postcard::Result<heapless::Vec<u8, 32>> {
+    postcard::to_vec(packet) // <- postcard serializes into a fixed-capacity buffer, no heap involved
+}
+```
+
+**Why this way:** serde's derive itself makes no allocation decisions —
+[serde.rs's `no_std` support notes](https://serde.rs/no-std.html) confirm
+the generated code is allocation-agnostic — so the choice of a
+heap-free wire format like `postcard` over `serde_json` is what actually
+determines whether the encoding step needs an allocator at all.

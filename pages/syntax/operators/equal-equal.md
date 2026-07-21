@@ -84,6 +84,39 @@ recommends `assert_eq!`/`assert_ne!` over a bare `assert!(a == b)`
 specifically because the macro captures and prints both operands when
 the assertion fails, saving a debugging round trip.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `PartialEq` lives in `core::cmp` — no `std` dependency.
+`==` means exactly the same thing under `#![no_std]` — `PartialEq` lives in
+`core::cmp`, so nothing about the trait or the comparison changes on a
+microcontroller target. What genuinely differs is *what* gets compared:
+embedded code constantly checks a hardware identity or status register
+against a constant the datasheet defines, rather than comparing two
+ordinary in-memory values. A "WHO_AM_I"-style identity register — many
+I2C/SPI sensors expose one — exists specifically so driver code can
+confirm it's actually talking to the chip it expects before trusting
+anything else that chip reports.
+
+## Usage examples (Embedded)
+
+### Confirming a sensor's identity register before use
+
+```
+const EXPECTED_WHO_AM_I: u8 = 0x68; // datasheet-defined identity byte for this sensor model
+
+fn is_expected_sensor(who_am_i_reg: u8) -> bool {
+    who_am_i_reg == EXPECTED_WHO_AM_I // <- `==` confirms the chip on the bus is the one this driver expects
+}
+
+let who_am_i_reg = 0x68; // value read back from the sensor's WHO_AM_I register
+assert!(is_expected_sensor(who_am_i_reg));
+```
+
+### Checking a peripheral's status flag against an expected encoding
+
+```
+const STATUS_READY: u8 = 0x01;
+
+fn is_ready(status_reg: u8) -> bool {
+    status_reg == STATUS_READY // <- `==` checks the status register matches the "ready" encoding
+}
+```

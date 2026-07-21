@@ -95,12 +95,99 @@ print both sides on failure — the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 notes both `PartialEq` and `Debug` are needed for `assert_eq!`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The built-in derives (`Debug`, `Clone`, `PartialEq`,
-etc.) all work in `#![no_std]`. Worth noting: `#[derive(Debug)]`'s
-formatting still goes through `core::fmt`, which has no built-in way to
-print anywhere on a bare-metal target — embedded code typically routes
-`Debug`/`Display` output through a crate like `defmt` (a
-`no_std`-oriented, wire-efficient logging framework) rather than
-`println!`, which requires `std`.
+The mechanism is unchanged under `#![no_std]` — every built-in derive
+still generates the same mechanical, field-by-field implementation,
+routed through `core::fmt`/`core::cmp`/`core::clone` rather than their
+`std` re-exports, and still requires every field's own type to already
+implement the trait being derived. What's worth deciding deliberately on
+an embedded target is *which* traits to derive on *which* types, because
+one of them has a cost that's easy to ignore on a hosted machine and hard
+to ignore on a flash-constrained chip: `#[derive(Debug)]` generates
+formatting code — matching every variant, writing every field name — that
+occupies flash, and deriving it reflexively on every type in a large HAL
+or driver crate can measurably inflate a release binary. See
+[`#[derive(...)]`'s embedded
+explanation](../../syntax/attributes/derive.md) for the full code-size
+argument and the `#[cfg_attr(feature = "debug-impls", derive(Debug))]`
+pattern used to keep it optional; the choice that belongs here, on the
+concept page, is *when* a type genuinely needs `Debug`/`Clone`/`PartialEq`
+at all — a hot, frequently-instantiated register-snapshot type is a poor
+candidate for a reflexive `Debug` derive, while a rarely-constructed
+configuration struct usually isn't worth worrying about either way.
+
+## Basic usage example (Embedded)
+
+```
+#![no_std]
+
+#[derive(Clone, Copy, PartialEq)] // <- routes through core::clone/core::cmp; Debug left out deliberately
+pub struct SensorReading {
+    pub raw_adc: u16,
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Implementing traits
+
+A register-snapshot type read many times per second is exactly the kind
+of type where reflexively deriving `Debug` alongside `Clone`/`PartialEq`
+is worth reconsidering, since only the latter two are needed for the
+driver's own logic to compare and copy readings.
+
+```
+#![no_std]
+
+#[derive(Clone, Copy, PartialEq)] // <- needed: the driver compares and copies readings internally
+pub struct StatusRegister {
+    pub raw: u32,
+}
+
+// Debug omitted here on purpose — this type is read on every poll loop
+// iteration, and its formatting code would occupy flash for a capability
+// the release firmware never exercises.
+```
+
+**Why this way:** deriving exactly the traits a type's own logic needs —
+and no more — keeps flash usage proportional to actual use, rather than
+paying for `Debug`'s formatting code on a type instantiated and copied
+constantly; see [`#[derive(...)]`'s embedded
+explanation](../../syntax/attributes/derive.md) for the full code-size
+reasoning behind treating `Debug` as opt-in on hot types.
+
+### Scenario: Testing
+
+A small, infrequently-constructed configuration type is a good candidate
+for deriving `Debug` and `PartialEq` together, since host-run unit tests
+need both to use `assert_eq!` — and this type's derive cost is paid once,
+not on every poll loop iteration.
+
+```
+#![no_std]
+
+#[derive(Debug, PartialEq)] // <- both needed for assert_eq! in host-run tests; cheap here: rarely constructed
+pub struct UartConfig {
+    pub baud_rate: u32,
+    pub parity_enabled: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn builds_expected_config() {
+        let cfg = UartConfig { baud_rate: 115_200, parity_enabled: false };
+        assert_eq!(cfg, UartConfig { baud_rate: 115_200, parity_enabled: false });
+    }
+}
+```
+
+**Why this way:** `assert_eq!` still requires `Debug` + `PartialEq` on a
+`no_std` target exactly as it does on a hosted one, and this type is
+constructed rarely enough (at startup, from configuration) that its
+`Debug` derive's flash cost is negligible — the code-size argument for
+withholding `Debug` applies to hot, repeatedly-instantiated types, not to
+every type in a crate uniformly.

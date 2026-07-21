@@ -954,7 +954,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>|</code> has three unrelated meanings depending on context:</p>
 <ol>
@@ -975,7 +976,7 @@ interchangeable in the grammar.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1039,20 +1040,86 @@ of separate arms.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> for all three meanings. <code>BitOr</code> lives in <code>core::ops</code> —
-setting flag bits in a hardware register (<code>reg | ENABLE_BIT</code>) is a
-routine embedded operation; pattern alternatives and closure delimiters
-are pure grammar either way.</p>
+        <p>All three meanings of <code>|</code> are common in embedded code, though the mix
+differs from hosted code's. Bitwise OR is used to assemble a register's
+new value from several independent configuration bits <em>before</em> a
+single write — combining bits in a local variable first and writing
+the peripheral once, rather than once per bit, avoids extra volatile
+writes to memory-mapped I/O, which matters whenever a peripheral's
+write side-effects (triggering a state-machine transition, say)
+shouldn't happen mid-configuration. Pattern alternatives are just as
+common as in hosted code, for collapsing several related interrupt or
+fault variants into a single <code>match</code> arm. The closure-delimiter meaning
+has a distinctly embedded home too: HAL crates built on <code>cortex_m</code>
+commonly expose a critical-section function that takes a closure with
+one parameter — <code>cortex_m::interrupt::free(|cs| { ... })</code> — so <code>|cs|</code>
+opening that closure's parameter list is boilerplate seen in almost any
+interrupt-safe embedded driver.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Assembling a peripheral control register from several config bits</h3>
+            <pre><code class="rust">const CR1_UE: u32 = 1 &lt;&lt; 13; // USART enable
+const CR1_TE: u32 = 1 &lt;&lt; 3;  // transmitter enable
+const CR1_RE: u32 = 1 &lt;&lt; 2;  // receiver enable
+
+fn usart_cr1_value() -&gt; u32 {
+    CR1_UE | CR1_TE | CR1_RE // &lt;- `|` combines three independent config bits into one write
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Matching several fault codes in one arm</h3>
+            <pre><code class="rust">enum FaultCode {
+    Overcurrent,
+    Overtemperature,
+    UnderVoltage,
+    Ok,
+}
+
+fn is_critical(fault: &amp;FaultCode) -&gt; bool {
+    matches!(fault, FaultCode::Overcurrent | FaultCode::Overtemperature) // &lt;- `|`: either variant is critical
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Opening a critical-section closure's parameter list</h3>
+            <pre><code class="rust">struct CriticalSection;
+
+fn interrupt_free&lt;F: FnOnce(&amp;CriticalSection)&gt;(f: F) {
+    // in real firmware this disables interrupts, runs `f`, then restores them
+    let cs = CriticalSection;
+    f(&amp;cs);
+}
+
+static mut SHARED_COUNTER: u32 = 0;
+
+fn increment_shared_counter() {
+    interrupt_free(|_cs| { // &lt;- `|_cs|` opens this closure's one-parameter list
+        unsafe { SHARED_COUNTER += 1; }
+    });
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

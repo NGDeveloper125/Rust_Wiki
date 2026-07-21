@@ -99,12 +99,118 @@ compile and often "work" in testing, then wrap to a near-`u32::MAX`
 value in production the first time a caller sends bad data —
 `checked_sub` makes that failure explicit and impossible to ignore.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** All defined in `core`, no `std` dependency. Overflow
-behavior is worth extra attention in embedded code: register widths
-often dictate the natural integer type (`u16` for a 16-bit ADC reading,
-for example), and the debug-panics/release-wraps split still applies —
-safety-critical embedded code frequently uses explicit
-`checked_`/`saturating_` arithmetic deliberately, rather than relying on
-build-profile-dependent default behavior.
+As [`+`](../../syntax/operators/plus.md)'s embedded section covers, a
+release build — the profile that actually gets flashed to a device — has
+overflow checks off by default, so an ordinary `a + b` wraps silently
+instead of panicking; a device already in the field can't be
+"recompiled in debug mode" to catch the bug later the way a desktop
+program can. That single fact makes `checked_*`/`wrapping_*`/`saturating_*`
+more load-bearing in firmware than in typical hosted code, for a simple
+reason: the debug build's panic was never a *plan* for handling overflow,
+just a development-time trip-wire, and firmware has no equivalent
+trip-wire once it ships.
+
+What's genuinely a design decision, though, is *which* of the three to
+reach for, and that follows from what the quantity itself means:
+
+- **`wrapping_*`** is correct, not just tolerated, when the quantity is
+  *designed* to roll over — a free-running millis/tick counter
+  incremented every interrupt is the canonical case. Wraparound there
+  isn't a bug being suppressed; two's-complement wraparound arithmetic
+  means `now.wrapping_sub(earlier)` still produces the correct elapsed
+  time even after `now` has wrapped past its type's max, as long as the
+  actual elapsed duration never exceeds the counter's range. Reaching for
+  `checked_add` on a tick counter would be actively wrong — it would
+  report a spurious failure on a rollover that isn't an error at all.
+- **`saturating_*`** fits a quantity that has a real physical or logical
+  ceiling/floor where clamping is itself the sane behavior — a PWM duty
+  cycle that must never exceed 100%, an accumulated ADC reading being
+  scaled toward a display range. Silently wrapping a duty cycle past its
+  max could momentarily command a wildly wrong value to actuator
+  hardware before the next control cycle corrects it; saturating clamps
+  it to the safe boundary instead, which is the outcome actually wanted.
+- **`checked_*`** is right when going out of range means something is
+  actually wrong and the caller needs to know before acting on the
+  result — a value parsed from a config blob in EEPROM/flash, an
+  index computed from external input, anything where continuing past the
+  overflow with *any* number (wrapped or clamped) would be worse than
+  surfacing an explicit failure.
+
+Picking among the three is a per-quantity design decision, not a
+one-size-fits-all default — the same program legitimately uses
+`wrapping_*` for its tick counter and `checked_*` for a value it just
+parsed from storage.
+
+## Basic usage example (Embedded)
+
+```
+struct Millis(u32);
+
+impl Millis {
+    fn on_tick(&mut self) {
+        self.0 = self.0.wrapping_add(1); // <- correct by design: rollover is expected, not an error
+    }
+
+    fn elapsed_since(&self, earlier: u32) -> u32 {
+        self.0.wrapping_sub(earlier) // <- still correct even if self.0 has wrapped past u32::MAX since `earlier`
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Numeric computation
+
+A free-running millis counter should wrap on purpose; a PWM duty-cycle
+value derived from it should never be allowed to wrap at all, because a
+wrapped duty cycle is a plausible-looking but wildly wrong value that
+could reach the hardware.
+
+```
+struct Millis(u32);
+
+fn duty_cycle_percent(on_time_us: u32, period_us: u32) -> u8 {
+    let ratio = (on_time_us * 100) / period_us; // assumes period_us > 0, checked elsewhere
+    ratio.min(100) as u8 // <- PREFER: clamp explicitly, never let a computed duty cycle exceed the valid range
+}
+
+impl Millis {
+    fn on_tick(&mut self) {
+        self.0 = self.0.wrapping_add(1); // <- PREFER: rollover is the intended behavior for a tick counter
+    }
+}
+```
+
+**Why this way:** the tick counter's job is to keep counting forever
+within a fixed width, so `wrapping_add` is the *correct* operation, not a
+concession; the duty cycle's job is to stay within a hardware-meaningful
+0–100 range, so clamping with `.min(100)` (or `saturating_*` on the raw
+arithmetic before the cast) prevents an out-of-range value from ever
+reaching a PWM register, where Clippy's
+[`arithmetic_side_effects`](https://rust-lang.github.io/rust-clippy/master/#arithmetic_side_effects)
+lint would flag the unchecked multiplication as worth a second look.
+
+### Scenario: Validating input
+
+A calibration constant read back from EEPROM or a config blob should be
+checked before it's used in arithmetic that ultimately drives hardware —
+unlike a tick counter, there's no "intended" out-of-range value here, so
+overflow must surface as an explicit error instead of continuing with a
+wrapped or clamped number that looks plausible but isn't.
+
+```
+fn scaled_reading(raw_adc: u16, calibration_gain: u16) -> Result<u32, &'static str> {
+    (raw_adc as u32)
+        .checked_mul(calibration_gain as u32) // <- corrupt calibration data must not silently produce a bogus reading
+        .ok_or("calibration overflow: check stored gain value")
+}
+```
+
+**Why this way:** a gain constant corrupted by a bad flash write or a
+misconfigured EEPROM cell isn't a case where wrapping or clamping
+produces anything meaningful — the only sound response is to refuse to
+report a reading at all, which is exactly what surfacing the failure as
+an explicit `Result` accomplishes, versus silently handing downstream
+control logic a number that only looks like a valid sensor reading.

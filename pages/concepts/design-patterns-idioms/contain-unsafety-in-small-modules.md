@@ -165,13 +165,175 @@ them, is exactly the containment the
 [Rustonomicon's FFI chapter](https://doc.rust-lang.org/nomicon/ffi.html)
 assumes when it discusses trusting a foreign function's behavior.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** This is a source-organization idiom, not a runtime
-feature, so it costs nothing and applies identically under `#![no_std]`.
-It is, if anything, used more heavily there: hardware abstraction layer
-crates concentrate all of a driver's raw register access — inherently
-`unsafe` — inside one small internal module, exposing a safe, typed API
-(often built on `embedded-hal` traits) so application code above the
-driver never needs to write `unsafe` itself, the same shape as
-[Unsafe Rust](../memory-unsafe/unsafe-rust.md)'s embedded notes describe.
+This idiom isn't just applicable to embedded Rust — it's arguably the
+organizing principle the whole embedded Rust ecosystem is layered around.
+[Unsafe Rust](../memory-unsafe/unsafe-rust.md)'s and [Raw
+pointers](../memory-unsafe/raw-pointers.md)'s embedded notes cover the
+*mechanics* a contained module has to get right — volatile access,
+interrupt-safety, the exact register semantics a datasheet specifies —
+so this page won't repeat that ground. What's worth going deeper on here
+is the *module-boundary design* itself: how embedded crates draw the
+line, and a guarantee the boundary provides on top of hardware that a
+purely software small-module boundary (a bump allocator, an FFI wrapper)
+doesn't get for free.
+
+The ecosystem's standard layering is three tiers, each one a small-module
+boundary around the tier below it. A **peripheral access crate** (a
+"PAC," usually generated from the chip vendor's SVD file by `svd2rust`)
+is the innermost layer: it exposes one struct per peripheral, one method
+per register, and every method is `unsafe` — it's a thin, mechanical
+wrapper around raw addresses with essentially no judgment applied. A
+**HAL crate** (`stm32f4xx-hal`, `nrf52840-hal`, and similar) wraps the
+PAC: it is the module boundary this idiom is actually about — it takes
+ownership of the PAC's raw register structs and exposes safe, typed
+methods (`led.set_high()`, `i2c.write(addr, &bytes)`) built on the shared
+`embedded-hal` traits, with the unsafe register pokes contained entirely
+inside the HAL crate's own implementation. Everything above that —
+driver crates, application firmware — depends only on the HAL's safe
+trait methods and, ideally, never writes `unsafe` at all. The discipline
+this page describes at the scale of one hand-written module is, in
+embedded Rust, applied automatically by a whole layer of generated and
+hand-written crates most firmware never needs to look inside.
+
+The guarantee worth calling out that a software-only small module doesn't
+automatically get: embedded aliasing is a *hardware* correctness
+property, not just a Rust data-race property. Two independent `&mut`
+handles to the same register block are just as unsound as two aliased
+raw pointers in any other unsafe module, but the failure mode is a
+control system with two independent writers to the same physical device
+— a motor driver configured one way by task A and reconfigured
+mid-operation by task B, neither aware the other exists. HAL crates
+enforce the boundary at the *type* level, not just by convention:
+`Peripherals::take()` returns `Option<Peripherals>` and can only ever
+return `Some` once per program (a second call gets `None`, backed by a
+hidden flag), so ownership itself — not just the module's privacy and the
+author's discipline — statically prevents two independent driver
+instances from ever both claiming the same register block. That's a
+stronger boundary than "the unsafe fields are private and a reviewer
+checked the invariant"; it's "the compiler refuses to hand out a second
+handle at all."
+
+## Basic usage example (Embedded)
+
+```
+mod led {
+    const GPIOA_ODR: *mut u32 = 0x4001_0814 as *mut u32; // <- stays private to this module
+
+    pub struct Led; // <- the only public item; every raw register detail stays inside `led`
+
+    impl Led {
+        pub fn set_high(&self) {
+            unsafe {
+                // SAFETY: see Raw pointers (Embedded) for the volatile-access rationale this
+                // module relies on; contained here, this is the crate's only touch of GPIOA_ODR.
+                let current = core::ptr::read_volatile(GPIOA_ODR);
+                core::ptr::write_volatile(GPIOA_ODR, current | (1 << 5));
+            }
+        }
+    }
+}
+
+let status_led = led::Led;
+status_led.set_high(); // <- application code never sees a raw pointer or an address
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A board's LED and its user button both live on the same GPIO port, and
+the module boundary needs to guarantee no two parts of the firmware can
+ever independently claim the same underlying register block — not just
+by convention, but so the compiler refuses a second claim outright.
+
+```
+struct GpioaRegisters; // stands in for a PAC-generated raw register struct
+
+static mut TAKEN: bool = false;
+
+pub struct Peripherals {
+    pub gpioa: GpioaRegisters,
+}
+
+impl Peripherals {
+    /// Returns the peripherals exactly once per program; a second call gets `None`.
+    pub fn take() -> Option<Self> {
+        unsafe {
+            // SAFETY: firmware is single-threaded at startup, before interrupts are enabled,
+            // so this check-and-set has no concurrent caller to race against.
+            if TAKEN {
+                return None;
+            }
+            TAKEN = true;
+        }
+        Some(Peripherals { gpioa: GpioaRegisters })
+    }
+}
+
+let peripherals = Peripherals::take().expect("peripherals not yet taken");
+let second_attempt = Peripherals::take();
+assert!(second_attempt.is_none()); // <- the type system, not a reviewer, prevents a second owner of GPIOA
+```
+
+**Why this way:** privacy alone would stop *other modules'* code from
+constructing a `GpioaRegisters` out of thin air, but it wouldn't stop the
+same module from handing out the register block twice; the `take()`
+pattern used throughout the `cortex-m`/chip-HAL ecosystem (see the [Rust
+Embedded Book's peripherals
+chapter](https://docs.rust-embedded.org/book/peripherals/singletons.html))
+closes that gap by making "at most one owner" a runtime-enforced,
+type-level fact, which is a strictly stronger containment guarantee than
+a small module gets on a purely software invariant.
+
+### Scenario: Crossing an FFI boundary
+
+A vendor ships a proprietary radio SDK as a C library with dozens of
+functions; rather than letting `unsafe extern "C"` calls spread across
+the firmware wherever radio functionality is needed, one module owns
+every call into the SDK and translates its error codes into a typed Rust
+`Result`.
+
+```
+mod radio_sdk {
+    unsafe extern "C" {
+        fn radio_init() -> i32;
+        fn radio_send(data: *const u8, len: u32) -> i32;
+    }
+
+    pub struct RadioError(pub i32);
+
+    pub struct Radio; // <- the module's only public item
+
+    impl Radio {
+        pub fn init() -> Result<Self, RadioError> {
+            let code = unsafe {
+                // SAFETY: `radio_init` has no preconditions per the vendor SDK's header comment.
+                radio_init() // <- the only place in the crate this call is allowed to happen
+            };
+            if code == 0 { Ok(Radio) } else { Err(RadioError(code)) }
+        }
+
+        pub fn send(&self, data: &[u8]) -> Result<(), RadioError> {
+            let code = unsafe {
+                // SAFETY: `data` is a valid Rust slice for its full length, which satisfies
+                // `radio_send`'s documented pointer+length contract.
+                radio_send(data.as_ptr(), data.len() as u32)
+            };
+            if code == 0 { Ok(()) } else { Err(RadioError(code)) }
+        }
+    }
+}
+
+let radio = radio_sdk::Radio::init().expect("radio init failed");
+radio.send(b"ping").expect("send failed");
+```
+
+**Why this way:** every one of the vendor SDK's undocumented assumptions
+about calling context lives behind this one module's two methods instead
+of being re-litigated at every call site across the firmware that wants
+to send a radio packet — the same "thin unsafe core, safe API" shape
+[Unsafe Rust (Embedded)](../memory-unsafe/unsafe-rust.md)'s FFI scenario
+describes, scaled up here to a whole vendor SDK with typed error
+translation instead of one function.

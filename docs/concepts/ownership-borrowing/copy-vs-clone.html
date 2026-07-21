@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>Copy</code> and <code>Clone</code> are both about duplicating a value, but they represent
 opposite philosophies about when duplication should be implicit versus
@@ -971,7 +972,7 @@ implicit copy in a GC'd language typically isn't.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let a = 5;
 let b = a; // &lt;- i32 is Copy: a is silently duplicated, both remain usable
@@ -987,7 +988,7 @@ of its fields is also <code>Copy</code> — any type owning a heap allocation (l
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1061,19 +1062,115 @@ genuinely required applies directly to this choice.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Copy</code> and <code>Clone</code> are both defined in <code>core</code> — no
-<code>std</code> dependency. <code>Copy</code> types are especially convenient in embedded code
-since they avoid any question of allocation entirely.</p>
+        <p><code>Copy</code> and <code>Clone</code> mean exactly the same thing under <code>#![no_std]</code> — both
+traits live in <code>core</code>, so nothing about the mechanism itself changes; a
+<code>Clone</code> impl for something like a <code>heapless::Vec</code> still copies real bytes
+around, it just never touches an allocator to do it. What genuinely
+differs is the cost asymmetry: on a device with a few kilobytes of RAM and
+no allocator, a <code>.clone()</code> on anything beyond a handful of bytes is a
+real, visible cost in stack space and cycles, not the "cheap enough not
+to think about" operation it usually is on a desktop with megabytes of
+cache. This tilts the usual <code>Copy</code>/<code>Clone</code> choice further toward <code>Copy</code>
+for embedded's characteristic types — register-value wrappers, small
+sensor readings, timestamps — since a handful of bytes is exactly what
+<code>Copy</code>'s free bitwise duplication is for, and it removes the temptation to
+reach for <code>.clone()</code> reflexively later on something bigger. See
+<a href="../design-patterns-idioms/anti-pattern-clone-to-satisfy-borrow-checker.md">Anti-pattern: cloning to satisfy the borrow
+checker</a>
+for that reflex's specific failure mode — its embedded stakes are higher
+still, since a clone added just to silence the borrow checker can
+duplicate a <code>heapless</code>-style fixed-capacity buffer that the surrounding
+code budgeted RAM for exactly once.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#[derive(Clone, Copy)]
+struct AdcSample { channel: u8, value: u16 } // &lt;- 3 bytes: bitwise copy is free, Copy is the right call
+
+let a = AdcSample { channel: 0, value: 512 };
+let b = a; // &lt;- silently duplicated, both usable — no cost beyond the 3 bytes already on the stack
+println!("{} {}", a.value, b.value);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Cloning and copying</h3>
+            <p>A small register-value sample type derives <code>Copy</code>; a log built on a
+<code>heapless</code> buffer stays <code>Clone</code>-only, because duplicating it copies a real,
+visible chunk of the device's RAM budget.</p>
+<pre><code class="rust">#[derive(Clone, Copy)] // &lt;- 3 bytes total: bitwise duplication is free, no reason to make it explicit
+struct AdcSample { channel: u8, value: u16 }
+
+#[derive(Clone)] // &lt;- deliberately NOT Copy: duplicating this copies the whole fixed-capacity buffer
+struct SensorLog {
+    samples: heapless::Vec&lt;AdcSample, 32&gt;, // &lt;- up to 32 * 3 bytes moved on every .clone()
+}
+
+let sample = AdcSample { channel: 0, value: 512 };
+let sample2 = sample; // &lt;- implicit copy: 3 bytes, effectively free
+let log = SensorLog { samples: heapless::Vec::new() };
+let log_snapshot = log.clone(); // &lt;- explicit: visibly copies up to 96 bytes, worth a second look in a hot path
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> on a device with only a few KB of RAM total, an implicit
+<code>Copy</code> staying cheap (a handful of bytes) versus an explicit <code>.clone()</code>
+that can move nearly a hundred bytes is exactly the distinction <code>Clone</code>'s
+visibility is meant to surface — the
+<a href="https://doc.rust-lang.org/std/marker/trait.Copy.html">std docs for <code>Copy</code></a>
+frame deriving it as a commitment that's only appropriate for genuinely
+trivial types, which keeps every silent duplication in the program free
+while anything <code>heapless</code>-backed stays visibly costed at the call site.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Reading the most recent value out of a fixed-capacity log collapses the
+usual borrow-vs-clone tradeoff into a near-free decision once the element
+type is small and <code>Copy</code>.</p>
+<pre><code class="rust">fn latest_borrowed(log: &amp;heapless::Vec&lt;AdcSample, 32&gt;) -&gt; Option&lt;&amp;AdcSample&gt; {
+    log.last() // &lt;- borrows: zero-cost, tied to `log`'s lifetime
+}
+
+fn latest_owned(log: &amp;heapless::Vec&lt;AdcSample, 32&gt;) -&gt; Option&lt;AdcSample&gt; {
+    log.last().copied() // &lt;- AdcSample is Copy: ".copied()" is a 3-byte copy, not a heap-owning clone
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> because <code>AdcSample</code> is <code>Copy</code>, pulling one out of the
+log with <code>.copied()</code> costs exactly 3 bytes and never risks an allocation —
+the same borrow-vs-own choice the classic page makes between
+<code>Vec&lt;&amp;str&gt;</code>/<code>Vec&lt;String&gt;</code> collapses to a near-free decision once the
+element type is small and <code>Copy</code>, which is exactly why embedded code
+favors small <code>Copy</code> types for anything read out of a collection often.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

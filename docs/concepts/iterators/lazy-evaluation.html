@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Building an <a href="../../concepts/iterators/iterator-adaptors.html">adaptor</a> chain does no work by itself.
 Writing <code>data.iter().map(f).filter(g)</code> only constructs a small nested
@@ -975,7 +976,7 @@ much of the sequence to actually pay for.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let numbers = 1..; // an infinite range
 
@@ -987,7 +988,7 @@ assert_eq!(first_three, vec![2, 4, 6]);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1051,21 +1052,113 @@ preferring the laziest return type that still satisfies every caller.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Laziness is a property of <code>core::iter</code>'s adaptors, not
-of <code>std</code> — building and partially consuming a lazy chain costs nothing
-beyond the items actually produced, and avoiding intermediate
-allocations this way is often more valuable on a memory-constrained
-target than on a hosted one.</p>
+        <p>Laziness is a property of <code>core::iter</code>'s adaptors, not of <code>std</code>, so it
+holds exactly as written on a <code>#![no_std]</code> target: building a chain with
+<code>map</code>/<code>filter</code> does no work and allocates nothing until something pulls
+values through it. This matters even more on a memory-constrained target
+than on a hosted one — because no intermediate buffer is ever
+materialized between adaptor stages, a long chain over a fixed-size array
+of readings still costs nothing beyond the final values actually
+produced, and the compiler typically fuses the whole chain into one loop.
+Laziness also means a chain can be built over a source that's slow to
+fully drain — a peripheral FIFO being drained one register read at a
+time — and still be handed to a caller that only wants the first few
+values, without ever pulling more reads than requested.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">let register_bank: [u16; 6] = [10, 45, 90, 200, 512, 1023];
+
+let scaled = register_bank.iter().map(|&amp;r| r / 2); // &lt;- map builds a pipeline; nothing computed yet, no allocation
+
+let first_two: [u16; 2] = {
+    let mut it = scaled.take(2); // still lazy
+    [it.next().unwrap(), it.next().unwrap()] // work happens here, one value at a time
+};
+assert_eq!(first_two, [5, 22]);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Searching a buffer of recent sensor samples for the first one past a
+threshold only needs to look as far as the first match — laziness means
+the rest of the buffer is never touched, and nothing is ever collected
+into a <code>Vec</code> to search through.</p>
+<pre><code class="rust">let samples: [u16; 8] = [480, 495, 510, 605, 490, 500, 512, 498];
+
+let first_over_threshold = samples
+    .iter()
+    .filter(|&amp;&amp;s| s &gt; 600) // &lt;- filter is lazy: nothing evaluated until pulled
+    .next(); // &lt;- stops at the first match, ignoring the rest of the buffer
+
+assert_eq!(first_over_threshold, Some(&amp;605));
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> stopping at the first match without ever building an
+intermediate collection keeps the whole search on the stack with a
+bounded, small number of comparisons — exactly the property that matters
+when the buffer represents scarce peripheral reads rather than free
+in-memory data.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A driver function that reports which channel readings crossed a
+threshold shouldn't build a <code>heapless::Vec</code> of every match if the caller
+only wants the first — returning a lazy iterator over a borrowed fixed
+buffer lets the caller decide how much to consume, with no allocation
+forced either way.</p>
+<pre><code class="rust">struct ChannelLog {
+    readings: [i16; 4],
+}
+
+impl ChannelLog {
+    fn above_threshold(&amp;self, threshold: i16) -&gt; impl Iterator&lt;Item = i16&gt; + '_ {
+        // &lt;- returns a lazy iterator borrowing `readings`; caller decides how much to consume
+        self.readings.iter().copied().filter(move |&amp;r| r &gt; threshold)
+    }
+}
+
+let log = ChannelLog { readings: [18, 24, 30, 21] };
+let first_spike = log.above_threshold(25).next();
+assert_eq!(first_spike, Some(30));
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Iterator&lt;Item = i16&gt;</code> instead of a
+collected buffer defers work until the caller actually asks for it, and
+because the iterator borrows the fixed array rather than owning a new
+allocation, the whole API stays viable with zero heap on a <code>#![no_std]</code>
+target.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

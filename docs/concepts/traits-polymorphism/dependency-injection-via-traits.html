@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Without a class hierarchy or a dependency-injection framework, Rust
 achieves the same decoupling goal — code depending on an abstraction
@@ -962,7 +963,7 @@ framework, reflection, or runtime container needed.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">trait Logger {
     fn log(&amp;self, msg: &amp;str);
@@ -982,7 +983,7 @@ run(&amp;ConsoleLogger);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1056,20 +1057,156 @@ thing production and test code have in common.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No allocator dependency — this is precisely the pattern
-<code>embedded-hal</code> is built around: application/driver code is generic over
-a trait (e.g. a GPIO or SPI trait), decoupled from which vendor's
-concrete peripheral implementation is plugged in at the top level.</p>
+        <p>This pattern isn't just supported in embedded Rust — it's arguably the
+central design idea <code>embedded-hal</code> exists to enable, and the reason
+<code>trait</code>-based dependency injection reads as more than an OO-framework
+substitute once you're writing firmware. A driver for a sensor, display,
+or radio is written generic over an <code>embedded-hal</code> trait (<code>OutputPin</code>,
+<code>SpiBus</code>, <code>I2c</code>, <code>DelayNs</code>, ...) instead of any one chip's concrete HAL
+type — see <a href="../../syntax/keywords/trait.md"><code>trait</code>'s embedded
+explanation</a> for how that trait boundary
+is what lets one driver crate compile unmodified against an STM32 board,
+an RP2040 board, or any other target whose HAL implements the traits the
+driver needs. Dependency injection is the same shape one level up: the
+concrete peripheral implementation is chosen once, at the top of the
+application (typically <code>main</code>, where the real board's HAL type is known),
+and only the trait is threaded down into the driver.</p>
+<p>The second payoff is on the host side. Because the driver never names a
+concrete chip type, a host-run unit test can construct a fake
+implementation of the same trait — a struct that records which pin
+operations were called, or returns canned sensor readings — and inject
+that instead of real hardware. The driver logic (parsing a sensor's
+response bytes, sequencing a display's init commands, retry/backoff
+policy) is then exercised by an ordinary <code>cargo test</code> on the development
+machine, with no debug probe and no board attached, following the same
+host-vs-target split <a href="../../concepts/testing-tooling/unit-tests.md">Unit tests' embedded
+notes</a> describe for
+hardware-independent logic generally — here the trait seam is <em>what
+makes</em> the logic hardware-independent in the first place.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">trait OutputPin {
+    fn set_high(&amp;mut self);
+    fn set_low(&amp;mut self);
+}
+
+struct Led&lt;P: OutputPin&gt; { // &lt;- generic over the trait, not any one vendor's pin type
+    pin: P,
+}
+
+impl&lt;P: OutputPin&gt; Led&lt;P&gt; {
+    fn turn_on(&amp;mut self) {
+        self.pin.set_high();
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A sensor driver crate should depend on <code>embedded-hal</code>'s <code>I2c</code> trait, not
+on any one vendor's concrete I2C peripheral type, so the same driver
+compiles unmodified against boards from different manufacturers.</p>
+<pre><code class="rust">trait I2c {
+    fn write_read(&amp;mut self, addr: u8, out: &amp;[u8], in_buf: &amp;mut [u8]);
+}
+
+struct TempSensor&lt;I: I2c&gt; { // &lt;- generic over the HAL trait: portable across every chip's I2C impl
+    i2c: I,
+    addr: u8,
+}
+
+impl&lt;I: I2c&gt; TempSensor&lt;I&gt; {
+    fn read_celsius(&amp;mut self) -&gt; f32 {
+        let mut buf = [0u8; 2];
+        self.i2c.write_read(self.addr, &amp;[0x00], &amp;mut buf);
+        i16::from_be_bytes(buf) as f32 / 256.0
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a driver written against <code>I2c</code> rather than, say, a
+concrete <code>Stm32I2c1</code> type runs unchanged on any board whose HAL implements
+<code>I2c</code> for its own peripheral — the same portability goal <a href="../../syntax/keywords/trait.md"><code>trait</code>'s
+embedded explanation</a> covers for
+<code>embedded-hal</code> as a whole, applied here to one driver crate's own
+dependency.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p><code>TempSensor</code>'s decoding logic — turning two raw bytes into a Celsius
+value — can be verified on the host by injecting a fake <code>I2c</code>
+implementation that returns a fixed byte pair, with no real sensor or
+board attached.</p>
+<pre><code class="rust">trait I2c {
+    fn write_read(&amp;mut self, addr: u8, out: &amp;[u8], in_buf: &amp;mut [u8]);
+}
+
+struct TempSensor&lt;I: I2c&gt; {
+    i2c: I,
+    addr: u8,
+}
+
+impl&lt;I: I2c&gt; TempSensor&lt;I&gt; {
+    fn read_celsius(&amp;mut self) -&gt; f32 {
+        let mut buf = [0u8; 2];
+        self.i2c.write_read(self.addr, &amp;[0x00], &amp;mut buf);
+        i16::from_be_bytes(buf) as f32 / 256.0
+    }
+}
+
+struct FakeI2c; // test double: no real peripheral involved
+impl I2c for FakeI2c {
+    fn write_read(&amp;mut self, _addr: u8, _out: &amp;[u8], in_buf: &amp;mut [u8]) {
+        in_buf.copy_from_slice(&amp;[25, 0]); // canned reading: 25.0 C
+    }
+}
+
+#[test]
+fn decodes_a_fixed_reading_as_celsius() {
+    let mut sensor = TempSensor { i2c: FakeI2c, addr: 0x48 };
+    assert_eq!(sensor.read_celsius(), 25.0);
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> because <code>TempSensor</code> only ever calls through <code>I2c</code>,
+this test runs as an ordinary host-side <code>cargo test</code> with no target
+hardware — the same fast, deterministic split <a href="../../concepts/testing-tooling/unit-tests.md">Unit tests' embedded
+notes</a> describe for
+hardware-independent logic, made possible here specifically because the
+driver was written against the trait rather than a concrete peripheral
+type.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

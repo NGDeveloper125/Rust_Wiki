@@ -111,8 +111,109 @@ works for `Cache<&str, f64>`, `Cache<u32, String>`, or any other pairing
 with no duplicated code, and monomorphization means each instantiation
 runs exactly as fast as a hand-written version would.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Generics and monomorphization are purely a compile-time
-mechanism — no `std` or allocator dependency, and no extra binary size
-beyond what monomorphization already costs on any target.
+Generic, trait-bounded code is arguably the single most load-bearing
+pattern in the embedded Rust ecosystem: it's how a driver crate — an
+accelerometer, a display, a flash chip — gets written *once* and works
+across every microcontroller vendor's HAL, instead of one copy per chip
+family. The `embedded-hal` crate defines a set of small, vendor-neutral
+traits (`i2c::I2c`, `spi::SpiBus`, `digital::OutputPin`, …); a driver
+writes its logic generic over `BUS: embedded_hal::i2c::I2c` rather than
+over any concrete vendor's I2C peripheral type, and each vendor's HAL
+crate (`stm32f4xx-hal`, `nrf52840-hal`, `rp2040-hal`, …) provides its own
+concrete type implementing that same trait. The driver never mentions a
+specific chip; the HAL crate never mentions the driver. Generics are what
+let those two crates, written by different people for different hardware,
+meet in the middle.
+
+Because generics resolve entirely at compile time, this hardware-agnostic
+abstraction costs nothing at runtime the way a `dyn Trait`/vtable
+approach would: no indirect call, no vtable lookup, and the compiler can
+inline across the trait boundary the same way it would for a
+non-generic function, which matters for tightly-timed code (bit-banged
+protocols, cycle-counted delays) where an indirect call's timing isn't
+just slower but *less predictable*. The cost moves elsewhere instead:
+monomorphization means the compiler emits one full specialized copy of
+the generic driver code per concrete type it's instantiated with, so a
+firmware image linking against several different concrete bus types
+through the same generic driver pays in flash size for each copy — a
+real and sometimes decisive constraint on a target with, say, 64 KB of
+flash total. Choosing between a generic, monomorphized driver and a
+`dyn Trait`-based one is frequently a code-size-vs-call-overhead
+tradeoff made explicitly for that reason, not a default either way.
+
+## Basic usage example (Embedded)
+
+```
+use embedded_hal::digital::OutputPin;
+
+fn blink<PIN: OutputPin>(pin: &mut PIN) { // <- generic over any HAL's concrete GPIO output pin type
+    pin.set_high().ok();
+    pin.set_low().ok();
+}
+
+// Called identically whether `pin` is an stm32f4xx-hal, nrf52840-hal, or rp2040-hal pin type --
+// `blink` never names a specific vendor, and monomorphizes to one specialized copy per type used.
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Writing generic code
+
+A sensor driver's core logic — issuing the right register reads and
+writes — has nothing to do with which vendor's I2C peripheral it runs on;
+writing it generic over `embedded_hal::i2c::I2c` lets the same driver
+crate compile against any HAL that implements the trait.
+
+```
+use embedded_hal::i2c::I2c;
+
+struct TempSensor<BUS> { // <- generic over the bus type, not any one vendor's concrete I2C peripheral
+    bus: BUS,
+    address: u8,
+}
+
+impl<BUS: I2c> TempSensor<BUS> {
+    fn read_celsius(&mut self) -> Result<f32, BUS::Error> {
+        let mut raw = [0u8; 2];
+        self.bus.write_read(self.address, &[0x00], &mut raw)?;
+        Ok(i16::from_be_bytes(raw) as f32 / 256.0)
+    }
+}
+```
+
+**Why this way:** bounding `BUS` to exactly `embedded_hal::i2c::I2c` — no
+more — means `TempSensor` compiles against any board's HAL crate that
+implements that trait, without the driver crate depending on any single
+vendor's hardware-access library; this is the standard shape of
+essentially every driver crate published for `embedded-hal`.
+
+### Scenario: Designing a public API
+
+A driver crate's public API should be generic over the trait it actually
+needs, not over a specific board's HAL type, and should weigh
+monomorphized flash cost against `dyn Trait`'s runtime indirection
+deliberately rather than defaulting to generics out of habit.
+
+```
+use embedded_hal::spi::SpiBus;
+
+// PREFER (most drivers): generic + monomorphized -- zero call overhead, cost paid in flash per instantiation
+pub struct FlashChip<BUS: SpiBus> {
+    bus: BUS,
+}
+
+// AVOID unless flash budget forces it: dyn Trait -- one shared code path, but every call is now indirect
+pub struct FlashChipDyn<'a> {
+    bus: &'a mut dyn SpiBus<Error = core::convert::Infallible>,
+}
+```
+
+**Why this way:** most embedded driver crates default to the generic
+form because timing-sensitive bus transactions benefit from inlining and
+predictable, non-indirect calls; a `dyn Trait` form is the right
+trade only when a project links many different concrete bus
+implementations through the same driver and flash size, not call
+overhead, is the binding constraint — a decision worth making
+explicitly rather than by default.

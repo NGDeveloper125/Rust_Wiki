@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&lt;&lt;</code> is the left-shift operator, overloadable via <code>std::ops::Shl</code>.</p>
 <p>Shifting by an amount greater than or equal to the type's bit width
@@ -965,7 +966,7 @@ overload of <code>&lt;&lt;</code> for stream output — Rust uses <code>{}</code
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1003,18 +1004,47 @@ shows the same shift-to-build-a-mask idiom.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Shl</code> lives in <code>core::ops</code> — bit shifts are used
-constantly in embedded code to construct register masks (<code>1 &lt;&lt; pin_num</code>).</p>
+        <p><code>&lt;&lt;</code> carries over unchanged and is the standard way to position a
+value at a specific bit offset within a register, rather than at bit
+0. Many peripheral registers pack several unrelated fields into one
+word — a UART's word length, parity, and stop-bit count might each
+occupy a couple of bits at different offsets — and writing one of
+those fields means shifting its value up to the field's offset before
+OR-ing it into the register (see <a href="pipe.md"><code>|</code></a>). That's distinct from
+the single-bit case of turning a pin index into a mask (<code>1 &lt;&lt; pin</code>):
+the same operator, but shifting a value <em>wider than one bit</em> into
+position rather than a single set bit.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Positioning a multi-bit field within a control register</h3>
+            <pre><code class="rust">const STOP_BITS_OFFSET: u32 = 12; // USART CR2 STOP field starts at bit 12
+const STOP_BITS_2: u32 = 0b10;    // "2 stop bits", per the field's own encoding
+
+fn cr2_value() -&gt; u32 {
+    STOP_BITS_2 &lt;&lt; STOP_BITS_OFFSET // &lt;- `&lt;&lt;` moves the 2-bit field up to its position in the register
+}
+
+assert_eq!(cr2_value(), 0b10_0000_0000_0000);
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

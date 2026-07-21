@@ -66,9 +66,122 @@ recommends as the default choice; reach for
 instead once the set of concrete types is only known at runtime or code
 size becomes the binding constraint.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No allocator dependency — and often the preferred
-choice in embedded code specifically to avoid `dyn Trait`'s vtable
-indirection, at the cost of larger compiled binary size (a real, often
-tighter constraint on embedded flash than on a hosted target).
+Static dispatch has no allocator dependency at all, and monomorphization
+is exactly this page's specific angle on a tradeoff [`dyn`'s embedded
+explanation](../../syntax/keywords/dyn.md) already frames at a higher
+level — generics-vs-`dyn Trait` on a constrained core. The reason generic,
+`embedded-hal`-bounded functions are so strongly preferred in embedded
+code specifically (more so than the same preference shows up in hosted
+Rust) is that monomorphization doesn't just avoid a vtable's indirect
+jump — it hands the compiler a fully concrete call graph to optimize
+across. A function generic over `P: OutputPin`, once monomorphized for
+one concrete pin type, can often be inlined straight through: the
+"abstract" call to `pin.set_high()` resolves at compile time to the one
+`impl OutputPin for Pa0` that exists for that instantiation, which the
+compiler can then inline into a single volatile register write — the
+trait boundary can vanish from the compiled output entirely, leaving code
+indistinguishable from what you'd get hand-writing the register access
+with no abstraction at all. A `dyn OutputPin` call can never do this: the
+concrete implementation behind the vtable is chosen at runtime, so the
+compiler must leave an indirect call in place and cannot see through it to
+inline anything on the other side.
+
+The cost runs the other way in code size, and on embedded that cost is
+concrete rather than abstract: every distinct concrete type a generic
+function is actually instantiated with produces its own full copy of that
+function's compiled code. A driver function generic over `embedded-hal`'s
+`OutputPin` called with five different pin types across a board's
+initialization code compiles to five separate (though each individually
+optimal) copies, where the `dyn`-based equivalent would be one copy shared
+by all five call sites. On a hosted target with megabytes of program
+memory this rarely registers; on a chip with tens of kilobytes of flash,
+instantiating a generic driver across many peripheral instances is a real
+line item, and is the concrete reason some embedded codebases deliberately
+reach for `dyn` (once `alloc` is available) or a hand-written enum
+dispatch instead, trading away the inlining benefit specifically to cap
+code size.
+
+## Basic usage example (Embedded)
+
+```
+trait OutputPin {
+    fn set_high(&mut self);
+}
+
+fn turn_on<P: OutputPin>(pin: &mut P) { // <- generic: monomorphized per concrete pin type used
+    pin.set_high();
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Writing generic code
+
+A driver function that only ever configures one or two concrete pin
+types in a given firmware image is a strong candidate for static
+dispatch — the compiler can often inline the call chain down to a single
+register write, with the trait boundary costing nothing at runtime.
+
+```
+trait OutputPin {
+    fn set_high(&mut self);
+    fn set_low(&mut self);
+}
+
+struct Pa0; // this board's only status LED pin
+impl OutputPin for Pa0 {
+    fn set_high(&mut self) { /* single volatile register write */ }
+    fn set_low(&mut self) { /* single volatile register write */ }
+}
+
+fn blink<P: OutputPin>(pin: &mut P) { // <- monomorphized for Pa0 alone in this firmware image
+    pin.set_high();
+    pin.set_low();
+}
+
+blink(&mut Pa0);
+```
+
+**Why this way:** with a single concrete `P` used at the only call site,
+monomorphization produces exactly one specialized copy of `blink`, which
+the compiler is free to inline straight into the two register writes —
+the same zero-cost-abstraction argument [Effective Rust's generics vs.
+trait objects item](https://effective-rust.com/generics.html) makes
+generally, sharpened here by embedded code's tighter cycle budgets, where
+an indirect vtable call is a cost that's easy to measure rather than a
+theoretical one.
+
+### Scenario: Designing a public API
+
+A HAL crate offering a generic driver function should watch how many
+distinct concrete types it actually gets instantiated with across a
+firmware image, since each one is a full compiled copy — instantiating
+the same generic driver logic across a dozen peripheral instances can
+turn a small function into a real line item in the flash budget.
+
+```
+trait OutputPin {
+    fn set_high(&mut self);
+}
+
+fn set_all<P: OutputPin, const N: usize>(pins: &mut [P; N]) { // <- one copy per concrete P actually used
+    for pin in pins {
+        pin.set_high();
+    }
+}
+
+// Called with five distinct pin types across board init compiles to
+// five separate copies of set_all — each individually optimal, but each
+// occupying its own flash space, unlike a single shared dyn-based version.
+```
+
+**Why this way:** the code-size side of monomorphization is the
+concrete counterpart to [`dyn`'s embedded
+explanation](../../syntax/keywords/dyn.md) of the same tradeoff — a HAL
+author choosing generics for their inlining benefit should still budget
+for one compiled copy per concrete type actually instantiated, and switch
+a specific hot spot to `dyn Trait` (once `alloc` is available) or an enum
+dispatch if that multiplication becomes the binding constraint rather
+than execution speed.
