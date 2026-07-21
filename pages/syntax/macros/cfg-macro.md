@@ -93,9 +93,51 @@ profile without a custom Cargo feature — both message forms live in the
 same compiled binary per profile, and which one runs is chosen at
 runtime by the flag baked in at compile time.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `cfg!` is resolved entirely at compile time against the
-target's configuration — it has no runtime dependency on `std` or an OS,
-and is used constantly in embedded code to pick behavior (e.g.
-`cfg!(target_arch = "arm")`) inside a function shared across targets.
+`cfg!(...)` resolves at compile time exactly as it does on a hosted
+target, and it's one of the more load-bearing tools in embedded Rust
+specifically, because embedded crates routinely support several
+different microcontrollers — often from different vendors entirely —
+from one codebase. A bare-metal target has no operating system at all,
+so `cfg!(target_os = "none")` is the standard way to detect "am I
+compiling for bare metal" inside logic shared between a `no_std`
+firmware crate and, say, its host-side test suite running under `std`.
+
+More commonly still, embedded crates gate behavior on a Cargo feature per
+supported chip rather than on `target_os`: a HAL crate supporting both an
+STM32F4 and an STM32F1 typically exposes `feature = "stm32f4"` /
+`feature = "stm32f1"` (mutually exclusive, chosen by the downstream
+`Cargo.toml`), and reaches for `cfg!(feature = "stm32f4")` inside a
+function whose logic is nearly identical between chips but differs in
+one register value or pin count — reserving
+`#[cfg(feature = "stm32f4")]` on the whole module or function for the
+parts that are structurally different per chip (a register block layout,
+a type that doesn't exist on the other chip) and genuinely wouldn't
+compile otherwise. The same "both branches must compile" rule from the
+classic explanation is exactly why `cfg!` is only the right tool for the
+*shared-logic* slice of a multi-target HAL.
+
+## Usage examples (Embedded)
+
+### Detecting a bare-metal target at compile time
+
+```
+fn heap_available() -> bool {
+    !cfg!(target_os = "none") // <- true on a hosted test build, false on bare-metal firmware
+}
+```
+
+### Picking a chip-specific constant inside shared HAL logic
+
+```
+fn gpio_pin_count() -> u8 {
+    if cfg!(feature = "stm32f401") { // <- both branches compile in every build of this HAL crate
+        16
+    } else if cfg!(feature = "stm32f411") {
+        16
+    } else {
+        8 // fallback for the smaller chip variant in this family
+    }
+}
+```

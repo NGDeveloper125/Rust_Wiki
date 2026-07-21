@@ -109,14 +109,54 @@ carry enough context to diagnose the failure without re-running the
 program — building the message with `format!` right where the bad input
 is still in scope is how that context gets captured before it's lost.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** The formatting engine itself (`core::fmt`,
-`Display`/`Debug`, the `format_args!` machinery this macro expands into)
-is pure `core` and works with no allocator at all — what `format!`
-specifically needs is `alloc`, since it allocates and returns an owned
-`String`. On a `#![no_std]` target with `extern crate alloc` and a
-configured `#[global_allocator]`, `format!` works normally; without an
-allocator, the usual substitute is `write!`ing into a stack buffer or a
-`heapless::String` instead of allocating a fresh one (see
-[`write!` / `writeln!`](write-macros.md)).
+`format!` itself needs `alloc`, for the same reason as `vec!` and
+`String`: it returns an owned, heap-allocated `String`, and a
+`#![no_std]` target has no heap unless one is explicitly configured. On a
+target that does configure `extern crate alloc` plus a
+`#[global_allocator]`, `format!` works exactly as documented above — the
+`{}`/`{:?}` grammar, specifiers, and compile-time argument checking are
+unaffected by the target having no OS.
+
+Where there's no allocator at all — the common case on the most
+constrained MCUs — the caveat is specifically the return type, not the
+formatting machinery: `core::fmt` itself (`Display`, `Debug`, the
+`format_args!` engine every one of these macros expands into) is pure
+`core` and costs nothing extra. The idiomatic no-heap substitute is to
+`write!` the same format string into something that owns fixed, non-heap
+storage instead of asking for a fresh `String` — a `heapless::String<N>`
+(it implements `core::fmt::Write`, so `write!(my_string, "...")` works
+unchanged) or a stack buffer paired with a small `core::fmt::Write`
+wrapper. For code-size-constrained targets specifically, the `ufmt` crate
+goes further and replaces `core::fmt` with its own leaner `uWrite`/
+`uwrite!` machinery, trading some flexibility (no default
+floating-point formatting, no dynamic precision) for a meaningfully
+smaller compiled footprint.
+
+## Usage examples (Embedded)
+
+### Formatting into a heapless::String instead of allocating
+
+```
+use core::fmt::Write;
+use heapless::String;
+
+let order_id = 42;
+let amount = 19.9;
+
+let mut receipt: String<64> = String::new(); // <- fixed 64-byte capacity, no heap
+write!(receipt, "Order #{order_id}: ${amount:.2}").unwrap(); // <- same {}/:.2 grammar as format!, no allocation
+```
+
+### Formatting with ufmt on a heavily size-constrained MCU
+
+```
+use ufmt::uwrite;
+use heapless::String; // heapless's "ufmt" feature implements uWrite for String<N>
+
+let voltage_mv: u16 = 3300;
+
+let mut line: String<32> = String::new();
+uwrite!(&mut line, "vbus = {} mV", voltage_mv).unwrap(); // <- ufmt's leaner engine, no core::fmt involved
+```

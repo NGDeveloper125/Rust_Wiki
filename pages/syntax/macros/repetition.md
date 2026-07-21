@@ -76,12 +76,66 @@ for the macro this pattern mirrors; a custom variadic constructor macro
 copies the same shape so it tolerates trailing commas the same way
 callers already expect from `vec!`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Repetition is resolved entirely at compile time and
-produces ordinary, already-expanded Rust code, so it costs nothing at
-runtime and works identically under `#![no_std]`. It's a heavily used
-tool in embedded HAL crates specifically: generating one nearly
-identical `impl` per GPIO pin or timer instance from a single
-`$($pin:ident),*`-style macro call is far less error-prone than
-hand-writing dozens of copies.
+Repetition is resolved entirely at compile time and produces ordinary,
+already-expanded Rust code, so `$(...)*`/`$(...)+`/`$(...)?` cost nothing
+at runtime and work identically under `#![no_std]` — nothing about
+matching or re-emitting a repeated sub-pattern depends on a heap, an
+allocator, or `std` being present. It's one of the most heavily used
+tools in embedded HAL crates specifically, because so much embedded
+boilerplate is genuinely repetitive: one nearly identical register
+accessor per peripheral instance, one nearly identical GPIO pin type per
+physical pin, one nearly identical timer `impl` per timer instance.
+Writing `$($pin:ident => $bit:expr),*` once and having it expand into
+dozens of hand-equivalent functions is both far less error-prone and far
+less to review than the hand-written copies it replaces — this is
+exactly the technique tools like `svd2rust` lean on to generate an entire
+chip's register API from its hardware description file.
+
+## Usage examples (Embedded)
+
+### Generating GPIO pin accessor functions
+
+```
+macro_rules! gpio_pins {
+    ($($name:ident => $bit:expr),* $(,)?) => { // <- `*` over pin definitions, trailing comma tolerated
+        $(
+            fn $name(gpio_odr: &mut u32) { // <- re-emits one function per repetition
+                *gpio_odr |= 1 << $bit;
+            }
+        )*
+    };
+}
+
+gpio_pins! {
+    set_pa5 => 5,
+    set_pa6 => 6,
+    set_pa7 => 7,
+}
+// <- expands to three separate functions, set_pa5/set_pa6/set_pa7, one per repetition
+```
+
+### Generating register-accessor functions for multiple peripheral instances
+
+A driver needs a `read_status` function for each of several identical
+UART instances sitting at different base addresses — exactly the "one
+nearly identical accessor per instance" case repetition exists for.
+
+```
+macro_rules! uart_status_readers {
+    ($($fn_name:ident @ $base:expr),* $(,)?) => {
+        $(
+            fn $fn_name() -> u32 {
+                unsafe { core::ptr::read_volatile(($base + 0x00) as *const u32) } // <- status register at offset 0x00
+            }
+        )*
+    };
+}
+
+uart_status_readers! {
+    uart1_status @ 0x4001_3800,
+    uart2_status @ 0x4000_4400,
+    uart3_status @ 0x4000_4800,
+}
+```

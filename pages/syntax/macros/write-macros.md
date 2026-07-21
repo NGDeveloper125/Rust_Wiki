@@ -108,14 +108,63 @@ treats unwrapping a fallible I/O result as acceptable only in throwaway
 code, unlike the `fmt::Write`-into-a-`String` case above where
 `.unwrap()` is standard practice.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Split by target (partial overall).** Writing into a `core::fmt::Write`
-destination — a `heapless::String`, a fixed `[u8; N]` buffer wrapper, a
-UART peripheral implementing the trait — has **full** support and needs
-no allocator at all, which is exactly why `write!` is the standard
-replacement for `println!`/`format!` in `#![no_std]` code. Writing into a
-`std::io::Write` destination (a file, a socket) has **no** support under
-`#![no_std]`, since `std::io` itself needs an OS. The two look like the
-same macro call at the source level, but which trait the destination
-implements decides which of these applies.
+`write!`/`writeln!` split cleanly along the same two-trait line the
+classic Explanation lays out, and that split is exactly what decides
+embedded support. A `core::fmt::Write` destination — `heapless::String`,
+a hand-rolled fixed `[u8; N]` buffer wrapper, or a UART/USART peripheral
+that implements the trait directly — needs no allocator at all, because
+`core::fmt::Write` (unlike `std::io::Write`) is defined in `core`, with
+no OS or heap assumption baked in. That makes writing into one of these
+the standard, idiomatic replacement for `println!`/`format!` in
+`#![no_std]` code generally: `format!` needs `alloc` plus a configured
+`#[global_allocator]` just to produce its returned `String`, while
+`write!`ing the same formatted text into a `heapless::String` or
+straight out over UART needs neither — the formatting machinery itself
+(the `{}`/`{:?}`/`{:.2}` grammar) is identical in both cases, only the
+destination differs. A `std::io::Write` destination (a file, a socket)
+has no support under `#![no_std]` at all, for the same reason `println!`
+doesn't: `std::io` itself assumes a hosted OS. The two destinations look
+like the same macro call at the source level; which trait the
+destination type implements is what decides which of these applies.
+
+## Usage examples (Embedded)
+
+### Writing formatted text into a heapless::String (no heap)
+
+```
+use core::fmt::Write as _;
+use heapless::String;
+
+fn build_status_line(errors: u8, uptime_s: u32) -> String<64> { // <- fixed 64-byte capacity, no allocator
+    let mut line: String<64> = String::new();
+    write!(line, "errors={errors} uptime={uptime_s}s").unwrap(); // <- core::fmt::Write target: fails only if capacity is exceeded
+    line
+}
+```
+
+### Writing formatted text directly to a UART peripheral
+
+A UART/USART HAL type implementing `core::fmt::Write` lets `write!` send
+formatted diagnostic text straight over the wire, with no intermediate
+`String` — and no heap — involved at all.
+
+```
+use core::fmt::Write as _;
+
+struct Uart; // stand-in for a HAL's concrete UART type
+
+impl core::fmt::Write for Uart {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        for byte in s.bytes() {
+            // ... block until the transmit register is free, then write `byte`
+        }
+        Ok(())
+    }
+}
+
+fn report_reading(uart: &mut Uart, sensor_id: u32, value: f32) {
+    writeln!(uart, "sensor {sensor_id}: {value:.2}").unwrap(); // <- formatted text goes straight out over the wire, no String built at all
+}
+```
