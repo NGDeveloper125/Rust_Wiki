@@ -2,7 +2,7 @@
 title: "The Default trait as idiom"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Builders & Object Construction"]
+groups: ["Idioms", "Design Patterns & Idioms", "Builders & Object Construction"]
 related_syntax: [derive]
 see_also: ["Constructor functions (new() convention)", "Derivable traits (Debug, Clone, PartialEq, …)", "Structs"]
 ---

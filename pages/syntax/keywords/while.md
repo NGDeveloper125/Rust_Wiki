@@ -2,7 +2,7 @@
 title: "while"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: [Ownership]
 related_syntax: [loop, for, break, continue]
 see_also: [loop, for]

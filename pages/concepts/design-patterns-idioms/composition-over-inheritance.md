@@ -2,7 +2,7 @@
 title: "Composition over inheritance"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Object-Oriented-ish Patterns", "Decoupling", "Composition"]
+groups: ["Idioms", "Design Patterns & Idioms", "Object-Oriented-ish Patterns", "Decoupling", "Composition"]
 related_syntax: [impl]
 see_also: ["Compose structs", "Trait objects & dynamic dispatch (dyn Trait)", "Supertraits", "Default trait methods", "Structs"]
 ---

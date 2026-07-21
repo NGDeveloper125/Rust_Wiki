@@ -2,7 +2,7 @@
 title: "Temporary mutability"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms"]
+groups: ["Idioms", "Design Patterns & Idioms"]
 related_syntax: [mut, let]
 see_also: ["Constructor functions (new() convention)", "Move semantics", "Immutability by default"]
 ---

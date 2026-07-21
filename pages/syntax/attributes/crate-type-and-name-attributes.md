@@ -2,7 +2,7 @@
 title: "#[crate_type = \"...\"] / #[crate_name = \"...\"]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["FFI & Linkage", "Memory & Unsafe"]
 related_concepts: ["FFI (foreign function interface)"]
 related_syntax: []
 see_also: []

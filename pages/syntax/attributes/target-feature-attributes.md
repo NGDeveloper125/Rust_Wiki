@@ -2,7 +2,7 @@
 title: "#[target_feature(...)] / #[instruction_set(...)]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["FFI & Linkage", "Memory & Unsafe"]
 related_concepts: ["Unsafe Rust"]
 related_syntax: [unsafe]
 see_also: []

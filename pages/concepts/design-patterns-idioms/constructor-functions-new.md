@@ -2,7 +2,7 @@
 title: "Constructor functions (new() convention)"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Builders & Object Construction"]
+groups: ["Idioms", "Design Patterns & Idioms", "Builders & Object Construction"]
 related_syntax: [fn]
 see_also: ["The Default trait as idiom", "Privacy for extensibility", "Structs", "Visibility & privacy (pub and friends)"]
 ---

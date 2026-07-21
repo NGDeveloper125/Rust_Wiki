@@ -2,7 +2,7 @@
 title: "struct"
 kind: keyword
 embedded_support: full
-groups: [Basics, "Types & Data Structures"]
+groups: ["Types & Data Structures", Basics]
 related_concepts: [Structs, "Tuple structs", "Unit structs"]
 related_syntax: ["{ }", "( )", ";", ":"]
 see_also: [enum]

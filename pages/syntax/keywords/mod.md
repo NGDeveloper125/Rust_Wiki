@@ -2,7 +2,7 @@
 title: "mod"
 kind: keyword
 embedded_support: full
-groups: ["Modules, Crates & Visibility"]
+groups: ["Modules & Visibility", "Modules, Crates & Visibility"]
 related_concepts: [Modules]
 related_syntax: [use, pub, crate, super, "::"]
 see_also: [use, pub]

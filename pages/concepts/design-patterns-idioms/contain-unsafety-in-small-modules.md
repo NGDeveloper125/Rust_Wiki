@@ -2,7 +2,7 @@
 title: "Contain unsafety in small modules"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Encapsulation"]
+groups: ["Idioms", "Design Patterns & Idioms", "Encapsulation"]
 related_syntax: [unsafe, mod]
 see_also: ["Unsafe Rust", "Modules", "Visibility & privacy (pub and friends)"]
 ---

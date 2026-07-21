@@ -2,7 +2,7 @@
 title: "#[non_exhaustive]"
 kind: attribute
 embedded_support: full
-groups: ["Types & Data Structures", "Pattern Matching"]
+groups: ["Types & Layout", "Types & Data Structures", "Pattern Matching"]
 related_concepts: ["Exhaustiveness checking", Structs, "Enums (algebraic data types)"]
 related_syntax: [struct, enum, match, "_"]
 see_also: ["Exhaustiveness checking"]

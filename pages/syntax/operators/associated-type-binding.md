@@ -2,7 +2,7 @@
 title: "Type<Ident = Type>"
 kind: operator
 embedded_support: full
-groups: [Basics, "Types & Data Structures", "Traits & Polymorphism"]
+groups: ["Types & Data Structures", Basics, "Traits & Polymorphism"]
 related_concepts: ["Associated types", "Generics", "Trait bounds"]
 related_syntax: ["<", ">", "::"]
 see_also: ["<", ">"]

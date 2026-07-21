@@ -2,7 +2,7 @@
 title: "#[windows_subsystem = \"...\"]"
 kind: attribute
 embedded_support: none
-groups: ["Memory & Unsafe"]
+groups: ["FFI & Linkage", "Memory & Unsafe"]
 related_concepts: []
 related_syntax: []
 see_also: []

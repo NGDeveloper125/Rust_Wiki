@@ -2,7 +2,7 @@
 title: "#[path = \"...\"]"
 kind: attribute
 embedded_support: full
-groups: ["Modules, Crates & Visibility"]
+groups: ["Modules & Visibility", "Modules, Crates & Visibility"]
 related_concepts: [Modules]
 related_syntax: [mod]
 see_also: [mod]

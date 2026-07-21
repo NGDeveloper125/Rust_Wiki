@@ -2,7 +2,7 @@
 title: "The visitor pattern"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Object-Oriented-ish Patterns"]
+groups: ["Design Patterns", "Design Patterns & Idioms", "Object-Oriented-ish Patterns"]
 related_syntax: [dyn]
 see_also: ["Trait objects & dynamic dispatch (dyn Trait)", "Enums (algebraic data types)", "The strategy pattern", "On-stack dynamic dispatch"]
 ---

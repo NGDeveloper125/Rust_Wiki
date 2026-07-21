@@ -2,7 +2,7 @@
 title: "#[allow(...)] / #[warn(...)] / #[deny(...)] / #[forbid(...)]"
 kind: attribute
 embedded_support: full
-groups: ["Design Patterns & Idioms"]
+groups: ["Lints & Diagnostics", "Design Patterns & Idioms"]
 related_concepts: ["Anti-pattern: #[deny(warnings)]"]
 related_syntax: ["#[expect(...)]", "#[meta] / #![meta]"]
 see_also: ["Anti-pattern: #[deny(warnings)]", "#[expect(...)]"]

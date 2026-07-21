@@ -2,7 +2,7 @@
 title: "#[should_panic]"
 kind: attribute
 embedded_support: partial
-groups: ["Testing & Tooling"]
+groups: ["Testing", "Testing & Tooling"]
 related_concepts: ["Unit tests"]
 related_syntax: ["#[test]", "#[ignore]"]
 see_also: ["#[test]"]

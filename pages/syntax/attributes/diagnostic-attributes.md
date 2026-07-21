@@ -2,7 +2,7 @@
 title: "#[diagnostic::on_unimplemented] / #[diagnostic::do_not_recommend]"
 kind: attribute
 embedded_support: full
-groups: ["Traits & Polymorphism"]
+groups: ["Lints & Diagnostics", "Traits & Polymorphism"]
 related_concepts: ["Traits", "Trait bounds"]
 related_syntax: ["trait", "impl"]
 see_also: []

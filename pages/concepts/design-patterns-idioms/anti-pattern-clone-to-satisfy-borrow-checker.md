@@ -2,7 +2,7 @@
 title: "Anti-pattern: cloning to satisfy the borrow checker"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Move Semantics"]
+groups: ["Anti-patterns", "Design Patterns & Idioms", "Move Semantics"]
 related_syntax: []
 see_also: ["Copy vs Clone", "mem::take / mem::replace", "Borrowing (shared references)"]
 ---

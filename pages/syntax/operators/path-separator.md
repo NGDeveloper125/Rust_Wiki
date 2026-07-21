@@ -2,7 +2,7 @@
 title: "::"
 kind: operator
 embedded_support: full
-groups: ["Modules, Crates & Visibility", "Types & Data Structures"]
+groups: ["Modules & Visibility", "Modules, Crates & Visibility", "Types & Data Structures"]
 related_concepts: [Modules, Crates, Generics]
 related_syntax: [mod, use, crate, super, "<", ">"]
 see_also: ["<", generic-fn]

@@ -2,7 +2,7 @@
 title: "format!"
 kind: macro
 embedded_support: partial
-groups: ["Macros & Metaprogramming"]
+groups: ["Output & Formatting", "Macros & Metaprogramming"]
 related_concepts: ["String formatting (Display, Debug, format!)"]
 related_syntax: ["println! / print! / eprintln! / eprint!", "write! / writeln!"]
 see_also: ["println! / print! / eprintln! / eprint!", "write! / writeln!"]

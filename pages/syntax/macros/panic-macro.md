@@ -2,7 +2,7 @@
 title: "panic!"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Errors & Assertions", "Macros & Metaprogramming"]
 related_concepts: ["Panic & unwinding"]
 related_syntax: ["!", "#[panic_handler]"]
 see_also: ["Panic & unwinding", "#[panic_handler]"]

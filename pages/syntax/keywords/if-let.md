@@ -2,7 +2,7 @@
 title: "if let"
 kind: keyword
 embedded_support: full
-groups: [Basics, "Control Flow & Pattern Matching"]
+groups: ["Control Flow", Basics, "Control Flow & Pattern Matching"]
 related_concepts: ["if let / while let"]
 related_syntax: [if, else, let, match]
 see_also: [if, else, match]

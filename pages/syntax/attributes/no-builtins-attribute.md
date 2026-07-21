@@ -2,7 +2,7 @@
 title: "#[no_builtins]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["FFI & Linkage", "Memory & Unsafe"]
 related_concepts: ["Unsafe Rust"]
 related_syntax: ["#![no_std]"]
 see_also: ["#![no_std]"]

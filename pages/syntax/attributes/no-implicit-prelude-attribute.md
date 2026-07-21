@@ -2,7 +2,7 @@
 title: "#[no_implicit_prelude]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["No-std & Embedded Runtime", "Memory & Unsafe"]
 related_concepts: []
 related_syntax: [mod, use]
 see_also: []

@@ -2,7 +2,7 @@
 title: "cfg!"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Compile-time Introspection", "Macros & Metaprogramming"]
 related_concepts: []
 related_syntax: ["#[cfg(...)]"]
 see_also: ["#[cfg(...)]"]

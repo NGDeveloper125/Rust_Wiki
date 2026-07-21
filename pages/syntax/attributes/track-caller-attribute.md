@@ -2,7 +2,7 @@
 title: "#[track_caller]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["Compiler Hints & Limits", "Memory & Unsafe"]
 related_concepts: []
 related_syntax: [fn, "panic!"]
 see_also: []

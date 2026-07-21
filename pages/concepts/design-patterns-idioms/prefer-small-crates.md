@@ -2,7 +2,7 @@
 title: "Prefer small crates"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Structuring a Project"]
+groups: ["Idioms", "Design Patterns & Idioms", "Structuring a Project"]
 related_syntax: []
 see_also: ["Crates", "Workspaces", "Dependency management & semver", "Compose structs"]
 ---

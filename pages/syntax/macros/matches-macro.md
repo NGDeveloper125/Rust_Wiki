@@ -2,7 +2,7 @@
 title: "matches!"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Errors & Assertions", "Macros & Metaprogramming"]
 related_concepts: ["match expressions", "if let / while let"]
 related_syntax: ["match", "if let"]
 see_also: ["match expressions", "if let / while let"]

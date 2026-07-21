@@ -2,7 +2,7 @@
 title: "#[repr(...)]"
 kind: attribute
 embedded_support: full
-groups: ["Types & Data Structures", "Memory & Unsafe / FFI"]
+groups: ["Types & Layout", "Types & Data Structures", "Memory & Unsafe / FFI"]
 related_concepts: ["Memory layout & repr", "FFI (foreign function interface)", Structs, "Enums (algebraic data types)"]
 related_syntax: [struct, enum, union]
 see_also: ["Memory layout & repr"]

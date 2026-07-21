@@ -2,7 +2,7 @@
 title: "#[meta] / #![meta]"
 kind: attribute
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Core Syntax", "Macros & Metaprogramming"]
 related_concepts: []
 related_syntax: ["///", "//!", "#[derive(...)]", "#[cfg(...)]"]
 see_also: ["///", "//!"]

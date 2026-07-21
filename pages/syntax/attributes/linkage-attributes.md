@@ -2,7 +2,7 @@
 title: "#[no_mangle] / #[link(...)] / #[link_name] / #[link_ordinal] / #[link_section] / #[no_link] / #[export_name]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["FFI & Linkage", "Memory & Unsafe"]
 related_concepts: ["FFI (foreign function interface)", "Unsafe Rust", "Memory layout & repr"]
 related_syntax: [extern, unsafe, static]
 see_also: ["FFI (foreign function interface)"]

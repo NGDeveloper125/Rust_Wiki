@@ -2,7 +2,7 @@
 title: "concat! / stringify! / line! / column! / file! / module_path!"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Compile-time Introspection", "Macros & Metaprogramming"]
 related_concepts: []
 related_syntax: ["assert! / assert_eq! / assert_ne!", "#[track_caller]"]
 see_also: ["assert! / assert_eq! / assert_ne!", "#[track_caller]"]

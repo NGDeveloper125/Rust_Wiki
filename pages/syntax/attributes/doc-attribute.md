@@ -2,7 +2,7 @@
 title: "#[doc = \"...\"]"
 kind: attribute
 embedded_support: full
-groups: ["Testing & Tooling"]
+groups: ["Documentation", "Testing & Tooling"]
 related_concepts: ["Doc tests"]
 related_syntax: ["///", "//!"]
 see_also: ["///", "//!"]

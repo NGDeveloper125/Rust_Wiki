@@ -2,7 +2,7 @@
 title: "match"
 kind: keyword
 embedded_support: full
-groups: [Basics, "Control Flow & Pattern Matching"]
+groups: ["Control Flow", Basics, "Control Flow & Pattern Matching"]
 related_concepts: ["match expressions", "Match guards", "Exhaustiveness checking", "Destructuring"]
 related_syntax: ["=>", "|", "@", "if let", "_"]
 see_also: ["=>", "if let", "@"]

@@ -2,7 +2,7 @@
 title: "#[cfg(...)]"
 kind: attribute
 embedded_support: full
-groups: ["Modules, Crates & Visibility"]
+groups: ["Conditional Compilation", "Modules, Crates & Visibility"]
 related_concepts: ["Crates", "Cargo & Cargo.toml"]
 related_syntax: ["#[meta] / #![meta]", "#[cfg_attr(...)]", "cfg!"]
 see_also: ["#[cfg_attr(...)]", "cfg!"]

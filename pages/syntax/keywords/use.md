@@ -2,7 +2,7 @@
 title: "use"
 kind: keyword
 embedded_support: full
-groups: ["Modules, Crates & Visibility"]
+groups: ["Modules & Visibility", "Modules, Crates & Visibility"]
 related_concepts: [Modules, "Visibility & privacy"]
 related_syntax: [mod, pub, self, as, "::"]
 see_also: [mod, pub, self, as]

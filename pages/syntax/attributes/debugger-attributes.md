@@ -2,7 +2,7 @@
 title: "#[debugger_visualizer(...)] / #[collapse_debuginfo]"
 kind: attribute
 embedded_support: partial
-groups: ["Memory & Unsafe"]
+groups: ["Compiler Hints & Limits", "Memory & Unsafe"]
 related_concepts: []
 related_syntax: ["macro_rules!"]
 see_also: []

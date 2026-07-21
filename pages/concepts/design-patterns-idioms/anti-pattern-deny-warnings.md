@@ -2,7 +2,7 @@
 title: "Anti-pattern: #[deny(warnings)]"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Testing & Documenting Code"]
+groups: ["Anti-patterns", "Design Patterns & Idioms", "Testing & Documenting Code"]
 related_syntax: []
 see_also: ["Custom error types"]
 ---

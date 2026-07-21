@@ -2,7 +2,7 @@
 title: "#[automatically_derived]"
 kind: attribute
 embedded_support: full
-groups: ["Traits & Polymorphism"]
+groups: ["Traits & Derives", "Traits & Polymorphism"]
 related_concepts: ["Derivable traits (Debug, Clone, PartialEq, …)", "Derive macros"]
 related_syntax: [derive, trait, impl]
 see_also: ["#[derive(...)]", "Derivable traits (Debug, Clone, PartialEq, …)"]

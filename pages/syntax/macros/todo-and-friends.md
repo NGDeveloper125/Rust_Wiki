@@ -2,7 +2,7 @@
 title: "todo! / unimplemented! / unreachable!"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Errors & Assertions", "Macros & Metaprogramming"]
 related_concepts: ["Panic & unwinding", "Exhaustiveness checking"]
 related_syntax: ["panic!", "match"]
 see_also: ["panic!"]

@@ -2,7 +2,7 @@
 title: "macro_rules!"
 kind: keyword
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: [Macros, "Macros & Metaprogramming"]
 related_concepts: ["Declarative macros (macro_rules!)"]
 related_syntax: ["!", "ident!(...) / ident!{...} / ident![...]", "$ident", "$ident:kind", "$(...)…"]
 see_also: ["Declarative macros (macro_rules!)"]

@@ -2,7 +2,7 @@
 title: "Anti-pattern: Deref polymorphism (faking inheritance)"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Composition"]
+groups: ["Anti-patterns", "Design Patterns & Idioms", "Composition"]
 related_syntax: ["*"]
 see_also: ["Deref & DerefMut coercion", "Traits", "Dependency injection via traits/generics"]
 ---

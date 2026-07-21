@@ -2,7 +2,7 @@
 title: "Privacy for extensibility"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Encapsulation"]
+groups: ["Idioms", "Design Patterns & Idioms", "Encapsulation"]
 related_syntax: [pub]
 see_also: ["Visibility & privacy (pub and friends)", "Exhaustiveness checking", "Constructor functions (new() convention)", "The newtype pattern"]
 ---

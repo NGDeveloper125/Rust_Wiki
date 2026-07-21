@@ -2,7 +2,7 @@
 title: "Compose structs"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Composition"]
+groups: ["Idioms", "Design Patterns & Idioms", "Composition"]
 related_syntax: []
 see_also: ["Composition over inheritance", "The builder pattern", "Structs"]
 ---

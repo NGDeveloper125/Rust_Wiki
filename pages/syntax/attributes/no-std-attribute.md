@@ -2,7 +2,7 @@
 title: "#![no_std]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["No-std & Embedded Runtime", "Memory & Unsafe"]
 related_concepts: ["Unsafe Rust", "FFI (foreign function interface)"]
 related_syntax: ["#[panic_handler]", "#[global_allocator]", "#[no_main]"]
 see_also: ["#[panic_handler]", "#[global_allocator]", "#[no_main]"]

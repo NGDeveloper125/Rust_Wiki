@@ -2,7 +2,7 @@
 title: "#[panic_handler]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["No-std & Embedded Runtime", "Memory & Unsafe"]
 related_concepts: ["Unsafe Rust"]
 related_syntax: ["#![no_std]", "#[global_allocator]"]
 see_also: ["#![no_std]", "#[global_allocator]"]

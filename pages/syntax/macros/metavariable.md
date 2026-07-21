@@ -2,7 +2,7 @@
 title: "$ident"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Macro Definition Syntax", "Macros & Metaprogramming"]
 related_concepts: ["Declarative macros (macro_rules!)"]
 related_syntax: ["macro_rules!", "$ident:kind", "$(...)…"]
 see_also: ["$ident:kind"]

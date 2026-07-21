@@ -2,7 +2,7 @@
 title: "#[recursion_limit = \"N\"] / #[type_length_limit = \"N\"]"
 kind: attribute
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Compiler Hints & Limits", "Macros & Metaprogramming"]
 related_concepts: []
 related_syntax: ["macro_rules!"]
 see_also: []

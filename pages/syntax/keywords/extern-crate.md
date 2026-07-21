@@ -2,7 +2,7 @@
 title: "extern crate"
 kind: keyword
 embedded_support: partial
-groups: ["Modules, Crates & Visibility", "Memory & Unsafe"]
+groups: ["Modules & Visibility", "Modules, Crates & Visibility", "Memory & Unsafe"]
 related_concepts: [Crates]
 related_syntax: [extern, mod, use]
 see_also: [extern]

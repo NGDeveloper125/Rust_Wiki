@@ -2,7 +2,7 @@
 title: "#[test]"
 kind: attribute
 embedded_support: partial
-groups: ["Testing & Tooling"]
+groups: ["Testing", "Testing & Tooling"]
 related_concepts: ["Unit tests", "Doc tests"]
 related_syntax: ["#[cfg(...)]", "#[ignore]", "#[should_panic]"]
 see_also: ["Unit tests", "#[ignore]", "#[should_panic]"]

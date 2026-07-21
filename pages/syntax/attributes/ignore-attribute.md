@@ -2,7 +2,7 @@
 title: "#[ignore]"
 kind: attribute
 embedded_support: partial
-groups: ["Testing & Tooling"]
+groups: ["Testing", "Testing & Tooling"]
 related_concepts: ["Unit tests"]
 related_syntax: ["#[test]", "#[should_panic]"]
 see_also: ["#[test]"]

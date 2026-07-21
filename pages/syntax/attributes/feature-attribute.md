@@ -2,7 +2,7 @@
 title: "#![feature(...)]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["Compiler Hints & Limits", "Memory & Unsafe"]
 related_concepts: []
 related_syntax: []
 see_also: []

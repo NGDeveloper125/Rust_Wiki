@@ -2,7 +2,7 @@
 title: "#[naked]"
 kind: attribute
 embedded_support: full
-groups: ["Memory & Unsafe"]
+groups: ["FFI & Linkage", "Memory & Unsafe"]
 related_concepts: ["Unsafe Rust", "FFI (foreign function interface)"]
 related_syntax: [unsafe, "#[no_mangle] / #[link(...)] / #[link_name] / #[link_ordinal] / #[link_section] / #[no_link] / #[export_name]"]
 see_also: []

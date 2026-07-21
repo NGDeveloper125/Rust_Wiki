@@ -2,7 +2,7 @@
 title: "enum"
 kind: keyword
 embedded_support: full
-groups: [Basics, "Types & Data Structures"]
+groups: ["Types & Data Structures", Basics]
 related_concepts: ["Enums (algebraic data types)"]
 related_syntax: [struct, match, "#[repr(...)]"]
 see_also: [struct]

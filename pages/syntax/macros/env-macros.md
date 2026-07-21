@@ -2,7 +2,7 @@
 title: "env! / option_env!"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Compile-time Introspection", "Macros & Metaprogramming"]
 related_concepts: []
 related_syntax: ["include! / include_str! / include_bytes!"]
 see_also: ["include! / include_str! / include_bytes!"]

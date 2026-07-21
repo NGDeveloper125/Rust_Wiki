@@ -2,7 +2,7 @@
 title: "#[expect(...)]"
 kind: attribute
 embedded_support: full
-groups: ["Testing & Tooling"]
+groups: ["Lints & Diagnostics", "Testing & Tooling"]
 related_concepts: []
 related_syntax: ["#[allow(...)] / #[warn(...)] / #[deny(...)] / #[forbid(...)]"]
 see_also: ["#[allow(...)] / #[warn(...)] / #[deny(...)] / #[forbid(...)]"]

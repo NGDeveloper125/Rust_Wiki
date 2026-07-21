@@ -2,7 +2,7 @@
 title: "The builder pattern"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Object-Oriented-ish Patterns", "Builders & Object Construction"]
+groups: ["Design Patterns", "Design Patterns & Idioms", "Object-Oriented-ish Patterns", "Builders & Object Construction"]
 related_syntax: []
 see_also: ["The typestate pattern", "Compose structs", "Structs", "Ownership"]
 ---

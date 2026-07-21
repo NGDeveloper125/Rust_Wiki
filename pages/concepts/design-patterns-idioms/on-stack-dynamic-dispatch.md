@@ -2,7 +2,7 @@
 title: "On-stack dynamic dispatch"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Polymorphism"]
+groups: ["Idioms", "Design Patterns & Idioms", "Polymorphism"]
 related_syntax: [dyn]
 see_also: ["Trait objects & dynamic dispatch (dyn Trait)", "The strategy pattern", "Static dispatch & monomorphization"]
 ---

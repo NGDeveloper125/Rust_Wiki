@@ -2,7 +2,7 @@
 title: "Return consumed argument on error"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Handling Errors & Failure"]
+groups: ["Idioms", "Design Patterns & Idioms", "Handling Errors & Failure"]
 related_syntax: []
 see_also: ["Result<T, E>", "Custom error types", "mem::take / mem::replace"]
 ---

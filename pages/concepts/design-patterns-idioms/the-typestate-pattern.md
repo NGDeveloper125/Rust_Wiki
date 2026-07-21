@@ -2,7 +2,7 @@
 title: "The typestate pattern"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "State Machines", "Designing Robust Data Models"]
+groups: ["Design Patterns", "Design Patterns & Idioms", "State Machines", "Designing Robust Data Models"]
 related_syntax: []
 see_also: ["The builder pattern", "Enums (algebraic data types)", "Structs"]
 ---

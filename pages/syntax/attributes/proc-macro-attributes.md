@@ -2,7 +2,7 @@
 title: "#[proc_macro] / #[proc_macro_derive(...)] / #[proc_macro_attribute]"
 kind: attribute
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Macros", "Macros & Metaprogramming"]
 related_concepts: ["Procedural macros", "Derive macros", "Attribute-like macros", "Function-like macros"]
 related_syntax: ["macro_rules!"]
 see_also: ["Procedural macros", "Derive macros", "Attribute-like macros", "Function-like macros"]

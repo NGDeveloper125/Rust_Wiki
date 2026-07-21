@@ -2,7 +2,7 @@
 title: "#[deprecated]"
 kind: attribute
 embedded_support: full
-groups: ["Design Patterns & Idioms"]
+groups: ["Lints & Diagnostics", "Design Patterns & Idioms"]
 related_concepts: []
 related_syntax: ["#[must_use]"]
 see_also: []

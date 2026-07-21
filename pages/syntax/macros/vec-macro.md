@@ -2,7 +2,7 @@
 title: "vec!"
 kind: macro
 embedded_support: partial
-groups: ["Macros & Metaprogramming"]
+groups: ["Collections", "Macros & Metaprogramming"]
 related_concepts: ["Vec<T>"]
 related_syntax: ["[ ]", "!"]
 see_also: ["Vec<T>"]

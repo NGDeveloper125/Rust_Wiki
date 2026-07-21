@@ -2,7 +2,7 @@
 title: "The command pattern"
 area: "Design Patterns & Idioms"
 embedded_support: partial
-groups: ["Design Patterns & Idioms", "Object-Oriented-ish Patterns"]
+groups: ["Design Patterns", "Design Patterns & Idioms", "Object-Oriented-ish Patterns"]
 related_syntax: [dyn]
 see_also: ["Trait objects & dynamic dispatch (dyn Trait)", "The strategy pattern", "Fn / FnMut / FnOnce"]
 ---

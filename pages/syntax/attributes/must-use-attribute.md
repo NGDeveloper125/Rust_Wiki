@@ -2,7 +2,7 @@
 title: "#[must_use]"
 kind: attribute
 embedded_support: full
-groups: ["Design Patterns & Idioms"]
+groups: ["Lints & Diagnostics", "Design Patterns & Idioms"]
 related_concepts: []
 related_syntax: ["_"]
 see_also: ["_"]

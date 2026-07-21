@@ -2,7 +2,7 @@
 title: "else"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: [Expression-oriented language, "if let / while let"]
 related_syntax: [if, let]
 see_also: [if]

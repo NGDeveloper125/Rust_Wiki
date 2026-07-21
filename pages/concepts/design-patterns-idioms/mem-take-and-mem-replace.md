@@ -2,7 +2,7 @@
 title: "mem::take / mem::replace"
 area: "Design Patterns & Idioms"
 embedded_support: full
-groups: ["Design Patterns & Idioms", "Interior Mutability", "Sharing & Mutating Data Safely"]
+groups: ["Idioms", "Design Patterns & Idioms", "Interior Mutability", "Sharing & Mutating Data Safely"]
 related_syntax: []
 see_also: ["Copy vs Clone", "Anti-pattern: cloning to satisfy the borrow checker", "Interior mutability (Cell & RefCell)"]
 ---

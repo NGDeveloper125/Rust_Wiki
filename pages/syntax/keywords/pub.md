@@ -2,7 +2,7 @@
 title: "pub"
 kind: keyword
 embedded_support: full
-groups: ["Modules, Crates & Visibility"]
+groups: ["Modules & Visibility", "Modules, Crates & Visibility"]
 related_concepts: ["Visibility & privacy"]
 related_syntax: [mod, crate, super, use]
 see_also: [mod, crate, super]

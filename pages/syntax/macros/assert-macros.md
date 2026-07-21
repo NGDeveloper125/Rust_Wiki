@@ -2,7 +2,7 @@
 title: "assert! / assert_eq! / assert_ne!"
 kind: macro
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Errors & Assertions", "Macros & Metaprogramming"]
 related_concepts: ["Unit tests"]
 related_syntax: ["==", "panic!"]
 see_also: ["==", "panic!"]

@@ -2,7 +2,7 @@
 title: "#[macro_export] / #[macro_use]"
 kind: attribute
 embedded_support: full
-groups: ["Macros & Metaprogramming"]
+groups: ["Macros", "Macros & Metaprogramming"]
 related_concepts: ["Declarative macros (macro_rules!)"]
 related_syntax: ["macro_rules!", "use", "pub"]
 see_also: ["Declarative macros (macro_rules!)"]

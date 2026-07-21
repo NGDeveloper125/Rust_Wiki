@@ -2,7 +2,7 @@
 title: "!"
 kind: operator
 embedded_support: full
-groups: [Basics, "Macros & Metaprogramming"]
+groups: [Logical, Basics, "Macros & Metaprogramming"]
 related_concepts: [Operator overloading]
 related_syntax: ["!="]
 see_also: []
