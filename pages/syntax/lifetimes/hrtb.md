@@ -14,16 +14,10 @@ see_also: ["Trait bounds"]
 says "this must hold for *every* lifetime `'a`, not one specific lifetime
 chosen ahead of time." It shows up almost exclusively on trait bounds
 involving a reference-taking closure or function, most commonly `Fn`/
-`FnMut`/`FnOnce`:
-
-```
-fn apply<F>(f: F) -> bool
-where
-    F: for<'a> Fn(&'a str) -> bool, // <- F must work for ANY lifetime the caller picks
-{
-    f("reading")
-}
-```
+`FnMut`/`FnOnce` — a bound like `F: for<'a> Fn(&'a str) -> bool` requires
+`F` to work for any lifetime the caller ends up picking, not one fixed
+lifetime chosen where the bound is written, as the complete function
+below demonstrates.
 
 To see why this is needed, compare it to the bound without `for<'a>`:
 `F: Fn(&'a str) -> bool` would require `'a` to be some *one* concrete

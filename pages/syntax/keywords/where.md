@@ -12,20 +12,12 @@ see_also: ["Trait bounds"]
 
 `where` introduces a clause that lists trait bounds separately from a
 function, struct, enum, impl, or trait's parameter list, as an
-alternative to writing them inline after `:`:
-
-```
-fn summarize<T: std::fmt::Debug + Clone>(items: &[T]) -> String { /* ... */ }
-```
-
-is equivalent to
-
-```
-fn summarize<T>(items: &[T]) -> String
-where
-    T: std::fmt::Debug + Clone,
-{ /* ... */ }
-```
+alternative to writing them inline after `:`. `fn summarize<T:
+std::fmt::Debug + Clone>(items: &[T]) -> String` and `fn
+summarize<T>(items: &[T]) -> String where T: std::fmt::Debug + Clone`
+declare exactly the same bound on `T` — one inline, one relocated to a
+`where` clause after the parameter list and before the body's opening
+brace.
 
 For simple bounds, the two forms are purely a readability choice — moving
 bounds to `where` keeps the parameter list itself scannable once it

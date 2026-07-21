@@ -13,15 +13,9 @@ see_also: [mod]
 `#[path = "..."]` overrides where a `mod name;` declaration looks for its
 source file on disk, replacing the default `name.rs` / `name/mod.rs`
 convention with an explicit path, resolved relative to the directory of
-the file containing the attribute:
-
-```
-#[path = "impl/windows.rs"]
-mod platform;
-```
-
-loads `platform`'s contents from `impl/windows.rs` instead of the default
-`platform.rs`. The attribute can also sit on a `mod name { ... }` block
+the file containing the attribute — `#[path = "impl/windows.rs"] mod
+platform;` loads `platform`'s contents from `impl/windows.rs` instead of
+the default `platform.rs`. The attribute can also sit on a `mod name { ... }` block
 that itself contains further `mod other;` declarations, changing the base
 directory those nested declarations resolve from — but in practice it's
 almost always attached to a `mod name;` file-loading declaration, which is

@@ -12,17 +12,12 @@ see_also: ["Declarative macros (macro_rules!)"]
 
 `macro_rules!` declares a declarative macro: a name, followed by a brace-
 delimited list of one or more **arms**, each written `(matcher) =>
-{transcriber};`. A matcher is a sequence of literal tokens and
+{transcriber};` — so a two-armed definition reads as `macro_rules! name {
+(matcher_1) => { transcriber_1 }; (matcher_2) => { transcriber_2 }; }`
+end to end. A matcher is a sequence of literal tokens and
 metavariables (`$name:expr`, `$name:ident`, ...); a transcriber is the
 template of tokens to emit when that matcher fits. Arms are separated by
 `;`; the `;` after the very last arm is optional.
-
-```
-macro_rules! name {
-    (matcher_1) => { transcriber_1 };
-    (matcher_2) => { transcriber_2 };
-}
-```
 
 Invoking `name!(...)` tries each arm's matcher **in the order written,
 top to bottom, and uses the first one whose matcher fully consumes the

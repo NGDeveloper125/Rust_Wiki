@@ -27,18 +27,9 @@ either way.
 
 **Why this exists instead of two `#[cfg(...)]` blocks.** Without
 `cfg_attr`, getting an extra derive only under one condition would require
-duplicating the entire item — one copy gated `#[cfg(test)]` carrying the
-extra derive, and a second, otherwise-identical copy gated
-`#[cfg(not(test))]` without it:
-
-```
-#[cfg(test)]
-#[derive(Debug, PartialEq)]
-struct Reading { celsius: f64 }
-
-#[cfg(not(test))]
-struct Reading { celsius: f64 }
-```
+duplicating the entire item — one copy gated `#[cfg(test)]` with `#[derive(Debug,
+PartialEq)]` added, and a second, otherwise-identical copy gated
+`#[cfg(not(test))]` without that derive at all.
 
 Any change to `Reading`'s fields now has to be made in two places at once
 and kept in sync by hand. `#[cfg_attr(test, derive(Debug, PartialEq))]` on
