@@ -77,10 +77,116 @@ a `RingBuffer<8>` where a `RingBuffer<256>` is expected is a compile
 error rather than a bug discovered at runtime — the same compile-time
 guarantee [generics](generics.md) give for types, extended to a value.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No allocator dependency — const generics are
-especially valuable in embedded/`no_std` code, since they let
-fixed-capacity, stack-allocated buffer types (like `heapless::Vec<T, N>`)
-express their capacity in the type system instead of needing heap
-allocation at all.
+Const generics are not just *compatible* with no-heap embedded code —
+they are the mechanism that makes no-heap collections work at all.
+`heapless::Vec<T, N>`, `heapless::String<N>`, `heapless::spsc::Queue<T, N>`,
+and every other fixed-capacity collection in that ecosystem are ordinary
+generic structs parameterized by a const `N`, storing their backing data
+as `[MaybeUninit<T>; N]` (or equivalent) inline — on the stack or in
+`static` memory — plus a small runtime field tracking how much of that
+fixed space is currently in use. Without const generics, a crate wanting
+a "growable, but bounded, no-heap" type would have no way to express the
+bound in the type system at all: either every possible capacity needs its
+own hand-written struct, or the capacity becomes a runtime-only
+convention nobody's checking, which is exactly the unenforced-assumption
+problem const generics close.
+
+Because `N` is part of the type, mismatched capacities are caught at
+compile time, at the call site, rather than surfacing as a runtime panic
+or a silently truncated buffer on hardware where a debugger may not even
+be attached: a function expecting a `heapless::Vec<u8, 64>` genuinely
+cannot be called with a `heapless::Vec<u8, 32>`, the same way `Buffer<64>`
+and `Buffer<128>` are unrelated types on the classic Explanation. Each
+distinct `N` monomorphizes into its own specialized code, so a `[u8; 64]`
+DMA buffer and a `[u8; 256]` one cost nothing beyond the storage each
+actually occupies — there is no generic runtime indirection paying for
+the abstraction.
+
+## Basic usage example (Embedded)
+
+```
+struct RxBuffer<const N: usize> { // <- N fixed at compile time: no allocator, no runtime capacity check
+    data: [u8; N],
+    len: usize,
+}
+
+impl<const N: usize> RxBuffer<N> {
+    fn new() -> Self {
+        RxBuffer { data: [0; N], len: 0 }
+    }
+
+    fn push_byte(&mut self, byte: u8) -> Result<(), u8> {
+        if self.len == N {
+            return Err(byte); // <- buffer full: caught here, not by overrunning a fixed-size array
+        }
+        self.data[self.len] = byte;
+        self.len += 1;
+        Ok(())
+    }
+}
+
+let mut uart_rx: RxBuffer<64> = RxBuffer::new(); // <- 64-byte receive buffer, stack/static storage only
+uart_rx.push_byte(0xAA).ok();
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Writing generic code
+
+A UART receive buffer's right size depends on the peripheral and use
+case — a console UART might need 256 bytes, a low-rate sensor link only
+16 — so writing the buffer type once, generic over its capacity, avoids
+either hand-duplicating a struct per size or falling back to a heap that
+may not exist on the target at all.
+
+```
+struct RingBuffer<const N: usize> { // <- same struct serves every peripheral instance, at whatever size it needs
+    data: [u8; N],
+    head: usize,
+    tail: usize,
+}
+
+impl<const N: usize> RingBuffer<N> {
+    fn new() -> Self {
+        RingBuffer { data: [0; N], head: 0, tail: 0 }
+    }
+}
+
+let console_rx: RingBuffer<256> = RingBuffer::new(); // <- sized for a chatty console UART
+let sensor_rx: RingBuffer<16> = RingBuffer::new();   // <- sized for a low-rate sensor link, same code
+```
+
+**Why this way:** each instantiation is monomorphized into its own
+specialized, stack/`static`-allocated code path, so picking a larger `N`
+for the console UART costs exactly the extra bytes of storage it uses —
+nothing is paid in indirection or runtime capacity tracking that a
+hand-written per-size struct wouldn't already need.
+
+### Scenario: Designing a public API
+
+A driver crate that hands back a fixed-capacity buffer type should encode
+the capacity in the return type itself, so a caller wiring the wrong-size
+buffer into a peripheral expecting a specific length fails to compile
+instead of corrupting a transfer at runtime.
+
+```
+fn make_spi_tx_buffer<const N: usize>() -> heapless::Vec<u8, N> {
+    heapless::Vec::new() // <- capacity N is part of the returned type, decided by the caller's type annotation
+}
+
+fn send_frame(bus: &mut impl embedded_hal::spi::SpiBus, frame: heapless::Vec<u8, 32>) {
+    let _ = (bus, frame); // a 32-byte-capacity frame, enforced by the parameter's own type
+}
+
+let frame: heapless::Vec<u8, 32> = make_spi_tx_buffer(); // <- N inferred as 32 from send_frame's parameter type
+```
+
+**Why this way:** encoding the capacity in the type means a
+`heapless::Vec<u8, 16>` accidentally passed where a `heapless::Vec<u8, 32>`
+is required is rejected by the compiler, the same guarantee the classic
+Explanation describes for `RingBuffer<8>` vs `RingBuffer<256>` — on
+hardware where a buffer-size mismatch is a silent memory-safety bug
+rather than a caught exception, that compile-time check is doing real
+work.
