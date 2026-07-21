@@ -165,12 +165,123 @@ compiler auto-derive thread-safety for a type that secretly isn't — the
 treats getting this right as a checklist item precisely because the
 auto-trait mechanism otherwise grants `Send`/`Sync` silently.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Send` and `Sync` are defined in `core::marker`, cost
-nothing at runtime, and require no allocator or OS — if anything they
-matter more in embedded code than on a hosted target, since they're what
-the compiler uses to check that data shared between a main loop and an
-interrupt handler, or between tasks on an async executor like `embassy`,
-is genuinely safe to share. The same auto-trait rules apply identically
-under `#![no_std]`.
+`Send` and `Sync` are defined in `core::marker`, not `std`, so nothing
+about their meaning changes under `#![no_std]` — this is a `full`-support
+page precisely because the marker-trait mechanics described above are
+identical on a microcontroller. What's genuinely different is *where*
+concurrency shows up to make these traits load-bearing. There's usually no
+OS scheduler and no `std::thread::spawn` on bare metal, but there is
+almost always an interrupt controller: firmware routinely shares state
+between `fn main`'s loop and one or more `#[interrupt]` handlers, and an
+interrupt handler is, for `Send`/`Sync` purposes, a second concurrent
+context in exactly the same sense a second OS thread is — it can run
+"at the same time" as the main loop from the compiler's point of view,
+because it can preempt the main loop at any instruction boundary.
+
+Because embedded code frequently runs with no heap and no `Arc`/`Mutex`
+from `std`, the idiomatic shared-state type is different, but the question
+`Send`/`Sync` answers is the same one: is it safe for two contexts (main
+loop and ISR, or two async tasks) to touch this data? The `critical-section`
+crate is the closest embedded analog to `std::sync::Mutex` — it provides a
+`Mutex<T>` wrapper that is `Sync` only when `T: Send`, and only allows
+accessing the wrapped value inside a critical section (typically
+interrupts-disabled on a single-core target), which is what makes it sound
+to hand a `'static` reference to that `Mutex` to both `main` and an
+interrupt handler. Async executors like `embassy` add a third concurrent
+context — cooperatively scheduled tasks — and the same `Send` bound shows
+up again on anything crossing an `.await` point or being moved into
+`spawner.spawn(...)`.
+
+## Basic usage example (Embedded)
+
+```
+use core::cell::RefCell;
+use critical_section::Mutex;
+
+// Sync only because RefCell<u32> — via u32 — is Send; critical-section's
+// Mutex is what makes the RefCell safe to share with an interrupt handler.
+static COUNTER: Mutex<RefCell<u32>> = Mutex::new(RefCell::new(0)); // <- Mutex<RefCell<u32>>: Sync, shareable with an ISR
+
+fn on_tick_interrupt() {
+    critical_section::with(|cs| {
+        let mut counter = COUNTER.borrow_ref_mut(cs);
+        *counter += 1;
+    });
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Sharing state across threads
+
+A tick counter incremented by a timer interrupt and read from the main
+loop needs a type that's genuinely `Sync` for a single-core target with no
+OS — `critical-section::Mutex` fills the role `std::sync::Mutex` plays on
+a hosted target, without needing a thread to block on.
+
+```
+use core::cell::RefCell;
+use critical_section::Mutex;
+
+static TICKS: Mutex<RefCell<u32>> = Mutex::new(RefCell::new(0)); // <- static requires TICKS: Sync, checked at compile time
+
+#[interrupt]
+fn TIM2() { // <- runs as a second concurrent context alongside `main`
+    critical_section::with(|cs| {
+        *TICKS.borrow_ref_mut(cs) += 1;
+    });
+}
+
+fn main() -> ! {
+    loop {
+        let ticks = critical_section::with(|cs| *TICKS.borrow(cs));
+        if ticks % 1000 == 0 {
+            // ... report the tick count
+        }
+    }
+}
+```
+
+**Why this way:** a plain `RefCell<u32>` is `!Sync`, so `static TICKS:
+RefCell<u32>` would fail to compile the instant an interrupt handler tried
+to touch it too — wrapping it in `critical-section`'s `Mutex` is what
+makes the type `Sync` and forces every access through a critical section,
+the same discipline `std::sync::Mutex` enforces for OS threads, applied
+here with no OS underneath it.
+
+### Scenario: Designing a public API
+
+A driver crate exposing a handle to a peripheral register block should
+leave that handle `!Send`/`!Sync` unless the author has verified it's
+safe to move or share across the main-loop/interrupt boundary — the same
+API-design discipline that applies to native OS handles applies to raw
+peripheral access.
+
+```
+use core::marker::PhantomData;
+
+pub struct SpiHandle {
+    base_addr: usize,
+    _not_sync: PhantomData<*const ()>, // <- opts out of auto-Send/Sync, same as a native-handle wrapper would
+}
+
+impl SpiHandle {
+    /// # Safety
+    /// Caller must guarantee no other `SpiHandle` aliases this peripheral.
+    pub unsafe fn at(base_addr: usize) -> Self {
+        SpiHandle { base_addr, _not_sync: PhantomData }
+    }
+}
+// No `unsafe impl Send`/`Sync` here: touching the register block from both
+// `main` and an interrupt handler without synchronization would race.
+```
+
+**Why this way:** defaulting to `!Send`/`!Sync` and requiring a deliberate
+`unsafe impl` once the driver author has actually reasoned about
+interrupt-safety is exactly the [API Guidelines'
+C-SEND-SYNC](https://rust-lang.github.io/api-guidelines/interoperability.html)
+checklist item, applied to the main-loop/interrupt boundary instead of an
+OS thread boundary — the risk (silent auto-derived thread-safety for a
+type that secretly isn't) is identical.

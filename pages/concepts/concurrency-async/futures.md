@@ -151,13 +151,119 @@ heterogeneous futures need to live together in one collection — the
 note this boxed-trait-object pattern as the usual answer when a fixed
 concrete `Future` type isn't expressible.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** The `Future` trait itself lives in `core::future` and
-needs neither `std` nor an allocator, so `#![no_std]` code can implement
-and hold futures directly — the trait definition works identically on any
-target. What's missing on bare-metal targets is a hosted executor: there's
-no `tokio` to poll anything, so day-to-day use of futures in embedded code
-depends on an `alloc`-friendly (or fully allocation-free) embedded
-executor like `embassy`, which polls `core::future::Future`s the same way
-`tokio` does on a hosted OS.
+The `Future` trait itself is core-language: it lives in `core::future`, not
+`std::future`, so defining a type that implements `poll` and returning
+`Poll::Ready`/`Poll::Pending` works identically under `#![no_std]` — a
+future is just as lazy and just as much an inert value on a
+microcontroller as on a hosted target. That's the `full`-equivalent half
+of the story; the `partial` caveat is entirely about the other half: a
+future is only ever *data describing* work, and something external has to
+call `poll` on it, repeatedly, for that work to actually happen. On a
+hosted target that "something" is an executor like `tokio`'s, built on an
+OS scheduler and an OS I/O reactor that wakes tasks when their socket or
+timer is ready. Bare metal has no OS underneath it to provide any of that,
+so `#![no_std]` code that only defines a `Future` compiles fine but never
+runs on its own.
+
+The practical answer is the same one the sibling Async/await page reaches:
+an embedded async executor such as `embassy` provides the missing engine,
+polling `core::future::Future`s the same way `tokio` does, just built to
+run without an OS — typically single-threaded per core, woken by
+interrupts rather than by an OS-level I/O reactor. It's worth being modest
+here rather than asserting specifics: `embassy`'s waking mechanism is
+tied to its own timer queue and interrupt-driven peripheral drivers, and
+the exact plumbing is an implementation detail this page doesn't need to
+get into — the load-bearing fact is only that *some* executor has to
+exist to drive a future to completion, and on `no_std` that executor is
+not `tokio`.
+
+## Basic usage example (Embedded)
+
+```
+use core::future::Future;
+use core::pin::Pin;
+use core::task::{Context, Poll};
+
+struct ReadyNow<T>(Option<T>); // <- a minimal Future, no_std-compatible: core::future::Future only
+
+impl<T: Unpin> Future for ReadyNow<T> { // <- same trait as on a hosted target, imported from core instead of std
+    type Output = T;
+
+    fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<T> {
+        Poll::Ready(self.0.take().expect("polled after completion"))
+    }
+}
+```
+
+**Note:** this compiles under `#![no_std]` as-is because it only defines a
+`Future` — actually polling `ReadyNow` to get its value still needs a
+driver, whether that's `.await` inside an executor-spawned task (e.g. an
+`embassy_executor::task`) or a hand-rolled minimal executor.
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Async tasks
+
+A sensor task that needs to wait on both a timer and an interrupt-driven
+data-ready signal should combine both as futures polled together, rather
+than blocking on one before checking the other, so a slow timer doesn't
+delay noticing the sensor is already ready.
+
+```
+use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+async fn wait_for_reading() -> u16 {
+    Timer::after(Duration::from_millis(50)).await; // <- an embassy-provided Future; this task only owns the .await point
+    // ... read the conversion result register here
+    512
+}
+
+#[embassy_executor::task]
+async fn sample_loop() {
+    loop {
+        let reading = wait_for_reading().await; // <- polling happens inside embassy's executor, not this code
+        // ... use `reading`
+        let _ = reading;
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    spawner.spawn(sample_loop()).unwrap();
+}
+```
+
+**Why this way:** because `wait_for_reading`'s future is inert until
+something polls it, embassy's executor is free to poll it only when the
+underlying timer future indicates progress is possible, rather than this
+code having to busy-poll a register itself — the same lazy-until-polled
+property that makes `tokio::join!` work concurrently on a hosted target is
+what lets embassy avoid wasting cycles here.
+
+### Scenario: Designing a public API
+
+A sensor-driver crate that performs async reads but shouldn't force
+callers onto a specific embedded executor should return `impl Future`
+from its API, the same choice a hosted async library makes to stay
+executor-agnostic.
+
+```
+use core::future::Future;
+
+pub fn read_temperature() -> impl Future<Output = i16> { // <- concrete future type hidden, still no_std, still zero-cost
+    async {
+        // ... trigger a conversion and await its completion
+        21
+    }
+}
+```
+
+**Why this way:** returning `impl Future<Output = i16>` keeps the driver
+usable from any executor that can poll a `core::future::Future` —
+`embassy` or a hand-rolled one — instead of hard-coding a dependency on
+one specific executor's task-spawning API, the same executor-agnostic
+reasoning the classic Explanation applies to `impl Future` on a hosted
+target.
