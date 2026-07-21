@@ -140,9 +140,89 @@ assert_eq!(from_array, 10);
 the
 [API Guidelines' flexibility checklist](https://rust-lang.github.io/api-guidelines/flexibility.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `IntoIterator` lives in `core::iter` and requires no
-allocator — iterating a `heapless::Vec` or a fixed-size array by
-reference, mutable reference, or value works exactly as it does with
-`std` collections.
+`IntoIterator` lives in `core::iter`, so it needs no allocator: the same
+`into_iter(self) -> Self::IntoIter` contract that turns a `Vec` into
+something iterable on a hosted target turns a fixed-size array or a
+`heapless::Vec` into something iterable on a `#![no_std]` target. The
+same three forms carry over unchanged — `iter()` borrows and yields `&T`,
+`iter_mut()` mutably borrows and yields `&mut T`, `into_iter()` takes
+ownership and yields `T` — and a `for` loop over a fixed array or a
+`heapless` collection desugars to `IntoIterator::into_iter` exactly the
+way it does over a `Vec`. This is what makes `for reading in
+&sensor_buffer` or `for reading in &mut register_bank` idiomatic on
+embedded targets: the loop syntax and the borrowing choice it expresses
+are identical to hosted Rust, only the underlying container is a
+fixed-capacity one instead of a heap-growable one.
+
+## Basic usage example (Embedded)
+
+```
+let readings: [u16; 3] = [512, 498, 610];
+
+for reading in &readings { // <- `&readings` invokes IntoIterator for &[u16; 3], yielding &u16
+    let _ = reading; // process each ADC reading in place, no allocation
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Sharing data with multiple references
+
+Reading a bank of GPIO pin states, then updating a "stale" flag in place,
+then finally consuming the buffer to hand each state off to a logging
+routine needs all three `IntoIterator` forms — none of which require a
+heap.
+
+```
+struct PinState { pin: u8, high: bool, stale: bool }
+
+let mut pins = [
+    PinState { pin: 0, high: true, stale: false },
+    PinState { pin: 1, high: false, stale: true },
+];
+
+for p in pins.iter() { // <- borrows: caller still owns `pins` afterward
+    let _ = (p.pin, p.high);
+}
+
+for p in pins.iter_mut() { // <- mutably borrows: can clear or update in place
+    if p.stale {
+        p.stale = false; // refreshed
+    }
+}
+
+for p in pins.into_iter() { // <- consumes: `pins` is gone after this loop
+    let _ = p.pin; // hand each reading off, e.g. to a log buffer
+}
+```
+
+**Why this way:** the same `iter`/`iter_mut`/`into_iter` triple that
+disciplines borrowing on a hosted `Vec` disciplines it identically on a
+plain `[PinState; 2]` array, with no allocation involved at any of the
+three passes.
+
+### Scenario: Working with collections
+
+Iterating a `heapless::Vec` of recent readings by reference hands back
+each value without taking ownership of the buffer, exactly like
+iterating a `Vec` by reference would on a hosted target.
+
+```
+// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+let mut recent: Vec<u16, 8> = Vec::new();
+recent.push(512).unwrap();
+recent.push(498).unwrap();
+
+for reading in &recent { // <- &heapless::Vec implements IntoIterator, yielding &u16
+    let _ = reading;
+}
+```
+
+**Why this way:** `heapless::Vec<T, N>` implements `IntoIterator` the
+same way `std::vec::Vec<T>` does, so code written against `for x in
+&collection` ports to a fixed-capacity, no-heap buffer with no change to
+the loop itself.

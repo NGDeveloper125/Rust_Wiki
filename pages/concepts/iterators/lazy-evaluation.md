@@ -107,10 +107,88 @@ until — and unless — the caller actually asks for it, an API design
 principle [Effective Rust](https://effective-rust.com/) frames as
 preferring the laziest return type that still satisfies every caller.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Laziness is a property of `core::iter`'s adaptors, not
-of `std` — building and partially consuming a lazy chain costs nothing
-beyond the items actually produced, and avoiding intermediate
-allocations this way is often more valuable on a memory-constrained
-target than on a hosted one.
+Laziness is a property of `core::iter`'s adaptors, not of `std`, so it
+holds exactly as written on a `#![no_std]` target: building a chain with
+`map`/`filter` does no work and allocates nothing until something pulls
+values through it. This matters even more on a memory-constrained target
+than on a hosted one — because no intermediate buffer is ever
+materialized between adaptor stages, a long chain over a fixed-size array
+of readings still costs nothing beyond the final values actually
+produced, and the compiler typically fuses the whole chain into one loop.
+Laziness also means a chain can be built over a source that's slow to
+fully drain — a peripheral FIFO being drained one register read at a
+time — and still be handed to a caller that only wants the first few
+values, without ever pulling more reads than requested.
+
+## Basic usage example (Embedded)
+
+```
+let register_bank: [u16; 6] = [10, 45, 90, 200, 512, 1023];
+
+let scaled = register_bank.iter().map(|&r| r / 2); // <- map builds a pipeline; nothing computed yet, no allocation
+
+let first_two: [u16; 2] = {
+    let mut it = scaled.take(2); // still lazy
+    [it.next().unwrap(), it.next().unwrap()] // work happens here, one value at a time
+};
+assert_eq!(first_two, [5, 22]);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+Searching a buffer of recent sensor samples for the first one past a
+threshold only needs to look as far as the first match — laziness means
+the rest of the buffer is never touched, and nothing is ever collected
+into a `Vec` to search through.
+
+```
+let samples: [u16; 8] = [480, 495, 510, 605, 490, 500, 512, 498];
+
+let first_over_threshold = samples
+    .iter()
+    .filter(|&&s| s > 600) // <- filter is lazy: nothing evaluated until pulled
+    .next(); // <- stops at the first match, ignoring the rest of the buffer
+
+assert_eq!(first_over_threshold, Some(&605));
+```
+
+**Why this way:** stopping at the first match without ever building an
+intermediate collection keeps the whole search on the stack with a
+bounded, small number of comparisons — exactly the property that matters
+when the buffer represents scarce peripheral reads rather than free
+in-memory data.
+
+### Scenario: Designing a public API
+
+A driver function that reports which channel readings crossed a
+threshold shouldn't build a `heapless::Vec` of every match if the caller
+only wants the first — returning a lazy iterator over a borrowed fixed
+buffer lets the caller decide how much to consume, with no allocation
+forced either way.
+
+```
+struct ChannelLog {
+    readings: [i16; 4],
+}
+
+impl ChannelLog {
+    fn above_threshold(&self, threshold: i16) -> impl Iterator<Item = i16> + '_ {
+        // <- returns a lazy iterator borrowing `readings`; caller decides how much to consume
+        self.readings.iter().copied().filter(move |&r| r > threshold)
+    }
+}
+
+let log = ChannelLog { readings: [18, 24, 30, 21] };
+let first_spike = log.above_threshold(25).next();
+assert_eq!(first_spike, Some(30));
+```
+
+**Why this way:** returning `impl Iterator<Item = i16>` instead of a
+collected buffer defers work until the caller actually asks for it, and
+because the iterator borrows the fixed array rather than owning a new
+allocation, the whole API stays viable with zero heap on a `#![no_std]`
+target.
