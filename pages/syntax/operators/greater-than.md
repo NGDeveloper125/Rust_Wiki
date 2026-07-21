@@ -60,7 +60,38 @@ standard tools for floats are
 the same kind of data with a comparator instead of just finding one
 extreme.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Same as [`<`](less-than.md) — `core::cmp`, no `std`
-dependency.
+`>` means the same thing under `#![no_std]` — `PartialOrd` lives in
+`core::cmp`, and its role as the closing delimiter for a generic
+parameter list is pure compile-time grammar either way. What shows up
+constantly in embedded code is a strict "has this crossed a limit"
+check — a sensor reading that has gone past a safety threshold, or an
+incoming frame that's larger than a fixed-size buffer can hold — checked
+in a polling loop far more often than in hosted code, since there's
+frequently no interrupt or event system to raise the condition instead.
+
+## Usage examples (Embedded)
+
+### Flagging an over-temperature reading
+
+```
+const MAX_SAFE_CELSIUS: i16 = 85;
+
+fn is_overheating(temperature_celsius: i16) -> bool {
+    temperature_celsius > MAX_SAFE_CELSIUS // <- `>` flags a reading that has crossed the safety limit
+}
+
+assert!(is_overheating(90));
+assert!(!is_overheating(40));
+```
+
+### Rejecting a frame too large for a fixed-size receive buffer
+
+```
+const RX_BUFFER_LEN: usize = 128;
+
+fn incoming_frame_too_large(frame_len: usize) -> bool {
+    frame_len > RX_BUFFER_LEN // <- `>` rejects any frame that wouldn't fit the fixed-size receive buffer
+}
+```

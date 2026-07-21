@@ -1062,13 +1062,83 @@ cover this combination as the standard shape for a two-way FFI boundary.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>This whole attribute family is close to the load-bearing core of how a
+<code>#![no_std]</code> binary comes together at all, not a peripheral feature of
+it. <code>cortex-m-rt</code> finds an application's entry point and every interrupt
+handler purely by symbol name: its <code>#[entry]</code> macro expands to
+(approximately) a <code>#[unsafe(no_mangle)]</code> <code>extern "C" fn main</code>, and its
+<code>#[interrupt]</code> macro expands each handler to a <code>#[unsafe(no_mangle)]</code>
+function whose exact name must match one of the interrupt names the
+runtime crate's own vector table already reserved a slot for (<code>USART1</code>,
+<code>TIMER0</code>, <code>SPI0</code>, and so on, per the target's SVD-derived interrupt
+list) — get the name wrong and the linker reports an undefined reference
+to that vector-table slot, not a Rust-level type error. <code>#[unsafe(link_section = "...")]</code>
+is what places that vector table itself — and other fixed-address
+structures a boot ROM expects, like NXP's i.MX RT <code>FlexSPI</code> NOR boot
+configuration block — at the exact flash offset the linker script or the
+chip's boot ROM requires, rather than wherever the linker would otherwise
+choose to put it.</p>
+<p><code>#[link(name = "...")]</code>/<code>#[link_name]</code> carry over unchanged from hosted
+FFI, just against a different kind of library: instead of a general-
+purpose system library, the "vendor library" in embedded FFI is typically
+a chip maker's C SDK or HAL — ST's STM32Cube HAL, Nordic's <code>nrfx</code>, TI's
+DriverLib — linked in as a prebuilt static library the Rust side calls
+into through an <code>unsafe extern "C"</code> block, exactly as with any other C
+FFI boundary; see
+<a href="../../concepts/memory-unsafe/ffi.md">FFI (foreign function interface)</a>
+for that broader picture.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Naming a hardware interrupt handler for the vector table</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use panic_halt as _;
+use cortex_m_rt::{entry, interrupt};
+
+#[entry]
+fn main() -&gt; ! {
+    loop {}
+}
+
+#[interrupt] // &lt;- expands to a #[unsafe(no_mangle)] fn named exactly "USART1"
+fn USART1() {
+    // this exact symbol name is what the vector table's USART1 slot expects;
+    // a typo here becomes an undefined-reference link error, not a Rust error
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Linking directly against a vendor's C HAL</h3>
+            <pre><code class="rust">#![no_std]
+
+#[link(name = "stm32f4xx_hal")] // &lt;- tells the linker to search the prebuilt vendor HAL library
+unsafe extern "C" {
+    #[link_name = "HAL_GPIO_TogglePin"] // &lt;- renames only this item's resolved C symbol
+    fn hal_gpio_toggle_pin(port: *mut core::ffi::c_void, pin: u16);
+}
+
+#[unsafe(no_mangle)] // &lt;- exported under a stable name a C-side test harness or bootloader can call
+pub extern "C" fn toggle_status_led(gpio_port: *mut core::ffi::c_void) {
+    unsafe {
+        // SAFETY: `gpio_port` is a valid GPIO peripheral base address,
+        // guaranteed by this function's documented C-side contract.
+        hal_gpio_toggle_pin(gpio_port, 1u16 &lt;&lt; 5);
+    }
+}
+</code></pre>
+<p>Both examples are the same two attributes doing the same jobs as in the
+classic section — naming a symbol precisely, and telling the linker where
+a foreign implementation lives — just against a vector table slot and a
+chip vendor's HAL instead of a generic OS library.</p>
+
+          </div>
         </div>
       </section>
       </div>

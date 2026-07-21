@@ -47,8 +47,43 @@ operator behind the [`BitXor`](https://doc.rust-lang.org/std/ops/trait.BitXor.ht
 trait — is the natural choice whenever "combine, and let duplicates
 cancel" is the goal, as with simple checksums or toggle masks.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `BitXor` lives in `core::ops` — bit-toggling a hardware
-register (`reg ^= mask`) is common in embedded code, e.g. toggling an
-output pin.
+`^` carries over unchanged, and its self-cancelling property
+(`x ^ y ^ y == x`) is exploited in two distinct embedded contexts. The
+first is computing a value with some bits flipped relative to an
+existing one *without* mutating anything — useful when a new register
+value is being assembled ahead of a later write, as opposed to
+toggling a register in place (that in-place case is `^=`, its own
+page). The second is lightweight framing: many embedded serial
+protocols use a single XOR byte as a cheap integrity check, since a
+receiver can XOR every byte of an incoming frame together and compare
+the result to a trailing checksum byte — catching single-bit
+corruption on a wire without the code size or cycle cost of a CRC
+table.
+
+## Usage examples (Embedded)
+
+### Computing a toggled register value without mutating the original
+
+```
+const LED_PIN: u32 = 1 << 5;
+
+fn toggled_odr(current_odr: u32) -> u32 {
+    current_odr ^ LED_PIN // <- `^` produces a new value with only the LED bit flipped
+}
+
+let odr = 0b0010_0000;
+assert_eq!(toggled_odr(odr), 0);
+```
+
+### Checksumming a UART frame
+
+```
+fn frame_checksum(payload: &[u8]) -> u8 {
+    payload.iter().fold(0u8, |acc, &b| acc ^ b) // <- `^` folds the frame into a single check byte
+}
+
+let frame = [0x02, 0xA4, 0x00, 0x7F]; // start byte, address, command, data
+let checksum = frame_checksum(&frame);
+```

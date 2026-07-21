@@ -1047,13 +1047,43 @@ page defines exactly this semantics for <code>while let</code>.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>while</code> maps directly onto the most common polling idiom in bare-metal
+code: "spin while this status bit is not yet set." It's identical under
+<code>#![no_std]</code> — a plain condition check and jump, no allocator or OS
+involvement. One thing worth flagging that doesn't come up in hosted
+code: an unbounded <code>while</code> polling a register that never sets — because
+the peripheral is disconnected, misconfigured, or dead — hangs the
+program forever, and unlike a hosted program a user can just kill from a
+terminal, a wedged firmware loop usually means a full power-cycle to
+recover. Any polling <code>while</code> that isn't guaranteed to terminate by
+hardware behavior alone is worth pairing with an attempt counter or a
+hardware timer as a timeout.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Polling a status bit until it sets</h3>
+            <pre><code class="rust">while !uart.status().read().txe().bit_is_set() {} // &lt;- spins while the transmit-empty flag is not yet set
+uart.data().write(|w| w.bits(byte as u32));
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Polling with a timeout</h3>
+            <pre><code class="rust">fn wait_ready(sensor: &amp;Sensor, max_attempts: u32) -&gt; Result&lt;(), &amp;'static str&gt; {
+    let mut attempts = 0;
+    while !sensor.is_ready() &amp;&amp; attempts &lt; max_attempts {
+        // &lt;- bounded: an unbounded `while` here would hang forever if the sensor is disconnected
+        attempts += 1;
+    }
+    if sensor.is_ready() { Ok(()) } else { Err("sensor timed out") }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

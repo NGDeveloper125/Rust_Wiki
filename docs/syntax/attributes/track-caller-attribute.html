@@ -1082,13 +1082,45 @@ describes for custom assertion helpers that want to preserve
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[track_caller]</code> and <code>core::panic::Location::caller()</code> both live in
+<code>core</code>, with no dependency on <code>alloc</code>/<code>std</code> or an OS, so the mechanism is
+fully available and behaves identically under <code>#![no_std]</code>. It arguably
+matters <em>more</em> in embedded code than in a hosted program: a <code>#![no_std]</code>
+panic handler frequently has no attached debugger, no backtrace, and no
+OS-level crash report to fall back on — depending on the panic handler,
+all it does is blink an LED, reset the chip, or emit a message over
+RTT/UART. In that setting, the file/line a <code>#[track_caller]</code>-annotated
+validation helper reports may be the <em>only</em> diagnostic information
+available about where a bad value actually originated, rather than one
+convenience among several.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Reporting the caller's location from a HAL validation panic</h3>
+            <pre><code class="rust">#[track_caller] // &lt;- panics from inside this function report the CALLER's source location
+fn require_valid_channel(channel: u8) -&gt; u8 {
+    if channel &gt;= 8 {
+        panic!("ADC channel {channel} out of range (0..=7)");
+    }
+    channel
+}
+
+fn read_adc(channel: u8) -&gt; u16 {
+    let channel = require_valid_channel(channel); // &lt;- an out-of-range call here is what gets reported
+    // ... trigger a conversion on `channel` and return the raw sample
+    0
+}
+</code></pre>
+<p>Without <code>#[track_caller]</code>, every misconfigured call
+across a firmware crate would report the same unhelpful line inside
+<code>require_valid_channel</code> itself — over RTT or a UART log with no debugger
+attached, that's often the only location information available at all.</p>
+
+          </div>
         </div>
       </section>
       </div>

@@ -1074,13 +1074,66 @@ suppress the warning at all.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[must_use]</code> is a pure compile-time diagnostic with no runtime cost, so
+it applies identically under <code>#![no_std]</code> — <code>Result</code> and <code>Option</code> are
+<code>#[must_use]</code> in <code>core</code> exactly as they are in <code>std</code>. It matters more, not
+less, in embedded code: a hosted program that ignores a <code>Result</code> still
+often produces some visible symptom (a crash, a log line, an OS-level
+error surfaced some other way), while a microcontroller that silently
+continues past a failed SPI or I2C transaction can just keep running on
+stale or garbage data with no obvious sign anything went wrong — there's
+no OS underneath to surface the failure any other way. Marking every
+fallible peripheral-transaction function <code>#[must_use]</code> (which most HAL
+crates already do, since nearly all of them return <code>Result</code>) turns "the
+write failed and nobody checked" into a compile-time warning instead of a
+bug found later on a bench with a logic analyzer.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Warning when an I2C transaction's Result is silently dropped</h3>
+            <pre><code class="rust">struct I2cError;
+
+struct I2cBus;
+
+impl I2cBus {
+    fn write(&amp;mut self, _addr: u8, _bytes: &amp;[u8]) -&gt; Result&lt;(), I2cError&gt; {
+        // ... transmit bytes over the bus
+        Ok(())
+    }
+}
+
+#[must_use] // &lt;- warns if the caller doesn't check whether the transaction succeeded
+fn write_register(i2c: &amp;mut I2cBus, addr: u8, reg: u8, value: u8) -&gt; Result&lt;(), I2cError&gt; {
+    i2c.write(addr, &amp;[reg, value])
+}
+
+fn configure_sensor(i2c: &amp;mut I2cBus) {
+    // AVOID: write_register(i2c, 0x68, 0x6B, 0x00); — a failed write here goes unnoticed
+    write_register(i2c, 0x68, 0x6B, 0x00).ok(); // &lt;- explicit: acknowledged, not silently ignored
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Propagating a failed sensor read instead of discarding it</h3>
+            <pre><code class="rust">struct SensorError;
+
+fn read_temperature_raw(i2c: &amp;mut I2cBus) -&gt; Result&lt;u16, SensorError&gt; {
+    let _ = i2c; // a real implementation reads two bytes back over the bus here
+    Ok(0x0140)
+}
+
+fn read_temperature_celsius(i2c: &amp;mut I2cBus) -&gt; Result&lt;f32, SensorError&gt; {
+    let raw = read_temperature_raw(i2c)?; // &lt;- `Result` is `#[must_use]` in `core`; `?` uses it, doesn't drop it
+    Ok(raw as f32 * 0.0625)
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

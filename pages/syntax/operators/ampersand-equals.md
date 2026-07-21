@@ -51,7 +51,30 @@ trait behind `&=` — see [`+=`](plus-equals.md) for the fuller treatment
 of compound-assignment operators shared across `+=`, `-=`, `*=`, and the
 rest of the family.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `BitAndAssign` lives in `core::ops` — clearing specific
-bits in a register (`reg &= !mask`) is routine embedded code.
+`&=` is the read-modify-write idiom for clearing one or more bits in a
+register while leaving every other bit alone: AND the current value
+against the bitwise complement of the bits to clear. This is one of
+the most routine operations in embedded firmware — disabling a single
+interrupt source in an enable register, or clearing one configuration
+bit in a peripheral's control register — anywhere the hardware doesn't
+offer a dedicated "clear" register and software has to preserve the
+bits it isn't touching by hand.
+
+## Usage examples (Embedded)
+
+### Disabling one interrupt source in an interrupt-enable register
+
+```
+const TIMER_IER: *mut u32 = 0x4000_0C00 as *mut u32; // timer interrupt-enable register
+const UPDATE_IE: u32 = 1 << 0; // update-event interrupt enable bit
+
+fn disable_update_interrupt() {
+    unsafe {
+        let mut ier = core::ptr::read_volatile(TIMER_IER);
+        ier &= !UPDATE_IE; // <- clears only the update-interrupt bit, leaves the rest as they were
+        core::ptr::write_volatile(TIMER_IER, ier);
+    }
+}
+```

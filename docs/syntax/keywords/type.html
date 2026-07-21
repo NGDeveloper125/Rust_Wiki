@@ -1058,13 +1058,34 @@ for when this is preferable to a generic parameter instead.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Both forms of <code>type</code> mean exactly the same thing under <code>#![no_std]</code>, with
+no allocator or <code>std</code> dependency either way. The alias form earns its
+keep especially often in embedded code, where a fully-generic HAL driver
+type's real signature can get long — parameterized over a specific SPI
+peripheral, a specific GPIO pin type, and a specific display controller
+all at once — so a crate commonly aliases the one concrete instantiation
+it actually uses to a short, chip-specific name instead of spelling that
+signature out at every use site.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Aliasing a verbose HAL-generic driver type</h3>
+            <pre><code class="rust">type Display = Ssd1306&lt;SpiInterface&lt;Spi1, Pa5&lt;Output&gt;&gt;, DisplaySize128x64, BufferedGraphicsMode&gt;;
+// &lt;- `type` alias: one short name standing in for the fully-parameterized driver type
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Aliasing a chip-specific peripheral type</h3>
+            <pre><code class="rust">type Led = stm32f4xx_hal::gpio::Pin&lt;'B', 7, stm32f4xx_hal::gpio::Output&gt;;
+// &lt;- `type` alias: names this board's specific LED pin without repeating the full generic path everywhere
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

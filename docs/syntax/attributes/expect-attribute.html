@@ -1049,13 +1049,28 @@ forever the way a plain <code>#[allow(dead_code)]</code> would.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[expect(...)]</code> is a pure compile-time lint-tracking mechanism with no
+runtime footprint, and nothing about it changes under <code>#![no_std]</code> — the
+embedded story here is identical to <a href="allow-and-friends.md"><code>#[allow(...)]</code></a>'s.
+It's genuinely useful in firmware code for the same reason it is
+anywhere else: a HAL's work-in-progress peripheral module with a
+temporarily-unused helper function can track that as a known,
+self-expiring gap instead of a silently-stale suppression.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Tracking a temporarily-unused HAL helper</h3>
+            <pre><code class="rust">#[expect(dead_code, reason = "will be called once the SPI DMA path lands")] // &lt;- warns again once dead_code stops firing
+fn configure_spi_dma_burst(len: usize) {
+    let _ = len;
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

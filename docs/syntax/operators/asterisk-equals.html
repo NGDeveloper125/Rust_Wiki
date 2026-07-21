@@ -1004,13 +1004,42 @@ own trait impl distinct from the plain operator).</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>*=</code> means exactly the same thing under <code>#![no_std]</code> — <code>MulAssign</code> lives
+in <code>core::ops</code>, with no <code>std</code> dependency to swap out. There's no
+dereference angle to reconsider here the way there is for plain
+<a href="asterisk.md"><code>*</code></a>: this token is purely the compound multiplication
+assignment. The one embedded-relevant nuance it shares with the rest of
+the arithmetic family (<a href="plus-equals.md"><code>+=</code></a>/<a href="minus-equals.md"><code>-=</code></a>) is
+overflow behavior: a release build — the profile that actually ships to a
+device — has overflow checks off by default, so a <code>*=</code> that overflows
+wraps silently instead of panicking, and a deployed board can't "just
+recompile in debug" to catch it after the fact. Scaling a small,
+bounded value in place is fine with bare <code>*=</code>; scaling something that
+could plausibly grow past its type's range calls for <code>checked_mul</code>/
+<code>wrapping_mul</code> assigned back explicitly.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Scaling a duty-cycle value in place</h3>
+            <pre><code class="rust">let mut duty: u16 = 200;
+duty *= 2; // &lt;- `*=` scales `duty` in place; silently wraps in release if this ever overflows u16
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Guarding a gain multiplier against release-mode wraparound</h3>
+            <pre><code class="rust">fn apply_gain(sample: u16, gain: u16) -&gt; Option&lt;u16&gt; {
+    let mut result = sample;
+    result = result.checked_mul(gain)?; // stands in for a bare `*=` that could wrap unnoticed on a shipped device
+    Some(result)
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

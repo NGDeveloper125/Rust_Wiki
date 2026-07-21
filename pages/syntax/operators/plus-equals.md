@@ -86,6 +86,43 @@ summing is the *only* thing happening, `Iterator::sum` from the
 [standard library docs](https://doc.rust-lang.org/std/iter/trait.Sum.html)
 expresses the same intent with no mutable state at all.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `AddAssign` lives in `core::ops` — no `std` dependency.
+`AddAssign` lives in `core::ops`, so `+=` behaves identically under
+`#![no_std]`. The relevant nuance is the same one covered on
+[`+`](plus.md): a release build ships with overflow checks off, so `+=`
+wraps silently on overflow instead of panicking, and a device already
+deployed can't be recompiled in debug to catch it after the fact. `+=` on
+a value that's provably bounded within a single function call — summing a
+handful of samples into a wider accumulator type, say — is perfectly
+safe to leave as bare `+=`. `+=` on a value that accumulates for the
+entire lifetime of the device — an uptime counter, an event tally, a
+running energy total — is exactly the spot where an explicit
+`wrapping_add`/`checked_add` assigned back is worth the extra line, since
+that's where a silent wrap would otherwise go unnoticed indefinitely.
+
+## Usage examples (Embedded)
+
+### Using `+=` for a bounded per-cycle accumulator
+
+```
+fn average_adc_reading(samples: &[u16; 8]) -> u16 {
+    let mut sum: u32 = 0;
+    for &s in samples {
+        sum += s as u32; // <- `+=` is fine here: 8 u16 samples can never overflow a u32 accumulator
+    }
+    (sum / samples.len() as u32) as u16
+}
+```
+
+### Guarding a long-lived event counter instead of bare `+=`
+
+```
+struct EventCounter(u32);
+
+impl EventCounter {
+    fn record(&mut self) {
+        self.0 = self.0.wrapping_add(1); // explicit wrapping stands in for a bare `+=` that would wrap unnoticed anyway
+    }
+}
+```

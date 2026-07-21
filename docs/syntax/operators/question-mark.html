@@ -1105,13 +1105,60 @@ the <a href="https://doc.rust-lang.org/reference/dynamically-sized-types.html">R
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>?</code> works exactly the same, unchanged, under <code>#![no_std]</code> — it desugars
+to a plain <code>match</code> plus <code>From::from</code> over <code>core::result::Result</code> /
+<code>core::option::Option</code>, both core-language types with no allocator or
+runtime involvement, so nothing about <code>#![no_std]</code> restricts it. This
+makes <code>?</code> quietly valuable for embedded driver code specifically: an I2C
+or SPI transaction is naturally a chain of several fallible steps — write
+a command byte, read back a response, write another byte — and <code>?</code> lets
+each step propagate its failure without a <code>match</code> at every line, exactly
+the pattern from the classic Explanation above. One thing worth being
+explicit about: <code>?</code>'s <code>From::from</code> conversion needs the enclosing
+function's error type to implement <code>From&lt;E&gt;</code> for whatever error <code>E</code> each
+step produces, and that has nothing to do with <code>std::error::Error</code> —
+which isn't available without <code>std</code> at all (<code>core::error::Error</code> now
+exists separately) — no more than hosted code strictly needs it either.
+Embedded driver crates typically define their own small, <code>#[derive(Debug)]</code>
+no_std error enum with a <code>From</code> impl per underlying error source (an I2C
+error, a SPI error, a timeout), and <code>?</code> chains through that enum exactly
+as it would through any hosted <code>Result</code> type.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Propagating I2C transaction errors through a custom no_std error type</h3>
+            <pre><code class="rust">use embedded_hal::i2c::{I2c, Error as I2cErrorTrait};
+
+#[derive(Debug)]
+enum SensorError {
+    Bus,
+    UnexpectedId(u8),
+}
+
+impl&lt;E: I2cErrorTrait&gt; From&lt;E&gt; for SensorError {
+    fn from(_error: E) -&gt; Self {
+        SensorError::Bus // &lt;- collapses any bus-level error into one variant
+    }
+}
+
+const WHO_AM_I_REG: u8 = 0x0F;
+const EXPECTED_ID: u8 = 0x68;
+
+fn read_who_am_i(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u8, SensorError&gt; {
+    let mut buf = [0u8; 1];
+    i2c.write_read(addr, &amp;[WHO_AM_I_REG], &amp;mut buf)?; // &lt;- `?` converts any I2C error into SensorError via the impl above
+    if buf[0] != EXPECTED_ID {
+        return Err(SensorError::UnexpectedId(buf[0]));
+    }
+    Ok(buf[0])
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

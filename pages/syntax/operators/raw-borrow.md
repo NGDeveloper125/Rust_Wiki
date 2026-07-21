@@ -137,11 +137,67 @@ this idiomatic instead of relying on `&(*status_ptr).flags as *const u32`,
 which briefly forms a reference the incoming layout may not actually
 satisfy.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `&raw const`/`&raw mut` are core-language and
-allocator-free, so they work identically in `#![no_std]`. This is one of
-the operators' most natural homes: reading a memory-mapped hardware
-register or a field of a packed protocol struct is precisely the situation
-where forming an intermediate reference risks undefined behavior that
-`&raw` was added to let you avoid.
+`&raw const`/`&raw mut` carry over into `#![no_std]` completely
+unchanged — they're core-language and allocator-free — but bare-metal
+firmware is where they earn their keep beyond the packed-struct/FFI case
+covered above. A `static mut` shared between `main` and an interrupt
+handler is a textbook case: taking `&mut TICK_COUNT` to get a plain
+mutable reference requires proving, for as long as that reference lives,
+that nothing else can access `TICK_COUNT` — a guarantee an interrupt that
+can fire at any moment genuinely breaks, which is exactly why current
+Rust increasingly treats `&mut` to a `static mut` as dangerous or rejects
+it outright. `&raw mut TICK_COUNT` sidesteps the problem: it produces a
+`*mut T` pointing at the static without ever asserting exclusive access,
+so forming the pointer stays sound even though the static is genuinely
+shared; only the later dereference needs its own `unsafe` block and its
+own reasoning about why that particular read or write is safe (typically:
+interrupts disabled around it, or the access is a single properly-aligned
+load/store the target guarantees is atomic). The same reasoning is why a
+`#[repr(C)]` register-block struct benefits from the same operator:
+taking a pointer to one field with `&raw mut regs.cr1` doesn't require
+asserting a reference to the *entire* struct is simultaneously exclusive,
+which matters when a peripheral's register block is reachable from more
+than one place — an interrupt handler and the main loop both holding a
+pointer into the same MMIO block, for instance.
+
+## Usage examples (Embedded)
+
+### Taking a raw pointer to a `static mut` shared with an interrupt handler
+
+```
+static mut TICK_COUNT: u32 = 0;
+
+// Called only from the timer interrupt handler.
+unsafe fn increment_tick_count() {
+    let ptr: *mut u32 = &raw mut TICK_COUNT; // <- forms the pointer without asserting exclusive access to the static
+    unsafe { *ptr += 1; } // the write itself is its own, separately-justified unsafe operation
+}
+
+// Called only from the main loop, with interrupts briefly disabled around the read.
+fn read_tick_count() -> u32 {
+    let ptr: *const u32 = &raw const TICK_COUNT; // <- same static, read-only pointer, still no `&u32` ever formed
+    unsafe { ptr.read_volatile() }
+}
+```
+
+### Pointing at one register of a memory-mapped peripheral block
+
+```
+#[repr(C)]
+struct Usart {
+    cr1: u32,
+    cr2: u32,
+    sr: u32,
+}
+
+const USART1: *mut Usart = 0x4001_3800 as *mut Usart;
+
+fn enable_usart() {
+    unsafe {
+        let cr1_ptr: *mut u32 = &raw mut (*USART1).cr1; // <- pointer to one register, no reference to the whole peripheral block
+        cr1_ptr.write_volatile(cr1_ptr.read_volatile() | 0x1); // set the enable bit
+    }
+}
+```

@@ -1067,13 +1067,39 @@ trait definition serve unrelated concrete types.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>Self</code> resolves exactly the same way under <code>#![no_std]</code> — a compile-time
+placeholder with no runtime representation of its own. It shows up
+constantly in HAL builder-style configuration types, where each setter
+consumes and returns <code>Self</code> so a peripheral's configuration can be
+chained fluently before the peripheral is finally initialized.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">`Self` in a builder-style HAL config type</h3>
+            <pre><code class="rust">struct UartConfig {
+    baud_rate: u32,
+    parity: bool,
+}
+
+impl UartConfig {
+    fn new() -&gt; Self { // &lt;- `Self` means `UartConfig` here
+        Self { baud_rate: 9600, parity: false }
+    }
+
+    fn baud_rate(mut self, rate: u32) -&gt; Self { // &lt;- `Self`: consumes and returns the same config type
+        self.baud_rate = rate;
+        self
+    }
+}
+
+let config = UartConfig::new().baud_rate(115_200);
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

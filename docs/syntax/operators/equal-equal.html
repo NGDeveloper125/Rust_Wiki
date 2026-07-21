@@ -1036,13 +1036,44 @@ the assertion fails, saving a debugging round trip.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>==</code> means exactly the same thing under <code>#![no_std]</code> — <code>PartialEq</code> lives in
+<code>core::cmp</code>, so nothing about the trait or the comparison changes on a
+microcontroller target. What genuinely differs is <em>what</em> gets compared:
+embedded code constantly checks a hardware identity or status register
+against a constant the datasheet defines, rather than comparing two
+ordinary in-memory values. A "WHO_AM_I"-style identity register — many
+I2C/SPI sensors expose one — exists specifically so driver code can
+confirm it's actually talking to the chip it expects before trusting
+anything else that chip reports.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Confirming a sensor's identity register before use</h3>
+            <pre><code class="rust">const EXPECTED_WHO_AM_I: u8 = 0x68; // datasheet-defined identity byte for this sensor model
+
+fn is_expected_sensor(who_am_i_reg: u8) -&gt; bool {
+    who_am_i_reg == EXPECTED_WHO_AM_I // &lt;- `==` confirms the chip on the bus is the one this driver expects
+}
+
+let who_am_i_reg = 0x68; // value read back from the sensor's WHO_AM_I register
+assert!(is_expected_sensor(who_am_i_reg));
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Checking a peripheral's status flag against an expected encoding</h3>
+            <pre><code class="rust">const STATUS_READY: u8 = 0x01;
+
+fn is_ready(status_reg: u8) -&gt; bool {
+    status_reg == STATUS_READY // &lt;- `==` checks the status register matches the "ready" encoding
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

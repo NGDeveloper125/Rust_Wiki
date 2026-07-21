@@ -1058,13 +1058,64 @@ function, not per crate.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Nothing about <code>#[proc_macro]</code>/<code>#[proc_macro_derive(...)]</code>/<code>#[proc_macro_attribute]</code>
+themselves changes for embedded targets, because a procedural macro never
+runs on the target at all — it's a plain function compiled for, and
+executed on, the <em>host</em> machine as part of the compiler's own build
+process, taking token streams in and producing token streams out. This
+host/target split is the same one doctests run into: the macro crate
+itself has no <code>#![no_std]</code> concerns, no target triple, and no access to
+(or need for) any peripheral — its only job is to transform source text
+before the <em>target</em> build ever begins.</p>
+<p>What is embedded-specific is what real embedded proc-macros generate:
+<code>cortex-m-rt</code>'s <code>#[entry]</code> is an attribute-like macro
+(<code>#[proc_macro_attribute]</code>-backed) that runs on the host at compile time
+and rewrites the annotated function into the shape the reset handler
+expects to call, wiring it up as the firmware's actual entry point;
+RTIC's <code>#[app]</code> is a much larger attribute-like macro that expands an
+entire annotated module into the interrupt-driven scheduling,
+resource-locking, and task-dispatch code RTIC applications run on. Both
+only ever produce ordinary <code>#![no_std]</code>-compatible Rust source — the
+macro's own execution is host-side and completely unaffected by the
+target it's generating code for.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">cortex-m-rt's #[entry] transforming code at compile time, on the host</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry; // &lt;- #[proc_macro_attribute]-backed: runs on the host at compile time
+
+#[entry] // &lt;- rewrites this function into the firmware's actual entry point; the rewritten code runs on-target
+fn main() -&gt; ! {
+    loop {}
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">RTIC's #[app] expanding a whole module into scheduling code</h3>
+            <pre><code class="rust">#[rtic::app(device = pac)] // &lt;- proc-macro-attribute expansion happens on the host; only its output ships to the chip
+mod app {
+    #[shared]
+    struct Shared {}
+
+    #[local]
+    struct Local {}
+
+    #[init]
+    fn init(_cx: init::Context) -&gt; (Shared, Local) {
+        (Shared {}, Local {})
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

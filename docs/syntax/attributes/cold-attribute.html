@@ -1036,13 +1036,64 @@ paired with error-construction helpers for this reason.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[cold]</code> behaves identically under <code>#![no_std]</code> — it's a pure codegen
+hint with no allocator or OS dependency — but it tends to matter more on
+a constrained core than on a desktop CPU. Many Cortex-M0/M0+ parts have
+no instruction cache at all, and even parts that do have one have far
+less of it than a desktop chip; every extra byte of rarely-taken code
+inlined into a hot path is extra flash the core has to fetch through,
+often across more wait states than an equivalent SRAM access would cost.
+That effect is sharpest inside an interrupt service routine, where the
+hot path's size and predictability directly bound how quickly the ISR can
+finish and how much interrupt latency the rest of the system sees —
+keeping a rare fault or overrun branch <code>#[cold]</code> and out of the ISR's
+inlined body is a small, concrete way to protect that latency budget
+instead of a general-purpose style preference.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Keeping an ADC interrupt handler's fault path cold</h3>
+            <pre><code class="rust">#[cold] // &lt;- rare fault path stays out of the ISR's hot, latency-sensitive body
+fn handle_adc_overrun() {
+    // log or count the overrun; a real handler might set a fault flag
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ADC1_2() {
+    let overrun = false; // stand-in for a real overrun-flag register read
+    if overrun {
+        handle_adc_overrun(); // rarely taken
+    }
+    // ordinary sample read continues here, uninterrupted by the fault-handling code above
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Marking an allocator's out-of-memory path cold</h3>
+            <pre><code class="rust">#[cold] // &lt;- keeps the common allocation path lean; OOM is the rare branch
+fn report_alloc_failure() -&gt; ! {
+    panic!("heap exhausted");
+}
+
+fn alloc_or_halt(remaining: usize, requested: usize) -&gt; usize {
+    if requested &gt; remaining {
+        report_alloc_failure();
+    }
+    remaining - requested
+}
+</code></pre>
+<p>Both examples split a rare, larger branch into its own <code>#[cold]</code> function
+for the same underlying reason as the classic case — the optimizer stops
+considering it for inlining into the path that matters — but on firmware
+the payoff is measured directly in cycles of interrupt latency and bytes
+of flash, not just instruction-cache locality in the abstract.</p>
+
+          </div>
         </div>
       </section>
       </div>

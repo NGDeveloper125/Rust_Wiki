@@ -1076,13 +1076,42 @@ becomes useful once the signature needs to refer to <code>T</code> more than onc
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>impl</code> means exactly the same thing under <code>#![no_std]</code> as in hosted
+Rust — the same choice between an inherent block and a trait-implementing
+block, made the same way. Worth naming explicitly is how central the
+trait-implementing form is to the embedded ecosystem: a driver crate
+written against <code>embedded-hal</code> is, at its simplest, one struct plus one
+or more <code>impl &lt;HalTrait&gt; for MyDriver</code> blocks translating the trait's
+generic method calls into the specific register writes a real chip
+needs.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Implementing an embedded-hal trait for a custom driver type</h3>
+            <pre><code class="rust">struct MockLed {
+    state: bool,
+}
+
+impl embedded_hal::digital::OutputPin for MockLed { // &lt;- `impl Trait for Type`: connects OutputPin's methods to MockLed
+    type Error = core::convert::Infallible;
+
+    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt; {
+        self.state = true;
+        Ok(())
+    }
+
+    fn set_low(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt; {
+        self.state = false;
+        Ok(())
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

@@ -1043,13 +1043,39 @@ using <code>&lt;=</code> here would be an off-by-one bug.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>&lt;</code> means the same thing under <code>#![no_std]</code> — <code>core::cmp::PartialOrd</code>,
+and generics/turbofish stay pure compile-time grammar regardless of
+target. The single most common <code>&lt;</code> in firmware is a bounds check on a
+fixed-size, stack-allocated buffer rather than a heap-growable <code>Vec</code> —
+embedded code almost always indexes a <code>[T; N]</code> or a <code>heapless::Vec</code>
+whose capacity is fixed at compile time, so <code>index &lt; capacity</code> is the
+everyday guard before every write.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Bounds-checking an index into a fixed-size sample buffer</h3>
+            <pre><code class="rust">const SAMPLE_BUFFER_LEN: usize = 32;
+
+fn can_write_sample(write_index: usize) -&gt; bool {
+    write_index &lt; SAMPLE_BUFFER_LEN // &lt;- `&lt;` confirms the index still lands inside the fixed-size buffer
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Flagging an undervoltage reading</h3>
+            <pre><code class="rust">const MIN_SAFE_MILLIVOLTS: u16 = 2700;
+
+fn is_undervoltage(voltage_millivolts: u16) -&gt; bool {
+    voltage_millivolts &lt; MIN_SAFE_MILLIVOLTS // &lt;- `&lt;` flags a reading that has dropped below the safe minimum
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

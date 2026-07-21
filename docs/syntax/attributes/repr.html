@@ -1093,13 +1093,75 @@ signal that the type no longer qualifies, per the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[repr(...)]</code> is arguably as central to embedded Rust as
+<a href="cfg-attribute.md"><code>#[cfg(...)]</code></a>, because it's the mechanism that pins a
+Rust type's memory layout to a hardware memory map that Rust itself has
+no say over. A microcontroller's peripherals expose their registers at
+fixed byte offsets from a base address, documented in the vendor's
+datasheet/SVD file — a <code>GPIOA</code> register block might place <code>MODER</code> at
+offset <code>0x00</code>, <code>OTYPER</code> at <code>0x04</code>, <code>IDR</code> at <code>0x10</code>, and so on. A Rust
+struct meant to overlay that block field-for-field only overlays it
+correctly if the compiler is told not to reorder or pad those fields the
+way <code>#[repr(Rust)]</code> (the implicit default) is explicitly free to do —
+<code>#[repr(C)]</code> is what makes the struct's actual layout something the code
+can rely on: fields in declaration order, at the memory-mapped offsets
+the register block was already documented as having. This is exactly
+what <code>svd2rust</code> — the tool that generates peripheral-access crates (PACs)
+from a chip's SVD file — emits: nearly every register-block struct in a
+generated PAC crate carries <code>#[repr(C)]</code> for this reason, and
+reading/writing a peripheral through the generated struct only works
+because that layout guarantee holds.</p>
+<p><code>#[repr(transparent)]</code> shows up constantly in the same neighborhood for a
+different reason: wrapping a single raw register value (a <code>u32</code>, say) in
+a newtype for type safety — a <code>Millivolts(u32)</code> or <code>GpioPin(u8)</code> —
+without paying any cost for the wrapper. Because <code>#[repr(transparent)]</code>
+guarantees identical layout, size, and ABI to the single inner field, the
+newtype can be passed to/from an <code>extern "C"</code> HAL function, transmuted
+from a raw memory-mapped read, or stored directly in a register-block
+field with zero runtime overhead — it's a genuinely zero-cost abstraction
+specifically because the repr makes that guarantee load-bearing rather
+than incidental.</p>
+<p><code>#[repr(packed)]</code> also appears more often in embedded code than in most
+hosted code, for the same reason it does in FFI: a radio or bus protocol
+frame that must match an exact byte layout with no compiler-inserted
+padding.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A peripheral register block laid out to match a datasheet's memory map</h3>
+            <pre><code class="rust">#[repr(C)] // &lt;- pins field order/offsets to match the GPIOA register block's documented layout
+pub struct GpioARegisterBlock {
+    pub moder: u32,   // offset 0x00
+    pub otyper: u32,  // offset 0x04
+    pub ospeedr: u32, // offset 0x08
+    pub idr: u32,     // offset 0x10
+}
+
+const GPIOA_BASE: usize = 0x4002_0000;
+
+fn gpioa() -&gt; &amp;'static mut GpioARegisterBlock {
+    unsafe { &amp;mut *(GPIOA_BASE as *mut GpioARegisterBlock) }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">A zero-cost newtype around a raw register value</h3>
+            <pre><code class="rust">#[repr(transparent)] // &lt;- guarantees identical layout/ABI to the inner u16, zero cost over the raw value
+pub struct AdcReading(u16);
+
+impl AdcReading {
+    pub fn millivolts(self, vref_mv: u32) -&gt; u32 {
+        (self.0 as u32 * vref_mv) / 4095
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

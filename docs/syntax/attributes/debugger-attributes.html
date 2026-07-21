@@ -1038,13 +1038,56 @@ rather than something a caller needs to debug into.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>#[collapse_debuginfo]</code> is unaffected by target — it's pure debug-info
+attribution for macro-generated code, and works the same whether the
+eventual debugger is a hosted one or GDB attached over a hardware probe.
+<code>#[debugger_visualizer(natvis_file = "...")]</code> is where the caveat lives:
+an embedded debugging session almost always goes through GDB (or an
+equivalent) over SWD/JTAG via a probe — <code>probe-rs</code>, OpenOCD, or a vendor
+tool — not through Visual Studio. Natvis is a Visual-Studio-specific XML
+format; a GDB frontend doesn't load it, so a
+<code>#[debugger_visualizer(natvis_file = "...")]</code> written for a HAL type has
+no effect at all in the GDB-based session actually used to debug the
+firmware on target. The GDB-pretty-printer-script form of
+<code>#[debugger_visualizer(...)]</code> is the one that matters for this workflow
+instead — though in practice, most embedded debugging leans less on
+custom pretty-printers and more on <code>defmt</code> (structured, low-overhead
+logging formatted on the host) piped over RTT, alongside <code>probe-rs</code>'s own
+tooling, a workflow that doesn't route through the debugger's
+variable-inspection view at all.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Why a Natvis visualizer doesn't help a probe-rs/GDB debugging session</h3>
+            <pre><code class="rust">// AVOID relying on this alone for embedded debugging — Natvis is Visual-Studio-specific:
+#[debugger_visualizer(natvis_file = "RingBuffer.natvis")] // &lt;- has no effect when debugging via GDB over a probe
+pub struct RingBuffer {
+    head: usize,
+    data: [u8; 64],
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Reaching for defmt/RTT instead of a visualizer for on-target inspection</h3>
+            <pre><code class="rust">use defmt::Format;
+
+#[derive(Format)] // &lt;- defmt's own derive, not debugger_visualizer: formats this type for RTT logging
+pub struct RingBuffer {
+    head: usize,
+    data: [u8; 64],
+}
+
+fn log_state(buf: &amp;RingBuffer) {
+    defmt::info!("ring buffer state: {:?}", buf); // &lt;- printed over RTT, read by probe-rs on the host
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

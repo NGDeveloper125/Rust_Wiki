@@ -1058,13 +1058,45 @@ unlabeled <code>break</code> always targets the nearest enclosing loop.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>break</code> behaves identically under <code>#![no_std]</code> — no <code>std</code> dependency,
+same core-language exit-the-loop semantics. Its most common embedded use
+is closing off a bounded polling loop: pairing <code>break</code> with an attempt
+counter turns an otherwise-unbounded "spin until ready" <code>loop</code> into one
+that gives up after a timeout instead of hanging forever on dead
+hardware, and — because <code>loop</code> is the one form <code>break</code> can carry a value
+out of — the same construct can report back whether it succeeded or
+timed out.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Exiting a bounded polling loop with a value</h3>
+            <pre><code class="rust">let mut attempts = 0;
+let ready = loop {
+    if sensor.is_ready() {
+        break true; // &lt;- `break` carries a value out of the polling loop
+    }
+    attempts += 1;
+    if attempts &gt;= MAX_ATTEMPTS {
+        break false; // &lt;- times out instead of spinning forever on dead hardware
+    }
+};
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Stopping a retry loop on the first successful transmission</h3>
+            <pre><code class="rust">for attempt in 0..3 {
+    if uart.try_send(byte).is_ok() {
+        break; // &lt;- stop retrying once the send succeeds
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

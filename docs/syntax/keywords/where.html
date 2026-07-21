@@ -1081,13 +1081,34 @@ readable at a glance, with constraints listed separately underneath.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>where</code> means exactly the same thing under <code>#![no_std]</code> — a pure
+compile-time clause with no runtime cost or allocator dependency. It
+shows up constantly in embedded driver code specifically because
+<code>embedded-hal</code> traits lean on associated types (an SPI trait's associated
+<code>Error</code> type, for instance), and bounding an associated type has no
+inline position to write it in — <code>where</code> is the only legal spelling here,
+same as in any other Rust code with an associated-type bound.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Bounding a generic driver function over embedded-hal traits</h3>
+            <pre><code class="rust">fn init_display&lt;SPI, CS&gt;(spi: &amp;mut SPI, cs: &amp;mut CS) -&gt; Result&lt;(), SPI::Error&gt;
+where
+    SPI: embedded_hal::spi::SpiBus, // &lt;- `where` bounds the bus type over the SpiBus trait
+    CS: embedded_hal::digital::OutputPin,
+{
+    cs.set_low().ok();
+    spi.write(&amp;[0xAE])?; // display-off command, as an example
+    cs.set_high().ok();
+    Ok(())
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

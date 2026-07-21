@@ -1010,13 +1010,37 @@ about it in isolation; see <a href="../../syntax/keywords/for.html"><code>for</c
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>in</code> is pure grammar bound to the <code>for</code> loop form (and <code>pub(in path)</code>
+visibility) — it carries no behavior of its own, so there's nothing that
+changes under <code>#![no_std]</code> regardless of what kind of iterator source
+sits on its right: a range over register offsets, a fixed-size array, or
+a <code>heapless</code> collection all bind through <code>in</code> the same way.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Binding a loop variable while scanning a channel range</h3>
+            <pre><code class="rust">for offset in 0..NUM_CHANNELS {
+    // &lt;- `in` binds `offset` to each value the range produces
+    read_channel(offset);
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Destructuring a pin/level pair on each iteration</h3>
+            <pre><code class="rust">let pins = [(0u8, true), (1u8, false), (2u8, true)];
+
+for (pin, level) in pins {
+    // &lt;- `in` binds the destructured tuple to each pair the array yields
+    set_output(pin, level);
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

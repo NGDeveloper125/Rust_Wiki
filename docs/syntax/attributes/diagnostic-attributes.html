@@ -1085,13 +1085,34 @@ useful thing to suggest" scenario as its intended use.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Both <code>#[diagnostic::on_unimplemented]</code> and <code>#[diagnostic::do_not_recommend]</code>
+are purely compile-time diagnostic metadata, read only by the compiler
+while producing an error message — they have no runtime behavior to
+differ in the first place, so there's no genuine embedded angle beyond
+confirming they work exactly the same way in <code>#![no_std]</code> code. A
+<code>core</code>-only trait that's central to a HAL's public API (something
+implemented by every GPIO pin type, say) benefits from a custom
+<code>on_unimplemented</code> message for exactly the same reason a hosted crate's
+trait would: a clearer error the moment someone reaches for a type that
+doesn't implement it.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A HAL trait with a custom message for unimplemented pin types</h3>
+            <pre><code class="rust">#[diagnostic::on_unimplemented(
+    message = "`{Self}` is not configured as an output pin",
+    label = "missing `OutputPin` implementation"
+)]
+trait OutputPin {
+    fn set_high(&amp;mut self);
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

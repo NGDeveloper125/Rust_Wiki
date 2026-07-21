@@ -1032,13 +1032,53 @@ restrictive, safer one.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>=</code> means the same thing under <code>#![no_std]</code> — plain assignment, move (or
+copy) semantics, all core-language, nothing changes reaching a
+microcontroller target. For most embedded code <code>=</code> is exactly as
+ordinary as anywhere else: assigning into a local variable, a struct
+field, or a <code>mut</code> binding inside a task. The one place worth calling out
+is assigning into a <code>static mut</code> that's also touched from an interrupt
+handler. The assignment itself is still just <code>=</code>, but reaching it at all
+requires an <code>unsafe</code> block — <code>static mut</code> access requires <code>unsafe</code> even
+for a plain write — and a bare <code>=</code> there is only sound if nothing else
+can observe a half-written state, which is precisely the property a
+genuinely concurrent interrupt can break. That's why real firmware
+usually reaches for a <code>Cell</code>, <code>RefCell</code>, or atomic type wrapped in a
+<code>static</code> instead of a bare <code>static mut</code>, using their own interior-mutability
+methods rather than raw <code>=</code>, so the compiler enforces safety instead of
+the programmer promising it via <code>unsafe</code>.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Assigning into a `static mut` shared with an interrupt handler</h3>
+            <pre><code class="rust">static mut TICK_COUNT: u32 = 0;
+
+// Called only from the timer interrupt handler.
+unsafe fn on_timer_tick() {
+    TICK_COUNT = TICK_COUNT + 1; // &lt;- `=` assigns the new value; `unsafe` is required just to touch a `static mut`
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">The safer alternative: assigning through a `Cell`-wrapped static</h3>
+            <pre><code class="rust">use core::cell::Cell;
+
+struct TickCounter(Cell&lt;u32&gt;);
+unsafe impl Sync for TickCounter {} // sound only because access here is single-threaded (main + one interrupt)
+
+static TICK_COUNT: TickCounter = TickCounter(Cell::new(0));
+
+fn on_timer_tick() {
+    TICK_COUNT.0.set(TICK_COUNT.0.get() + 1); // &lt;- still an `=`-style replacement of the whole value, now via `Cell::set`
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

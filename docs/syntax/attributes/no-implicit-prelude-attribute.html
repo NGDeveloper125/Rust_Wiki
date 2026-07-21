@@ -1030,13 +1030,45 @@ on whatever the prelude happens to contain.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Honestly, there isn't a distinct embedded story here. <code>#[no_implicit_prelude]</code>
+is a name-resolution-only, compile-time attribute with no runtime
+behavior and no dependency on <code>alloc</code>/<code>std</code> — it works exactly the same
+way in a <code>#![no_std]</code> crate, disabling injection of the <code>core</code> prelude in
+place of the <code>std</code> one, and nothing about being on bare metal changes
+what it does or how it's used. Its actual audience — codegen tooling that
+wants a guaranteed-empty namespace so generated identifiers can never
+collide with a prelude item — does exist in embedded Rust: <code>svd2rust</code>
+generates an entire peripheral-access crate's worth of register and field
+types from a chip vendor's SVD file, which is exactly the shape of
+large-scale, tool-generated code this attribute is meant for. But
+<code>svd2rust</code>'s generated code doesn't actually reach for
+<code>#[no_implicit_prelude]</code> in practice, any more than most other Rust
+codegen tools do — so even here, this stays a rare attribute, not one
+with genuine embedded-specific pull.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A peripheral-register codegen module, still not reaching for this attribute</h3>
+            <pre><code class="rust">#[no_implicit_prelude] // &lt;- guarantees no accidental collision with prelude items
+mod gpio_regs_generated {
+    use core::marker::PhantomData; // must be spelled out; nothing implicit here
+
+    pub struct MODER&lt;T&gt; {
+        pub(crate) _marker: PhantomData&lt;T&gt;,
+    }
+}
+</code></pre>
+<p>This is the same kind of guaranteed-empty-namespace guarantee a
+non-embedded codegen tool would want, just applied to a register-
+definition module instead of a general one — the attribute itself
+behaves identically to its non-embedded usage, and most real embedded
+codegen (including <code>svd2rust</code> itself) doesn't actually opt into it.</p>
+
+          </div>
         </div>
       </section>
       </div>

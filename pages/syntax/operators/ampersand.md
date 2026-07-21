@@ -129,9 +129,51 @@ recommends borrowing over owning in function signatures whenever the
 function doesn't need to store or consume the value, since it's strictly
 less restrictive for every caller.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** for both meanings. Borrowing is core-language and used
-constantly for peripheral/driver references; `BitAnd` lives in
-`core::ops` and register-mask manipulation (`status & FLAG_BIT`) is one
-of the most common operations in register-level embedded code.
+Both meanings of `&` carry over unchanged in `#![no_std]` firmware, and
+both are used constantly. The borrow meaning is how driver code hands
+out access to a peripheral without giving it up — a HAL function that
+only reads a peripheral's state typically takes `&Peripheral` rather
+than consuming it, exactly as in hosted code, and the borrow checker
+still enforces that no other code holds a conflicting `&mut` to the
+same peripheral at the same time, which is exactly how embedded Rust
+statically prevents two pieces of code from fighting over one register
+block. The bitwise meaning is how register state is *tested*: reading
+a status register into a plain integer and combining it with `&`
+against a bitmask asks "is this particular flag set?" without touching
+the register — setting or clearing bits is `|=`/`&=` (their own pages),
+and plain `&` never writes anything back. Because `&` never mutates,
+testing a flag this way is safe to repeat freely, including from
+inside an interrupt handler that only needs to read a status bit, not
+acknowledge it.
+
+## Usage examples (Embedded)
+
+### Testing a status flag before writing to a peripheral
+
+```
+const USART_SR: *const u32 = 0x4001_3800 as *const u32; // USART1 status register
+const TXE: u32 = 1 << 7; // transmit-data-register-empty flag
+
+fn tx_ready() -> bool {
+    let status = unsafe { core::ptr::read_volatile(USART_SR) };
+    status & TXE != 0 // <- `&` tests the TXE bit; it only reads, it never writes
+}
+```
+
+### Borrowing a peripheral handle in driver code
+
+```
+struct Gpio {
+    idr: *const u32, // input data register
+}
+
+fn read_pin(gpio: &Gpio, pin: u8) -> bool { // <- `&Gpio` borrows the handle instead of consuming it
+    let bits = unsafe { core::ptr::read_volatile(gpio.idr) };
+    bits & (1 << pin) != 0
+}
+
+let gpio = Gpio { idr: 0x4001_0810 as *const u32 };
+let pressed = read_pin(&gpio, 5); // <- a second call could borrow `&gpio` again at the same time
+```

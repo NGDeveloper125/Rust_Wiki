@@ -1058,13 +1058,59 @@ destructuring site to be revisited.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>This is where <code>struct</code> becomes one of the defining idioms of embedded
+Rust, rather than merely "still works." Tools like svd2rust read a chip
+vendor's SVD file — an XML description of every peripheral's registers,
+their byte offsets, and bit layouts — and generate one <code>#[repr(C)]</code>
+struct per peripheral, its fields laid out in declaration order to match
+the hardware's memory map exactly. Each field is typically a thin,
+interior-mutable register-cell type sitting at that field's exact offset,
+so <code>peripheral.cr1.write(|w| ...)</code> compiles down to a single volatile
+store at the register's real address. <code>#[repr(C)]</code> matters more here than
+in ordinary FFI: Rust's default field ordering and padding are
+unspecified, and a register that lands a few bytes off its real hardware
+address is a silent wrong-memory-access bug, not a compile error. Pairing
+one <code>struct</code> per peripheral with Rust's ownership rules — only one
+<code>&amp;mut</code> to a peripheral's register struct at a time — is also how
+embedded Rust turns "only one part of the program may be programming
+this peripheral right now" into a compile-time guarantee instead of a
+runtime convention.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A register-block struct matching a hardware memory map</h3>
+            <pre><code class="rust">#[repr(C)] // &lt;- guarantees field order/offsets match the hardware layout, not compiler-chosen layout
+struct Gpio { // &lt;- `struct` models the peripheral's registers, one field per register
+    moder: u32,   // offset 0x00: mode register
+    otyper: u32,  // offset 0x04: output type register
+    ospeedr: u32, // offset 0x08: output speed register
+    idr: u32,     // offset 0x0C: input data register
+    odr: u32,     // offset 0x10: output data register
+}
+
+fn set_pin_high(gpio: &amp;mut Gpio, pin: u32) {
+    gpio.odr |= 1 &lt;&lt; pin;
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Bundling driver state alongside a peripheral handle</h3>
+            <p>A driver crate wraps the peripheral it owns together with any state the
+driver itself needs to track, so the whole thing moves and borrows as one
+unit.</p>
+<pre><code class="rust">struct TemperatureSensor&lt;I2C&gt; { // &lt;- `struct` bundles a peripheral handle with driver-owned state
+    i2c: I2C,
+    address: u8,
+    last_reading: Option&lt;f32&gt;,
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

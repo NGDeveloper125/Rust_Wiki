@@ -1077,13 +1077,43 @@ isn't known when <code>trait_area</code> is written, only that it implements <co
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>::</code> means exactly the same thing under <code>#![no_std]</code> — pure compile-time
+path resolution, identical whether walking <code>std</code>'s module tree or
+<code>core</code>/<code>alloc</code>'s. Embedded code leans on it just as heavily, but the paths
+it walks look different: instead of <code>std::collections::HashMap</code>, firmware
+code walks into a peripheral-access crate (a "PAC," generated from the
+chip's SVD file) or a HAL crate wrapping it. <code>crate::pac::GPIOA</code> reaches
+the register-block type for a specific GPIO peripheral, and
+<code>cortex_m::peripheral::NVIC</code> reaches the Cortex-M core peripheral that
+controls interrupts. Turbofish shows up in the same disambiguating role
+it always does — most often forcing which concrete peripheral or register
+type a generic HAL function should operate on.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Walking into a peripheral-access crate to reach a register block</h3>
+            <pre><code class="rust">use crate::pac::GPIOA; // &lt;- `::` walks `crate` -&gt; `pac` -&gt; the GPIOA register-block type
+
+fn set_pin_high(gpioa: &amp;GPIOA) {
+    gpioa.bsrr.write(|w| w.bs0().set_bit());
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Reaching a core peripheral through a HAL crate</h3>
+            <pre><code class="rust">use cortex_m::peripheral::NVIC; // &lt;- `::` walks `cortex_m` -&gt; `peripheral` -&gt; `NVIC`, the interrupt controller
+
+fn mask_interrupt(nvic: &amp;mut NVIC, interrupt: crate::pac::Interrupt) {
+    NVIC::mask(interrupt); // &lt;- `::` also reaches `NVIC`'s own associated function `mask`
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

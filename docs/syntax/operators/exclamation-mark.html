@@ -1020,13 +1020,57 @@ of the function as the unindented success path.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>All three meanings of <code>!</code> carry over into <code>#![no_std]</code> unchanged: logical
+NOT and bitwise complement are core-language operators overloadable via
+<code>core::ops::Not</code>, macro-invocation syntax is resolved entirely at compile
+time regardless of target, and the never type <code>!</code> is likewise a
+core-language type with no runtime component. The never type is the one
+place <code>!</code> becomes <em>more</em> prominent rather than merely unchanged. Firmware's
+<code>fn main</code> conventionally never returns — there's no OS to return control
+to — so declaring it <code>fn main() -&gt; !</code> and driving it with an unconditional
+<code>loop { }</code> isn't a stylistic quirk, it's the normal, expected shape of an
+embedded entry point, and the compiler uses that same <code>-&gt; !</code> signature to
+statically confirm the function really never falls off the end. The same
+requirement applies to a <code>#[panic_handler]</code> function, which likewise must
+return <code>!</code> since a firmware panic has nowhere to unwind to.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Negating a peripheral's ready flag before polling</h3>
+            <pre><code class="rust">fn poll_until_ready(is_ready: impl Fn() -&gt; bool) {
+    while !is_ready() { // &lt;- `!` negates the ready check into a "keep waiting" condition
+        // spin until the peripheral reports ready
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">An embedded entry point that never returns</h3>
+            <pre><code class="rust">#[no_mangle]
+fn main() -&gt; ! { // &lt;- `!`: main never returns control to anything, so its return type is the never type
+    loop {
+        // service peripherals, feed a watchdog, etc. — forever
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">A panic handler, also required to diverge</h3>
+            <pre><code class="rust">use core::panic::PanicInfo;
+
+#[panic_handler]
+fn on_panic(_info: &amp;PanicInfo) -&gt; ! { // &lt;- `!`: a firmware panic has nowhere to unwind to, so this must diverge too
+    loop {} // e.g. halt the core, or reset the microcontroller
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

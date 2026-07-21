@@ -1061,13 +1061,56 @@ explicitly for spawned tasks.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><strong>Partial support.</strong> <code>async fn</code> and <code>async</code>/<code>async move</code> blocks are
+core-language: writing one, having it desugar into an anonymous
+<code>core::future::Future</code>-implementing state machine, and the distinction
+between borrowing (<code>async</code> block) and taking ownership (<code>async move</code>) of
+captured variables all work identically under <code>#![no_std]</code> — none of it
+depends on <code>std</code> or an allocator. What's missing on bare metal is the
+other half of the picture the classic examples lean on: <code>tokio::spawn</code>,
+<code>#[tokio::main]</code>, and the hosted runtime that actually polls those
+futures to completion. <code>tokio</code> is built on an OS scheduler, threads, and
+an OS-backed I/O reactor, none of which exist on a microcontroller with
+no operating system underneath it.</p>
+<p>The real substitute is an embedded async executor — <code>embassy</code> is the
+most widely used one. Embassy provides its own entry point attribute,
+<code>#[embassy_executor::main]</code>, in place of <code>#[tokio::main]</code>, and its own
+task-spawning and timer primitives (<code>embassy_executor::Spawner</code>,
+<code>embassy_time::Timer</code>) in place of <code>tokio::spawn</code>/<code>tokio::time</code>. An
+<code>async fn</code> marked <code>#[embassy_executor::task]</code> is spawned onto embassy's
+executor instead of tokio's, but the <code>async fn</code>/<code>.await</code> syntax inside it
+is exactly the same language feature described in the classic
+Explanation above — only the runtime driving it has changed.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Declaring an embassy task with `async fn`</h3>
+            <pre><code class="rust">use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+#[embassy_executor::task]
+async fn blink_led() { // &lt;- `async fn`: same grammar as hosted Rust, spawned onto embassy's executor instead of tokio's
+    loop {
+        // ... toggle a GPIO pin here
+        Timer::after(Duration::from_millis(500)).await;
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) { // &lt;- embassy's entry point, in place of #[tokio::main]
+    spawner.spawn(blink_led()).unwrap();
+}
+</code></pre>
+<p><code>spawner.spawn(...)</code> is embassy's substitute for
+<code>tokio::spawn</code> — both hand an <code>async fn</code>'s produced future to an
+executor, just a different one suited to running with no OS underneath
+it.</p>
+
+          </div>
         </div>
       </section>
       </div>

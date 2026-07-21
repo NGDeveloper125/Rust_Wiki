@@ -1088,13 +1088,79 @@ same global reach with none of the safety.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>static</code> means exactly what the classic Explanation above describes
+under <code>#![no_std]</code> too — one fixed-address, program-long-lived piece of
+storage — and that fixed address is precisely why it, rather than
+<a href="const.md"><code>const</code></a>, is the tool embedded code reaches for whenever more
+than one part of the program needs to touch the <em>same</em> piece of storage:
+a peripheral register block modeled as a singleton, or state genuinely
+shared between an interrupt handler and the main loop. (This page is
+about the <code>static</code> <em>item keyword</em> itself; the closely related <code>'static</code>
+<em>lifetime</em> — which every <code>static</code> item's type is bound by, and which
+shows up constantly on its own even where no <code>static</code> item is involved,
+e.g. <code>thread::spawn</code>'s bound or a <code>'static</code> trait object — has its own
+dedicated page, <a href="../lifetimes/static-lifetime.md"><code>'static</code></a>, which
+covers several embedded-specific scenarios — a <code>critical-section</code>-guarded
+counter, a <code>#[global_allocator]</code>, a <code>heapless::spsc</code> queue split — in
+depth. Those aren't repeated here.)</p>
+<p>Two mechanisms specific to the <em>item</em> keyword are worth calling out.
+First, a peripheral-access crate (hand-written, or <code>svd2rust</code>-generated
+from a chip's SVD file) models each hardware peripheral as effectively a
+<code>static</code> singleton, reached through a <code>take()</code>-style API
+(<code>pac::Peripherals::take()</code>) that hands out the one instance exactly
+once at runtime — this exists because there is exactly one physical
+UART/GPIO/timer controller for the whole program to share, and modeling
+that as a <code>static</code>-backed singleton, rather than a value freely
+constructible anywhere, is what stops two independent parts of the
+firmware from each believing they have exclusive access to the same
+hardware. Second, <code>static mut</code> remains the direct way to give an
+interrupt handler and <code>main</code> a shared, mutable global when no
+synchronization wrapper is in the picture — every access requires
+<code>unsafe</code>, and, per increasingly-recommended, lint-enforced practice,
+forming an ordinary <code>&amp;</code>/<code>&amp;mut</code> reference to it directly is discouraged
+in favor of a raw pointer obtained with <code>&amp;raw const</code>/<code>&amp;raw mut</code>,
+narrowing the window where the aliasing promise has to hold (see
+<a href="mut.md"><code>mut</code></a> for that pattern from the mutability-marker angle). In
+new code, a <code>static</code> wrapping a <code>critical-section</code>-guarded
+<code>Cell</code>/<code>RefCell</code>, or an atomic, is generally preferred over <code>static mut</code>
+for exactly this reason — it gets the same interrupt/main-loop sharing
+without ever needing an <code>unsafe</code> block at the access site.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Modeling a peripheral register block as a `static`-backed singleton</h3>
+            <pre><code class="rust">use stm32f4xx_hal::pac;
+
+fn main() -&gt; ! {
+    let device = pac::Peripherals::take().unwrap(); // &lt;- hands out the one `static`-backed peripheral instance
+    let gpioa = &amp;device.GPIOA;
+    gpioa.odr.write(|w| w.odr5().set_bit());
+    loop {}
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">`static mut` as a direct interrupt/main-loop shared counter</h3>
+            <pre><code class="rust">static mut OVERFLOW_COUNT: u32 = 0; // &lt;- `static mut`: one fixed address, reachable from both `main` and the ISR
+
+#[interrupt]
+fn TIM2() {
+    unsafe {
+        OVERFLOW_COUNT += 1; // &lt;- every access needs `unsafe`: no compiler-checked synchronization here
+    }
+}
+
+fn overflow_count() -&gt; u32 {
+    unsafe { OVERFLOW_COUNT }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

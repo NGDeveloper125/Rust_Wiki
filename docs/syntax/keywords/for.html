@@ -1043,13 +1043,40 @@ uses exactly this shape instead of a manual <code>loop</code> calling <code>.rec
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>for</code> behaves identically under <code>#![no_std]</code> — the <code>Iterator</code> and
+<code>IntoIterator</code> machinery it desugars to lives in <code>core</code>, not <code>std</code>, so
+iterating a fixed-size array or a <code>heapless</code> collection works exactly the
+same as iterating a <code>Vec</code> on a hosted target. The only real difference is
+what's on the other side of <code>in</code>: a fixed-size sample buffer or a
+capacity-bounded <code>heapless::Vec</code>, rather than a heap-allocated collection.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Iterating over a fixed sample buffer</h3>
+            <pre><code class="rust">let samples: [u16; 8] = read_adc_burst();
+for sample in samples {
+    // &lt;- `for` iterates the fixed-size array by value, same as any `IntoIterator`
+    accumulate(sample);
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Iterating over a heapless queue of pending commands</h3>
+            <pre><code class="rust">use heapless::Vec;
+
+let commands: Vec&lt;u8, 16&gt; = Vec::new();
+for cmd in &amp;commands {
+    // &lt;- `for` over a `heapless::Vec`, exactly like a `std` collection
+    dispatch(*cmd);
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

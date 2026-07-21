@@ -1103,13 +1103,66 @@ in a single place.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><strong>Full support.</strong> <code>unsafe</code> is core-language and, if anything, shows up
+more densely in embedded code than in hosted code, because two of its
+five gated operations are the primary way firmware talks to hardware at
+all. Reading or writing a memory-mapped peripheral register means
+dereferencing a raw pointer at a fixed address — there's no safe
+language-level concept of "a GPIO register" for the compiler to check,
+only a raw address the datasheet assigns meaning to — so every direct
+register access needs an <code>unsafe</code> block. Likewise, many embedded projects
+link against a vendor-supplied C SDK or bootloader routine through
+<code>unsafe extern "C" { ... }</code>, for exactly the FFI reasons covered in the
+classic Explanation above: the compiler can verify the declared
+signature but nothing about what the foreign function actually does with
+the pointers it's given.</p>
+<p>The difference from a typical hosted <code>unsafe</code> block is where it tends to
+live. A well-designed hardware-abstraction-layer (HAL) crate — the
+<code>embedded-hal</code> trait ecosystem is built around this — concentrates every
+raw register dereference and every <code>extern "C"</code> call in one low-level
+module, and exposes a safe, typed API (<code>pin.set_high()</code>,
+<code>uart.write(&amp;bytes)</code>, and so on) to the rest of the firmware. Application
+code built on top of a good HAL rarely writes <code>unsafe</code> itself; the
+unsafety is real and unavoidable, but it stays contained to the layer
+that actually owns the hardware contract, rather than scattered through
+application logic.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Reading a memory-mapped peripheral register</h3>
+            <pre><code class="rust">const GPIOA_IDR: *const u32 = 0x4001_0800 as *const u32; // &lt;- fixed peripheral address, from the chip's datasheet
+
+fn read_port_a() -&gt; u32 {
+    unsafe { *GPIOA_IDR } // &lt;- `unsafe` block: required to dereference a raw pointer at a hard-coded address
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Calling into a vendor HAL function</h3>
+            <pre><code class="rust">unsafe extern "C" {
+    fn HAL_UART_Transmit(huart: *mut u8, data: *const u8, len: u16, timeout: u32) -&gt; i32; // &lt;- vendor C SDK function
+}
+
+fn send_byte(uart_handle: *mut u8, byte: u8) {
+    unsafe {
+        // SAFETY: `uart_handle` was initialized by the vendor SDK's own
+        // init routine before this call, and `&amp;byte` is a valid pointer
+        // for the single byte being transmitted.
+        HAL_UART_Transmit(uart_handle, &amp;byte, 1, 100); // &lt;- `unsafe` block: calling into the vendor C HAL
+    }
+}
+</code></pre>
+<p>Both blocks above are exactly the kind of code a
+well-layered embedded crate keeps inside its HAL module — application
+code further up the stack calls a safe wrapper method instead of
+touching <code>GPIOA_IDR</code> or <code>HAL_UART_Transmit</code> directly.</p>
+
+          </div>
         </div>
       </section>
       </div>

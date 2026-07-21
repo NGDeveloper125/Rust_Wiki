@@ -1058,13 +1058,59 @@ recommend for exactly this kind of public, extensible enum.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>enum</code> is a natural fit for modeling the discrete states real hardware
+actually has: a peripheral's power mode, a protocol's state machine, or
+the fixed set of fault/error codes a sensor's datasheet enumerates.
+Because these are typically closed, hardware-defined sets — a chip's
+power controller genuinely only has the modes its datasheet lists, no
+more and no fewer — an <code>enum</code>'s exhaustive <code>match</code> is a good fit for
+handling every documented state explicitly instead of leaving an implicit
+"anything else" case unaccounted for. Explicit discriminants paired with
+<code>#[repr(u8)]</code> (or another fixed-width repr) are the standard way to
+decode a raw register value into one of these enums, and to encode one
+back into the bit pattern a peripheral expects.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Modeling a peripheral's power mode</h3>
+            <pre><code class="rust">#[repr(u8)]
+enum PowerMode { // &lt;- `enum` models the datasheet's fixed set of power states
+    Off = 0,
+    Standby = 1,
+    Active = 2,
+    LowPower = 3,
+}
+
+fn configure_power(mode: PowerMode) -&gt; u8 {
+    mode as u8 // &lt;- explicit discriminants make the enum-to-register-value mapping direct
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Decoding a sensor fault code</h3>
+            <pre><code class="rust">enum SensorFault { // &lt;- `enum` covers the datasheet's documented fault codes
+    None,
+    OverTemperature,
+    UnderVoltage,
+    CommunicationTimeout,
+}
+
+fn decode_fault(raw: u8) -&gt; SensorFault {
+    match raw {
+        0 =&gt; SensorFault::None,
+        1 =&gt; SensorFault::OverTemperature,
+        2 =&gt; SensorFault::UnderVoltage,
+        _ =&gt; SensorFault::CommunicationTimeout,
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

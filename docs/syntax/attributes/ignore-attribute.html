@@ -1042,13 +1042,49 @@ recommends the <code>= "reason"</code> form for exactly this reason.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>#[ignore]</code> is a modifier on <code>#[test]</code>, and <code>#[test]</code>'s harness itself
+needs <code>std</code> — see <a href="test-attribute.md"><code>#[test]</code></a>'s Embedded Rust Notes for
+the full host-vs-target testing story: hardware-independent embedded
+logic is normally tested with plain <code>cargo test</code> on the host, behind a
+<code>#[cfg(test)]</code> split, rather than on the target. Within that host-tested
+slice, <code>#[ignore]</code> behaves exactly as it does anywhere else — nothing
+about the code belonging to a <code>#![no_std]</code> crate changes what
+<code>#[ignore]</code>/<code>#[ignore = "reason"]</code> do once the test is actually compiled
+and run on the host. It's also a reasonable way to mark a host test that's
+only meaningful with real hardware attached over <code>probe-rs</code> (an
+integration-style test that flashes a board and reads a real response
+back) as excluded from the default host-only run, since that scenario is
+common enough in embedded projects to be worth naming directly.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Marking a hardware-in-the-loop host test as ignored by default</h3>
+            <pre><code class="rust">fn parse_frame(bytes: &amp;[u8]) -&gt; Result&lt;u8, &amp;'static str&gt; {
+    bytes.first().copied().ok_or("empty frame")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_a_valid_frame() {
+        assert_eq!(parse_frame(&amp;[0x42]), Ok(0x42));
+    }
+
+    #[test]
+    #[ignore = "requires a board attached over probe-rs; run explicitly, not on every host build"] // &lt;- reason shown in output
+    fn round_trips_a_frame_through_real_hardware() {
+        // a full run of this test flashes a target board and reads the response back over the probe
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

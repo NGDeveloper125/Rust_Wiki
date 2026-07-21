@@ -1078,13 +1078,52 @@ crate add a variant later without breaking this function.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[non_exhaustive]</code> is a pure compile-time attribute affecting only
+downstream construction/matching rules, so it applies identically to a
+<code>#![no_std]</code> HAL crate's public types. It's a natural fit for exactly the
+kind of enum a hardware-abstraction crate tends to publish early and
+grow later: a fault/error code enum describing what went wrong on a
+peripheral (bus timeout, parity error, overrun, ...) is rarely complete
+on day one — a HAL author who discovers a new distinguishable fault
+condition in a later chip revision, or simply didn't enumerate every case
+the silicon can report at first release, wants to add a variant without
+that being a breaking change for every downstream <code>match</code>. Marking the
+enum <code>#[non_exhaustive]</code> from its first published version keeps that door
+open.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A HAL's fault-code enum left open for future variants</h3>
+            <pre><code class="rust">#[non_exhaustive] // &lt;- lets this HAL add new fault variants later without a semver break
+pub enum I2cFault {
+    BusTimeout,
+    ArbitrationLost,
+    NackOnAddress,
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Downstream firmware handling the fault enum with a required wildcard</h3>
+            <pre><code class="rust">// Defined in the HAL crate:
+// #[non_exhaustive]
+// pub enum I2cFault { BusTimeout, ArbitrationLost, NackOnAddress }
+
+fn recover_from(fault: &amp;I2cFault) {
+    match fault {
+        I2cFault::BusTimeout =&gt; { /* reset the peripheral */ }
+        I2cFault::ArbitrationLost =&gt; { /* retry the transaction */ }
+        I2cFault::NackOnAddress =&gt; { /* mark the device unresponsive */ }
+        _ =&gt; { /* unknown fault added in a later HAL version: fall back to a full peripheral reset */ }
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

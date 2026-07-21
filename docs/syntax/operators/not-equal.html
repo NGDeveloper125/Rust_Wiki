@@ -1004,13 +1004,41 @@ and its derive/impl tradeoffs.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>!=</code> means exactly the same thing under <code>#![no_std]</code> — still
+<code>PartialEq::ne</code> via <code>core::cmp</code>, no different from <code>==</code>'s embedded story.
+The concrete case that comes up constantly in firmware is polling a
+status register's busy bit until it clears, or flagging a hardware ID
+read-back that doesn't match what a driver expects — both are <code>!=</code>
+comparisons against a bit pattern the datasheet defines, checked in a
+tight loop rather than once at startup.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Detecting an unexpected device on the bus</h3>
+            <pre><code class="rust">const EXPECTED_CHIP_ID: u8 = 0xD4;
+
+fn is_unexpected_chip(chip_id_reg: u8) -&gt; bool {
+    chip_id_reg != EXPECTED_CHIP_ID // &lt;- `!=` flags any chip ID that doesn't match what this driver expects
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Polling a busy bit until it clears</h3>
+            <pre><code class="rust">const BUSY_BIT: u8 = 0x80;
+
+fn wait_until_ready(read_status: impl Fn() -&gt; u8) {
+    while read_status() &amp; BUSY_BIT != 0 { // &lt;- `!=` keeps polling until the busy bit clears
+        // spin until the peripheral reports it's no longer busy
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

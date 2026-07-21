@@ -1083,13 +1083,83 @@ explains in full.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>dyn Trait</code> works the same under <code>#![no_std]</code> as in hosted Rust —
+object-safety rules are identical, and a vtable-dispatched call requires
+neither an OS nor an allocator by itself. The form that needs nothing
+extra is <code>&amp;dyn Trait</code> (or <code>&amp;mut dyn Trait</code>): a fat pointer — data pointer
+plus vtable pointer — to a value already living somewhere (the stack, a
+<code>static</code>, or borrowed from a caller), with no heap involved at all.
+<code>Box&lt;dyn Trait&gt;</code> is a different story: <code>Box</code> itself is defined in
+<code>alloc</code>, so boxing a trait object is only available once a crate pulls in
+<code>alloc</code> and configures a <code>#[global_allocator]</code>.</p>
+<p>Even where <code>alloc</code> is available, many embedded codebases still prefer
+generics and monomorphization over <code>dyn Trait</code>, for reasons that matter
+more on a constrained core than on a server. A generic function is
+specialized per concrete type at compile time, so the compiler can inline
+across the call and the CPU executes a direct call instead of an
+indirect jump through a vtable — a real consideration on a core with a
+small or no branch predictor and every cycle budgeted. The tradeoff runs
+the other way in code size: monomorphization generates one copy of the
+generic code per concrete type actually used, where a single
+<code>dyn</code>-based function is one copy shared by every implementer — on a chip
+with a few tens of kilobytes of flash, that code-size cost is sometimes
+the deciding factor back toward <code>dyn</code> instead. Neither choice is
+universally correct; it's a genuine per-project tradeoff between
+dispatch predictability/inlining and flash footprint, not a case where
+one option is simply wrong.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">`&amp;dyn Trait` needs no heap</h3>
+            <pre><code class="rust">trait Sensor {
+    fn read_raw(&amp;self) -&gt; u16;
+}
+
+struct Thermistor;
+impl Sensor for Thermistor {
+    fn read_raw(&amp;self) -&gt; u16 { 512 }
+}
+
+fn log_reading(sensor: &amp;dyn Sensor) { // &lt;- `&amp;dyn Sensor`: fat pointer to a borrowed value, no allocation
+    let _raw = sensor.read_raw();
+}
+
+let thermistor = Thermistor;
+log_reading(&amp;thermistor);
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">`Box&lt;dyn Trait&gt;` once `alloc` is configured</h3>
+            <pre><code class="rust">extern crate alloc;
+use alloc::boxed::Box;
+
+trait Sensor {
+    fn read_raw(&amp;self) -&gt; u16;
+}
+
+fn boxed_sensor(sensor: impl Sensor + 'static) -&gt; Box&lt;dyn Sensor&gt; {
+    Box::new(sensor) // &lt;- `dyn Sensor` here still requires `alloc` + a #[global_allocator], same as hosted Rust
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Choosing generics over `dyn` for predictable, allocation-free dispatch</h3>
+            <pre><code class="rust">trait Sensor {
+    fn read_raw(&amp;self) -&gt; u16;
+}
+
+fn log_reading_generic&lt;S: Sensor&gt;(sensor: &amp;S) { // &lt;- monomorphized per concrete S: no vtable, no dyn at all
+    let _raw = sensor.read_raw();
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

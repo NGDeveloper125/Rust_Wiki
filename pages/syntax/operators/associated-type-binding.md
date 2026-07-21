@@ -106,10 +106,49 @@ and a vtable dispatch per call — the
 documents associated-type bindings as part of a trait object type's
 grammar, not an optional add-on to it.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Associated-type bindings are a purely compile-time
-constraint with no `std`/allocator dependency on their own; the boxed
-`dyn Trait<Assoc = T>` form specifically needs `alloc` (or a `heapless`
-equivalent) for the allocation `Box::new` performs, the same caveat as
-any other `Box<dyn Trait>` usage.
+Associated-type bindings are pure compile-time constraint syntax with no
+runtime component, so the mechanism is unchanged under `#![no_std]`.
+Where this shows up constantly in embedded code is the `embedded-hal`
+ecosystem: traits like `OutputPin`, `InputPin`, and `SpiBus` all declare
+an associated `Error` type rather than hard-coding one, since the
+concrete error a GPIO pin or SPI peripheral can report is entirely
+HAL/chip-specific. A generic driver written against `embedded-hal` almost
+always needs to bind that associated type to something concrete enough
+to use — most simply, `Error = Infallible` when the driver only intends
+to support pins whose operations genuinely cannot fail (common for plain
+push-pull GPIO on many chips), which keeps the driver's own error
+handling simple instead of wrapping an arbitrary, unconstrained `E`.
+
+## Usage examples (Embedded)
+
+### Constraining a generic driver to an infallible GPIO pin
+
+```
+use core::convert::Infallible;
+use embedded_hal::digital::OutputPin;
+
+fn blink<P: OutputPin<Error = Infallible>>(led: &mut P) {
+    // <- `Error = Infallible`: this driver only supports pins whose operations can't fail
+    led.set_high().unwrap(); // safe to unwrap: Infallible can never actually be constructed
+    led.set_low().unwrap();
+}
+```
+
+### Constraining a driver to a board's own concrete error type
+
+```
+use embedded_hal::digital::OutputPin;
+
+#[derive(Debug)]
+enum GpioError {
+    BusFault,
+}
+
+fn drive_relay<P: OutputPin<Error = GpioError>>(relay_pin: &mut P) -> Result<(), GpioError> {
+    // <- `Error = GpioError`: only pins reporting this concrete error type are accepted
+    relay_pin.set_high()?;
+    Ok(())
+}
+```

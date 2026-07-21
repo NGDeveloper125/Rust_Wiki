@@ -1025,13 +1025,45 @@ involved at all.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Both attributes behave identically under <code>#![no_std]</code> in the rare cases
+they're used directly — there's nothing about compiling for a bare-metal
+target that changes what <code>#![crate_type = "..."]</code> or
+<code>#![crate_name = "..."]</code> do. The honest embedded-specific point is that
+idiomatic firmware projects essentially never reach for either: a
+Cargo-managed firmware crate gets its <code>crate-type</code>/name from <code>Cargo.toml</code>
+exactly like any hosted crate, and the pieces that are genuinely
+embedded-specific — which chip/architecture to compile for, the linker
+script, memory layout — are handled by <code>.cargo/config.toml</code>'s
+<code>[build] target</code> and a runtime crate's linker arguments, not by anything
+<code>#![crate_type]</code>/<code>#![crate_name]</code> controls. There's no real embedded
+nuance to add beyond "still applies, and still rarely written by hand."</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Why a firmware crate doesn't usually write these attributes at all</h3>
+            <pre><code class="rust">// src/main.rs — no #![crate_type]/#![crate_name] needed here:
+#![no_std]
+#![no_main]
+
+// Cargo.toml supplies crate-type/name (defaults to "bin" from [[bin]], name from [package]);
+// .cargo/config.toml supplies the target instead:
+//   [build]
+//   target = "thumbv7em-none-eabihf"
+
+use cortex_m_rt::entry;
+use panic_halt as _;
+
+#[entry]
+fn main() -&gt; ! {
+    loop {}
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

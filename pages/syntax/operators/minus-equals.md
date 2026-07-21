@@ -54,6 +54,49 @@ through `&mut` avoids a separate read-modify-write statement — see
 [`+=`](plus-equals.md) for the compound-assignment notes shared across
 the whole family.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `SubAssign` lives in `core::ops` — no `std` dependency.
+`SubAssign` lives in `core::ops`, so `-=` behaves identically under
+`#![no_std]`. The relevant nuance is the same one covered on
+[`-`](minus.md): a release build ships with overflow checks off, so a
+`-=` that underflows wraps silently rather than panicking, and a device
+already deployed can't be recompiled in debug to catch it. Where the
+right-hand side is a runtime value that isn't guaranteed to stay smaller
+than the left — decrementing a countdown, a remaining-capacity counter, or
+a fuel/charge gauge — it's worth guarding the subtraction (or using
+`checked_sub`/`saturating_sub` explicitly) rather than trusting bare `-=`
+to fail loudly the way a debug build would.
+
+## Usage examples (Embedded)
+
+### Decrementing a countdown timer without an unchecked underflow
+
+```
+struct Watchdog {
+    remaining: u16,
+}
+
+impl Watchdog {
+    fn tick(&mut self) -> bool {
+        if self.remaining == 0 {
+            return false; // guard first: `-=` on 0 here would panic (debug) or wrap (release)
+        }
+        self.remaining -= 1; // <- `-=` decrements in place, now safe from underflow
+        true
+    }
+}
+```
+
+### Draining a charge counter with a saturating alternative
+
+```
+struct Battery {
+    milliamp_hours: u32,
+}
+
+impl Battery {
+    fn drain(&mut self, used: u32) {
+        self.milliamp_hours = self.milliamp_hours.saturating_sub(used); // stands in for `-=`, floors at 0 instead of wrapping
+    }
+}
+```

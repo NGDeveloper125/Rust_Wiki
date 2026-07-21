@@ -1025,13 +1025,34 @@ existing reachability gets spelled out as a path, with no need to widen
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>super</code> resolves exactly the same way under <code>#![no_std]</code> — a compile-time
+path prefix with no runtime cost. A common sighting in an embedded
+crate's module structure is a driver submodule reaching back up to a
+peripheral-access crate (PAC) re-exported near the crate root with
+<code>super::pac</code>, rather than importing that PAC path fresh inside every
+submodule.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Reaching a peripheral-access crate re-export from a driver submodule</h3>
+            <pre><code class="rust">pub use stm32f4xx_hal::pac; // &lt;- re-exported once, near the crate root
+
+mod drivers {
+    pub mod gpio {
+        pub fn configure() {
+            let peripherals = super::super::pac::Peripherals::take().unwrap();
+            // &lt;- `super::super::` climbs from `drivers::gpio` back up to the crate root's `pac` re-export
+            let _ = peripherals;
+        }
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

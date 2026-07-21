@@ -1011,13 +1011,40 @@ for the fuller ordering-operator treatment.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>&lt;=</code> means the same thing under <code>#![no_std]</code> — the same <code>core::cmp</code>
+<code>PartialOrd</code> as <code>&lt;</code>, <code>&gt;</code>, and <code>&gt;=</code>. The inclusive-upper-bound reading
+comes up often in firmware for a retry counter that hasn't yet exceeded
+its cap (the capped attempt itself should still be allowed), and for the
+upper edge of an inclusive safe-operating range paired with <code>&gt;=</code> on the
+lower edge.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Allowing a bus transaction retry up to and including its cap</h3>
+            <pre><code class="rust">const MAX_RETRIES: u8 = 3;
+
+fn may_retry(attempt: u8) -&gt; bool {
+    attempt &lt;= MAX_RETRIES // &lt;- `&lt;=` allows the boundary attempt itself, not just attempts strictly below it
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Confirming a reading sits within an inclusive safe range</h3>
+            <pre><code class="rust">const MIN_SAFE_CELSIUS: i16 = -20;
+const MAX_SAFE_CELSIUS: i16 = 85;
+
+fn in_safe_range(temperature_celsius: i16) -&gt; bool {
+    MIN_SAFE_CELSIUS &lt;= temperature_celsius &amp;&amp; temperature_celsius &lt;= MAX_SAFE_CELSIUS
+    // &lt;- `&lt;=` twice expresses an inclusive range on both edges
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

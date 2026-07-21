@@ -1096,13 +1096,64 @@ the matched place itself.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>ref</code>/<code>ref mut</code> behave identically under <code>#![no_std]</code> — pure
+pattern-binding syntax with no runtime representation, so there's
+nothing allocator- or target-specific about them. The situation that
+calls for <code>ref</code> in embedded code is the same one that calls for it
+anywhere: matching directly on an owned value (not a reference to one)
+while still needing the rest of that value intact afterward — for
+instance, inspecting one field of a hardware-status struct read back
+from a peripheral without consuming the whole struct in the process.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Borrowing a field while matching an owned hardware-status struct</h3>
+            <pre><code class="rust">struct LinkStatus {
+    speed_mbps: u32,
+    duplex: Duplex,
+}
+
+enum Duplex { Half, Full }
+
+fn log_link(status: LinkStatus) -&gt; LinkStatus {
+    match status {
+        LinkStatus { ref duplex, speed_mbps } =&gt; {
+            // &lt;- `ref` borrows `duplex`; `speed_mbps` (a Copy u32) is still bound normally alongside it
+            match duplex {
+                Duplex::Full =&gt; defmt::info!("full duplex @ {}", speed_mbps),
+                Duplex::Half =&gt; defmt::info!("half duplex @ {}", speed_mbps),
+            }
+        }
+    }
+    status // still whole: only `duplex` was borrowed during the match, never moved out
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Mutating a retry counter with `ref mut` in an owned driver-status enum</h3>
+            <pre><code class="rust">enum SensorState {
+    Faulted { retries: u8 },
+    Ready,
+}
+
+fn record_retry(mut state: SensorState) -&gt; SensorState {
+    match state {
+        SensorState::Faulted { ref mut retries } =&gt; {
+            // &lt;- `ref mut`: mutably borrows the real field so the increment survives past the match
+            *retries += 1;
+        }
+        SensorState::Ready =&gt; {}
+    }
+    state
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

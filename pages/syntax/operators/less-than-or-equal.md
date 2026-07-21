@@ -55,6 +55,35 @@ lint suggests exactly that rewrite — but the explicit `&&` chain remains
 fine when you want the bounds visible inline; see [`<`](less-than.md)
 for the fuller ordering-operator treatment.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `PartialOrd` lives in `core::cmp` — no `std` dependency.
+`<=` means the same thing under `#![no_std]` — the same `core::cmp`
+`PartialOrd` as `<`, `>`, and `>=`. The inclusive-upper-bound reading
+comes up often in firmware for a retry counter that hasn't yet exceeded
+its cap (the capped attempt itself should still be allowed), and for the
+upper edge of an inclusive safe-operating range paired with `>=` on the
+lower edge.
+
+## Usage examples (Embedded)
+
+### Allowing a bus transaction retry up to and including its cap
+
+```
+const MAX_RETRIES: u8 = 3;
+
+fn may_retry(attempt: u8) -> bool {
+    attempt <= MAX_RETRIES // <- `<=` allows the boundary attempt itself, not just attempts strictly below it
+}
+```
+
+### Confirming a reading sits within an inclusive safe range
+
+```
+const MIN_SAFE_CELSIUS: i16 = -20;
+const MAX_SAFE_CELSIUS: i16 = 85;
+
+fn in_safe_range(temperature_celsius: i16) -> bool {
+    MIN_SAFE_CELSIUS <= temperature_celsius && temperature_celsius <= MAX_SAFE_CELSIUS
+    // <- `<=` twice expresses an inclusive range on both edges
+}
+```

@@ -1061,13 +1061,33 @@ the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>let</code> itself has little genuinely embedded-specific to say — it's core
+language grammar with no dependency on <code>std</code>, and a binding it introduces
+lives on the stack exactly as it does on a hosted target. Where an
+embedded binding's story actually diverges from a hosted one is not on
+<code>let</code> but on the pages next to it: <a href="mut.md"><code>mut</code></a> (a peripheral handle
+is almost always bound mutably, since writing a register requires <code>&amp;mut self</code>), <code>static</code> (a value shared with an interrupt handler needs <code>'static</code>
+storage, not a stack binding), and lifetimes (a borrowed peripheral
+handle threaded through driver functions). <code>let</code> just supplies the
+ordinary binding form each of those builds on.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Binding a configured peripheral handle</h3>
+            <pre><code class="rust">let mut led = gpioa.pa5.into_push_pull_output(); // &lt;- `let` binds the configured pin handle, same as any other value
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Binding a value produced by a fallible read</h3>
+            <pre><code class="rust">let reading = adc.read(&amp;mut channel).unwrap_or(0); // &lt;- ordinary `let` binding, no embedded-specific behavior
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

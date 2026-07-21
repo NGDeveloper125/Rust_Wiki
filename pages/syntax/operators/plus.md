@@ -84,8 +84,45 @@ which the [Book's generics chapter](https://doc.rust-lang.org/book/ch10-02-trait
 recommends over over-constraining with a single catch-all trait or
 under-constraining and hitting compile errors deep in the function body.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Add` lives in `core::ops` (re-exported as `std::ops`),
-so both the arithmetic and trait-bound-combinator meanings work
-identically in `#![no_std]`.
+`Add` lives in `core::ops`, so both meanings of `+` — arithmetic addition
+and the trait-bound combinator — work identically under `#![no_std]`. The
+trait-bound meaning is pure compile-time grammar and has nothing further
+to say about embedded targets. The arithmetic meaning has one nuance
+worth being deliberate about: a release build — the profile that actually
+gets flashed to a device — has overflow checks off by default, so `a + b`
+wraps silently past a type's maximum instead of panicking. A desktop
+program usually catches an overflow during development, in a debug
+build; a device already in the field can't be recompiled in debug to
+catch the same bug later. That's why `checked_add`/`wrapping_add`/
+`saturating_add` carry more real weight in firmware than they do in
+typical hosted code — especially for anything that accumulates for as
+long as the device runs, like a tick counter incremented every interrupt
+or a running total built from sensor samples.
+
+## Usage examples (Embedded)
+
+### Incrementing a tick counter across an interrupt boundary
+
+```
+struct Ticks(u32);
+
+impl Ticks {
+    fn on_interrupt(&mut self) {
+        self.0 = self.0.wrapping_add(1); // <- `+` via wrapping_add: rolls over on purpose instead of panicking
+    }
+}
+```
+
+### Accumulating a sensor total without an unnoticed release-mode wrap
+
+```
+fn total_pulses(counts: &[u16]) -> Option<u32> {
+    let mut total: u32 = 0;
+    for &count in counts {
+        total = total.checked_add(count as u32)?; // <- None flags an overflow a shipped device can't catch by recompiling in debug
+    }
+    Some(total)
+}
+```

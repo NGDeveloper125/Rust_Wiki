@@ -80,7 +80,48 @@ bindings are immutable by default — add `mut` only once a binding is
 actually going to be reassigned later, keeping the default the more
 restrictive, safer one.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Assignment and move semantics are core language
-behavior — no `std` dependency.
+`=` means the same thing under `#![no_std]` — plain assignment, move (or
+copy) semantics, all core-language, nothing changes reaching a
+microcontroller target. For most embedded code `=` is exactly as
+ordinary as anywhere else: assigning into a local variable, a struct
+field, or a `mut` binding inside a task. The one place worth calling out
+is assigning into a `static mut` that's also touched from an interrupt
+handler. The assignment itself is still just `=`, but reaching it at all
+requires an `unsafe` block — `static mut` access requires `unsafe` even
+for a plain write — and a bare `=` there is only sound if nothing else
+can observe a half-written state, which is precisely the property a
+genuinely concurrent interrupt can break. That's why real firmware
+usually reaches for a `Cell`, `RefCell`, or atomic type wrapped in a
+`static` instead of a bare `static mut`, using their own interior-mutability
+methods rather than raw `=`, so the compiler enforces safety instead of
+the programmer promising it via `unsafe`.
+
+## Usage examples (Embedded)
+
+### Assigning into a `static mut` shared with an interrupt handler
+
+```
+static mut TICK_COUNT: u32 = 0;
+
+// Called only from the timer interrupt handler.
+unsafe fn on_timer_tick() {
+    TICK_COUNT = TICK_COUNT + 1; // <- `=` assigns the new value; `unsafe` is required just to touch a `static mut`
+}
+```
+
+### The safer alternative: assigning through a `Cell`-wrapped static
+
+```
+use core::cell::Cell;
+
+struct TickCounter(Cell<u32>);
+unsafe impl Sync for TickCounter {} // sound only because access here is single-threaded (main + one interrupt)
+
+static TICK_COUNT: TickCounter = TickCounter(Cell::new(0));
+
+fn on_timer_tick() {
+    TICK_COUNT.0.set(TICK_COUNT.0.get() + 1); // <- still an `=`-style replacement of the whole value, now via `Cell::set`
+}
+```

@@ -1052,13 +1052,56 @@ test verifies the <em>intended</em> failure, not merely that some panic occurred
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>#[should_panic]</code> is a modifier on <code>#[test]</code>, which needs the host-run
+test harness described in <a href="test-attribute.md"><code>#[test]</code></a>'s Embedded Rust
+Notes — catching a panic and reporting pass/fail assumes an
+unwinding-capable, hosted process, which a bare <code>#![no_std]</code> target build
+doesn't have by default (many embedded configurations use
+<code>panic = "abort"</code> and a panic handler that resets or halts the chip, not
+one that unwinds back into a test harness). Hardware-independent logic
+split out for host testing — a parser rejecting a malformed frame, say —
+can still use <code>#[should_panic]</code> completely normally when it's compiled
+and run on the host toolchain, same as any other crate. There's no
+on-target equivalent: an on-target framework like <code>defmt-test</code> reports
+each test's pass/fail over RTT but doesn't provide a
+"this function is expected to panic" mechanism of its own — asserting a
+panic on real hardware would mean recovering from an abort/reset mid
+test-run, which these harnesses aren't built around.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Asserting a panic in host-tested, hardware-independent validation logic</h3>
+            <pre><code class="rust">struct ChannelId(u8);
+
+impl ChannelId {
+    fn new(value: u8) -&gt; Self {
+        assert!(value &lt; 8, "ADC channel {value} out of range (0..=7)");
+        ChannelId(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_a_valid_channel() {
+        assert_eq!(ChannelId::new(3).0, 3);
+    }
+
+    #[test]
+    #[should_panic(expected = "out of range")] // &lt;- runs on the host; no on-target equivalent exists
+    fn rejects_an_out_of_range_channel() {
+        ChannelId::new(9);
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

@@ -987,13 +987,27 @@ let r#typeof = 5;   // ok: the raw-identifier form escapes the reservation
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>No real difference here: <code>typeof</code>'s reservation is a lexer-level fact,
+checked before any target or runtime is even in the picture, so it's
+exactly as unclaimed and exactly as inert under <code>#![no_std]</code> as in hosted
+Rust. There's no embedded-specific angle to add — no HAL, register, or
+interrupt handler changes what this keyword does, because it doesn't do
+anything yet in either context.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">The reservation error is identical under `#![no_std]`</h3>
+            <pre><code class="rust">#![no_std]
+
+// let typeof = read_register(); // error: expected identifier, found reserved keyword `typeof`
+let r#typeof = 0u32; // ok: the raw-identifier form escapes the reservation, same as hosted Rust
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

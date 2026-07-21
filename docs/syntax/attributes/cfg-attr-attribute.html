@@ -1060,13 +1060,50 @@ attribute varies by target.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>cfg_attr</code> is the compile-time-only combinator paired with
+<a href="cfg-attribute.md"><code>#[cfg(...)]</code></a> that embedded crates lean on constantly
+for a slightly different job: not choosing which module exists, but
+choosing which <em>attribute</em> a shared item gets. The most common embedded
+case is conditionally deriving a <code>no_std</code>-friendly logging trait: a HAL's
+error type wants <code>#[derive(defmt::Format)]</code> when the crate's <code>defmt</code>
+feature is enabled (for wire-efficient logging over RTT/probe-rs), but a
+build that doesn't want that dependency at all shouldn't pull it in —
+<code>#[cfg_attr(feature = "defmt", derive(defmt::Format))]</code> on the type adds
+that derive only when the feature is on, while exactly one struct
+definition serves both builds. A second common case pairs <code>cfg_attr</code> with
+<code>cortex-m-rt</code>'s <code>#[interrupt]</code>/<code>#[exception]</code> attributes: a handler
+function sometimes needs a target- or feature-conditional
+<code>#[link_section = "..."]</code> alongside its interrupt registration, so the
+same function body gets the extra attribute only on the
+target/feature combination that needs it, instead of two near-duplicate
+copies of the handler.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Deriving a no_std logging trait only when the defmt feature is enabled</h3>
+            <pre><code class="rust">#[cfg_attr(feature = "defmt", derive(defmt::Format))] // &lt;- adds defmt's Format derive only when the "defmt" feature is on
+#[derive(Debug, Clone, Copy)]
+pub enum SensorError {
+    Timeout,
+    BusFault,
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Relocating an interrupt handler to RAM only on a feature-gated build</h3>
+            <pre><code class="rust">#[cortex_m_rt::interrupt]
+#[cfg_attr(feature = "ram-handlers", link_section = ".data.TIM2")] // &lt;- relocated to RAM only when that feature is on
+fn TIM2() {
+    // handle the timer-2 interrupt
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

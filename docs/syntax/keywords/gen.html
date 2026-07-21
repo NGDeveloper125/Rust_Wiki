@@ -1029,13 +1029,26 @@ implements (<code>Future</code> vs. <code>Iterator</code>).</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><strong>Full support.</strong> Reservation is checked at the lexer level before any
+target-specific code generation happens, so <code>gen</code> being unavailable as an
+identifier is identical in <code>#![no_std]</code> firmware and hosted code alike.
+The unstable <code>gen { }</code>/<code>gen fn</code> generator design this reservation is held
+for is likewise unstable everywhere — nothing about it is more or less
+available on embedded targets, since it doesn't exist as stable syntax on
+any target yet.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">The `gen` reservation, unaffected by target</h3>
+            <pre><code class="rust">let gen = 5;     // error (2024 edition): expected identifier, found reserved keyword `gen`, on every target
+let r#gen = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

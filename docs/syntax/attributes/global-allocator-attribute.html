@@ -1073,13 +1073,88 @@ hand-written one for anything beyond a toy example.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[global_allocator]</code> only becomes relevant the moment a <code>#![no_std]</code>
+crate decides it wants <code>alloc</code> — a crate that sticks to <code>heapless</code>'s
+fixed-capacity collections (see <a href="no-std-attribute.md"><code>#![no_std]</code></a> for
+why that's the default idiom on constrained targets) never needs this
+attribute at all. When <code>alloc</code> genuinely is the right call, hand-writing
+a <code>GlobalAlloc</code> implementation is rarely necessary: <code>embedded-alloc</code> is
+the crate most <code>#![no_std]</code> projects reach for, wrapping a linked-list
+allocator over a plain byte array whose size is chosen at <code>init</code> time,
+with no dependency on an OS heap whatsoever. Its <code>Heap</code> type is declared
+<code>#[global_allocator]</code> once, then explicitly initialized with a pointer
+and length at the start of <code>main</code> — a two-step process (declare, then
+initialize) rather than a single step, because a <code>static</code> must be
+initializable at compile time, while the actual backing memory region and
+its size are usually a runtime decision made early in <code>main</code>, not a
+<code>const</code>.</p>
+<p>Because a microcontroller has no OS thread scheduler serializing access
+to the heap, <code>embedded_alloc::Heap</code> also needs a <code>critical-section</code>
+implementation in scope (typically via the <code>critical-section</code> crate's
+single-core Cortex-M backend) so allocations from an interrupt handler
+and from <code>main</code> can't race on the same linked-list allocator — a concern
+that doesn't exist in the same form on a hosted target, where the OS
+already provides thread-safe heap primitives.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Wiring up embedded-alloc's Heap as the global allocator</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+extern crate alloc;
+
+use core::mem::MaybeUninit;
+use cortex_m_rt::entry;
+use embedded_alloc::Heap;
+use panic_halt as _;
+
+#[global_allocator] // &lt;- every alloc::vec::Vec/Box/String call routes through this Heap
+static HEAP: Heap = Heap::empty();
+
+#[entry]
+fn main() -&gt; ! {
+    const HEAP_SIZE: usize = 4096;
+    static mut HEAP_MEM: [MaybeUninit&lt;u8&gt;; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
+    unsafe {
+        HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE); // &lt;- backing region chosen at runtime, not const
+    }
+
+    let mut samples: alloc::vec::Vec&lt;u16&gt; = alloc::vec::Vec::new();
+    samples.push(512);
+
+    loop {}
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Avoiding a global allocator entirely with heapless</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+use cortex_m_rt::entry;
+use heapless::Vec as HVec; // fixed-capacity: no #[global_allocator] required anywhere
+use panic_halt as _;
+
+#[entry]
+fn main() -&gt; ! {
+    let mut samples: HVec&lt;u16, 32&gt; = HVec::new(); // capacity fixed at compile time
+    let _ = samples.push(512); // push returns Result instead of panicking/allocating on overflow
+
+    loop {}
+}
+</code></pre>
+<p>Most firmware that only needs a small, boundable buffer never reaches for
+<code>#[global_allocator]</code> at all — <code>heapless::Vec</code>'s capacity is part of its
+type, so a capacity overrun is a checked <code>Result::Err</code> at the call site
+instead of a heap allocation that could fail unpredictably later.</p>
+
+          </div>
         </div>
       </section>
       </div>

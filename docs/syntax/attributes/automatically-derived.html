@@ -1029,13 +1029,45 @@ compiler's built-in derives already get.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#[automatically_derived]</code> is a compiler-inserted, compile-time-only
+marker with no representation in the compiled artifact — it carries over
+unchanged in <code>#![no_std]</code> builds, appearing above every <code>impl</code> block the
+compiler generates from a <code>#[derive(...)]</code>, whether that derive is one of
+the built-ins (<code>Debug</code>, <code>Clone</code>, ...) or a <code>no_std</code>-oriented third-party
+one like <code>defmt</code>'s <code>#[derive(Format)]</code>. There's no embedded-specific
+behavior beyond that: it costs no flash or RAM, and lints treat it the
+same way regardless of target.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Recognizing it above a defmt-generated impl</h3>
+            <pre><code class="rust">#[derive(defmt::Format)] // &lt;- defmt's own proc-macro derive attaches #[automatically_derived] here too
+pub struct SensorReading {
+    raw_adc: u16,
+}
+
+// roughly what expands (never written by hand):
+// #[automatically_derived]
+// impl defmt::Format for SensorReading { ... }
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Marking a register-access crate's own derive output the same way</h3>
+            <pre><code class="rust">// inside a #[proc_macro_derive(RegisterField)] function's generated output for a no_std register-access crate:
+let expanded = quote::quote! {
+    #[automatically_derived] // &lt;- marks this impl as generated, the same convention the compiler's own derives use
+    impl RegisterField for #name {
+        const OFFSET: u8 = #offset;
+    }
+};
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

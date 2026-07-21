@@ -1101,13 +1101,38 @@ the extra <code>None =&gt; ...</code> arm a full <code>match</code> would need h
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>if let</code> behaves identically under <code>#![no_std]</code> — core-language pattern
+matching, allocator-free, compiling to the same code a hand-written
+<code>match</code> would. It's a particularly good fit for embedded driver code: a
+non-blocking peripheral read commonly returns <code>Option&lt;T&gt;</code> ("a byte is
+available" vs. "nothing yet"), and <code>if let Some(...)</code> handles the one
+case that matters without a wildcard arm that does nothing.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Reading a byte only when one is available</h3>
+            <pre><code class="rust">if let Some(byte) = uart.read() {
+    // &lt;- `if let` handles only the case where a byte is actually available
+    buffer.push(byte);
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Reacting only to a sensor fault</h3>
+            <pre><code class="rust">fn handle_reading(result: Result&lt;f32, SensorError&gt;) {
+    if let Err(_fault) = result {
+        // &lt;- only the failure case needs a reaction; a good reading falls through silently
+        set_fault_led(true);
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

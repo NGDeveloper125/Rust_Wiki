@@ -89,7 +89,34 @@ exclusive-at-the-top convention that std's own range types and the
 [std slice docs](https://doc.rust-lang.org/std/primitive.slice.html) —
 using `<=` here would be an off-by-one bug.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `PartialOrd` lives in `core::cmp`; generics/turbofish
-are pure compile-time grammar. No `std` dependency either way.
+`<` means the same thing under `#![no_std]` — `core::cmp::PartialOrd`,
+and generics/turbofish stay pure compile-time grammar regardless of
+target. The single most common `<` in firmware is a bounds check on a
+fixed-size, stack-allocated buffer rather than a heap-growable `Vec` —
+embedded code almost always indexes a `[T; N]` or a `heapless::Vec`
+whose capacity is fixed at compile time, so `index < capacity` is the
+everyday guard before every write.
+
+## Usage examples (Embedded)
+
+### Bounds-checking an index into a fixed-size sample buffer
+
+```
+const SAMPLE_BUFFER_LEN: usize = 32;
+
+fn can_write_sample(write_index: usize) -> bool {
+    write_index < SAMPLE_BUFFER_LEN // <- `<` confirms the index still lands inside the fixed-size buffer
+}
+```
+
+### Flagging an undervoltage reading
+
+```
+const MIN_SAFE_MILLIVOLTS: u16 = 2700;
+
+fn is_undervoltage(voltage_millivolts: u16) -> bool {
+    voltage_millivolts < MIN_SAFE_MILLIVOLTS // <- `<` flags a reading that has dropped below the safe minimum
+}
+```

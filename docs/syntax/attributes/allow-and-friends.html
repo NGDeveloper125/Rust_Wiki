@@ -1082,13 +1082,32 @@ documents <code>forbid</code> as specifically closing that reopening loophole.</
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>All four lint levels are pure compile-time configuration with zero
+runtime effect, so they apply identically in <code>#![no_std]</code> firmware —
+there's no embedded-specific mechanism here, just an embedded-specific
+reason <code>#[allow(dead_code)]</code> shows up so often: a chip-family HAL or a
+<code>svd2rust</code>-generated peripheral-access crate defines every register and
+field a chip family exposes, and any single application only ever
+touches a fraction of them, so <code>#[allow(dead_code)]</code> on generated
+register modules is standard rather than a sign of neglect.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Allowing unused fields across a generated register module</h3>
+            <pre><code class="rust">#[allow(dead_code)] // &lt;- most fields here are unused by any single application; that's expected in generated PAC code
+pub struct Gpiox {
+    pub moder: u32,
+    pub otyper: u32,
+    pub ospeedr: u32,
+    pub pupdr: u32,
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

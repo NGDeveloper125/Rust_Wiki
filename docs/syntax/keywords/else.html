@@ -1034,13 +1034,39 @@ See <a href="../../syntax/keywords/if.html"><code>if</code></a> for the fuller <
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>else</code> is pure grammar attached to <code>if</code>/<code>let</code>, with no runtime behavior of
+its own — identical under <code>#![no_std]</code>. The classic caution about an
+<code>else if</code> chain vs. <code>match</code> applies just as much to decoding hardware
+state: a chain re-testing bit patterns one at a time is exactly the shape
+that should become a <code>match</code> over a fault enum once every bit combination
+needs to be accounted for.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Providing the alternative branch when polling an input pin</h3>
+            <pre><code class="rust">if button.is_pressed() {
+    led.set_high();
+} else {
+    led.set_low(); // &lt;- `else` runs when the button isn't pressed
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Bailing out of a driver function with let-else</h3>
+            <pre><code class="rust">fn read_calibration(eeprom: &amp;Eeprom) -&gt; Result&lt;Calibration, &amp;'static str&gt; {
+    let Some(raw) = eeprom.read_page(CALIBRATION_PAGE) else {
+        return Err("calibration page unreadable"); // &lt;- `else` block must diverge
+    };
+    Ok(Calibration::from_bytes(raw))
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

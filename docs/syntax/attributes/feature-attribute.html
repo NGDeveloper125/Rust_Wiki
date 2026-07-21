@@ -1035,13 +1035,40 @@ ongoing risk assessment before depending on one.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>#![feature(...)]</code> itself works identically regardless of target — it's
+a toolchain-level gate, unaffected by <code>std</code> vs <code>#![no_std]</code>. The one point
+worth naming for embedded specifically: a handful of capabilities
+embedded code has wanted for a long time — improvements to
+<code>asm!</code>/<code>global_asm!</code> before they stabilized, certain const-generics
+refinements, niche <code>core</code> APIs — spent real time as nightly-only
+features, and embedded projects have, anecdotally, been slightly more
+willing than typical application code to track nightly and accept
+<code>#![feature(...)]</code>'s stability risk while waiting, simply because there's
+often no stable workaround for a capability that reaches directly into
+architecture-specific low-level code. This is a minor, project-by-project
+pattern, not a rule — plenty of embedded crates target stable
+exclusively, and the same "this can change without notice" caveat from
+the classic explanation applies without exception here too.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A firmware crate tracking nightly for an inline-asm improvement</h3>
+            <pre><code class="rust">// Nightly-only — illustrative of the kind of low-level feature embedded
+// code has sometimes tracked nightly for before stabilization.
+#![feature(asm_const)]
+
+use core::arch::asm;
+
+unsafe fn delay_cycles&lt;const N: u32&gt;() {
+    asm!("1: subs {0}, {0}, #1", "bne 1b", inout(reg) N =&gt; _); // &lt;- uses the const generic directly inside asm!
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

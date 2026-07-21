@@ -1023,13 +1023,67 @@ as its purpose.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Firmware routinely has two entirely separate "readers" of a given
+static: the Rust program itself, and something completely outside it —
+a linker script, a ROM bootloader, a debug probe, or an external tool
+scanning the compiled image for a known byte pattern. The compiler's
+dead-code analysis only understands the first kind of reader. Anything
+that's read exclusively by the second kind looks, from the compiler's
+point of view, entirely unreachable, and gets stripped unless <code>#[used]</code>
+overrides that conclusion — which is why <code>#[used]</code> shows up constantly
+in firmware and almost never in hosted <code>std</code> code, where nothing external
+to the compiled binary typically inspects a static by raw address at all.</p>
+<p>Beyond the single-function vector-table entry, the same reasoning applies
+to a whole table at once — an array of exception/interrupt vectors, or a
+fixed metadata block a boot ROM or bootloader expects at a specific flash
+offset (a chip's "boot header," an application's version/checksum
+footer read by an over-the-air update tool). None of these are ever read
+by an expression anywhere in the Rust program; they're read by address,
+by something that isn't Rust at all, which is exactly the case <code>#[used]</code>
+exists for.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Placing a full vector table, not just one entry</h3>
+            <pre><code class="rust">#[used] // &lt;- the whole table, not only individual entries, has zero Rust-visible readers
+#[unsafe(link_section = ".vector_table.exceptions")]
+static EXCEPTIONS: [Option&lt;unsafe extern "C" fn()&gt;; 14] = [
+    Some(nmi_handler),
+    Some(hard_fault_handler),
+    None, None, None, None, None, None, // reserved entries
+    Some(sv_call_handler),
+    None, None,
+    Some(pend_sv_handler),
+    Some(sys_tick_handler),
+];
+
+unsafe extern "C" fn nmi_handler() { loop {} }
+unsafe extern "C" fn hard_fault_handler() { loop {} }
+unsafe extern "C" fn sv_call_handler() {}
+unsafe extern "C" fn pend_sv_handler() {}
+unsafe extern "C" fn sys_tick_handler() {}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Marking a firmware version footer for an OTA updater</h3>
+            <pre><code class="rust">#[used] // &lt;- read only by an external OTA/flashing tool scanning the compiled image, never by Rust
+#[unsafe(link_section = ".fw_metadata")]
+static FIRMWARE_VERSION: [u8; 4] = [1, 4, 0, 0]; // major, minor, patch, reserved
+</code></pre>
+<p>Neither static is ever named by a Rust expression — the vector table is
+read by the CPU's exception hardware directly from its fixed address, and
+the version footer is read by a separate tool entirely outside the
+firmware's own execution — so both would be silently eliminated as dead
+code without <code>#[used]</code>, exactly the failure mode the
+<a href="https://doc.rust-lang.org/reference/abi.html#the-used-attribute">Rust Reference on the <code>used</code> attribute</a>
+describes.</p>
+
+          </div>
         </div>
       </section>
       </div>

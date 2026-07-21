@@ -1007,13 +1007,54 @@ avoids an explicit <code>if idx == len { idx = 0 }</code> branch.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>RemAssign</code> lives in <code>core::ops</code>, so <code>%=</code> works identically under
+<code>#![no_std]</code>. The same nuance covered on <a href="percent.md"><code>%</code></a> applies here:
+on a divider-less microcontroller <code>%=</code> lowers to a software division
+routine, which is why firmware ring buffers and FIFOs are so often sized
+to a power of two — doing so lets <code>idx &amp;= len - 1</code> stand in for
+<code>idx %= len</code>, wrapping the index with a mask instead of a division. <code>%=</code>
+remains the clearer, and equally correct, choice whenever the buffer
+length isn't a convenient power of two.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Wrapping a UART receive buffer's write index in place</h3>
+            <pre><code class="rust">struct UartRxBuffer {
+    data: [u8; 32],
+    idx: usize,
+}
+
+impl UartRxBuffer {
+    fn store(&amp;mut self, byte: u8) {
+        self.data[self.idx] = byte;
+        self.idx += 1;
+        self.idx %= self.data.len(); // &lt;- `%=` wraps `idx` back into range in place
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">The same buffer wrapped with a bitmask instead of `%=`</h3>
+            <pre><code class="rust">struct UartRxBufferMasked {
+    data: [u8; 32], // still a power of two, so the mask below is exact
+    idx: usize,
+}
+
+impl UartRxBufferMasked {
+    fn store(&amp;mut self, byte: u8) {
+        self.data[self.idx] = byte;
+        self.idx += 1;
+        self.idx &amp;= self.data.len() - 1; // stands in for `idx %= self.data.len()`, no divide needed
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>
