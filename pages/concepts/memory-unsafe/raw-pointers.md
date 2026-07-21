@@ -3,7 +3,7 @@ title: "Raw pointers (*const T / *mut T)"
 area: "Memory & Unsafe"
 embedded_support: full
 groups: ["Memory & Unsafe", "Systems / Low-Level Programming", "Interfacing with C / Other Languages", "Boxing", "Unique to Rust", "Coming from C / C++"]
-related_syntax: [unsafe, "*const T", "*mut T", "&", "*"]
+related_syntax: [unsafe, "&", "*"]
 see_also: ["Unsafe Rust", "FFI (foreign function interface)", "Smart pointers (Box<T>)", "Borrowing (shared references)", "Memory layout & repr"]
 ---
 

@@ -3,7 +3,7 @@ title: "Clippy & rustfmt"
 area: "Testing & Tooling"
 embedded_support: full
 groups: ["Testing & Tooling", "Testing & Documenting Code"]
-related_syntax: ["#[allow(...)]", "#[warn(...)]", "#[rustfmt::skip]"]
+related_syntax: ["#[allow(...)] / #[warn(...)] / #[deny(...)] / #[forbid(...)]"]
 see_also: ["Doc tests", "Derivable traits"]
 ---
 

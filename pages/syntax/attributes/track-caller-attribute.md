@@ -4,7 +4,7 @@ kind: attribute
 embedded_support: full
 groups: ["Memory & Unsafe"]
 related_concepts: []
-related_syntax: [fn, panic]
+related_syntax: [fn, "panic!"]
 see_also: []
 ---
 

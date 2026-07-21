@@ -3,7 +3,7 @@ title: "BTreeMap & BTreeSet"
 area: "Collections & Strings"
 embedded_support: partial
 groups: ["Collections & Strings", "Working with Collections", "Collections"]
-related_syntax: ["[ ]", ".", ".."]
+related_syntax: ["[ ]", ".", ".. / ..= / ..."]
 see_also: ["HashMap & HashSet", "Vec<T>", "Slices"]
 ---
 

@@ -4,8 +4,8 @@ kind: punctuation
 embedded_support: full
 groups: [Basics, "Control Flow & Pattern Matching"]
 related_concepts: ["Destructuring", "match expressions"]
-related_syntax: [match, "..", "..=", "|"]
-see_also: [match, ".."]
+related_syntax: [match, ".. / ..= / ...", "|"]
+see_also: [match, ".. / ..= / ..."]
 ---
 
 ## Explanation

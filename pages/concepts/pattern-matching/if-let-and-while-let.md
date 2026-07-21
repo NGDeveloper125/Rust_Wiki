@@ -3,7 +3,7 @@ title: "if let / while let"
 area: "Pattern Matching"
 embedded_support: full
 groups: ["Pattern Matching"]
-related_syntax: ["if let", "while let", "else", match]
+related_syntax: ["if let", while, "else", match]
 see_also: ["match expressions", "Destructuring", "Option<T>", "Result<T, E>"]
 ---
 

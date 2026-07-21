@@ -3,7 +3,7 @@ title: "FFI (foreign function interface)"
 area: "Memory & Unsafe"
 embedded_support: full
 groups: ["Memory & Unsafe", "Systems / Low-Level Programming", "Interfacing with C / Other Languages", "FFI / Interop", "Unique to Rust", "Coming from C / C++"]
-related_syntax: [unsafe, extern, "*const T", "*mut T", "#[repr(...)]", "#[no_mangle]"]
+related_syntax: [unsafe, extern, "*", "#[repr(...)]", "#[no_mangle] / #[link(...)] / #[link_name] / #[link_ordinal] / #[link_section] / #[no_link] / #[export_name]"]
 see_also: ["Unsafe Rust", "Raw pointers (*const T / *mut T)", "Memory layout & repr", "The undefined-behavior boundary"]
 ---
 

@@ -3,7 +3,7 @@ title: "Destructuring"
 area: "Pattern Matching"
 embedded_support: full
 groups: ["Pattern Matching", "Functional Programming", "Designing Robust Data Models", "Coming from Haskell / functional languages"]
-related_syntax: ["let", "..", "@", "|"]
+related_syntax: ["let", ".. / ..= / ...", "@", "|"]
 see_also: ["match expressions", "Match guards", "Structs", "Tuple structs", "Enums (algebraic data types)"]
 ---
 

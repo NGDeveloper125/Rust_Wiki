@@ -3,7 +3,7 @@ title: "Fn / FnMut / FnOnce"
 area: "Functions & Closures"
 embedded_support: full
 groups: ["Functions & Closures", "Functional Programming"]
-related_syntax: ["|...| closures", move, fn]
+related_syntax: ["|", move, fn]
 see_also: ["Closures & capturing", "Higher-order functions", "Trait bounds"]
 ---
 

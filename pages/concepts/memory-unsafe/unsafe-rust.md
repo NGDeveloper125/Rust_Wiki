@@ -3,7 +3,7 @@ title: "Unsafe Rust"
 area: "Memory & Unsafe"
 embedded_support: full
 groups: ["Memory & Unsafe", "Systems / Low-Level Programming", "Interfacing with C / Other Languages", "Unique to Rust", "Coming from C / C++"]
-related_syntax: [unsafe, extern, "*const T", "*mut T"]
+related_syntax: [unsafe, extern, "*"]
 see_also: ["Raw pointers (*const T / *mut T)", "FFI (foreign function interface)", "Memory layout & repr", "The undefined-behavior boundary", "Smart pointers (Box<T>)", "Stack vs heap allocation"]
 ---
 

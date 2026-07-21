@@ -3,7 +3,7 @@ title: "Benchmarking"
 area: "Testing & Tooling"
 embedded_support: partial
 groups: ["Testing & Tooling", "Testing & Documenting Code", "Testing"]
-related_syntax: ["#[bench]"]
+related_syntax: []
 see_also: ["Unit tests", "Doc tests"]
 ---
 

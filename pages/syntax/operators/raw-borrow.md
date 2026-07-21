@@ -4,7 +4,7 @@ kind: operator
 embedded_support: full
 groups: ["Ownership & Borrowing", "Memory & Unsafe"]
 related_concepts: ["Borrowing (shared references)", "Mutable borrowing"]
-related_syntax: ["&", "&mut", "*const T", "*mut T"]
+related_syntax: ["&", mut, "*"]
 see_also: ["&", "*"]
 ---
 

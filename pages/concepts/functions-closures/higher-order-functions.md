@@ -3,7 +3,7 @@ title: "Higher-order functions"
 area: "Functions & Closures"
 embedded_support: full
 groups: ["Functions & Closures", "Functional Programming"]
-related_syntax: [fn, "|...| closures", "->"]
+related_syntax: [fn, "|", "->"]
 see_also: ["Closures & capturing", "Fn / FnMut / FnOnce", "Function pointers (fn types)", "Generics"]
 ---
 

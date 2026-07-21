@@ -3,7 +3,7 @@ title: "Unit tests"
 area: "Testing & Tooling"
 embedded_support: partial
 groups: ["Testing & Tooling", "Testing & Documenting Code", "Testing"]
-related_syntax: ["#[test]", "#[cfg(test)]"]
+related_syntax: ["#[test]", "#[cfg(...)]"]
 see_also: ["Integration tests", "Doc tests", "Benchmarking", "Traits"]
 ---
 

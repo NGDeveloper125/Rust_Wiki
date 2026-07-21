@@ -3,7 +3,7 @@ title: "String formatting (Display, Debug, format!)"
 area: "Collections & Strings"
 embedded_support: partial
 groups: ["Collections & Strings", "String Handling"]
-related_syntax: ["{}", "{:?}", "!"]
+related_syntax: ["{ }", "format!", "!"]
 see_also: ["String vs &str", "Vec<T>"]
 ---
 

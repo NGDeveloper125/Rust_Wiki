@@ -4,8 +4,8 @@ kind: keyword
 embedded_support: full
 groups: ["Ownership & Borrowing", "Functions & Closures", "Concurrency & Async"]
 related_concepts: ["Move semantics", "Closures & capturing"]
-related_syntax: ["|...| closures", "async"]
-see_also: ["async", "|...| closures"]
+related_syntax: ["|", "async"]
+see_also: ["async", "|"]
 ---
 
 ## Explanation

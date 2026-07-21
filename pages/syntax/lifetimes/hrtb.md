@@ -3,7 +3,7 @@ title: "for<'a> Type"
 kind: lifetime
 embedded_support: full
 groups: ["Types & Data Structures", "Traits & Polymorphism"]
-related_concepts: [Generics, "Trait bounds", Closures]
+related_concepts: [Generics, "Trait bounds", "Closures & capturing"]
 related_syntax: [where, "+", trait]
 see_also: ["Trait bounds"]
 ---

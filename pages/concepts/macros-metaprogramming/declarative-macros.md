@@ -3,7 +3,7 @@ title: "Declarative macros (macro_rules!)"
 area: "Macros & Metaprogramming"
 embedded_support: full
 groups: ["Macros & Metaprogramming", "Declarative / Metaprogramming", "Generating Code / Metaprogramming", "Macros & Code Generation"]
-related_syntax: [macro_rules, "!", "$ident"]
+related_syntax: ["macro_rules!", "!", "$ident"]
 see_also: ["Procedural macros", "Derive macros", "Attribute-like macros", "Function-like macros"]
 ---
 

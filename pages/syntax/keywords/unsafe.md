@@ -4,7 +4,7 @@ kind: keyword
 embedded_support: full
 groups: ["Memory & Unsafe"]
 related_concepts: ["Unsafe Rust", "FFI (foreign function interface)", "The undefined-behavior boundary", "Raw pointers (*const T / *mut T)"]
-related_syntax: [extern, union, "&raw const / &raw mut", "*const T / *mut T"]
+related_syntax: [extern, union, "&raw const / &raw mut", "*"]
 see_also: [extern, union]
 ---
 

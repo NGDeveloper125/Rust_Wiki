@@ -3,7 +3,7 @@ title: "Procedural macros"
 area: "Macros & Metaprogramming"
 embedded_support: full
 groups: ["Macros & Metaprogramming", "Declarative / Metaprogramming", "Generating Code / Metaprogramming", "Macros & Code Generation"]
-related_syntax: ["#[proc_macro]", "#[proc_macro_derive]", "#[proc_macro_attribute]"]
+related_syntax: ["#[proc_macro] / #[proc_macro_derive(...)] / #[proc_macro_attribute]"]
 see_also: ["Declarative macros", "Derive macros", "Attribute-like macros", "Function-like macros"]
 ---
 

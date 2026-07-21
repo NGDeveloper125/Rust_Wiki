@@ -3,7 +3,7 @@ title: "Derive macros"
 area: "Macros & Metaprogramming"
 embedded_support: full
 groups: ["Macros & Metaprogramming", "Declarative / Metaprogramming", "Generating Code / Metaprogramming", "Macros & Code Generation"]
-related_syntax: ["#[derive(...)]", "#[proc_macro_derive]", "TokenStream"]
+related_syntax: ["#[derive(...)]", "#[proc_macro] / #[proc_macro_derive(...)] / #[proc_macro_attribute]"]
 see_also: ["Declarative macros", "Procedural macros", "Attribute-like macros", "Function-like macros", "Derivable traits"]
 ---
 

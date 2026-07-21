@@ -4,8 +4,8 @@ kind: operator
 embedded_support: full
 groups: [Basics, "Ownership & Borrowing"]
 related_concepts: ["Borrowing (shared references)", "Mutable borrowing", Operator overloading]
-related_syntax: ["&mut", "*", "&&", "&="]
-see_also: ["*", "&mut"]
+related_syntax: [mut, "*", "&&", "&="]
+see_also: ["*", mut]
 ---
 
 ## Explanation

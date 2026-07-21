@@ -3,7 +3,7 @@ title: "Closures & capturing"
 area: "Functions & Closures"
 embedded_support: full
 groups: ["Functions & Closures", "Functional Programming"]
-related_syntax: ["|...| closures", "->", move, "||"]
+related_syntax: ["|", "->", move, "||"]
 see_also: ["Functions", "Fn / FnMut / FnOnce", "Higher-order functions", "Move semantics"]
 ---
 

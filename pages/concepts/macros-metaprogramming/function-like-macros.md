@@ -3,7 +3,7 @@ title: "Function-like macros"
 area: "Macros & Metaprogramming"
 embedded_support: full
 groups: ["Macros & Metaprogramming", "Generating Code / Metaprogramming", "Macros & Code Generation"]
-related_syntax: ["#[proc_macro]", "!", macro_rules]
+related_syntax: ["#[proc_macro] / #[proc_macro_derive(...)] / #[proc_macro_attribute]", "!", "macro_rules!"]
 see_also: ["Declarative macros", "Procedural macros", "Derive macros", "Attribute-like macros"]
 ---
 

@@ -3,7 +3,7 @@ title: "The undefined-behavior boundary"
 area: "Memory & Unsafe"
 embedded_support: full
 groups: ["Memory & Unsafe", "Systems / Low-Level Programming", "Interfacing with C / Other Languages", "FFI / Interop", "Unique to Rust", "Coming from C / C++"]
-related_syntax: [unsafe, extern, "*const T", "*mut T"]
+related_syntax: [unsafe, extern, "*"]
 see_also: ["Unsafe Rust", "Raw pointers (*const T / *mut T)", "FFI (foreign function interface)", "Memory layout & repr"]
 ---
 
