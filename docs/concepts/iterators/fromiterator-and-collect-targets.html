@@ -1090,19 +1090,107 @@ describe this pattern directly.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>FromIterator</code> itself is defined in <code>core</code>, so the trait and its
+<code>from_iter</code> method exist unchanged on a <code>#![no_std]</code> target — the caveat
+is entirely about <em>which types implement it</em>. <code>Vec&lt;T&gt;</code> and <code>String</code>'s
+<code>FromIterator</code> implementations live in <code>alloc</code>, so <code>.collect::&lt;Vec&lt;_&gt;&gt;()</code>
+or <code>.collect::&lt;String&gt;()</code> needs the <code>alloc</code> crate and a
+<code>#[global_allocator]</code> configured, and <code>HashMap</code>'s implementation
+additionally needs <code>std</code> for its default hasher — none of that is
+available on a bare-metal target without opting in. Two honest
+alternatives exist for a heap-free target: <code>heapless::Vec&lt;T, N&gt;</code>
+implements <code>FromIterator&lt;T&gt;</code>, so <code>.collect::&lt;heapless::Vec&lt;u16, 8&gt;&gt;()</code>
+works directly, though it's worth checking the exact <code>heapless</code> version
+in use and knowing it panics if more than <code>N</code> items are produced, since a
+fixed-capacity type has no way to grow past its bound. When that
+guarantee isn't good enough, or the crate/version in use doesn't provide
+the impl, a manual fold or loop that accumulates into a stack-allocated
+fixed-size buffer and tracks how many slots were actually filled is
+always the fallback — less convenient than <code>.collect()</code>, but it needs
+nothing beyond <code>core</code>.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+let raw_samples = [512u16, 498, 610];
+
+let samples: Vec&lt;u16, 8&gt; = raw_samples.into_iter().collect(); // &lt;- collect() targets heapless::Vec via its FromIterator impl
+assert_eq!(samples.len(), 3);
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Collecting a batch of scaled sensor readings into a fixed-capacity buffer
+needs a <code>.collect()</code> target that never allocates — <code>heapless::Vec</code> gives
+that, as long as the caller already knows the count fits within its
+declared capacity.</p>
+<pre><code class="rust">// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+let raw_readings = [512u16, 498, 610, 523];
+
+let scaled: Vec&lt;u32, 8&gt; = raw_readings
+    .iter()
+    .map(|&amp;r| r as u32 * 3) // ordinary adaptor, no allocation
+    .collect(); // &lt;- collect() into heapless::Vec&lt;u32, 8&gt;: fixed capacity, no heap
+
+assert_eq!(scaled.len(), 4);
+assert_eq!(scaled[0], 1536);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>heapless::Vec&lt;T, N&gt;</code>'s <code>FromIterator</code> implementation
+gives <code>.collect()</code> back on a <code>#![no_std]</code> target, but because it panics
+past <code>N</code> items rather than growing, it's the right choice only when the
+upper bound on item count is already known and enforced elsewhere (here,
+by the fixed-size <code>raw_readings</code> array).</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Accumulating into a fixed buffer without a heap</h3>
+            <p>When the exact collect target isn't available, or the count genuinely
+isn't bounded ahead of time, folding manually into a fixed buffer and
+tracking how many slots were actually filled is the always-available
+fallback, at the cost of writing the accumulation by hand.</p>
+<pre><code class="rust">let raw_readings: [u16; 5] = [512, 498, 610, 523, 700];
+let mut buffer = [0u32; 4]; // fixed capacity: room for at most 4 results
+let mut filled = 0;
+
+for reading in raw_readings.iter().filter(|&amp;&amp;r| r &gt; 500) { // ordinary adaptor chain, no allocation
+    if filled == buffer.len() {
+        break; // buffer is full; stop rather than overflow it
+    }
+    buffer[filled] = *reading as u32;
+    filled += 1;
+}
+
+assert_eq!(&amp;buffer[..filled], &amp;[512, 610, 523, 700]);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a manual fold into a fixed array needs nothing beyond
+<code>core</code> and makes the capacity check explicit at the point items are
+written, rather than relying on a <code>FromIterator</code> implementation's
+panic-on-overflow behavior — the safer default when the item count isn't
+already provably bounded.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

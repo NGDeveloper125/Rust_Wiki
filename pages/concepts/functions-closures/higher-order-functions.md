@@ -150,10 +150,91 @@ standard combination when a function needs both an ergonomic, zero-cost
 call site and heterogeneous storage — covered in the
 [API Guidelines' flexibility guidance](https://rust-lang.github.io/api-guidelines/flexibility.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Passing or returning functions/closures generically is
-resolved entirely at compile time through monomorphization, so it costs
-nothing at runtime and needs no allocator — this works identically in
-`#![no_std]`. Only the `dyn Fn`/`Box<dyn Fn>` trait-object form needs the
-`alloc` crate; the generic, `impl Fn`-based form never does.
+Passing or returning functions/closures generically resolves entirely at
+compile time through monomorphization, so it costs nothing at runtime and
+needs no allocator — this is identical in `#![no_std]`. The pattern shows
+up constantly over embedded's own fixed-size and stack-based collections:
+`.map()`/`.filter()`/`.fold()` over a `[u16; N]` array of sensor readings,
+or over a `heapless::Vec` (a `Vec`-like, fixed-capacity, stack-allocated
+collection built for `no_std`), are higher-order functions in exactly the
+sense this page describes — they take the per-element behavior as a
+closure or function argument, and the traversal itself is written once in
+`core::iter`.
+
+The one thing worth being explicit about: these iterator adapters stay
+zero-cost and heap-free only as long as the underlying collection is.
+Iterating, mapping, and filtering over a fixed-size array or a
+`heapless::Vec` never touches the heap; it's only reaching for an
+actually heap-backed collection (`alloc::vec::Vec`) that would reintroduce
+an allocator dependency — the adapter chain itself is never the thing
+that allocates.
+
+## Basic usage example (Embedded)
+
+```
+fn to_fahrenheit(c: i32) -> i32 { c * 9 / 5 + 32 }
+
+let readings_c: [i32; 4] = [20, 22, 19, 25];
+let mut readings_f = [0; 4];
+
+for (dst, &c) in readings_f.iter_mut().zip(readings_c.iter()) {
+    *dst = to_fahrenheit(c); // <- `to_fahrenheit` passed as ordinary per-element behavior
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+Filtering a fixed-size batch of sensor readings down to the ones above a
+threshold uses the same `.filter()` higher-order function as hosted code,
+just over a stack-allocated `heapless::Vec` instead of an allocating
+`Vec` — no heap involved at any point in the chain.
+
+```
+// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+fn readings_above(readings: &[i32], threshold: i32) -> Vec<i32, 8> {
+    readings
+        .iter()
+        .copied()
+        .filter(|&reading| reading > threshold) // <- `filter` is the higher-order function; the closure is its argument
+        .collect()
+}
+```
+
+**Why this way:** `heapless::Vec<T, N>` gives iterator adaptors like
+`.filter()`/`.collect()` a fixed-capacity, stack-allocated destination, so
+the same higher-order-function idiom used with `std::vec::Vec` carries
+over to `#![no_std]` without needing `alloc` — the
+[heapless crate docs](https://docs.rs/heapless/) frame it specifically as
+the `no_std` substitute for exactly this kind of collection-building code.
+
+### Scenario: Designing a public API
+
+A calibration "factory" builds a closure specialized to one sensor's
+offset, generic over the reading type — a higher-order function that
+returns behavior rather than requiring every call site to inline its own
+correction formula, with the returned closure staying stack-allocated.
+
+```
+fn calibrator(offset: i32) -> impl Fn(i32) -> i32 {
+    // <- higher-order function: returns a closure specialized to `offset`, no boxing needed
+    move |raw| raw + offset
+}
+
+let correct_temp_sensor = calibrator(-3);
+let corrected = correct_temp_sensor(21);
+```
+
+**Why this way:** returning `impl Fn(i32) -> i32` instead of
+`Box<dyn Fn(i32) -> i32>` keeps the returned closure's type concrete and
+stack-allocated, avoiding an `alloc` dependency for a value that's only
+ever called through one concrete call site per sensor — the same
+reasoning the
+[Book's closures chapter](https://doc.rust-lang.org/book/ch13-01-closures.html#returning-closures)
+gives for preferring `impl Fn` whenever the closure's exact type doesn't
+need to be erased.

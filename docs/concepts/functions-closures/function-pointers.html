@@ -1109,19 +1109,107 @@ passed in.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A hardware interrupt/exception vector table is, at the machine level,
+nothing more than a fixed-size array of addresses the CPU jumps to
+directly on reset or interrupt — which is exactly what a Rust <code>fn()</code>
+pointer is: an address with no captured environment attached. This makes
+<code>fn</code> pointers (never closures) the natural, and often mandatory, type
+behind a <code>#[link_section = ".vector_table"]</code> static array of handlers:
+the linker script expects a table of fixed-width words at a fixed
+address, and only a non-capturing function pointer has the fixed, known
+size (and <code>'static</code>, <code>Copy</code> nature) that shape requires. A capturing
+closure couldn't go in that table at all — there's no environment slot
+in a bare machine word for it to live in.</p>
+<p>This is the same property that makes <code>fn</code> pointers useful in hosted
+dispatch tables (see this page's classic Best practices), just with the
+stakes raised: on embedded targets the array isn't a convenience, it's
+read directly by hardware, so its element type is constrained by the
+CPU's vector-table ABI rather than by API taste.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">#[link_section = ".vector_table.reset"]
+#[used]
+static RESET_HANDLER: fn() -&gt; ! = reset; // &lt;- `fn() -&gt; !`: fixed-size, no captured environment, placed at a fixed address
+
+fn reset() -&gt; ! {
+    loop {}
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A microcontroller's interrupt vector table is a static array read
+directly by hardware, so every entry must be a plain, fixed-size <code>fn()</code>
+pointer — never a closure, since a closure's size and layout can vary and
+aren't part of the vector-table ABI the silicon expects.</p>
+<pre><code class="rust">#[link_section = ".vector_table.exceptions"]
+#[used]
+static EXCEPTIONS: [fn(); 2] = [
+    // &lt;- an array of bare `fn()` pointers: exactly what the hardware vector table's layout requires
+    nmi_handler,
+    hard_fault_handler,
+];
+
+fn nmi_handler() {
+    loop {}
+}
+
+fn hard_fault_handler() {
+    loop {}
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the vector table's address and layout are dictated by
+the CPU vendor's reference manual, not by Rust — only a non-capturing
+<code>fn()</code> pointer has the fixed word size and absence of an environment that
+a linker-placed table of raw addresses can hold; the
+<a href="https://doc.rust-lang.org/stable/embedded-book/start/exceptions.html">embedded Rust book's exception-handling chapter</a>
+builds vector tables from exactly this shape.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL's interrupt-registration slot for a peripheral that's set up once
+at boot and never needs surrounding context is typed as a plain <code>fn()</code>
+pointer field, keeping the peripheral driver itself free of any generic
+parameter or heap allocation.</p>
+<pre><code class="rust">struct TimerConfig {
+    on_tick: fn(), // &lt;- fn pointer: fixed ABI, no capture, matches what the timer peripheral's ISR table expects
+}
+
+fn default_tick_handler() {
+    // increment a tick counter
+}
+
+fn configure_timer() -&gt; TimerConfig {
+    TimerConfig { on_tick: default_tick_handler }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a non-capturing handler set once at startup has nothing
+to gain from a generic <code>Fn</code> bound or a boxed trait object — a bare
+<code>fn()</code> field is the smallest, <code>Copy</code>, allocation-free type that satisfies
+the requirement, and it composes directly with the vector-table pattern
+above if the handler ever needs to be installed into hardware directly.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

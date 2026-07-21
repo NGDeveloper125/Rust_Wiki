@@ -1116,19 +1116,103 @@ call site and heterogeneous storage — covered in the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Passing or returning functions/closures generically resolves entirely at
+compile time through monomorphization, so it costs nothing at runtime and
+needs no allocator — this is identical in <code>#![no_std]</code>. The pattern shows
+up constantly over embedded's own fixed-size and stack-based collections:
+<code>.map()</code>/<code>.filter()</code>/<code>.fold()</code> over a <code>[u16; N]</code> array of sensor readings,
+or over a <code>heapless::Vec</code> (a <code>Vec</code>-like, fixed-capacity, stack-allocated
+collection built for <code>no_std</code>), are higher-order functions in exactly the
+sense this page describes — they take the per-element behavior as a
+closure or function argument, and the traversal itself is written once in
+<code>core::iter</code>.</p>
+<p>The one thing worth being explicit about: these iterator adapters stay
+zero-cost and heap-free only as long as the underlying collection is.
+Iterating, mapping, and filtering over a fixed-size array or a
+<code>heapless::Vec</code> never touches the heap; it's only reaching for an
+actually heap-backed collection (<code>alloc::vec::Vec</code>) that would reintroduce
+an allocator dependency — the adapter chain itself is never the thing
+that allocates.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">fn to_fahrenheit(c: i32) -&gt; i32 { c * 9 / 5 + 32 }
+
+let readings_c: [i32; 4] = [20, 22, 19, 25];
+let mut readings_f = [0; 4];
+
+for (dst, &amp;c) in readings_f.iter_mut().zip(readings_c.iter()) {
+    *dst = to_fahrenheit(c); // &lt;- `to_fahrenheit` passed as ordinary per-element behavior
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Filtering a fixed-size batch of sensor readings down to the ones above a
+threshold uses the same <code>.filter()</code> higher-order function as hosted code,
+just over a stack-allocated <code>heapless::Vec</code> instead of an allocating
+<code>Vec</code> — no heap involved at any point in the chain.</p>
+<pre><code class="rust">// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+fn readings_above(readings: &amp;[i32], threshold: i32) -&gt; Vec&lt;i32, 8&gt; {
+    readings
+        .iter()
+        .copied()
+        .filter(|&amp;reading| reading &gt; threshold) // &lt;- `filter` is the higher-order function; the closure is its argument
+        .collect()
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>heapless::Vec&lt;T, N&gt;</code> gives iterator adaptors like
+<code>.filter()</code>/<code>.collect()</code> a fixed-capacity, stack-allocated destination, so
+the same higher-order-function idiom used with <code>std::vec::Vec</code> carries
+over to <code>#![no_std]</code> without needing <code>alloc</code> — the
+<a href="https://docs.rs/heapless/">heapless crate docs</a> frame it specifically as
+the <code>no_std</code> substitute for exactly this kind of collection-building code.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A calibration "factory" builds a closure specialized to one sensor's
+offset, generic over the reading type — a higher-order function that
+returns behavior rather than requiring every call site to inline its own
+correction formula, with the returned closure staying stack-allocated.</p>
+<pre><code class="rust">fn calibrator(offset: i32) -&gt; impl Fn(i32) -&gt; i32 {
+    // &lt;- higher-order function: returns a closure specialized to `offset`, no boxing needed
+    move |raw| raw + offset
+}
+
+let correct_temp_sensor = calibrator(-3);
+let corrected = correct_temp_sensor(21);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Fn(i32) -&gt; i32</code> instead of
+<code>Box&lt;dyn Fn(i32) -&gt; i32&gt;</code> keeps the returned closure's type concrete and
+stack-allocated, avoiding an <code>alloc</code> dependency for a value that's only
+ever called through one concrete call site per sensor — the same
+reasoning the
+<a href="https://doc.rust-lang.org/book/ch13-01-closures.html#returning-closures">Book's closures chapter</a>
+gives for preferring <code>impl Fn</code> whenever the closure's exact type doesn't
+need to be erased.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

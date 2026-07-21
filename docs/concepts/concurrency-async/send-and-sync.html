@@ -1129,19 +1129,134 @@ auto-trait mechanism otherwise grants <code>Send</code>/<code>Sync</code> silent
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>Send</code> and <code>Sync</code> are defined in <code>core::marker</code>, not <code>std</code>, so nothing
+about their meaning changes under <code>#![no_std]</code> — this is a <code>full</code>-support
+page precisely because the marker-trait mechanics described above are
+identical on a microcontroller. What's genuinely different is <em>where</em>
+concurrency shows up to make these traits load-bearing. There's usually no
+OS scheduler and no <code>std::thread::spawn</code> on bare metal, but there is
+almost always an interrupt controller: firmware routinely shares state
+between <code>fn main</code>'s loop and one or more <code>#[interrupt]</code> handlers, and an
+interrupt handler is, for <code>Send</code>/<code>Sync</code> purposes, a second concurrent
+context in exactly the same sense a second OS thread is — it can run
+"at the same time" as the main loop from the compiler's point of view,
+because it can preempt the main loop at any instruction boundary.</p>
+<p>Because embedded code frequently runs with no heap and no <code>Arc</code>/<code>Mutex</code>
+from <code>std</code>, the idiomatic shared-state type is different, but the question
+<code>Send</code>/<code>Sync</code> answers is the same one: is it safe for two contexts (main
+loop and ISR, or two async tasks) to touch this data? The <code>critical-section</code>
+crate is the closest embedded analog to <code>std::sync::Mutex</code> — it provides a
+<code>Mutex&lt;T&gt;</code> wrapper that is <code>Sync</code> only when <code>T: Send</code>, and only allows
+accessing the wrapped value inside a critical section (typically
+interrupts-disabled on a single-core target), which is what makes it sound
+to hand a <code>'static</code> reference to that <code>Mutex</code> to both <code>main</code> and an
+interrupt handler. Async executors like <code>embassy</code> add a third concurrent
+context — cooperatively scheduled tasks — and the same <code>Send</code> bound shows
+up again on anything crossing an <code>.await</code> point or being moved into
+<code>spawner.spawn(...)</code>.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::cell::RefCell;
+use critical_section::Mutex;
+
+// Sync only because RefCell&lt;u32&gt; — via u32 — is Send; critical-section's
+// Mutex is what makes the RefCell safe to share with an interrupt handler.
+static COUNTER: Mutex&lt;RefCell&lt;u32&gt;&gt; = Mutex::new(RefCell::new(0)); // &lt;- Mutex&lt;RefCell&lt;u32&gt;&gt;: Sync, shareable with an ISR
+
+fn on_tick_interrupt() {
+    critical_section::with(|cs| {
+        let mut counter = COUNTER.borrow_ref_mut(cs);
+        *counter += 1;
+    });
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing state across threads</h3>
+            <p>A tick counter incremented by a timer interrupt and read from the main
+loop needs a type that's genuinely <code>Sync</code> for a single-core target with no
+OS — <code>critical-section::Mutex</code> fills the role <code>std::sync::Mutex</code> plays on
+a hosted target, without needing a thread to block on.</p>
+<pre><code class="rust">use core::cell::RefCell;
+use critical_section::Mutex;
+
+static TICKS: Mutex&lt;RefCell&lt;u32&gt;&gt; = Mutex::new(RefCell::new(0)); // &lt;- static requires TICKS: Sync, checked at compile time
+
+#[interrupt]
+fn TIM2() { // &lt;- runs as a second concurrent context alongside `main`
+    critical_section::with(|cs| {
+        *TICKS.borrow_ref_mut(cs) += 1;
+    });
+}
+
+fn main() -&gt; ! {
+    loop {
+        let ticks = critical_section::with(|cs| *TICKS.borrow(cs));
+        if ticks % 1000 == 0 {
+            // ... report the tick count
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a plain <code>RefCell&lt;u32&gt;</code> is <code>!Sync</code>, so <code>static TICKS: RefCell&lt;u32&gt;</code> would fail to compile the instant an interrupt handler tried
+to touch it too — wrapping it in <code>critical-section</code>'s <code>Mutex</code> is what
+makes the type <code>Sync</code> and forces every access through a critical section,
+the same discipline <code>std::sync::Mutex</code> enforces for OS threads, applied
+here with no OS underneath it.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A driver crate exposing a handle to a peripheral register block should
+leave that handle <code>!Send</code>/<code>!Sync</code> unless the author has verified it's
+safe to move or share across the main-loop/interrupt boundary — the same
+API-design discipline that applies to native OS handles applies to raw
+peripheral access.</p>
+<pre><code class="rust">use core::marker::PhantomData;
+
+pub struct SpiHandle {
+    base_addr: usize,
+    _not_sync: PhantomData&lt;*const ()&gt;, // &lt;- opts out of auto-Send/Sync, same as a native-handle wrapper would
+}
+
+impl SpiHandle {
+    /// # Safety
+    /// Caller must guarantee no other `SpiHandle` aliases this peripheral.
+    pub unsafe fn at(base_addr: usize) -&gt; Self {
+        SpiHandle { base_addr, _not_sync: PhantomData }
+    }
+}
+// No `unsafe impl Send`/`Sync` here: touching the register block from both
+// `main` and an interrupt handler without synchronization would race.
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> defaulting to <code>!Send</code>/<code>!Sync</code> and requiring a deliberate
+<code>unsafe impl</code> once the driver author has actually reasoned about
+interrupt-safety is exactly the <a href="https://rust-lang.github.io/api-guidelines/interoperability.html">API Guidelines'
+C-SEND-SYNC</a>
+checklist item, applied to the main-loop/interrupt boundary instead of an
+OS thread boundary — the risk (silent auto-derived thread-safety for a
+type that secretly isn't) is identical.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

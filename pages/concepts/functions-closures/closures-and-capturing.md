@@ -135,10 +135,120 @@ message, the pattern the
 [Book's message-passing chapter](https://doc.rust-lang.org/book/ch16-02-message-passing.html)
 builds its channel examples around.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Closures are a core-language, compile-time construct —
-a non-boxed closure passed generically or via `impl Fn`/`impl FnMut`
-requires no heap allocation and works identically in `#![no_std]`. Only
-*boxing* a closure (`Box<dyn Fn()>`) needs the `alloc` crate plus a
-`#[global_allocator]`; capturing itself never does.
+Closures are a compile-time, core-language construct, so everything about
+how a closure is compiled — the anonymous per-closure struct, capture-by-
+reference/mutable-reference/value — works exactly the same inside
+`#![no_std]`. A closure passed generically (`impl Fn`/`impl FnMut`) or by
+reference (`&mut dyn FnMut`) needs no heap allocation at all: its captured
+environment lives on the stack (or is embedded directly in the calling
+frame), just like on a hosted target.
+
+The one genuinely embedded-relevant pattern this unlocks is registering a
+closure as a callback into a HAL driver or interrupt handler while it
+still holds `&mut` access to a peripheral — for example, a GPIO driver's
+"on interrupt, call this" slot taking `impl FnMut()`, where the closure
+captures `&mut` a shared counter or a second peripheral it needs to touch
+each time the interrupt fires. Because the closure is generic (or passed
+by reference), this costs nothing beyond the call itself: no vtable, no
+heap.
+
+The one caveat worth being explicit about: that's only true for a
+non-owning/non-boxed closure. A closure captured by `move` and then boxed
+into a `Box<dyn FnMut()>` — the shape you'd reach for to store a
+heterogeneous collection of callbacks, or to return a closure without
+naming its concrete type — needs the `alloc` crate plus a
+`#[global_allocator]`, exactly as on a hosted target. If a callback only
+ever needs to be called through a generic bound or a plain reference,
+skip boxing it: `impl FnMut()` or `&mut dyn FnMut()` never touches the
+heap.
+
+## Basic usage example (Embedded)
+
+```
+struct Gpio {
+    state: bool,
+}
+
+impl Gpio {
+    fn toggle(&mut self) {
+        self.state = !self.state;
+    }
+}
+
+fn on_interrupt(mut handler: impl FnMut()) { // <- generic bound: no heap allocation, no vtable
+    handler();
+}
+
+fn demo(led: &mut Gpio) {
+    on_interrupt(|| led.toggle()); // <- closure captures `led` by mutable reference
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Mutating through a reference
+
+A GPIO interrupt fires repeatedly for as long as the pin is armed, and the
+handler needs exclusive access to toggle the pin each time — so the
+callback slot is typed to accept a closure that captures `&mut` access to
+the peripheral, not an owned copy of it.
+
+```
+struct Led {
+    on: bool,
+}
+
+impl Led {
+    fn toggle(&mut self) {
+        self.on = !self.on;
+    }
+}
+
+fn register_gpio_callback<F: FnMut()>(mut callback: F) {
+    // <- `FnMut`: the interrupt may fire many times, and the closure mutates its capture each time
+    for _ in 0..3 {
+        callback(); // simulates repeated interrupt firings
+    }
+}
+
+fn wire_up(led: &mut Led) {
+    register_gpio_callback(|| led.toggle()); // <- closure captures `led` by `&mut`, not by value
+}
+```
+
+**Why this way:** capturing the peripheral by mutable reference instead
+of moving it in keeps the peripheral usable by the rest of `wire_up`
+after registration, and avoids needing `'static` or ownership transfer
+just to hand a callback to an interrupt-registration function.
+
+### Scenario: Designing a public API
+
+A sensor driver's "new data" callback needs to run on every sample and
+often needs to mutate something it captured (a running total, a flag) —
+so the driver's API takes `impl FnMut(u16)` generically rather than a
+boxed trait object, keeping the whole call chain heap-free.
+
+```
+struct Driver;
+
+impl Driver {
+    fn on_data_ready<F: FnMut(u16)>(&mut self, mut callback: F) {
+        // <- generic `FnMut` parameter: works with a plain reference-capturing closure, no `alloc` needed
+        let sample: u16 = 512; // stand-in for a register read
+        callback(sample);
+    }
+}
+
+fn read_and_log(driver: &mut Driver, total: &mut u32) {
+    driver.on_data_ready(|sample| *total += u32::from(sample)); // <- captures `total` by `&mut`
+}
+```
+
+**Why this way:** a generic `impl FnMut` parameter is monomorphized per
+call site and never allocates, whereas storing the same callback as
+`Box<dyn FnMut(u16)>` would require the `alloc` crate and a global
+allocator — reach for the boxed form only when the driver genuinely needs
+to store a heterogeneous collection of callbacks, not just call one back
+synchronously.

@@ -1101,19 +1101,100 @@ the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>IntoIterator</code> lives in <code>core::iter</code>, so it needs no allocator: the same
+<code>into_iter(self) -&gt; Self::IntoIter</code> contract that turns a <code>Vec</code> into
+something iterable on a hosted target turns a fixed-size array or a
+<code>heapless::Vec</code> into something iterable on a <code>#![no_std]</code> target. The
+same three forms carry over unchanged — <code>iter()</code> borrows and yields <code>&amp;T</code>,
+<code>iter_mut()</code> mutably borrows and yields <code>&amp;mut T</code>, <code>into_iter()</code> takes
+ownership and yields <code>T</code> — and a <code>for</code> loop over a fixed array or a
+<code>heapless</code> collection desugars to <code>IntoIterator::into_iter</code> exactly the
+way it does over a <code>Vec</code>. This is what makes <code>for reading in &amp;sensor_buffer</code> or <code>for reading in &amp;mut register_bank</code> idiomatic on
+embedded targets: the loop syntax and the borrowing choice it expresses
+are identical to hosted Rust, only the underlying container is a
+fixed-capacity one instead of a heap-growable one.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">let readings: [u16; 3] = [512, 498, 610];
+
+for reading in &amp;readings { // &lt;- `&amp;readings` invokes IntoIterator for &amp;[u16; 3], yielding &amp;u16
+    let _ = reading; // process each ADC reading in place, no allocation
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing data with multiple references</h3>
+            <p>Reading a bank of GPIO pin states, then updating a "stale" flag in place,
+then finally consuming the buffer to hand each state off to a logging
+routine needs all three <code>IntoIterator</code> forms — none of which require a
+heap.</p>
+<pre><code class="rust">struct PinState { pin: u8, high: bool, stale: bool }
+
+let mut pins = [
+    PinState { pin: 0, high: true, stale: false },
+    PinState { pin: 1, high: false, stale: true },
+];
+
+for p in pins.iter() { // &lt;- borrows: caller still owns `pins` afterward
+    let _ = (p.pin, p.high);
+}
+
+for p in pins.iter_mut() { // &lt;- mutably borrows: can clear or update in place
+    if p.stale {
+        p.stale = false; // refreshed
+    }
+}
+
+for p in pins.into_iter() { // &lt;- consumes: `pins` is gone after this loop
+    let _ = p.pin; // hand each reading off, e.g. to a log buffer
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the same <code>iter</code>/<code>iter_mut</code>/<code>into_iter</code> triple that
+disciplines borrowing on a hosted <code>Vec</code> disciplines it identically on a
+plain <code>[PinState; 2]</code> array, with no allocation involved at any of the
+three passes.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Iterating a <code>heapless::Vec</code> of recent readings by reference hands back
+each value without taking ownership of the buffer, exactly like
+iterating a <code>Vec</code> by reference would on a hosted target.</p>
+<pre><code class="rust">// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+let mut recent: Vec&lt;u16, 8&gt; = Vec::new();
+recent.push(512).unwrap();
+recent.push(498).unwrap();
+
+for reading in &amp;recent { // &lt;- &amp;heapless::Vec implements IntoIterator, yielding &amp;u16
+    let _ = reading;
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>heapless::Vec&lt;T, N&gt;</code> implements <code>IntoIterator</code> the
+same way <code>std::vec::Vec&lt;T&gt;</code> does, so code written against <code>for x in &amp;collection</code> ports to a fixed-capacity, no-heap buffer with no change to
+the loop itself.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

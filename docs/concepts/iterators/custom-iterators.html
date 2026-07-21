@@ -1147,19 +1147,132 @@ recommends designing for up front.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Implementing <code>Iterator</code> directly on a type — declaring <code>Item</code> and writing
+<code>next(&amp;mut self) -&gt; Option&lt;Self::Item&gt;</code> — is core language and requires
+no allocator, which makes it a genuinely common embedded pattern rather
+than a hosted-only convenience. A ring buffer over a fixed-capacity
+array, a cursor that scans a bank of memory-mapped registers, or a
+bit-scanner walking the set bits of a status word can all implement
+<code>Iterator</code> by holding nothing more than a position or a remaining-count
+field — the same "where am I" bookkeeping a hand-written <code>for</code> loop over
+indices would otherwise track, just packaged behind <code>next()</code>. The moment
+<code>next</code> exists, every adaptor and consumer covered elsewhere on this wiki
+becomes available on the type for free, with no additional code and no
+heap dependency, provided the type's own fields don't themselves need
+one.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct RegisterScan {
+    remaining_mask: u8, // bits still to report
+}
+
+impl Iterator for RegisterScan {
+    type Item = u8; // the bit position of the next set bit
+
+    fn next(&amp;mut self) -&gt; Option&lt;u8&gt; { // &lt;- the one method a custom iterator must implement
+        if self.remaining_mask == 0 {
+            return None;
+        }
+        let bit = self.remaining_mask.trailing_zeros() as u8;
+        self.remaining_mask &amp;= !(1 &lt;&lt; bit); // clear the bit we just reported
+        Some(bit)
+    }
+}
+
+let set_bits: [u8; 2] = {
+    let mut scan = RegisterScan { remaining_mask: 0b0000_1010 };
+    [scan.next().unwrap(), scan.next().unwrap()]
+};
+assert_eq!(set_bits, [1, 3]);
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p>Walking a fixed-capacity ring buffer of recent samples front-to-back is a
+natural fit for a hand-written <code>Iterator</code>, since the buffer only needs to
+track a cursor and a remaining count — no allocation, and no dependency
+on the buffer's own backing store beyond a borrow.</p>
+<pre><code class="rust">struct RingBufferIter&lt;'a&gt; {
+    items: &amp;'a [i16],
+    start: usize,
+    remaining: usize,
+}
+
+impl&lt;'a&gt; Iterator for RingBufferIter&lt;'a&gt; { // &lt;- Iterator implemented directly, no allocator involved
+    type Item = i16;
+
+    fn next(&amp;mut self) -&gt; Option&lt;i16&gt; {
+        if self.remaining == 0 {
+            return None;
+        }
+        let item = self.items[self.start];
+        self.start = (self.start + 1) % self.items.len();
+        self.remaining -= 1;
+        Some(item)
+    }
+}
+
+let backing: [i16; 4] = [10, 20, 30, 40];
+let walk = RingBufferIter { items: &amp;backing, start: 2, remaining: 4 };
+let ordered: [i16; 4] = {
+    let mut it = walk;
+    [it.next().unwrap(), it.next().unwrap(), it.next().unwrap(), it.next().unwrap()]
+};
+assert_eq!(ordered, [30, 40, 10, 20]);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the iterator only borrows the backing array and tracks
+two <code>usize</code> fields, so wrapping the buffer's read order this way costs
+nothing beyond the struct itself — no <code>Vec</code>, no <code>alloc</code>, and it
+immediately gains every adaptor and consumer covered on this wiki.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A bit-scanner over a hardware status register shouldn't allocate a <code>Vec</code>
+of set bit positions just to iterate them — implementing <code>Iterator</code>
+directly over the raw mask, as in the basic example, lets every set bit
+be visited one at a time with no intermediate collection at all.</p>
+<pre><code class="rust">let interrupt_mask: u8 = 0b0010_0101;
+
+struct SetBits(u8);
+impl Iterator for SetBits {
+    type Item = u8;
+    fn next(&amp;mut self) -&gt; Option&lt;u8&gt; {
+        if self.0 == 0 { return None; }
+        let bit = self.0.trailing_zeros() as u8;
+        self.0 &amp;= !(1 &lt;&lt; bit);
+        Some(bit)
+    }
+}
+
+let handled: u32 = SetBits(interrupt_mask).count() as u32; // &lt;- count: works for free once Iterator is implemented
+assert_eq!(handled, 3);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> once <code>next()</code> exists, <code>.count()</code> (and every other
+adaptor/consumer) works on <code>SetBits</code> for free — the same mechanism that
+lets <code>Vec&lt;T&gt;</code>'s <code>.iter()</code> support the whole ecosystem applies identically
+to a hand-written, allocation-free register scanner.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

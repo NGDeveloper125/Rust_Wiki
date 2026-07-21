@@ -1117,19 +1117,114 @@ choose between the three closure traits in a public signature.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The <code>Fn</code>/<code>FnMut</code>/<code>FnOnce</code> hierarchy lives in <code>core::ops</code>, not <code>std</code>, so it
+is available, unchanged, in <code>#![no_std]</code>: bounding a generic parameter by
+one of the three, or writing <code>impl Fn(...)</code>/<code>impl FnMut(...)</code>, compiles to
+the same monomorphized, allocation-free code on a microcontroller as on a
+hosted target. The same rule for choosing the loosest sufficient bound
+applies too, just against embedded-shaped callbacks instead of
+application ones: a driver that calls its callback once at setup only
+needs <code>FnOnce</code>; one that calls it repeatedly from a polling loop or an
+interrupt needs <code>FnMut</code> if it mutates its captures, or <code>Fn</code> if it only
+reads them.</p>
+<p>The only place the hierarchy interacts with <code>alloc</code> at all is if a
+callback is stored as a trait object (<code>Box&lt;dyn FnMut(...)&gt;</code>) rather than
+accepted through a generic bound — the traits themselves, and
+generic/reference-based use of them, never allocate.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct Sensor;
+
+impl Sensor {
+    fn on_data_ready&lt;F: FnMut(u16)&gt;(&amp;mut self, mut callback: F) {
+        // &lt;- `FnMut`: the driver may call `callback` again on every new sample
+        callback(0x01A3);
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A humidity sensor driver invokes its "new sample" callback every time a
+reading arrives over I2C, and callers commonly want to accumulate or
+mutate state on each call — so the callback parameter is bounded by
+<code>FnMut</code>, not the stricter <code>Fn</code> or the single-call <code>FnOnce</code>.</p>
+<pre><code class="rust">struct HumiditySensor;
+
+impl HumiditySensor {
+    fn on_data_ready&lt;F: FnMut(u16)&gt;(&amp;mut self, mut callback: F) {
+        // &lt;- `FnMut`: called once per sample, for as long as the sensor keeps producing readings
+        for sample in [412u16, 418, 405] { // stand-in for successive register reads
+            callback(sample);
+        }
+    }
+}
+
+fn run(sensor: &amp;mut HumiditySensor) {
+    let mut total: u32 = 0;
+    sensor.on_data_ready(|sample| total += u32::from(sample)); // &lt;- mutates a captured accumulator each call
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> requiring <code>FnMut</code> rather than <code>Fn</code> admits callbacks that
+need to accumulate or update state across samples, while still ruling
+out callbacks that would need to consume something on their one-and-only
+call — matching the bound to what a repeatedly-invoked hardware callback
+actually needs, the same principle the
+<a href="https://doc.rust-lang.org/book/ch13-01-closures.html">Book's closures chapter</a>
+applies to choosing between the three traits.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>Polling a peripheral's status register until a "ready" flag is set is a
+loop that calls its closure repeatedly and needs it to mutate a captured
+attempt counter, so the polling helper is generic over <code>FnMut</code>, exactly
+like a hosted retry loop would be.</p>
+<pre><code class="rust">fn poll_until_ready&lt;F: FnMut() -&gt; bool&gt;(mut attempt: F, max_polls: u32) -&gt; bool {
+    // &lt;- `FnMut`: called on every polling iteration, and needs `&amp;mut` access to its captures
+    for _ in 0..max_polls {
+        if attempt() {
+            return true;
+        }
+    }
+    false
+}
+
+let mut polls_used = 0;
+let ready = poll_until_ready(
+    || {
+        polls_used += 1; // &lt;- mutates a captured counter, so this closure only satisfies `FnMut`
+        polls_used &gt;= 3 // stand-in for reading a status register's ready bit
+    },
+    10,
+);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a bare-metal polling loop is one of the most common
+places embedded code calls a closure repeatedly while it mutates
+captured state (a counter, a timeout budget), so <code>FnMut</code> is the natural
+bound — identical in spirit to a hosted retry helper, just reading a
+register instead of a network response.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

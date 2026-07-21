@@ -1136,19 +1136,143 @@ for <code>match</code>.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>Option&lt;T&gt;</code> is <code>core::option::Option</code> — the identical two-variant enum,
+with identical semantics and no allocator involved, since it's core-language
+rather than anything <code>std</code> adds on top. The compiler's niche optimization
+(<code>Option&lt;&amp;T&gt;</code>, <code>Option&lt;Box&lt;T&gt;&gt;</code>, <code>Option&lt;NonZeroU32&gt;</code>, … costing no extra
+tag byte over <code>T</code> itself) carries over unchanged too, and matters more
+directly on a target measuring RAM in kilobytes.</p>
+<p>The design weight shifts, though: embedded code leans on <code>Option</code> constantly
+for "not available yet" state that a hosted program would rarely need to
+model explicitly — a sensor reading buffered by an interrupt handler that
+may not have fired since boot, a slot in a fixed-capacity queue, a
+calibration value only loaded once at startup. Because <code>Option&lt;T&gt;</code> forces
+the "is it actually there" check at compile time, it closes off a real bug
+class on bare metal specifically: reading a zeroed or garbage byte of
+uninitialized memory as if it were a valid measurement, with no OS-level
+convention (like a zeroed heap page) to make that accidentally harmless.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct SensorCache {
+    last_reading: Option&lt;f32&gt;, // &lt;- None until the first interrupt-driven read arrives
+}
+
+impl SensorCache {
+    fn latest(&amp;self) -&gt; Option&lt;f32&gt; {
+        self.last_reading
+    }
+}
+
+let cache = SensorCache { last_reading: None };
+
+match cache.latest() {
+    Some(value) =&gt; { let _ = value; } // handle the cached reading
+    None =&gt; {}                        // no reading yet this cycle: skip
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A fixed-capacity <code>heapless::Vec</code> buffers received CAN frame IDs; popping
+the most recent one returns <code>Option&lt;u16&gt;</code> since the queue can legitimately
+be empty between frames.</p>
+<pre><code class="rust">use heapless::Vec;
+
+fn pop_latest(queue: &amp;mut Vec&lt;u16, 16&gt;) -&gt; Option&lt;u16&gt; {
+    queue.pop() // &lt;- heapless::Vec::pop mirrors std's Option&lt;T&gt; return, no allocator needed
+}
+
+let mut queue: Vec&lt;u16, 16&gt; = Vec::new();
+queue.push(0x100).ok();
+
+match pop_latest(&amp;mut queue) {
+    Some(id) =&gt; { let _ = id; } // handle the CAN id
+    None =&gt; {}                  // queue empty this cycle
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>heapless</code> collections mirror std's <code>Option</code>-returning
+API shape (<code>Vec::pop</code>, <code>Vec::get</code>, …) so an empty fixed-capacity queue stays
+a normal, handled case instead of needing a sentinel value, the same
+reasoning as <code>HashMap::get</code> on the classic page.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>Decoding a 2-bit sample-rate field from a configuration register rejects
+the two reserved bit patterns by returning <code>None</code>, rather than quietly
+picking a default rate for an encoding the hardware doesn't actually
+define.</p>
+<pre><code class="rust">#[derive(Debug, PartialEq)]
+enum SampleRate {
+    Hz100,
+    Hz200,
+}
+
+fn decode_sample_rate(bits: u8) -&gt; Option&lt;SampleRate&gt; {
+    match bits &amp; 0b11 {
+        0b00 =&gt; Some(SampleRate::Hz100),
+        0b01 =&gt; Some(SampleRate::Hz200),
+        _ =&gt; None, // &lt;- reserved encodings: absence, not a made-up default rate
+    }
+}
+
+assert_eq!(decode_sample_rate(0b10), None);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> returning <code>None</code> for a reserved bit pattern keeps a
+misconfigured or corrupted register from being read as though the device
+had picked some sensible default, the same "absence over a stand-in value"
+idiom the classic page applies to a blank form field.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A calibration offset is loaded once from nonvolatile config at boot;
+matching on the <code>Option</code> keeps a genuine zero offset from being confused
+with "not calibrated yet."</p>
+<pre><code class="rust">struct Device {
+    calibration_offset: Option&lt;i16&gt;, // &lt;- None until load_calibration() runs at boot
+}
+
+impl Device {
+    fn apply(&amp;self, raw: i16) -&gt; i16 {
+        match self.calibration_offset {
+            Some(offset) =&gt; raw + offset, // &lt;- exhaustive match: both states are handled
+            None =&gt; raw,                  // &lt;- uncalibrated: pass the raw reading through unmodified
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> modeling "not yet calibrated" as <code>None</code> rather than a
+placeholder offset of <code>0</code> stops a real zero-offset calibration from being
+indistinguishable from "never calibrated" — exhaustive matching then
+forces every use site to handle both states, the same exhaustiveness
+argument the classic page makes for a discount field.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

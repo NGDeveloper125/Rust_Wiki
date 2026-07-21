@@ -1098,19 +1098,104 @@ same signature without the caller converting first.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p>The split this page draws between owned and borrowed text maps onto a
+second split under <code>#![no_std]</code>: <code>&amp;str</code> needs nothing beyond <code>core</code>,
+while <code>String</code> needs <code>alloc</code>. A <code>&amp;'static str</code> literal is compiled
+straight into the binary's read-only data — reading it back is the same
+single operation on a hosted target or a microcontroller with no heap at
+all, since nothing is ever allocated to produce it. <code>String</code>, by
+contrast, is defined in <code>alloc</code> and requires <code>extern crate alloc</code> plus a
+configured <code>#[global_allocator]</code> before <code>String::new()</code>/<code>.push_str()</code>
+compile — the same requirement <code>Vec&lt;T&gt;</code> carries, since <code>String</code> is
+<code>Vec&lt;u8&gt;</code> with a UTF-8 invariant layered on top.</p>
+<p>Where an owned, mutable string is genuinely needed but no heap is
+available, <code>heapless::String&lt;N&gt;</code> is the substitute: a fixed capacity <code>N</code>
+chosen at the type level, backed by an inline byte array instead of a
+heap allocation. It offers the same "build it up as you go" shape
+<code>String</code> does — <code>.push_str()</code>, <code>write!</code> support via <code>core::fmt::Write</code> —
+but bounded, so an append that would exceed <code>N</code> returns an error rather
+than growing. The practical embedded question this page's split becomes:
+is this text always one of a fixed, known-at-compile-time set of
+messages (<code>&amp;'static str</code>, no heap ever touched), or does it get built or
+mutated at runtime (an owned buffer — <code>heapless::String&lt;N&gt;</code> without an
+allocator, <code>String</code> with one)?</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::fmt::Write as _;
+use heapless::String;
+
+const DEVICE_NAME: &amp;str = "sensor-07"; // &lt;- &amp;'static str: baked into the binary, no heap involved
+
+let mut status: String&lt;32&gt; = String::new(); // &lt;- owned, growable-within-32-bytes buffer, no allocator
+write!(status, "{DEVICE_NAME} ready").unwrap();
+
+let view: &amp;str = &amp;status; // &lt;- borrows the heapless::String, same as &amp;String deref to &amp;str
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>The classic page's guidance — accept <code>&amp;str</code>, not an owned type, for
+anything that only reads text — holds unchanged here: a function
+written against <code>&amp;str</code> accepts a <code>&amp;'static str</code> literal or a borrow of a
+<code>heapless::String&lt;N&gt;</code> equally, since <code>heapless::String&lt;N&gt;</code> also derefs
+to <code>&amp;str</code>.</p>
+<pre><code class="rust">fn log_event(message: &amp;str) { // &lt;- &amp;str: accepts a &amp;'static str literal or a &amp;heapless::String&lt;N&gt; alike
+    // ... hand `message`'s bytes to a UART/logging peripheral
+}
+
+const READY: &amp;str = "device ready"; // &lt;- &amp;'static str, no heap
+let mut status: heapless::String&lt;32&gt; = heapless::String::new();
+core::fmt::Write::write_str(&amp;mut status, "calibrating").unwrap();
+
+log_event(READY);   // &amp;'static str
+log_event(&amp;status); // heapless::String&lt;32&gt; derefs to &amp;str, same call site
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the API Guidelines' preference for the narrowest
+borrowed type an embedded function's signature stays valid regardless of
+whether the caller's storage needs a heap at all — the function itself
+never has to know or care.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with text</h3>
+            <p>Building a status line from values only known at runtime — a reading, an
+error count, an uptime counter — needs owned, mutable storage the same
+way the classic page's log-building example does; on a target with no
+heap, that owned storage is a <code>heapless::String&lt;N&gt;</code> instead of <code>String</code>.</p>
+<pre><code class="rust">use core::fmt::Write as _;
+use heapless::String;
+
+fn build_status(errors: u8, uptime_s: u32) -&gt; String&lt;64&gt; {
+    let mut line: String&lt;64&gt; = String::new(); // &lt;- fixed 64-byte capacity, no heap
+    write!(line, "errors={errors} uptime={uptime_s}s").unwrap(); // &lt;- fails only if the text would exceed 64 bytes
+    line
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the capacity bound has to live somewhere once there's
+no allocator to grow into — putting it in the type (<code>String&lt;64&gt;</code>) makes
+the limit visible at every call site, rather than discovering it only
+when a runtime append happens to fail.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

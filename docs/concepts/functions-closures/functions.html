@@ -1096,19 +1096,122 @@ ownership is genuinely needed gives callers the most flexibility, per the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Functions are a core-language construct with zero built-in runtime
+dependency, so everything about them — named parameters with explicit
+types, a declared return type, monomorphization for generics — is
+identical whether the target is a server or a microcontroller with no
+operating system at all. The place this shows up constantly in embedded
+code is HAL and driver method signatures: a peripheral driver's methods
+look exactly like any other Rust function, e.g. a register-write method
+that borrows <code>&amp;mut self</code> (exclusive access to the peripheral), takes a
+register address and a value, and returns a <code>Result</code> so a bus failure is
+part of the function's contract rather than a panic.</p>
+<p>Embedded code also has two special-purpose kinds of function that are
+still, syntactically and semantically, ordinary functions: the
+reset/entry-point function a <code>#![no_main]</code> firmware crate supplies
+(typically via <code>cortex-m-rt</code>'s <code>#[entry]</code>, itself a
+<code>#[no_mangle] extern "C" fn</code> under the hood) and interrupt handlers
+registered into a vector table. Neither needs new syntax to exist — see
+<a href="../../syntax/attributes/no-main-attribute.md"><code>#[no_main]</code></a> for how a
+firmware crate's entry point is wired up; this page's Explanation focuses
+on the ordinary driver-method case, since the entry-point angle is
+already covered there.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct Error;
+
+struct Bus;
+
+impl Bus {
+    fn write_register(&amp;mut self, addr: u8, value: u8) -&gt; Result&lt;(), Error&gt; {
+        // &lt;- ordinary function: typed parameters, declared return type, borrows `&amp;mut self`
+        Ok(())
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A driver's register-write method borrows <code>&amp;mut self</code> (since writing a
+register is a mutating operation on shared hardware state) and takes the
+address and value as plain typed parameters, rather than bundling them
+into a struct or taking ownership of the bus.</p>
+<pre><code class="rust">struct Error;
+
+struct I2cBus;
+
+impl I2cBus {
+    fn write_register(&amp;mut self, addr: u8, value: u8) -&gt; Result&lt;(), Error&gt; {
+        // &lt;- `&amp;mut self`: exclusive access to the bus for the duration of the write
+        // pretend this issues the actual I2C transaction
+        Ok(())
+    }
+}
+
+fn configure_sensor(bus: &amp;mut I2cBus) -&gt; Result&lt;(), Error&gt; {
+    bus.write_register(0x20, 0x07)?;
+    bus.write_register(0x21, 0x01)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> borrowing <code>&amp;mut self</code> instead of consuming the bus by
+value lets a caller keep using it for the next register write, the same
+borrow-first guidance the
+<a href="https://rust-lang.github.io/api-guidelines/flexibility.html">API Guidelines' flexibility checklist</a>
+gives for any method whose receiver the caller needs again.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>A register write over a real bus (I2C, SPI) can fail — a NACK, a bus
+timeout — so the driver function's signature declares that failure
+explicitly with <code>Result</code>, instead of panicking or silently ignoring a
+failed transaction.</p>
+<pre><code class="rust">enum BusError {
+    Nack,
+    Timeout,
+}
+
+fn write_register(addr: u8, value: u8) -&gt; Result&lt;(), BusError&gt; {
+    // &lt;- the signature makes bus failure part of the function's contract, not a surprise panic
+    if addr &gt; 0x7F {
+        return Err(BusError::Nack);
+    }
+    Ok(())
+}
+
+fn init_device() -&gt; Result&lt;(), BusError&gt; {
+    write_register(0x00, 0x01)?;
+    write_register(0x01, 0x00)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a firmware panic on a failed bus transaction typically
+halts the whole device with no operator present to see a message, so
+returning <code>Result</code> and propagating with <code>?</code> lets calling code retry, fall
+back, or report the failure through whatever channel the application has
+— the same
+<a href="https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html">Book error-handling</a>
+discipline, applied to a failure mode that's routine on real hardware.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>
