@@ -1062,19 +1062,120 @@ thread.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Move semantics are core-language: the compiler's move-vs-copy tracking has
+nothing to do with an allocator, a runtime, or <code>std</code>, so the mechanism
+described above is byte-for-byte identical under <code>#![no_std]</code>. What
+changes is what gets moved. Embedded code moves ownership of things that
+don't exist in most hosted programs — a peripheral handle, a GPIO pin, a
+DMA channel — and the same use-after-move rule that stops a hosted program
+from reusing a moved <code>String</code> is what stops firmware from reusing a
+peripheral handle it has already handed off to a driver.</p>
+<p>The most common embedded move is into a driver's constructor: a HAL type
+like <code>Usart</code> or <code>Spi</code> takes ownership of the raw peripheral/pin types it
+wraps, so once <code>Usart::new(usart1, tx_pin, rx_pin)</code> runs, <code>usart1</code> is gone
+from the caller's scope — there is no way to accidentally reconfigure the
+same UART directly through the register block while the driver also
+believes it owns it. The second common case is a <code>move</code> closure or task
+function capturing a peripheral so it can run independently of the code
+that set it up — an interrupt handler registered through a framework like
+RTIC, or an <code>async</code> task spawned on an executor like <code>embassy</code> — which
+needs owned, <code>'static</code> data for exactly the reason <code>thread::spawn</code> does on
+a hosted target: the closure/task may still be running long after the
+function that created it has returned.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct Led { pin: GpioPin }
+
+impl Led {
+    fn new(pin: GpioPin) -&gt; Self { // &lt;- takes ownership: the caller can no longer touch `pin` directly
+        Led { pin }
+    }
+}
+
+let pin = GpioPin::new(5);
+let led = Led::new(pin); // &lt;- `pin` moves into `led`; using `pin` afterward is a compile error
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Transferring ownership</h3>
+            <p>A UART driver should take ownership of the raw peripheral it wraps in its
+constructor, so nothing else in the program can reconfigure the same
+registers behind the driver's back.</p>
+<pre><code class="rust">struct RawUsart1; // stand-in for a PAC-generated peripheral type
+struct Usart { inner: RawUsart1 }
+
+impl Usart {
+    fn new(usart1: RawUsart1) -&gt; Self { // &lt;- ownership moves in: usart1 is now exclusively the driver's
+        // ... configure baud rate, enable the peripheral clock, etc.
+        Usart { inner: usart1 }
+    }
+
+    fn write_byte(&amp;mut self, byte: u8) {
+        let _ = (&amp;self.inner, byte); // placeholder for a real register write
+    }
+}
+
+let usart1 = RawUsart1;
+let mut usart = Usart::new(usart1); // &lt;- usart1 moved; no other code can construct a second Usart from it
+usart.write_byte(b'A');
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> moving the raw peripheral into the driver's constructor
+means the type system — not a runtime check or a comment — guarantees
+there's exactly one <code>Usart</code> wrapping this hardware; the
+<a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html">Rust Book</a>'s
+"one owner at a time" rule is precisely what makes a second, conflicting
+<code>Usart::new(usart1)</code> a compile error rather than a runtime race over the
+same registers.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Multi-threading</h3>
+            <p>Spawning an <code>embassy</code> async task to drive a sensor independently of
+<code>main</code> needs the task to own its peripheral handle outright, the same way
+<code>thread::spawn</code> needs owned, <code>'static</code> data on a hosted target.</p>
+<pre><code class="rust">struct AdcChannel; // stand-in for a HAL ADC handle
+
+#[embassy_executor::task]
+async fn sample_task(mut adc: AdcChannel) { // &lt;- task owns `adc` for as long as it runs, independent of main
+    loop {
+        // ... await a conversion, publish the reading
+        let _ = &amp;mut adc;
+    }
+}
+
+fn spawn_sampling(spawner: embassy_executor::Spawner, adc: AdcChannel) {
+    spawner.spawn(sample_task(adc)).unwrap(); // &lt;- `adc` moves into the task here
+    // using `adc` in `main` after this point is a compile error
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> an async task or interrupt handler can outlive the
+function that set it up, so it can't safely hold a borrow into that
+function's stack frame — moving ownership in is what makes the peripheral
+handle valid for the task's entire, independently-scheduled lifetime,
+mirroring the
+<a href="https://doc.rust-lang.org/book/ch16-01-threads.html#using-move-closures-with-threads">Rust Book's <code>move</code> closure guidance for <code>thread::spawn</code></a>
+applied to an executor instead of an OS thread.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

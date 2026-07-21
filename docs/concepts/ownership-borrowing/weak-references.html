@@ -1047,19 +1047,137 @@ reference cycles; see
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>Weak&lt;T&gt;</code> is built directly on top of <code>Rc&lt;T&gt;</code>/<code>Arc&lt;T&gt;</code> — it lives in
+<code>alloc</code>, and needs the same <code>extern crate alloc;</code> plus a configured
+<code>#[global_allocator]</code> that its strong-reference counterparts need. See
+<a href="shared-ownership-rc-arc.md">Shared ownership (Rc &amp; Arc)</a> for that
+caveat in full, including the honest point that <code>Rc</code>/<code>Arc</code> are already
+uncommon in embedded code, since embedded rarely has the OS-thread-based
+multi-owner use case they were designed for, and interrupt-boundary
+sharing is usually better served by a <code>'static</code>
+<code>critical_section::Mutex&lt;RefCell&lt;T&gt;&gt;</code> instead. <code>Weak</code> inherits that
+unpopularity and then some: it only exists to solve a problem —
+reference cycles between <code>Rc</code>/<code>Arc</code>-owned values — that only arises once
+you're already using <code>Rc</code>/<code>Arc</code> for shared ownership in the first place.
+If a project isn't reaching for <code>Rc</code> much, it has correspondingly little
+need for <code>Weak</code> either.</p>
+<p>What embedded code needs instead is the same underlying idea <code>Weak</code>
+provides — a non-owning reference that might not resolve — without the
+heap and the refcounting machinery. The closest no-heap analogue is often
+just a plain <code>Option&lt;&amp;'a T&gt;</code>: instead of a runtime check ("has every
+strong owner already dropped this?"), validity is tracked by the
+borrow checker at compile time through the lifetime <code>'a</code>, so there's
+nothing to <code>.upgrade()</code> at runtime — the reference either compiles, or it
+doesn't live long enough and the compiler rejects it up front. For
+longer-lived, more dynamic non-owning references (a task scheduler
+handing out handles to entries that can later be removed), the usual
+embedded pattern is an index into a fixed-size slab/arena — often paired
+with a generation counter so a stale index into a reused slot is detected
+as invalid — rather than a pointer at all: "might not resolve" becomes "the
+generation stored in the handle doesn't match the slot's current
+generation," checked with a plain comparison instead of reference-count
+bookkeeping.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct Sensor { reading: f32 }
+
+fn last_active&lt;'a&gt;(sensors: &amp;'a [Sensor], last_index: Option&lt;usize&gt;) -&gt; Option&lt;&amp;'a Sensor&gt; {
+    // &lt;- Option&lt;&amp;'a T&gt;: "might not resolve" tracked by the borrow checker, not a runtime upgrade()
+    last_index.and_then(|i| sensors.get(i))
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Shared ownership</h3>
+            <p>A tree of sensor nodes where each child needs to reference its parent
+would use <code>Weak&lt;Node&gt;</code> on a hosted target to avoid a reference cycle —
+without an allocator, the no-heap analogue is a fixed-size arena plus
+plain indices, with a generation counter standing in for <code>Weak</code>'s
+"already dropped" check.</p>
+<pre><code class="rust">const MAX_NODES: usize = 16;
+
+#[derive(Clone, Copy)]
+struct NodeHandle { index: u8, generation: u8 } // &lt;- the no-heap analogue of a Weak&lt;Node&gt;
+
+struct NodeSlot {
+    name: &amp;'static str,
+    generation: u8,
+    occupied: bool,
+}
+
+struct Arena {
+    slots: [NodeSlot; MAX_NODES],
+}
+
+impl Arena {
+    fn resolve(&amp;self, handle: NodeHandle) -&gt; Option&lt;&amp;NodeSlot&gt; {
+        let slot = &amp;self.slots[handle.index as usize];
+        // &lt;- the "might not resolve" check: stale handle into a reused/freed slot returns None, like upgrade()
+        if slot.occupied &amp;&amp; slot.generation == handle.generation {
+            Some(slot)
+        } else {
+            None
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a fixed-size arena gives every node a compile-time-known
+home with no heap allocation at all, and a generation counter recreates
+<code>Weak::upgrade</code>'s "tell me if this has already gone away" check without
+reference counting — the same shape the
+<a href="https://doc.rust-lang.org/book/ch15-06-reference-cycles.html">Rust Book's <code>Weak</code> chapter</a>
+solves with <code>Rc</code>/<code>Weak</code>, reached here with plain arithmetic instead,
+which is the standard no-heap substitute wherever a project can't or
+won't configure a global allocator.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A small task registry that hands out handles to registered tasks, some of
+which can later be cancelled and removed, needs an API for "a reference
+that might no longer be valid" — an index-based handle communicates that
+contract without requiring <code>alloc</code> at all.</p>
+<pre><code class="rust">pub struct TaskHandle { index: u8, generation: u8 } // &lt;- public API surface: looks like a lightweight Weak&lt;Task&gt;
+
+pub struct TaskRegistry {
+    generations: [u8; 8],
+    active: [bool; 8],
+}
+
+impl TaskRegistry {
+    pub fn is_valid(&amp;self, handle: &amp;TaskHandle) -&gt; bool {
+        // &lt;- callers check validity explicitly, same contract as Weak::upgrade().is_some()
+        self.active[handle.index as usize] &amp;&amp; self.generations[handle.index as usize] == handle.generation
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> documenting the handle as "might not resolve, check
+before use" up front — mirroring <code>Weak&lt;T&gt;</code>'s contract — sets the right
+caller expectations without needing <code>alloc</code>, <code>Rc</code>, or a refcount at all;
+the <a href="https://rust-lang.github.io/api-guidelines/documentation.html">API Guidelines</a>
+favor an API whose type signals its own fallibility over one that panics
+on a stale handle and documents "don't do that" as the only safeguard.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

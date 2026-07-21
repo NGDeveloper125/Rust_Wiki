@@ -116,8 +116,90 @@ outlive the source or move into another owner — the
 idiom of borrowing by default and cloning only when ownership is
 genuinely required applies directly to this choice.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Copy` and `Clone` are both defined in `core` — no
-`std` dependency. `Copy` types are especially convenient in embedded code
-since they avoid any question of allocation entirely.
+`Copy` and `Clone` mean exactly the same thing under `#![no_std]` — both
+traits live in `core`, so nothing about the mechanism itself changes; a
+`Clone` impl for something like a `heapless::Vec` still copies real bytes
+around, it just never touches an allocator to do it. What genuinely
+differs is the cost asymmetry: on a device with a few kilobytes of RAM and
+no allocator, a `.clone()` on anything beyond a handful of bytes is a
+real, visible cost in stack space and cycles, not the "cheap enough not
+to think about" operation it usually is on a desktop with megabytes of
+cache. This tilts the usual `Copy`/`Clone` choice further toward `Copy`
+for embedded's characteristic types — register-value wrappers, small
+sensor readings, timestamps — since a handful of bytes is exactly what
+`Copy`'s free bitwise duplication is for, and it removes the temptation to
+reach for `.clone()` reflexively later on something bigger. See
+[Anti-pattern: cloning to satisfy the borrow
+checker](../design-patterns-idioms/anti-pattern-clone-to-satisfy-borrow-checker.md)
+for that reflex's specific failure mode — its embedded stakes are higher
+still, since a clone added just to silence the borrow checker can
+duplicate a `heapless`-style fixed-capacity buffer that the surrounding
+code budgeted RAM for exactly once.
+
+## Basic usage example (Embedded)
+
+```
+#[derive(Clone, Copy)]
+struct AdcSample { channel: u8, value: u16 } // <- 3 bytes: bitwise copy is free, Copy is the right call
+
+let a = AdcSample { channel: 0, value: 512 };
+let b = a; // <- silently duplicated, both usable — no cost beyond the 3 bytes already on the stack
+println!("{} {}", a.value, b.value);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Cloning and copying
+
+A small register-value sample type derives `Copy`; a log built on a
+`heapless` buffer stays `Clone`-only, because duplicating it copies a real,
+visible chunk of the device's RAM budget.
+
+```
+#[derive(Clone, Copy)] // <- 3 bytes total: bitwise duplication is free, no reason to make it explicit
+struct AdcSample { channel: u8, value: u16 }
+
+#[derive(Clone)] // <- deliberately NOT Copy: duplicating this copies the whole fixed-capacity buffer
+struct SensorLog {
+    samples: heapless::Vec<AdcSample, 32>, // <- up to 32 * 3 bytes moved on every .clone()
+}
+
+let sample = AdcSample { channel: 0, value: 512 };
+let sample2 = sample; // <- implicit copy: 3 bytes, effectively free
+let log = SensorLog { samples: heapless::Vec::new() };
+let log_snapshot = log.clone(); // <- explicit: visibly copies up to 96 bytes, worth a second look in a hot path
+```
+
+**Why this way:** on a device with only a few KB of RAM total, an implicit
+`Copy` staying cheap (a handful of bytes) versus an explicit `.clone()`
+that can move nearly a hundred bytes is exactly the distinction `Clone`'s
+visibility is meant to surface — the
+[std docs for `Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html)
+frame deriving it as a commitment that's only appropriate for genuinely
+trivial types, which keeps every silent duplication in the program free
+while anything `heapless`-backed stays visibly costed at the call site.
+
+### Scenario: Working with collections
+
+Reading the most recent value out of a fixed-capacity log collapses the
+usual borrow-vs-clone tradeoff into a near-free decision once the element
+type is small and `Copy`.
+
+```
+fn latest_borrowed(log: &heapless::Vec<AdcSample, 32>) -> Option<&AdcSample> {
+    log.last() // <- borrows: zero-cost, tied to `log`'s lifetime
+}
+
+fn latest_owned(log: &heapless::Vec<AdcSample, 32>) -> Option<AdcSample> {
+    log.last().copied() // <- AdcSample is Copy: ".copied()" is a 3-byte copy, not a heap-owning clone
+}
+```
+
+**Why this way:** because `AdcSample` is `Copy`, pulling one out of the
+log with `.copied()` costs exactly 3 bytes and never risks an allocation —
+the same borrow-vs-own choice the classic page makes between
+`Vec<&str>`/`Vec<String>` collapses to a near-free decision once the
+element type is small and `Copy`, which is exactly why embedded code
+favors small `Copy` types for anything read out of a collection often.

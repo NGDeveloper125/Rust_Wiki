@@ -1112,19 +1112,148 @@ covers the <code>self</code>/<code>&amp;self</code>/<code>&amp;mut self</code> s
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Ownership costs nothing at runtime and needs no allocator, OS, or <code>std</code> —
+it's a compile-time concept, so everything in the classic Explanation
+holds without modification under <code>#![no_std]</code>. Embedded Rust also has one
+of the strongest, most concrete illustrations of <em>why</em> single ownership
+matters: the <strong>singleton peripheral pattern</strong>, which nearly every
+embedded-hal-based crate (the STM32, RP2040, nRF52, and SAMD HAL families
+among them) uses to model hardware.</p>
+<p>A microcontroller's registers are a fixed, singular physical resource —
+there is exactly one UART1, one GPIOA bank, one TIM2 timer on the chip.
+The peripheral-access crate (PAC) generated for that chip exposes a single
+<code>Peripherals</code> struct whose fields are handles to each of these blocks, and
+a <code>Peripherals::take()</code> function that hands the whole struct out <strong>at
+most once</strong>, returning <code>None</code> on every call after the first. Doing this
+turns ownership into a hardware-safety guarantee: if you have a <code>Gpioa</code>
+value, you know statically that no other code in the program can also
+have one, so no other code can be reconfiguring the same GPIO bank's mode
+register while you're mid-configuration. This is exactly the same
+"exactly one owner, enforced at compile time" idea the classic Explanation
+describes for a <code>String</code> — applied here to a piece of physical hardware
+instead of a heap allocation, which is arguably a more intuitive place for
+it to click: a microcontroller pin genuinely does have only one wire, so
+letting exactly one owner exist for it isn't a compiler restriction, it's
+a fact about the hardware that the type system is finally able to state
+directly.</p>
+<p>Once obtained, that ownership composes exactly like the classic
+Explanation describes: passing <code>gpioa</code> into a driver's constructor moves
+it again, so the driver becomes the pin's new sole owner, and the caller
+loses the ability to touch it directly — see
+<a href="move-semantics.md">Move semantics</a> for that half of the picture.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct Gpioa; // stand-in for a PAC-generated peripheral type
+
+struct Peripherals { gpioa: Gpioa }
+
+static TAKEN: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
+impl Peripherals {
+    fn take() -&gt; Option&lt;Self&gt; {
+        if TAKEN.swap(true, core::sync::atomic::Ordering::AcqRel) {
+            None // &lt;- already taken once: no second owner of the hardware is possible
+        } else {
+            Some(Peripherals { gpioa: Gpioa })
+        }
+    }
+}
+
+let p1 = Peripherals::take(); // Some(...): first call succeeds
+let p2 = Peripherals::take(); // None: the hardware is already owned
+assert!(p1.is_some());
+assert!(p2.is_none());
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Transferring ownership</h3>
+            <p>Taking the chip's <code>Peripherals</code> once and moving individual peripherals
+into the drivers that use them chains single ownership all the way from
+"raw hardware" to "the one driver responsible for it."</p>
+<pre><code class="rust">struct Gpioa; // stand-in for a PAC-generated peripheral type
+struct Peripherals { gpioa: Gpioa }
+struct Led { pin: Gpioa }
+
+impl Peripherals {
+    fn take() -&gt; Option&lt;Self&gt; { Some(Peripherals { gpioa: Gpioa }) } // simplified for this example
+}
+
+impl Led {
+    fn new(pin: Gpioa) -&gt; Self { // &lt;- ownership moves again: the Led is now the pin's sole owner
+        Led { pin }
+    }
+}
+
+let peripherals = Peripherals::take().unwrap();
+let led = Led::new(peripherals.gpioa); // &lt;- peripherals.gpioa moves into led; it can't be reused from `peripherals`
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> each move narrows who is responsible for the hardware —
+first the whole-chip <code>Peripherals</code> struct, then one specific bank, then
+the driver that configures it — so at every point in the program exactly
+one piece of code can legally touch the pin, which is the same "handing
+off responsibility entirely" idea the
+<a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html">Rust Book</a>
+describes for ordinary values, just applied down a chain of constructors
+instead of into one collection.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A PAC's <code>Peripherals::take()</code> function has to guard against being called
+twice — including from two different execution contexts, such as <code>main</code>
+and an interrupt handler — so its implementation needs to be atomic, not
+just "check a boolean."</p>
+<pre><code class="rust">use core::sync::atomic::{AtomicBool, Ordering};
+
+struct Gpioa; // stand-in for a PAC-generated peripheral type
+
+pub struct Peripherals {
+    pub gpioa: Gpioa,
+}
+
+static TAKEN: AtomicBool = AtomicBool::new(false);
+
+impl Peripherals {
+    pub fn take() -&gt; Option&lt;Self&gt; {
+        // &lt;- swap is a single atomic operation: two simultaneous callers can't both see `false`
+        if TAKEN.swap(true, Ordering::AcqRel) {
+            None
+        } else {
+            Some(Peripherals { gpioa: Gpioa })
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> returning <code>Option&lt;Self&gt;</code> from a plain, safe function —
+rather than requiring callers to write <code>unsafe</code> or trust a convention —
+puts the "only one owner" guarantee in the type system itself, where the
+compiler enforces it; using <code>AtomicBool::swap</code> instead of a
+separate load-then-store keeps the check race-free even if <code>take()</code> is
+somehow called from both <code>main</code> and an interrupt, which the
+<a href="https://rust-lang.github.io/api-guidelines/predictability.html">API Guidelines</a>'
+predictability guidance favors over an API that merely documents "call
+this only once" and hopes.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

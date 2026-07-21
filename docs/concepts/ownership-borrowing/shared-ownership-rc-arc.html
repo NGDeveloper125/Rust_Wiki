@@ -1066,19 +1066,134 @@ covers this as the reason <code>Arc</code> exists alongside <code>Rc</code>.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p>Neither <code>Rc&lt;T&gt;</code> nor <code>Arc&lt;T&gt;</code> lives in <code>core</code> — both are defined in
+<code>alloc</code>, so using either at all requires <code>extern crate alloc;</code> plus a
+<code>#[global_allocator]</code> configured for the target; on a bare <code>#![no_std]</code>
+project with no allocator, <code>Rc::new</code>/<code>Arc::new</code> simply don't compile.
+That much is the same "needs <code>alloc</code>" caveat as <code>Box</code>.</p>
+<p>The more honest caveat is about whether reaching for either is the right
+move even once <code>alloc</code> is available. <code>Rc</code>'s whole value proposition —
+non-atomic, single-threaded reference counting — only pays for itself
+when there's a genuine multi-owner story: several independent parts of a
+program, none of which is clearly "the" owner, that outlive individual
+function scopes. That shape does happen in embedded code (a shared config
+struct read by several long-lived subsystems, for instance), but the
+<em>other</em> classic reason to reach for <code>Rc</code>/<code>Arc</code> on a hosted target — "this
+needs to survive being handed to a spawned OS thread whose lifetime the
+compiler can't otherwise reason about" — usually doesn't apply on bare
+metal, because there's rarely an OS thread being spawned in the first
+place. What embedded code <em>does</em> have instead is an interrupt boundary:
+state shared between <code>main</code>'s loop and one or more <code>#[interrupt]</code>
+handlers. For that specific, extremely common case, the idiomatic
+solution isn't <code>Rc</code>/<code>Arc</code> at all — it's a <code>'static</code>
+<code>critical_section::Mutex&lt;RefCell&lt;T&gt;&gt;</code>, which needs no heap, no reference
+counting, and no allocator, because the value has exactly one place it
+lives (a <code>static</code>) and the <code>Mutex</code> only governs <em>when</em> code is allowed to
+touch it, not <em>how many owners</em> it has. Reach for <code>Rc</code>/<code>Arc</code> in embedded
+code specifically when the multi-owner shape is real (and <code>alloc</code> is
+already configured for other reasons) — not as a reflexive substitute for
+sharing state with an interrupt handler.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::cell::RefCell;
+use critical_section::Mutex;
+
+// The idiomatic embedded default for state shared across the interrupt
+// boundary: no alloc, no reference counting, one static owner.
+static CONFIG: Mutex&lt;RefCell&lt;u32&gt;&gt; = Mutex::new(RefCell::new(9600)); // &lt;- 'static value, not an Rc/Arc
+
+fn set_baud(new_baud: u32) {
+    critical_section::with(|cs| {
+        *CONFIG.borrow_ref_mut(cs) = new_baud;
+    });
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Shared ownership</h3>
+            <p>A baud-rate setting read by the main loop and updated by a configuration
+interrupt handler looks like a job for shared ownership, but it's a
+<code>'static</code> value with two access points, not several genuine owners — the
+<code>alloc</code>-free answer is a <code>critical_section::Mutex</code>, not <code>Rc</code>.</p>
+<pre><code class="rust">use core::cell::RefCell;
+use critical_section::Mutex;
+
+static BAUD_RATE: Mutex&lt;RefCell&lt;u32&gt;&gt; = Mutex::new(RefCell::new(9600)); // &lt;- one static owner, not a reference count
+
+#[interrupt]
+fn CONFIG_UPDATE() {
+    critical_section::with(|cs| {
+        *BAUD_RATE.borrow_ref_mut(cs) = 115_200;
+    });
+}
+
+fn main_loop_read() -&gt; u32 {
+    critical_section::with(|cs| *BAUD_RATE.borrow(cs))
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>main</code> and <code>CONFIG_UPDATE</code> aren't two independent
+<em>owners</em> of the baud rate the way two threads holding <code>Arc</code> clones would
+be — there's exactly one value, living in one <code>static</code>, and the two
+contexts just need mutually-exclusive turns touching it, which is what
+<code>critical-section</code>'s <code>Mutex</code> provides without a heap; reaching for <code>Rc</code>
+here would add an allocation and a reference count to solve a problem
+that's actually about mutual exclusion, not ownership count, per the
+<a href="https://doc.rust-lang.org/book/ch15-04-rc.html">Rust Book's framing of <code>Rc</code> as "multiple ownership"</a>
+specifically — which this scenario doesn't have.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Multi-threading</h3>
+            <p>On the (less common) embedded targets that run a real preemptive RTOS
+with <code>alloc</code> configured and OS-level threads — FreeRTOS via
+<code>freertos-rust</code>, or ESP-IDF's <code>std</code> support on Xtensa/RISC-V — <code>Arc</code> earns
+its keep exactly the way it does on a hosted target, because the
+OS-thread-based use case it was built for genuinely exists there.</p>
+<pre><code class="rust">// Illustrative: an RTOS/std-capable embedded target (e.g. ESP-IDF with std support)
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+let shared_reading = Arc::new(Mutex::new(0.0_f32));
+
+let worker = {
+    let shared_reading = Arc::clone(&amp;shared_reading); // &lt;- genuine second owner: a real OS thread
+    thread::spawn(move || {
+        *shared_reading.lock().unwrap() = 21.4;
+    })
+};
+
+worker.join().unwrap();
+println!("{}", *shared_reading.lock().unwrap());
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> this only applies on the subset of embedded targets
+that actually provide OS threads and an allocator (an RTOS port or a
+<code>std</code>-capable target) — on a bare <code>#![no_std]</code> project with no RTOS, this
+use case doesn't arise, and the interrupt-boundary scenario above is the
+one to reach for instead; where a real OS thread does exist, <code>Arc</code>'s
+atomic reference count is exactly as necessary as it is on a desktop
+target, per the same
+<a href="https://doc.rust-lang.org/book/ch16-03-shared-state.html#atomic-reference-counting-with-arct">Rust Book reasoning for <code>Arc</code> over <code>Rc</code></a>.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>
