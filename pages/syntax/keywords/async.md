@@ -106,13 +106,53 @@ function body runs, a distinction the
 [Tokio tutorial](https://tokio.rs/tokio/tutorial/spawning) calls out
 explicitly for spawned tasks.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** The `async fn` / `async` / `async move` grammar and
-its desugaring into a `core::future::Future`-implementing state machine
-work identically under `#![no_std]` — no allocator or `std` is required
-for the syntax itself. What's missing on bare-metal targets is a runtime
-to drive the resulting future: there's no `tokio`, so `#![no_std]` code
-needs an embedded executor such as `embassy`, which supplies its own
-entry point (`#[embassy_executor::main]`) and polls the same
-`async`-produced futures.
+**Partial support.** `async fn` and `async`/`async move` blocks are
+core-language: writing one, having it desugar into an anonymous
+`core::future::Future`-implementing state machine, and the distinction
+between borrowing (`async` block) and taking ownership (`async move`) of
+captured variables all work identically under `#![no_std]` — none of it
+depends on `std` or an allocator. What's missing on bare metal is the
+other half of the picture the classic examples lean on: `tokio::spawn`,
+`#[tokio::main]`, and the hosted runtime that actually polls those
+futures to completion. `tokio` is built on an OS scheduler, threads, and
+an OS-backed I/O reactor, none of which exist on a microcontroller with
+no operating system underneath it.
+
+The real substitute is an embedded async executor — `embassy` is the
+most widely used one. Embassy provides its own entry point attribute,
+`#[embassy_executor::main]`, in place of `#[tokio::main]`, and its own
+task-spawning and timer primitives (`embassy_executor::Spawner`,
+`embassy_time::Timer`) in place of `tokio::spawn`/`tokio::time`. An
+`async fn` marked `#[embassy_executor::task]` is spawned onto embassy's
+executor instead of tokio's, but the `async fn`/`.await` syntax inside it
+is exactly the same language feature described in the classic
+Explanation above — only the runtime driving it has changed.
+
+## Usage examples (Embedded)
+
+### Declaring an embassy task with `async fn`
+
+```
+use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+#[embassy_executor::task]
+async fn blink_led() { // <- `async fn`: same grammar as hosted Rust, spawned onto embassy's executor instead of tokio's
+    loop {
+        // ... toggle a GPIO pin here
+        Timer::after(Duration::from_millis(500)).await;
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) { // <- embassy's entry point, in place of #[tokio::main]
+    spawner.spawn(blink_led()).unwrap();
+}
+```
+
+`spawner.spawn(...)` is embassy's substitute for
+`tokio::spawn` — both hand an `async fn`'s produced future to an
+executor, just a different one suited to running with no OS underneath
+it.

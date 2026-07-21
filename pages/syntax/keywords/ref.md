@@ -145,8 +145,59 @@ nothing that survives the match — the
 is explicit that `ref mut` is required to get a genuine mutable borrow into
 the matched place itself.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `ref`/`ref mut` are core-language pattern syntax with no
-runtime representation and no allocation — identical behavior in
-`#![no_std]`.
+`ref`/`ref mut` behave identically under `#![no_std]` — pure
+pattern-binding syntax with no runtime representation, so there's
+nothing allocator- or target-specific about them. The situation that
+calls for `ref` in embedded code is the same one that calls for it
+anywhere: matching directly on an owned value (not a reference to one)
+while still needing the rest of that value intact afterward — for
+instance, inspecting one field of a hardware-status struct read back
+from a peripheral without consuming the whole struct in the process.
+
+## Usage examples (Embedded)
+
+### Borrowing a field while matching an owned hardware-status struct
+
+```
+struct LinkStatus {
+    speed_mbps: u32,
+    duplex: Duplex,
+}
+
+enum Duplex { Half, Full }
+
+fn log_link(status: LinkStatus) -> LinkStatus {
+    match status {
+        LinkStatus { ref duplex, speed_mbps } => {
+            // <- `ref` borrows `duplex`; `speed_mbps` (a Copy u32) is still bound normally alongside it
+            match duplex {
+                Duplex::Full => defmt::info!("full duplex @ {}", speed_mbps),
+                Duplex::Half => defmt::info!("half duplex @ {}", speed_mbps),
+            }
+        }
+    }
+    status // still whole: only `duplex` was borrowed during the match, never moved out
+}
+```
+
+### Mutating a retry counter with `ref mut` in an owned driver-status enum
+
+```
+enum SensorState {
+    Faulted { retries: u8 },
+    Ready,
+}
+
+fn record_retry(mut state: SensorState) -> SensorState {
+    match state {
+        SensorState::Faulted { ref mut retries } => {
+            // <- `ref mut`: mutably borrows the real field so the increment survives past the match
+            *retries += 1;
+        }
+        SensorState::Ready => {}
+    }
+    state
+}
+```

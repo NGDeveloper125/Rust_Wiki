@@ -136,15 +136,75 @@ chapter](https://doc.rust-lang.org/book/ch16-03-shared-state.html)
 recommends exactly this shape over a raw `static mut`, which offers the
 same global reach with none of the safety.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `static` is core-language and especially central in
-embedded code: a peripheral register block is almost always modeled as a
-`static` singleton (or a `static mut`/`static` `Cell`-like wrapper) at a
-fixed memory-mapped address, since there is exactly one physical UART or
-GPIO controller for the whole program to share. Interrupt handlers
-routinely communicate with the main loop through a `static` guarded by a
-`critical-section`-based primitive instead of `std::sync::Mutex` (which
-needs an OS), and raw memory-mapped register access through a `static
-mut` or a raw pointer derived from one is one of the most common places
-`unsafe` shows up in firmware code at all.
+`static` means exactly what the classic Explanation above describes
+under `#![no_std]` too — one fixed-address, program-long-lived piece of
+storage — and that fixed address is precisely why it, rather than
+[`const`](const.md), is the tool embedded code reaches for whenever more
+than one part of the program needs to touch the *same* piece of storage:
+a peripheral register block modeled as a singleton, or state genuinely
+shared between an interrupt handler and the main loop. (This page is
+about the `static` *item keyword* itself; the closely related `'static`
+*lifetime* — which every `static` item's type is bound by, and which
+shows up constantly on its own even where no `static` item is involved,
+e.g. `thread::spawn`'s bound or a `'static` trait object — has its own
+dedicated page, [`'static`](../lifetimes/static-lifetime.md), which
+covers several embedded-specific scenarios — a `critical-section`-guarded
+counter, a `#[global_allocator]`, a `heapless::spsc` queue split — in
+depth. Those aren't repeated here.)
+
+Two mechanisms specific to the *item* keyword are worth calling out.
+First, a peripheral-access crate (hand-written, or `svd2rust`-generated
+from a chip's SVD file) models each hardware peripheral as effectively a
+`static` singleton, reached through a `take()`-style API
+(`pac::Peripherals::take()`) that hands out the one instance exactly
+once at runtime — this exists because there is exactly one physical
+UART/GPIO/timer controller for the whole program to share, and modeling
+that as a `static`-backed singleton, rather than a value freely
+constructible anywhere, is what stops two independent parts of the
+firmware from each believing they have exclusive access to the same
+hardware. Second, `static mut` remains the direct way to give an
+interrupt handler and `main` a shared, mutable global when no
+synchronization wrapper is in the picture — every access requires
+`unsafe`, and, per increasingly-recommended, lint-enforced practice,
+forming an ordinary `&`/`&mut` reference to it directly is discouraged
+in favor of a raw pointer obtained with `&raw const`/`&raw mut`,
+narrowing the window where the aliasing promise has to hold (see
+[`mut`](mut.md) for that pattern from the mutability-marker angle). In
+new code, a `static` wrapping a `critical-section`-guarded
+`Cell`/`RefCell`, or an atomic, is generally preferred over `static mut`
+for exactly this reason — it gets the same interrupt/main-loop sharing
+without ever needing an `unsafe` block at the access site.
+
+## Usage examples (Embedded)
+
+### Modeling a peripheral register block as a `static`-backed singleton
+
+```
+use stm32f4xx_hal::pac;
+
+fn main() -> ! {
+    let device = pac::Peripherals::take().unwrap(); // <- hands out the one `static`-backed peripheral instance
+    let gpioa = &device.GPIOA;
+    gpioa.odr.write(|w| w.odr5().set_bit());
+    loop {}
+}
+```
+
+### `static mut` as a direct interrupt/main-loop shared counter
+
+```
+static mut OVERFLOW_COUNT: u32 = 0; // <- `static mut`: one fixed address, reachable from both `main` and the ISR
+
+#[interrupt]
+fn TIM2() {
+    unsafe {
+        OVERFLOW_COUNT += 1; // <- every access needs `unsafe`: no compiler-checked synchronization here
+    }
+}
+
+fn overflow_count() -> u32 {
+    unsafe { OVERFLOW_COUNT }
+}
+```

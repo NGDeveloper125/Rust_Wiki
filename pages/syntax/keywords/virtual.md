@@ -80,7 +80,21 @@ dispatching through a trait object's vtable instead of a class
 hierarchy — see [Trait objects & dynamic dispatch](../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.md)
 for the full mechanism.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike.
+**Full support.** Keyword reservation is a lexer-level fact, identical in
+`#![no_std]` and hosted Rust alike — `virtual` carries no defined meaning
+on any target, so there's no embedded-specific behavior to describe. The
+same is true of the working alternative already covered on the classic
+page: `dyn Trait`'s vtable-based dispatch is available under
+`#![no_std]` too, with the same considerations (no class hierarchy,
+ordinary trait objects) covered on [`dyn`](dyn.md).
+
+## Usage examples (Embedded)
+
+### The `virtual` reservation, unaffected by target
+
+```
+let virtual = 5;     // error: expected identifier, found reserved keyword `virtual`, on every target
+let r#virtual = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+```

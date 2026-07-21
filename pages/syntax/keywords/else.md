@@ -79,6 +79,34 @@ be updated — an `else`-if chain gives no such guarantee, per the
 [Book's chapter on `match`](https://doc.rust-lang.org/book/ch06-02-match.html).
 See [`if`](if.md) for the fuller `if`/`else` treatment.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency — behaves identically in `#![no_std]`.
+`else` is pure grammar attached to `if`/`let`, with no runtime behavior of
+its own — identical under `#![no_std]`. The classic caution about an
+`else if` chain vs. `match` applies just as much to decoding hardware
+state: a chain re-testing bit patterns one at a time is exactly the shape
+that should become a `match` over a fault enum once every bit combination
+needs to be accounted for.
+
+## Usage examples (Embedded)
+
+### Providing the alternative branch when polling an input pin
+
+```
+if button.is_pressed() {
+    led.set_high();
+} else {
+    led.set_low(); // <- `else` runs when the button isn't pressed
+}
+```
+
+### Bailing out of a driver function with let-else
+
+```
+fn read_calibration(eeprom: &Eeprom) -> Result<Calibration, &'static str> {
+    let Some(raw) = eeprom.read_page(CALIBRATION_PAGE) else {
+        return Err("calibration page unreadable"); // <- `else` block must diverge
+    };
+    Ok(Calibration::from_bytes(raw))
+}
+```

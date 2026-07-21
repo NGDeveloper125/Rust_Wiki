@@ -52,7 +52,23 @@ that the `Default` also lines up with the API Guidelines'
 which recommends types eagerly implement `Default`. See [`true`](true.md)
 for the fuller treatment of `bool` literals.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Same as [`true`](true.md) — a `core` primitive, no `std`
-dependency.
+As with [`true`](true.md), there's no genuine embedded-specific angle to
+`false` — it's the same `core` primitive literal, identical under
+`#![no_std]`. It's worth naming plainly rather than manufacturing a
+distinction: the only embedded-flavored thing to say is what a `false`
+typically represents in firmware — an interrupt flag that hasn't fired
+yet, or a peripheral not yet ready.
+
+## Usage examples (Embedded)
+
+### A completion flag that starts false until an interrupt fires
+
+```
+let mut dma_transfer_complete = false; // <- `false` is the initial state before the DMA interrupt sets it
+
+fn on_dma_complete(flag: &mut bool) {
+    *flag = true;
+}
+```

@@ -125,8 +125,41 @@ separate file, the layout the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 uses throughout.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `mod` is a purely compile-time organizational construct
-with no runtime representation, so both forms work identically in a
-`#![no_std]` crate — there's no allocator or OS dependency either way.
+`mod` is a purely compile-time organizational construct with no runtime
+representation, so both the inline and file-loaded forms work
+identically in a `#![no_std]` crate — there's no allocator or OS
+dependency either way, same as the classic Explanation above. The shape
+it takes in a HAL crate mirrors the chip it targets: a typical layout
+splits `mod gpio;`, `mod uart;`, `mod timer;`, and so on, one file per
+peripheral family, with a generated (often `svd2rust`-produced) `pac`
+module holding the raw register definitions underneath, so a driver
+module's own code refers to `crate::pac::GPIOA` rather than duplicating
+the register layout itself.
+
+## Usage examples (Embedded)
+
+### A HAL crate's peripheral module layout
+
+```
+// src/lib.rs
+#![no_std]
+
+pub mod gpio;   // <- `mod` loads gpio.rs, one file per peripheral family
+pub mod uart;
+mod pac;        // <- `mod`: the generated register-definition module, not part of the public API
+
+// src/gpio.rs
+use crate::pac;
+
+pub struct Pin {
+    pin_number: u8,
+}
+
+impl Pin {
+    pub fn set_high(&mut self) {
+        unsafe { pac::GPIOA.odr.modify(|_, w| w.bits(1 << self.pin_number)) }
+    }
+}
+```

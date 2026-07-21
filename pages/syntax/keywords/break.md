@@ -105,6 +105,40 @@ including nested inside a `match` — with two exceptions: it cannot cross
 a closure or `async` block boundary to exit an outer loop, and an
 unlabeled `break` always targets the nearest enclosing loop.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency; works identically in `#![no_std]`.
+`break` behaves identically under `#![no_std]` — no `std` dependency,
+same core-language exit-the-loop semantics. Its most common embedded use
+is closing off a bounded polling loop: pairing `break` with an attempt
+counter turns an otherwise-unbounded "spin until ready" `loop` into one
+that gives up after a timeout instead of hanging forever on dead
+hardware, and — because `loop` is the one form `break` can carry a value
+out of — the same construct can report back whether it succeeded or
+timed out.
+
+## Usage examples (Embedded)
+
+### Exiting a bounded polling loop with a value
+
+```
+let mut attempts = 0;
+let ready = loop {
+    if sensor.is_ready() {
+        break true; // <- `break` carries a value out of the polling loop
+    }
+    attempts += 1;
+    if attempts >= MAX_ATTEMPTS {
+        break false; // <- times out instead of spinning forever on dead hardware
+    }
+};
+```
+
+### Stopping a retry loop on the first successful transmission
+
+```
+for attempt in 0..3 {
+    if uart.try_send(byte).is_ok() {
+        break; // <- stop retrying once the send succeeds
+    }
+}
+```

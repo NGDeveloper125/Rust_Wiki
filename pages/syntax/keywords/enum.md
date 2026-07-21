@@ -107,11 +107,54 @@ grammar and its effect on downstream `match`es, which the
 [API Guidelines](https://rust-lang.github.io/api-guidelines/future-proofing.html)
 recommend for exactly this kind of public, extensible enum.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Enum declarations are core-language and
-allocator-free — their size is roughly the largest variant plus, when
-needed, a discriminant (niche optimization often folds the tag into a
-variant's unused bit patterns, so `Option<&T>` stays pointer-sized).
-Explicit discriminants combined with `#[repr(u8)]` are common for
-decoding register states and protocol message kinds in embedded code.
+`enum` is a natural fit for modeling the discrete states real hardware
+actually has: a peripheral's power mode, a protocol's state machine, or
+the fixed set of fault/error codes a sensor's datasheet enumerates.
+Because these are typically closed, hardware-defined sets — a chip's
+power controller genuinely only has the modes its datasheet lists, no
+more and no fewer — an `enum`'s exhaustive `match` is a good fit for
+handling every documented state explicitly instead of leaving an implicit
+"anything else" case unaccounted for. Explicit discriminants paired with
+`#[repr(u8)]` (or another fixed-width repr) are the standard way to
+decode a raw register value into one of these enums, and to encode one
+back into the bit pattern a peripheral expects.
+
+## Usage examples (Embedded)
+
+### Modeling a peripheral's power mode
+
+```
+#[repr(u8)]
+enum PowerMode { // <- `enum` models the datasheet's fixed set of power states
+    Off = 0,
+    Standby = 1,
+    Active = 2,
+    LowPower = 3,
+}
+
+fn configure_power(mode: PowerMode) -> u8 {
+    mode as u8 // <- explicit discriminants make the enum-to-register-value mapping direct
+}
+```
+
+### Decoding a sensor fault code
+
+```
+enum SensorFault { // <- `enum` covers the datasheet's documented fault codes
+    None,
+    OverTemperature,
+    UnderVoltage,
+    CommunicationTimeout,
+}
+
+fn decode_fault(raw: u8) -> SensorFault {
+    match raw {
+        0 => SensorFault::None,
+        1 => SensorFault::OverTemperature,
+        2 => SensorFault::UnderVoltage,
+        _ => SensorFault::CommunicationTimeout,
+    }
+}
+```

@@ -128,9 +128,48 @@ inside the expansion — the
 conventions still apply to whatever `#[test]` function ultimately runs;
 the macro only chooses which assertion shape to generate.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `macro_rules!` expansion happens entirely before code
-generation, so it's identical under `#![no_std]` and costs nothing at
-runtime. The reserved `macro` keyword has no embedded-specific relevance
-either, since it isn't usable syntax on any target yet.
+`macro_rules!` expansion happens entirely before code generation, so
+arm-matching and transcription are identical under `#![no_std]` and cost
+nothing at runtime — the compiled firmware image ends up exactly as if
+the expanded code had been hand-written. This is exactly why
+register-definition macros are so common in HAL and peripheral-access
+crates: a chip can have hundreds of near-identical registers, and
+encoding "one register = one address plus one set of accessors" as a
+macro arm, tried against each register's definition in turn, keeps that
+boilerplate a single reviewed pattern instead of hundreds of hand-copied
+blocks. The reserved `macro` keyword has no additional embedded
+relevance beyond what the classic Explanation already covers — it isn't
+usable syntax on any target yet, embedded included.
+
+## Usage examples (Embedded)
+
+### A register-definition macro with a read-only and a read-write arm
+
+```
+macro_rules! register {
+    ($name:ident, $addr:expr, ro) => { // <- tried first: matches only when the literal token `ro` appears
+        pub fn $name() -> u32 {
+            unsafe { core::ptr::read_volatile($addr as *const u32) }
+        }
+    };
+    ($name:ident, $addr:expr, rw $set_name:ident) => { // <- tried second: the read-write form also names a setter
+        pub fn $name() -> u32 {
+            unsafe { core::ptr::read_volatile($addr as *const u32) }
+        }
+        pub fn $set_name(value: u32) {
+            unsafe { core::ptr::write_volatile($addr as *mut u32, value) }
+        }
+    };
+}
+
+register!(read_status, 0x4001_0000, ro);            // <- expands via the first arm: one accessor, no setter
+register!(read_ctrl, 0x4001_0004, rw write_ctrl);    // <- expands via the second arm: a reader and a writer
+```
+
+Just like the classic `sensor_reading!`/`assert_reading_eq!` examples,
+arm order here is meaningful, not cosmetic: `ro` and
+`rw $set_name:ident` are distinct enough token shapes that listing a
+more permissive arm first could swallow input meant for the more
+specific one below it.

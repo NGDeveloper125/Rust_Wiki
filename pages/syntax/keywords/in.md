@@ -57,7 +57,32 @@ meaning outside the `for` grammar and `pub(in path)` visibility — it
 isn't a general membership operator — so there's nothing further to say
 about it in isolation; see [`for`](for.md) for the loop it belongs to.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure grammar, part of the `for` loop form — no `std`
-dependency.
+`in` is pure grammar bound to the `for` loop form (and `pub(in path)`
+visibility) — it carries no behavior of its own, so there's nothing that
+changes under `#![no_std]` regardless of what kind of iterator source
+sits on its right: a range over register offsets, a fixed-size array, or
+a `heapless` collection all bind through `in` the same way.
+
+## Usage examples (Embedded)
+
+### Binding a loop variable while scanning a channel range
+
+```
+for offset in 0..NUM_CHANNELS {
+    // <- `in` binds `offset` to each value the range produces
+    read_channel(offset);
+}
+```
+
+### Destructuring a pin/level pair on each iteration
+
+```
+let pins = [(0u8, true), (1u8, false), (2u8, true)];
+
+for (pin, level) in pins {
+    // <- `in` binds the destructured tuple to each pair the array yields
+    set_output(pin, level);
+}
+```

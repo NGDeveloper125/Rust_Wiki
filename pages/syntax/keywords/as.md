@@ -108,9 +108,47 @@ guarantees the byte `as` produces matches the width the register or
 protocol actually expects, rather than whatever discriminant size the
 compiler would otherwise pick.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Numeric and pointer casts are core-language, with
-identical truncation/saturation rules under `#![no_std]` — `as` between
-register-width integer types and their signed/unsigned counterparts is a
-routine part of embedded register manipulation.
+`as` casting behaves identically under `#![no_std]` — the same
+truncating-narrow / sign-or-zero-extending-widen / saturating-float-to-int
+rules apply on any target, with no allocator or OS involvement in the
+mechanism itself. Where this shows up constantly in embedded code is
+reading a peripheral register or an ADC channel: a hardware read is
+almost always typed at some fixed width (a 12-bit ADC result held in a
+`u16`, a 32-bit status register), and narrowing it to whatever width a
+protocol or a downstream API actually needs (`as u8` to pack it into a
+byte for a UART frame, say) is routine. The behavior worth being
+deliberate about is exactly the classic Explanation's warning: `as`
+truncates silently rather than reporting that a value didn't fit, which
+matters more in embedded code than in most hosted code, since a
+truncated sensor reading or register value is a silent correctness bug
+that can be much harder to notice on a device with no console to print a
+warning to. `u8::try_from(reading)` (checked with `.ok()` or a `match` on
+the `Result`) is the safe alternative whenever a value genuinely might
+not fit and the caller needs to detect that rather than silently keep
+the low bits.
+
+## Usage examples (Embedded)
+
+### Narrowing an ADC reading with `as`, and the `try_from` alternative
+
+```
+fn pack_for_uart(adc_reading: u16) -> u8 {
+    adc_reading as u8 // <- `as`: truncates silently; fine only if the caller already knows the top bits are unused
+}
+
+fn pack_for_uart_checked(adc_reading: u16) -> Result<u8, &'static str> {
+    u8::try_from(adc_reading).map_err(|_| "reading exceeds one byte") // <- reports rather than truncates
+}
+```
+
+### Casting an integer address to a raw pointer for MMIO
+
+```
+const GPIOA_ODR: *mut u32 = 0x4001_0814 as *mut u32; // <- `as`: integer literal cast to a raw pointer for MMIO access
+
+fn set_pa5() {
+    unsafe { GPIOA_ODR.write_volatile(GPIOA_ODR.read_volatile() | (1 << 5)) }
+}
+```

@@ -112,9 +112,36 @@ The
 item specifies constructors should be static, inherent `fn`s named `new`
 whenever a type has an obvious default construction path.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Free functions, methods, and function pointers all work
-identically in `#![no_std]`. Interrupt handlers are ordinary `fn`s marked
-with a target-specific attribute (e.g. `#[interrupt]` from a HAL crate),
-not special syntax.
+`fn` means exactly the same thing under `#![no_std]` as in hosted Rust —
+the same parameter/return-type rules, the same monomorphization of
+generic functions, the same function-pointer coercion for a capturing-
+nothing function item. The one place embedded code leans on `fn` in a way
+rarely seen in hosted code is an interrupt handler: a plain `fn`, usually
+with no parameters and no return value, wired into the vector table not
+through special syntax or a different calling convention but through an
+attribute a HAL/PAC crate provides (`#[interrupt]`, `#[exception]`) sitting
+directly above an ordinary function declaration.
+
+## Usage examples (Embedded)
+
+### Declaring a HAL driver method signature
+
+```
+fn read_temperature(i2c: &mut impl embedded_hal::i2c::I2c) -> Result<f32, embedded_hal::i2c::ErrorKind> {
+    // <- `fn` declares a driver function, generic over any I2C bus implementation
+    let mut buf = [0u8; 2];
+    i2c.write_read(0x48, &[0x00], &mut buf)?;
+    Ok(i16::from_be_bytes(buf) as f32 / 256.0)
+}
+```
+
+### An interrupt handler as an ordinary `fn`
+
+```
+#[interrupt]
+fn TIM2() { // <- `fn` here: no parameters, no return value, wired to the vector table by the attribute above it
+    // clear the timer's interrupt flag and handle the tick
+}
+```

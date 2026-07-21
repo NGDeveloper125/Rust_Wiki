@@ -67,10 +67,57 @@ now-removed `box_syntax` experiment was specifically about making that
 elision a guarantee rather than an optimizer best-effort, which remains
 unresolved design space rather than a feature in progress today.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike. `Box` itself needs `alloc` (see
-[Smart pointers (Box\<T\>)](../../concepts/ownership-borrowing/smart-pointers-box.md)'s
-own Embedded Rust Notes) — the reserved `box` keyword has no runtime
-footprint of its own either way.
+The `box` keyword's reservation is identical under `#![no_std]` — a
+lexer-level fact with no dependency on what runtime the code eventually
+targets, so there's nothing target-specific to say about the reservation
+itself. The genuinely embedded-relevant part of this page is the type the
+reservation was named after: `Box<T>` is defined in `alloc`, not `core`,
+so it's only available once a crate pulls in `alloc` and wires up a
+`#[global_allocator]` — without that setup, `Box::new(...)` simply
+doesn't compile on a `#![no_std]` target. Where `heapless::Vec<T, N>`
+gives `Vec` a fixed-capacity, no-allocator substitute, there is no
+equivalent drop-in replacement for `Box<T>` itself — `heapless` has no
+`heapless::Box`, because a fixed-capacity, statically-sized "box" is a
+contradiction: `Box`'s whole point is holding a value whose size isn't
+known until runtime (most visibly `Box<dyn Trait>`), while a no-heap
+collection needs its element size fixed at compile time. The idiomatic
+no-heap alternative is therefore not a substitute type but a different
+design: own the value directly and pass it by reference instead of
+indirecting through a pointer, or replace a `Box<dyn Trait>` with a
+fixed-size enum over the concrete types that would otherwise have been
+boxed, dispatched with a `match` instead of a vtable.
+
+## Usage examples (Embedded)
+
+### `Box::new` once `alloc` is configured
+
+```
+extern crate alloc;
+use alloc::boxed::Box;
+
+struct SensorFrame {
+    readings: [f64; 64],
+}
+
+fn make_frame() -> Box<SensorFrame> {
+    Box::new(SensorFrame { readings: [0.0; 64] }) // <- identical to hosted Rust once alloc + a #[global_allocator] exist
+}
+```
+
+### Avoiding heap indirection with a fixed-size enum instead of `Box<dyn Trait>`
+
+```
+enum Command { // <- fixed-size enum in place of Box<dyn Trait>: no allocator needed, dispatch via match
+    SetPin { pin: u8, high: bool },
+    ReadAdc { channel: u8 },
+}
+
+fn dispatch(cmd: Command) {
+    match cmd {
+        Command::SetPin { pin, high } => { let _ = (pin, high); }
+        Command::ReadAdc { channel } => { let _ = channel; }
+    }
+}
+```
