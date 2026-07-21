@@ -68,12 +68,64 @@ this static has zero readers and would otherwise be eliminated — the
 documents exactly this "referenced only outside the compiler's view" case
 as its purpose.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[used]` is one of the more common embedded-only
-attributes: interrupt vector tables, linker-script-placed configuration
-tables, and boot-stage function pointer tables are all read by something
-outside Rust's visibility (a linker script, a ROM bootloader, a debugger
-probe), so they need `#[used]` to survive dead-code elimination. It has
-essentially no use case in hosted `std` binaries, where nothing outside
-the program's own object files typically inspects statics by raw address.
+Firmware routinely has two entirely separate "readers" of a given
+static: the Rust program itself, and something completely outside it —
+a linker script, a ROM bootloader, a debug probe, or an external tool
+scanning the compiled image for a known byte pattern. The compiler's
+dead-code analysis only understands the first kind of reader. Anything
+that's read exclusively by the second kind looks, from the compiler's
+point of view, entirely unreachable, and gets stripped unless `#[used]`
+overrides that conclusion — which is why `#[used]` shows up constantly
+in firmware and almost never in hosted `std` code, where nothing external
+to the compiled binary typically inspects a static by raw address at all.
+
+Beyond the single-function vector-table entry, the same reasoning applies
+to a whole table at once — an array of exception/interrupt vectors, or a
+fixed metadata block a boot ROM or bootloader expects at a specific flash
+offset (a chip's "boot header," an application's version/checksum
+footer read by an over-the-air update tool). None of these are ever read
+by an expression anywhere in the Rust program; they're read by address,
+by something that isn't Rust at all, which is exactly the case `#[used]`
+exists for.
+
+## Usage examples (Embedded)
+
+### Placing a full vector table, not just one entry
+
+```
+#[used] // <- the whole table, not only individual entries, has zero Rust-visible readers
+#[unsafe(link_section = ".vector_table.exceptions")]
+static EXCEPTIONS: [Option<unsafe extern "C" fn()>; 14] = [
+    Some(nmi_handler),
+    Some(hard_fault_handler),
+    None, None, None, None, None, None, // reserved entries
+    Some(sv_call_handler),
+    None, None,
+    Some(pend_sv_handler),
+    Some(sys_tick_handler),
+];
+
+unsafe extern "C" fn nmi_handler() { loop {} }
+unsafe extern "C" fn hard_fault_handler() { loop {} }
+unsafe extern "C" fn sv_call_handler() {}
+unsafe extern "C" fn pend_sv_handler() {}
+unsafe extern "C" fn sys_tick_handler() {}
+```
+
+### Marking a firmware version footer for an OTA updater
+
+```
+#[used] // <- read only by an external OTA/flashing tool scanning the compiled image, never by Rust
+#[unsafe(link_section = ".fw_metadata")]
+static FIRMWARE_VERSION: [u8; 4] = [1, 4, 0, 0]; // major, minor, patch, reserved
+```
+
+Neither static is ever named by a Rust expression — the vector table is
+read by the CPU's exception hardware directly from its fixed address, and
+the version footer is read by a separate tool entirely outside the
+firmware's own execution — so both would be silently eliminated as dead
+code without `#[used]`, exactly the failure mode the
+[Rust Reference on the `used` attribute](https://doc.rust-lang.org/reference/abi.html#the-used-attribute)
+describes.

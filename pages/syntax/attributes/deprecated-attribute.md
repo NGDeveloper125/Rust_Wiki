@@ -89,9 +89,41 @@ later breaking release" as the normal migration path for a stable public
 API, and naming the replacement directly in `note` is what makes the
 warning actionable rather than just a red flag.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[deprecated]` is a pure compile-time, zero-runtime-cost
-diagnostic mechanism — it works identically in `#![no_std]` crates, and is
-just as useful there for a HAL crate migrating callers from an old
-peripheral API to a redesigned one across major versions.
+`#[deprecated]` is a pure compile-time diagnostic mechanism with zero
+runtime footprint, so it behaves identically under `#![no_std]` as
+anywhere else — `core` and `alloc` items are deprecated using the exact
+same attribute as `std` ones. It's a particularly natural fit for HAL
+(hardware abstraction layer) crates, which routinely redesign their
+peripheral APIs across major versions: an old register-access method gets
+deprecated in favor of a newer, safer, or more ergonomic replacement, and
+every downstream firmware crate calling the old method gets a compiler
+warning naming the replacement — without an immediate breaking removal
+that would force every consumer to migrate on the HAL maintainer's
+schedule rather than their own.
+
+## Usage examples (Embedded)
+
+### Deprecating an old register-access method in a HAL crate
+
+```
+pub struct Gpio {
+    // ...
+}
+
+impl Gpio {
+    #[deprecated(since = "0.5.0", note = "use `Gpio::set_pin_state` instead; this method silently ignores an invalid pin index")] // <-
+    pub fn set_pin(&mut self, pin: u8, high: bool) {
+        self.set_pin_state(pin, high).ok();
+    }
+
+    pub fn set_pin_state(&mut self, pin: u8, high: bool) -> Result<(), &'static str> {
+        if pin > 15 {
+            return Err("pin index out of range for this GPIO port");
+        }
+        // ... write to the port's ODR register here
+        Ok(())
+    }
+}
+```

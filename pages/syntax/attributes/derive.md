@@ -111,12 +111,48 @@ its failure message, as the
 notes; deriving both traits in one attribute is the standard way to make
 a struct or enum usable in `assert_eq!` at all.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The built-in derives (`Debug`, `Clone`, `PartialEq`, and
-the rest of the compiler's fixed set) run entirely at compile time and
-work identically in `#![no_std]`. `#[derive(Debug)]`'s generated code
-still routes through `core::fmt`, which has no way to print anywhere on
-bare metal on its own — embedded code commonly derives against `defmt`'s
-own `Format` trait instead (`#[derive(defmt::Format)]`), a third-party
-derive built for wire-efficient, `no_std`-friendly logging.
+Under `#![no_std]`, `#[derive(...)]` for anything built purely on `core`
+traits — `Debug`, `Clone`, `Copy`, `PartialEq`, `Eq`, `Hash`, `Default`,
+`PartialOrd`, `Ord` — works exactly as described above: the same
+mechanical, field-by-field generation, the same requirement that every
+field's type already implement the trait, routed through `core::fmt` /
+`core::cmp` / `core::clone` instead of their `std` re-exports. Nothing
+about the attribute itself changes.
+
+Where embedded code diverges in practice, not in mechanism, is
+`#[derive(Debug)]` specifically: a `Debug` impl's formatting code
+(matching on every variant, writing out every field name) is generated
+code that occupies flash, and on a part with a genuinely tight flash
+budget, deriving `Debug` on every type in a large HAL — especially large
+enums or deeply nested register structs — can noticeably inflate binary
+size for a capability a release firmware image may never actually
+invoke. It's common to see `Debug` derives feature-gated
+(`#[cfg_attr(feature = "debug-impls", derive(Debug))]`) or skipped
+entirely on the hottest, most repeated types in a crate for exactly this
+code-size reason, while still deriving it freely on types that are rare
+or only used during development.
+
+## Usage examples (Embedded)
+
+### Deriving core-only traits identically under no_std
+
+```
+#![no_std]
+
+#[derive(Debug, Clone, Copy, PartialEq)] // <- routes through core::fmt/core::clone/core::cmp, not std
+pub struct SensorReading {
+    pub raw_adc: u16,
+}
+```
+
+### Feature-gating Debug to keep its code out of the flash budget by default
+
+```
+#[cfg_attr(feature = "debug-impls", derive(Debug))] // <- Debug's formatting code only ships when explicitly opted into
+#[derive(Clone, Copy)]
+pub struct RegisterSnapshot {
+    pub value: u32,
+}
+```

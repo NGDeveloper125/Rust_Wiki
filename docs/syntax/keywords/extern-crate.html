@@ -1034,13 +1034,65 @@ documents, with <code>alloc</code>'s own scope described in the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><strong>Partial support, and this is squarely where the keyword still earns
+its keep.</strong> <code>extern crate</code> itself is compile-time-only and costs nothing
+either way, but essentially its only living use case today is
+embedded/<code>#![no_std]</code>: bringing the <code>alloc</code> crate into scope with
+<code>extern crate alloc;</code> so a <code>#![no_std]</code> firmware crate can use
+heap-allocating types (<code>Vec</code>, <code>String</code>, <code>Box</code>) without pulling in the
+rest of <code>std</code>, which would require an OS this target doesn't have.
+<code>core</code> needs no equivalent declaration — it's implicitly available under
+<code>#![no_std]</code> the same way <code>std</code> is implicitly available in a hosted
+crate — but <code>alloc</code> sits in between and has to be opted into explicitly
+this way, interacting directly with <code>#![no_std]</code>'s stripped-down
+implicit-prelude wiring. The caveat that comes with it: <code>alloc</code> alone
+supplies the <em>types</em>, not an allocator — a <code>#![no_std]</code> binary using it
+also needs a <code>#[global_allocator]</code> (commonly <code>embedded-alloc</code> or a
+similar bare-metal allocator) wired up, or every allocation panics at
+runtime with nothing to satisfy it. Many embedded codebases sidestep
+both the <code>extern crate alloc;</code> declaration and the global-allocator
+requirement entirely by reaching for <code>heapless</code>'s fixed-capacity
+collections (<code>heapless::Vec&lt;T, N&gt;</code>, <code>heapless::String&lt;N&gt;</code>) instead,
+which need no heap and no allocator at all — the idiomatic embedded
+substitute whenever a fixed upper bound on size is acceptable, which it
+very often is in firmware.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Opting into `alloc` alongside a global allocator</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+extern crate alloc; // &lt;- still required: opts this `#![no_std]` crate into the `alloc` crate
+
+use alloc::vec::Vec;
+use embedded_alloc::Heap;
+
+#[global_allocator]
+static HEAP: Heap = Heap::empty(); // &lt;- required alongside `extern crate alloc;`: alloc supplies types, not memory
+
+fn collect_samples(readings: &amp;[u16]) -&gt; Vec&lt;u32&gt; {
+    readings.iter().map(|&amp;r| r as u32).collect() // &lt;- `Vec` only usable because both lines above are present
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">The `heapless` substitute — no `extern crate alloc;`, no global allocator</h3>
+            <pre><code class="rust">#![no_std]
+
+use heapless::Vec; // &lt;- fixed-capacity Vec: no `extern crate alloc;` and no `#[global_allocator]` needed
+
+fn collect_samples(readings: &amp;[u16]) -&gt; Vec&lt;u32, 32&gt; { // &lt;- capacity fixed at compile time via the const generic
+    readings.iter().map(|&amp;r| r as u32).collect()
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

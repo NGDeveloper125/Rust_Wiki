@@ -1060,13 +1060,46 @@ into.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>use</code> is pure compile-time name resolution with no runtime
+representation, so it behaves identically in a <code>#![no_std]</code> crate — the
+only difference is <em>which</em> paths exist to import from: <code>core</code>/<code>alloc</code>
+take the place of <code>std</code> for anything that isn't peripheral- or
+HAL-specific, and HAL/PAC crates supply the rest. Pulling in a trait
+like <code>embedded_hal::digital::OutputPin</code> with <code>use</code> is what lets driver
+code call <code>.set_high()</code>/<code>.set_low()</code> on any pin type across different
+vendors' HALs, since the trait — not a concrete peripheral type — is
+what the method call actually resolves against.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Importing a HAL trait to call its methods on a concrete pin type</h3>
+            <pre><code class="rust">#![no_std]
+
+use embedded_hal::digital::OutputPin; // &lt;- brings the trait's methods into scope for any type implementing it
+
+fn blink&lt;P: OutputPin&gt;(led: &amp;mut P) {
+    led.set_high().ok(); // &lt;- resolves via the `use`-imported `OutputPin` trait
+    led.set_low().ok();
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Grouping peripheral-module imports from a HAL crate</h3>
+            <pre><code class="rust">use stm32f4xx_hal::{pac, prelude::*}; // &lt;- one `use` line, grouped import mirroring the classic `{self, Read, Write}` form
+
+fn init() {
+    let device = pac::Peripherals::take().unwrap();
+    let gpioa = device.GPIOA.split();
+    let _led = gpioa.pa5.into_push_pull_output();
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

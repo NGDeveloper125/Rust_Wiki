@@ -1017,13 +1017,47 @@ build their privacy advice around.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>priv</code> is still just reserved, unusable syntax under <code>#![no_std]</code> —
+keyword reservation is a lexer-level concept with no runtime footprint
+either way, so there's nothing target-specific about it. What is worth
+restating in an embedded setting is what <code>priv</code> used to do, and why
+today's inverted default fills the same role there: a HAL driver's
+register-twiddling internals stay private by the ordinary default (no
+<code>priv</code> needed, exactly as everywhere else in modern Rust), and only the
+handful of methods meant to be called from firmware code are opted in
+with <code>pub</code> — see <a href="pub.md"><code>pub</code></a> for that split in more depth. <code>priv</code>
+itself contributes nothing further to that story in embedded code beyond
+what it contributes anywhere else — this is one of those cases where
+there's genuinely no embedded-specific nuance to add.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">The raw-identifier escape hatch, unchanged under `#![no_std]`</h3>
+            <pre><code class="rust">#![no_std]
+
+let priv = 5;     // error: expected identifier, found reserved keyword `priv`
+let r#priv = 5;   // ok: the raw-identifier form escapes the reservation, same as on any hosted target
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Today's default-private HAL internals doing `priv`'s old job</h3>
+            <pre><code class="rust">pub struct Adc {
+    resolution_bits: u8, // private by default — no `priv` needed, this is the current default
+}
+
+impl Adc {
+    pub fn new(resolution_bits: u8) -&gt; Self {
+        Adc { resolution_bits: resolution_bits.min(12) } // &lt;- invariant enforced here, not by the field
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

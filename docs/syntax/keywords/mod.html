@@ -1079,13 +1079,46 @@ uses throughout.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>mod</code> is a purely compile-time organizational construct with no runtime
+representation, so both the inline and file-loaded forms work
+identically in a <code>#![no_std]</code> crate — there's no allocator or OS
+dependency either way, same as the classic Explanation above. The shape
+it takes in a HAL crate mirrors the chip it targets: a typical layout
+splits <code>mod gpio;</code>, <code>mod uart;</code>, <code>mod timer;</code>, and so on, one file per
+peripheral family, with a generated (often <code>svd2rust</code>-produced) <code>pac</code>
+module holding the raw register definitions underneath, so a driver
+module's own code refers to <code>crate::pac::GPIOA</code> rather than duplicating
+the register layout itself.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A HAL crate's peripheral module layout</h3>
+            <pre><code class="rust">// src/lib.rs
+#![no_std]
+
+pub mod gpio;   // &lt;- `mod` loads gpio.rs, one file per peripheral family
+pub mod uart;
+mod pac;        // &lt;- `mod`: the generated register-definition module, not part of the public API
+
+// src/gpio.rs
+use crate::pac;
+
+pub struct Pin {
+    pin_number: u8,
+}
+
+impl Pin {
+    pub fn set_high(&amp;mut self) {
+        unsafe { pac::GPIOA.odr.modify(|_, w| w.bits(1 &lt;&lt; self.pin_number)) }
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

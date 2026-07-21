@@ -79,11 +79,41 @@ documents as the attribute's intended use — explicit, generated `use`
 statements for every name the module actually needs, rather than relying
 on whatever the prelude happens to contain.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[no_implicit_prelude]` is a name-resolution-only,
-compile-time attribute with no runtime behavior and no dependency on
-`alloc`/`std` — it behaves identically in a `#![no_std]` crate, disabling
-injection of the `core` prelude instead of the `std` one. Its use case
-(codegen tooling wanting a guaranteed-empty namespace) is no more or less
-common in embedded Rust than anywhere else.
+Honestly, there isn't a distinct embedded story here. `#[no_implicit_prelude]`
+is a name-resolution-only, compile-time attribute with no runtime
+behavior and no dependency on `alloc`/`std` — it works exactly the same
+way in a `#![no_std]` crate, disabling injection of the `core` prelude in
+place of the `std` one, and nothing about being on bare metal changes
+what it does or how it's used. Its actual audience — codegen tooling that
+wants a guaranteed-empty namespace so generated identifiers can never
+collide with a prelude item — does exist in embedded Rust: `svd2rust`
+generates an entire peripheral-access crate's worth of register and field
+types from a chip vendor's SVD file, which is exactly the shape of
+large-scale, tool-generated code this attribute is meant for. But
+`svd2rust`'s generated code doesn't actually reach for
+`#[no_implicit_prelude]` in practice, any more than most other Rust
+codegen tools do — so even here, this stays a rare attribute, not one
+with genuine embedded-specific pull.
+
+## Usage examples (Embedded)
+
+### A peripheral-register codegen module, still not reaching for this attribute
+
+```
+#[no_implicit_prelude] // <- guarantees no accidental collision with prelude items
+mod gpio_regs_generated {
+    use core::marker::PhantomData; // must be spelled out; nothing implicit here
+
+    pub struct MODER<T> {
+        pub(crate) _marker: PhantomData<T>,
+    }
+}
+```
+
+This is the same kind of guaranteed-empty-namespace guarantee a
+non-embedded codegen tool would want, just applied to a register-
+definition module instead of a general one — the attribute itself
+behaves identically to its non-embedded usage, and most real embedded
+codegen (including `svd2rust` itself) doesn't actually opt into it.

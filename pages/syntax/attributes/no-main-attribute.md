@@ -86,12 +86,84 @@ this bare-metal target doesn't have; supplying `_start` directly under
 [embedded Rust book](https://doc.rust-lang.org/stable/embedded-book/start/index.html)
 document for a custom entry point.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — `#[no_main]` is overwhelmingly an embedded/OS-dev
-attribute. Most embedded projects don't write it directly; a hardware
-support crate's `#[entry]` macro (from crates like `cortex-m-rt`) expands
-to the equivalent of `#![no_main]` plus a properly named, `#[no_mangle]`
-reset-handler function, so application code just writes `#[entry] fn
-main() -> !`. See [#![no_std]](no-std-attribute.md) for the broader
-context `#[no_main]` almost always appears alongside.
+On a microcontroller, program "startup" isn't a call from a C runtime
+into `main` at all — it's the CPU's hardware reset behavior. The very
+first entry of the interrupt/exception vector table (a fixed array of
+function-pointer-sized words placed at the start of flash by the linker
+script) holds the initial stack pointer, and the second holds the address
+of the **reset handler**: the hardware loads the program counter straight
+from that table entry on power-up or reset, with no OS, no C runtime, and
+no call instruction involved anywhere. `#![no_main]` is what tells the
+compiler not to generate the ordinary startup shim that would otherwise
+expect to call a conventional `fn main`, since there is nothing here for
+that shim to be called by in the first place.
+
+In practice, almost no embedded project writes the reset handler or
+`#![no_main]`'s companion entry point by hand. `cortex-m-rt`'s `#[entry]`
+attribute is the standard way in: it expands to roughly a `#[no_mangle]`
+`extern "C" fn main` that the crate's own reset handler calls after
+zeroing `.bss` and copying `.data` from flash into RAM, and it enforces at
+compile time that only one `#[entry]` function exists and that it never
+returns (`-> !`) — the same one-per-binary discipline
+[`#[panic_handler]`](panic-handler-attribute.md) enforces, for the same
+underlying reason: there is exactly one hardware reset vector to point
+at. Concurrency frameworks built on top, like `RTIC`, also require
+`#![no_main]` in the application crate, replacing the ordinary `fn main`
+with their own `#[app]` macro that generates the hardware interrupt
+handlers, shared-state locking, and task dispatch directly instead of a
+single linear entry point.
+
+## Usage examples (Embedded)
+
+### Using cortex-m-rt's #[entry] instead of a hand-rolled reset handler
+
+```
+#![no_std]
+#![no_main] // <- no C runtime exists to call an ordinary `main`
+
+use panic_halt as _;
+use cortex_m_rt::entry; // <- provides the real reset-vector wiring
+
+#[entry] // <- expands to the equivalent of a #[no_mangle] reset-called entry function
+fn main() -> ! {
+    loop {
+        // application logic
+    }
+}
+```
+
+### Building an interrupt-driven application with RTIC
+
+```
+#![no_std]
+#![no_main] // <- RTIC's #[app] macro generates the real entry point and vector table wiring
+
+use panic_halt as _;
+
+#[rtic::app(device = nrf52840_hal::pac)]
+mod app {
+    #[shared]
+    struct Shared {}
+
+    #[local]
+    struct Local {}
+
+    #[init]
+    fn init(_cx: init::Context) -> (Shared, Local) {
+        (Shared {}, Local {})
+    }
+
+    #[task(binds = TIMER0)]
+    fn on_timer(_cx: on_timer::Context) {
+        // runs whenever the TIMER0 interrupt fires
+    }
+}
+```
+
+`#![no_main]` here isn't optional scaffolding — the `#[app]` macro's
+generated code *is* the crate's entry point and interrupt table, so the
+ordinary Rust startup shim `#![no_main]` suppresses would only be in the
+way. See [`#![no_std]`](no-std-attribute.md) for the broader picture this
+entry point sits inside.

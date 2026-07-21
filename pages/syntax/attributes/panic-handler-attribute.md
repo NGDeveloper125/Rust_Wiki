@@ -134,12 +134,90 @@ notes swapping between a halting and a resetting handler (e.g.
 `panic-halt` vs. `panic-reset`) as a normal choice to make per build
 profile rather than per panic site.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — `#[panic_handler]` exists specifically for
-`#![no_std]` contexts and is one of the first things any `#![no_std]`
-binary crate must supply; see [#![no_std]](no-std-attribute.md) for the
-broader picture of what else is lost and gained by opting out of `std`.
-It has no equivalent role in hosted `std` binaries, where `std` already
-installs the default panic handler and `std::panic::set_hook` is the
-mechanism for customizing behavior instead.
+This page is about the attribute's own placement and linkage rules;
+what actually happens once a panic fires — unwind versus abort, why most
+firmware builds with `panic = "abort"`, and the specific handler crates
+(`panic-halt`, `panic-itm`, `panic-probe`) built for that world — is
+covered from the `panic!` side on the
+[`panic!`](../macros/panic-macro.md) page, and isn't repeated here.
+
+What belongs here is the contract the compiler and linker actually
+enforce. The function must have exactly the signature
+`fn(&core::panic::PanicInfo) -> !` — no other argument types, no other
+return type, and never returning, since there's no defined way to resume
+past a panic in a `#![no_std]` binary. And exactly **one** such function
+may exist in a binary's final linked dependency graph: **zero** is a
+link error (the linker has no symbol to satisfy the panic-handling
+runtime hook every `#![no_std]` binary needs), and **two or more** is
+also a link error (a duplicate-symbol failure), not silently resolved by
+picking one. This second failure mode is the more common one in practice
+— it happens when two different "panic handler" crates both end up in
+the same dependency graph, each defining its own `#[panic_handler]`,
+often because one dependency pulls in `panic-halt` while another pulls in
+`panic-probe` transitively. The fix is always the same: make sure exactly
+one panic-handler crate is an actual dependency of the final binary, not
+a version or naming issue.
+
+Because the handler crate is chosen purely by which one is a compiled-in
+dependency — not by any explicit registration call — the idiomatic way to
+supply one is importing it purely for its side effect:
+`use panic_halt as _;` at the crate root. The `as _` discards the actual
+import name (there's nothing to call), while still causing the crate's
+`#[panic_handler]` function to be compiled into the binary and satisfy
+the linker's requirement.
+
+## Usage examples (Embedded)
+
+### Selecting a handler crate purely for its side effect
+
+```
+#![no_std]
+#![no_main]
+
+use panic_probe as _; // <- imported only so its #[panic_handler] gets linked in
+use defmt_rtt as _;   // <- transport panic-probe's formatted output rides over
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -> ! {
+    loop {}
+}
+```
+
+### Keeping exactly one handler across build profiles
+
+```
+#![no_std]
+#![no_main]
+
+// Cargo.toml selects exactly one of these via mutually exclusive features,
+// so exactly one #[panic_handler] is ever compiled into a given build:
+//
+//   [dependencies]
+//   panic-halt  = { version = "0.2", optional = true }
+//   panic-probe = { version = "0.3", optional = true, features = ["print-defmt"] }
+//
+//   [features]
+//   release-halt = ["panic-halt"]
+//   debug-probe  = ["panic-probe"]
+
+#[cfg(feature = "release-halt")]
+use panic_halt as _;
+
+#[cfg(feature = "debug-probe")]
+use panic_probe as _;
+
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -> ! {
+    loop {}
+}
+```
+
+Feature-gating the `use` this way makes the one-handler-per-binary rule
+a build-time guarantee rather than something discovered as a duplicate-
+symbol link error after two transitive dependencies each brought in their
+own handler crate.

@@ -130,11 +130,27 @@ everywhere beneath a module boundary; the
 [rustc book's lint levels chapter](https://doc.rust-lang.org/rustc/lints/levels.html)
 documents `forbid` as specifically closing that reopening loophole.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** All four levels are pure compile-time lint configuration
-with zero runtime effect, so they apply identically in `#![no_std]` code.
-`#[allow(dead_code)]` shows up especially often in embedded crates around
-hardware register definitions and HAL boilerplate generated for a whole
-chip family, where plenty of fields/functions are legitimately unused by
-any single application.
+All four lint levels are pure compile-time configuration with zero
+runtime effect, so they apply identically in `#![no_std]` firmware —
+there's no embedded-specific mechanism here, just an embedded-specific
+reason `#[allow(dead_code)]` shows up so often: a chip-family HAL or a
+`svd2rust`-generated peripheral-access crate defines every register and
+field a chip family exposes, and any single application only ever
+touches a fraction of them, so `#[allow(dead_code)]` on generated
+register modules is standard rather than a sign of neglect.
+
+## Usage examples (Embedded)
+
+### Allowing unused fields across a generated register module
+
+```
+#[allow(dead_code)] // <- most fields here are unused by any single application; that's expected in generated PAC code
+pub struct Gpiox {
+    pub moder: u32,
+    pub otyper: u32,
+    pub ospeedr: u32,
+    pub pupdr: u32,
+}
+```

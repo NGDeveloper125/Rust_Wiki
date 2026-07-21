@@ -1028,13 +1028,41 @@ module moves.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>crate::</code> resolves identically under <code>#![no_std]</code> — a compile-time path
+prefix naming the current crate's root module, with no runtime
+representation on any target. It's exactly as useful in a HAL crate's
+typical layout as anywhere else: a peripheral-access module nested a few
+levels under the crate root (a driver's <code>gpio::pin</code> submodule, say)
+reaches the generated register definitions with <code>crate::pac::GPIOA</code>
+regardless of how deep the calling module sits, rather than working out
+a relative <code>super::super::...</code> path to the <code>pac</code> module every time the
+driver's own module tree gets reorganized.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Reaching the generated register module from a nested driver submodule</h3>
+            <pre><code class="rust">// src/lib.rs
+#![no_std]
+
+pub mod pac;   // generated register definitions, at the crate root
+
+pub mod gpio {
+    pub mod pin {
+        pub fn set_high(pin_number: u8) {
+            unsafe {
+                crate::pac::GPIOA.odr.modify(|_, w| w.bits(1 &lt;&lt; pin_number));
+                // &lt;- `crate::` reaches `pac` from two levels deep in `gpio::pin`
+            }
+        }
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>
