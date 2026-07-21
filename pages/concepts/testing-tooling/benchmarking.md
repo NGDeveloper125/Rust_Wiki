@@ -125,14 +125,114 @@ iterations and a statistical report without needing nightly at all; the
 still list the `test` crate as unstable, which is the direct reason the
 ecosystem standardized on a third-party crate for this instead.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Both benchmarking paths described above assume a
-host environment: the unstable `#[bench]` harness needs nightly `std`,
-and `criterion` needs `std` plus the ability to print a statistical
-report, neither of which exists on bare metal. On real embedded targets,
-"benchmarking" usually means something more direct — reading a hardware
-cycle counter (such as Cortex-M's `DWT` cycle counter) immediately before
-and after the code of interest, rather than running `cargo bench` at all.
-This measures actual on-target execution time, including effects like
-flash wait states, that a host-side benchmark could never capture.
+Both host benchmarking paths above measure the wrong CPU entirely for
+embedded work: `#[bench]` and `criterion` time how fast code runs on the
+*development machine*, which has a different instruction set, clock
+speed, cache hierarchy, and memory system than a microcontroller. A
+number from `cargo bench` says nothing about how long a routine takes on
+the actual target — it isn't a rough approximation that's merely less
+precise, it's measuring a genuinely different piece of silicon, so it
+isn't meaningful for target-hardware timing at all.
+
+Real embedded timing measurement instead reads the target's own notion
+of elapsed time. The most common approach uses the Cortex-M `DWT` (Data
+Watchpoint and Trace) unit's cycle counter, accessed via the `cortex-m`
+crate: enable it once, read the cycle count immediately before and after
+the code of interest, and the difference is an exact, on-target cycle
+count — including real effects a host benchmark could never see, like
+flash wait states or bus contention. Where even more ground truth is
+needed — end-to-end latency including interrupt response time, or
+comparing against an external event — the classic technique is toggling
+a GPIO pin high just before the code runs and low just after, then
+measuring the pulse width with a logic analyzer or oscilloscope
+externally. Neither technique gives `criterion`'s statistical rigor out
+of the box, but both measure the thing that actually matters for
+firmware: real time on the real chip.
+
+## Basic usage example (Embedded)
+
+```
+use cortex_m::peripheral::DWT;
+
+fn sum_of_squares(n: u32) -> u32 {
+    (1..=n).map(|x| x * x).sum()
+}
+
+fn measure(dwt: &mut DWT) {
+    let start = dwt.cyccnt.read(); // <- on-target cycle count before
+    let total = sum_of_squares(1_000);
+    let elapsed_cycles = dwt.cyccnt.read().wrapping_sub(start); // <- exact cycles spent on the target CPU
+    defmt::info!("total={}, took {} cycles", total, elapsed_cycles);
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Numeric computation
+
+Comparing two candidate implementations of a hot numeric routine only
+means something for a firmware's actual performance budget if the timing
+comes from the target chip itself, not the development host.
+
+```
+use cortex_m::peripheral::DWT;
+
+fn sum_iterator(values: &[i32]) -> i32 {
+    values.iter().sum() // <- candidate A
+}
+
+fn sum_manual_loop(values: &[i32]) -> i32 {
+    let mut total = 0;
+    for &v in values { // <- candidate B
+        total += v;
+    }
+    total
+}
+
+fn compare(dwt: &mut DWT, readings: &[i32]) {
+    let start = dwt.cyccnt.read();
+    let a = sum_iterator(readings);
+    let cycles_a = dwt.cyccnt.read().wrapping_sub(start); // <- on-target cycle count, candidate A
+
+    let start = dwt.cyccnt.read();
+    let b = sum_manual_loop(readings);
+    let cycles_b = dwt.cyccnt.read().wrapping_sub(start); // <- on-target cycle count, candidate B
+
+    defmt::assert_eq!(a, b);
+    defmt::info!("iterator: {} cycles, manual loop: {} cycles", cycles_a, cycles_b);
+}
+```
+
+**Why this way:** the two candidates can rank differently on the target's
+Cortex-M core than on a desktop CPU — different pipeline depth, no
+speculative execution, flash wait states on every fetch — so a decision
+that rides on which is actually faster in the shipping firmware has to be
+measured with the `DWT` cycle counter on real hardware, not with
+`std::time::Instant` on the host.
+
+### Scenario: Testing
+
+A routine's execution time sometimes needs to be verified against an
+external, ground-truth clock — end-to-end latency from an interrupt
+firing to a response being ready, say — which a cycle counter inside the
+same chip can't independently confirm.
+
+```
+use embedded_hal::digital::OutputPin;
+
+fn handle_sensor_interrupt(trigger_pin: &mut impl OutputPin, adc_sample: impl FnOnce() -> u16) -> u16 {
+    trigger_pin.set_high().ok(); // <- pulse starts: visible on a logic analyzer/oscilloscope
+    let sample = adc_sample();
+    trigger_pin.set_low().ok(); // <- pulse ends: the width between edges is the measured duration
+    sample
+}
+```
+
+**Why this way:** toggling a spare GPIO pin around the code under test
+gives an external instrument a hardware-level timestamp pair that's
+independent of the CPU whose timing is being measured, which is the
+standard way to validate interrupt-to-response latency or confirm a
+`DWT`-based measurement against ground truth when the stakes (a real-time
+deadline) justify the extra test rig.
