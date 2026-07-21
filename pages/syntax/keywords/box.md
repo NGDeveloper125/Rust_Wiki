@@ -36,16 +36,16 @@ Using `box` as an ordinary identifier is a compile error in every edition.
 The raw-identifier form `r#box` is legal, the same escape hatch every
 reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### Using the raw-identifier escape hatch
 
 ```
 let box = 5;     // error: expected identifier, found reserved keyword `box`
 let r#box = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Boxing and heap allocation
+### Boxing and heap allocation
 
 Today's real way to heap-allocate a value is the ordinary `Box::new`
 associated function — no reserved keyword involved.
@@ -58,7 +58,7 @@ struct SensorFrame {
 let frame = Box::new(SensorFrame { readings: [0.0; 64] }); // <- today's real heap-allocation syntax
 ```
 
-**Why this way:** `Box::new` is a perfectly ordinary function call, not
+`Box::new` is a perfectly ordinary function call, not
 special syntax, and the compiler frequently optimizes away the
 intermediate stack copy in practice even without a language-level
 placement guarantee — see [Smart pointers (Box\<T\>)](../../concepts/ownership-borrowing/smart-pointers-box.md)

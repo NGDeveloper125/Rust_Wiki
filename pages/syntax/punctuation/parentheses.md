@@ -30,7 +30,9 @@ call or construction; `(` starting an expression is grouping or a tuple —
 and between those two, the presence of a comma inside is what makes it a
 tuple.
 
-## Basic usage example
+## Usage examples
+
+### Grouping, calling, and building tuples
 
 ```
 fn add(a: i32, b: i32) -> i32 { a + b } // <- `( )` groups the parameter list
@@ -38,9 +40,7 @@ let sum = add(1, 2); // <- `( )` here is the call, passing the arguments
 let pair = (1, "a"); // <- `( )` here builds a tuple value
 ```
 
-## Best practices & deeper information
-
-### Scenario: Creating a new object
+### Creating a new object
 
 Tuple structs and enum variants are constructed by calling their name
 like a function — the same `( )` syntax as any other function call,
@@ -57,12 +57,12 @@ let readings: Vec<Option<f64>> = vec![1.0, 2.0]
     .collect();
 ```
 
-**Why this way:** because tuple-struct/variant construction really is a
+Because tuple-struct/variant construction really is a
 function call under the hood, the constructor can be passed anywhere a
 closure is expected (`.map(Some)` instead of `.map(|x| Some(x))`) — one
 less closure to write and read.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 The same `( )` used to construct a tuple struct or variant is used, in
 reverse, to destructure one inside a `match` arm or `if let`.
@@ -80,12 +80,11 @@ let area = match shape {
 };
 ```
 
-**Why this way:** matching gives each field a name at the point of use
+Matching gives each field a name at the point of use
 (`r`, `w`, `h`) instead of reaching into the value with `.0`/`.1`
 afterward — the
 [Rust Book](https://doc.rust-lang.org/book/ch06-02-match.html) covers
-this destructuring-in-match pattern as the idiomatic way to work with
-enum payloads.
+this destructuring-in-match pattern for working with enum payloads.
 
 ## Embedded Rust Notes
 

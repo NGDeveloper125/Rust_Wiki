@@ -19,15 +19,15 @@ numeric literals which have many possible values.
 there's no implicit conversion between `bool` and `i32`/`u8`/etc. in
 either direction (an explicit `as` cast is required: `true as i32 == 1`).
 
-## Basic usage example
+## Usage examples
+
+### The `true` boolean literal
 
 ```
 let done: bool = true; // <- `true` is the boolean literal for a true value
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 A feature flag is naturally represented as a plain `bool`, opted into
 explicitly with the `true` literal rather than an integer or string
@@ -45,13 +45,13 @@ if flags.enable_new_dashboard {
 }
 ```
 
-**Why this way:** `bool` is a distinct one-byte type with no implicit
+`bool` is a distinct one-byte type with no implicit
 conversion to or from integers, per the
 [`bool` primitive docs](https://doc.rust-lang.org/std/primitive.bool.html)
 — using `true`/`false` for on/off state avoids the "is 1 true or is
 non-zero true?" ambiguity that languages without a real boolean type have.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A single bare `bool` reads better with `if`/`else`, but matching several
 booleans together as a tuple can express a small dispatch table more
@@ -68,7 +68,7 @@ fn shipping_label(is_express: bool, is_international: bool) -> &'static str {
 }
 ```
 
-**Why this way:** Clippy's
+Clippy's
 [`match_bool`](https://rust-lang.github.io/rust-clippy/master/#match_bool)
 lint flags matching on a single lone `bool` in favor of `if`/`else`, but
 that lint doesn't apply once several booleans are matched together — the

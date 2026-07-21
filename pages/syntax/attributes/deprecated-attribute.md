@@ -36,7 +36,9 @@ Both together — `#[deprecated(since = "1.2.0", note = "use `new_fn` instead")]
 is deprecated, but since when and what to use instead, right in the
 compiler warning itself rather than requiring a trip to a changelog.
 
-## Basic usage example
+## Usage examples
+
+### Deprecating a function in favor of its replacement
 
 ```
 #[deprecated(since = "1.2.0", note = "use `parse_duration_ms` instead")] // <- warns at every call site
@@ -49,9 +51,7 @@ pub fn parse_duration_ms(input: &str) -> u64 {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A library replaces an older, ambiguously-named function with a clearer
 one — rather than deleting the old function outright and breaking every
@@ -79,7 +79,7 @@ fn build_default_policy() -> RetryPolicy {
 }
 ```
 
-**Why this way:** deprecating first and removing later, rather than
+Deprecating first and removing later, rather than
 removing immediately, gives downstream crates a compiler-enforced,
 visible warning to act on across their own release cycle instead of a
 sudden hard break — the

@@ -39,7 +39,9 @@ named." Don't confuse it with `impl Trait for Type`: same keyword,
 completely different grammar position and meaning, the same
 by-position-disambiguation pattern seen with tokens like [`&`](../operators/ampersand.md).
 
-## Basic usage example
+## Usage examples
+
+### Inherent impl block alongside a trait impl block
 
 ```
 struct Cat;
@@ -57,9 +59,7 @@ impl Greet for Cat { // <- trait impl block: connects Greet's methods to Cat
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Runtime polymorphism
+### Runtime polymorphism
 
 A plugin system needs many unrelated types behind one interface — each
 type gets its own `impl Trait for Type` block, and callers hold them all
@@ -90,13 +90,13 @@ for command in &commands {
 }
 ```
 
-**Why this way:** each `impl Command for ...` block is independent and can
+Each `impl Command for ...` block is independent and can
 live in its own module or crate, which is exactly the decoupling
 [trait objects & dynamic dispatch](../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.md)
 relies on — the trait, not a shared base type, is what ties these
 implementations together.
 
-### Scenario: Writing generic code
+### Writing generic code
 
 A function that only reads its argument through one trait's methods can
 accept `impl Trait` in argument position instead of a generic type
@@ -112,13 +112,13 @@ log_reading(21.5);
 log_reading("overheating");
 ```
 
-**Why this way:** `impl Trait` in argument position desugars to the same
+`impl Trait` in argument position desugars to the same
 monomorphized generic function as `fn log_reading<T: Display>(value: T)`
 — see
 [static dispatch & monomorphization](../../concepts/traits-polymorphism/static-dispatch-monomorphization.md)
-for why this costs nothing at runtime; reach for an explicit generic
-parameter instead once the signature needs to refer to `T` more than
-once (e.g. two parameters that must share the same concrete type).
+for why this costs nothing at runtime. An explicit generic parameter
+becomes useful once the signature needs to refer to `T` more than once
+(e.g. two parameters that must share the same concrete type).
 
 ## Embedded Rust Notes
 

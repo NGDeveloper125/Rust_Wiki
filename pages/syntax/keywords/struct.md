@@ -41,7 +41,9 @@ answered on the [Structs](../../concepts/types-data-modeling/structs.md),
 [Unit structs](../../concepts/types-data-modeling/unit-structs.md)
 concept pages; this page covers only the grammar each form requires.
 
-## Basic usage example
+## Usage examples
+
+### Declaring and instantiating a named-field struct
 
 ```
 struct Point { x: f64, y: f64 } // <- `struct` declares a named-field type; no `;` after the `}`
@@ -50,9 +52,7 @@ let p = Point { x: 1.0, y: 2.0 };
 println!("{}", p.x);
 ```
 
-## Best practices & deeper information
-
-### Scenario: Creating a new object
+### Creating a new object
 
 Constructing a value of a named-field struct uses the same `Name { field:
 value, ... }` syntax the declaration introduced; the field-init shorthand
@@ -72,14 +72,14 @@ let base = Order { id, customer: "Alice".into(), total_cents: 1500 };
 let reordered = Order { total_cents: 2200, ..base }; // <- `..base` fills every other field from `base`
 ```
 
-**Why this way:** the field-init shorthand and `..` update syntax both
+The field-init shorthand and `..` update syntax both
 come directly from the struct declaration's field list, so renaming a
 field is a single edit that the compiler will flag everywhere the old
 name was still expected — clippy's
 [`redundant_field_names`](https://rust-lang.github.io/rust-clippy/master/#redundant_field_names)
 lint nudges toward the shorthand form whenever the names already match.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 The same field list a `struct` declares can be destructured in a `let` or
 `match` pattern, binding each field to a local name in one step instead
@@ -99,7 +99,7 @@ println!("sensor {sensor_id}: {celsius}°C");
 let Reading { celsius, .. } = Reading { sensor_id: 8, celsius: 19.0 };
 ```
 
-**Why this way:** naming only the fields a function actually needs, with
+Naming only the fields a function actually needs, with
 `..` for the rest, keeps the pattern resilient to a struct gaining new
 fields later — a bare `let Reading { sensor_id, celsius } = reading;`
 would stop compiling the moment a third field is added, forcing every

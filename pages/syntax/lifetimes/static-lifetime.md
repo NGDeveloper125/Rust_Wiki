@@ -49,16 +49,16 @@ already-owned value satisfies the bound for free (see
 [Move semantics](../../concepts/ownership-borrowing/move-semantics.md) and
 [`move`](../keywords/move.md) for how an owned capture gets there).
 
-## Basic usage example
+## Usage examples
+
+### Binding a string literal as &'static str
 
 ```
 let name: &'static str = "engine-status"; // <- string literals are `&'static str` automatically
 println!("{name}");
 ```
 
-## Best practices & deeper information
-
-### Scenario: Multi-threading
+### Multi-threading
 
 `thread::spawn`'s closure must be `'static`; moving an owned `String` into
 it satisfies that bound trivially, since owned data can't contain a
@@ -78,14 +78,14 @@ let handle = start_worker(String::from("indexer"));
 handle.join().unwrap();
 ```
 
-**Why this way:** the spawned thread's lifetime isn't bounded by the
+The spawned thread's lifetime isn't bounded by the
 caller's stack frame, so nothing it captures may borrow from that frame —
 the
 [Book's concurrency chapter](https://doc.rust-lang.org/book/ch16-01-threads.html#using-move-closures-with-threads)
 covers `move`-ing an owned value in as the standard way to satisfy
 `thread::spawn`'s `'static` bound without cloning anything unnecessarily.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A scheduler that stores heterogeneous jobs behind `Box<dyn Trait>` needs
 those trait objects to be `'static` — not because a job runs forever, but
@@ -108,13 +108,13 @@ impl Scheduler {
 }
 ```
 
-**Why this way:** `dyn Trait` defaults to a `'static` lifetime bound unless
+`dyn Trait` defaults to a `'static` lifetime bound unless
 a shorter one is spelled out explicitly, which the
 [Rust Reference's trait-object lifetime-bounds section](https://doc.rust-lang.org/reference/types/trait-object.html#trait-object-lifetime-bounds)
 documents as the reason a stored trait object needs the data behind it to
 be fully owned or itself `'static`.
 
-### Scenario: Sharing data with multiple references
+### Sharing data with multiple references
 
 Constants and literals baked into the binary are naturally `&'static`, so
 many call sites can share the same reference without any explicit lifetime
@@ -131,7 +131,7 @@ println!("{}", region_label(Some("eu-west-1")));
 println!("{}", region_label(None));
 ```
 
-**Why this way:** the
+The
 [standard library's `str` documentation](https://doc.rust-lang.org/std/primitive.str.html)
 notes that string literals are `&'static str` because they live directly in
 the compiled binary and are never deallocated, which is what lets code pass

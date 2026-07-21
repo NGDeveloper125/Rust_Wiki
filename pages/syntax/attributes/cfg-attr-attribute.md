@@ -36,7 +36,9 @@ and kept in sync by hand. `#[cfg_attr(test, derive(Debug, PartialEq))]` on
 a single copy of the struct says the same thing without the duplication —
 the item is written once, and only the extra attribute is conditional.
 
-## Basic usage example
+## Usage examples
+
+### Conditionally deriving a trait for test builds
 
 ```
 #[cfg_attr(test, derive(Debug))] // <- derives Debug only when compiling for `cargo test`
@@ -45,9 +47,7 @@ struct Reading {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 A domain type doesn't need `Debug` in ordinary builds, but test code
 constantly wants it for `assert_eq!` failure messages and `dbg!` output —
@@ -78,7 +78,7 @@ mod tests {
 }
 ```
 
-**Why this way:** `assert_eq!` needs both `Debug` (to print the failure
+`assert_eq!` needs both `Debug` (to print the failure
 message) and `PartialEq` (to compare) on `OrderTotal`, but a published
 library's normal build gains nothing from either derive on a purely
 internal amount type — `cfg_attr` keeps both traits scoped to exactly the
@@ -87,7 +87,7 @@ builds that need them, which the
 documents as `cfg_attr`'s purpose: attaching an attribute conditionally
 without writing the item itself twice.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A struct needs `#[repr(C)]` only when built for a specific target that
 crosses an FFI boundary, while other targets are free to let the compiler
@@ -102,7 +102,7 @@ pub struct FrameHeader {
 }
 ```
 
-**Why this way:** writing the struct out twice — once `#[repr(C)]` gated
+Writing the struct out twice — once `#[repr(C)]` gated
 to Linux, once without a repr gated to everything else — would risk the
 two copies' field lists drifting apart over time; `cfg_attr` keeps exactly
 one field list as the single source of truth while only the layout

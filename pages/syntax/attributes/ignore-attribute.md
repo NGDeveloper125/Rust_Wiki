@@ -34,7 +34,9 @@ rot into code that no longer even builds, and it still shows up (as
 skipped) in the test summary as a visible reminder that it exists and is
 excluded on purpose.
 
-## Basic usage example
+## Usage examples
+
+### Skipping a test and documenting why
 
 ```
 #[test]
@@ -44,9 +46,7 @@ fn fetches_remote_config() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 A test suite has one test that's genuinely slow — it exercises a full
 retry-with-backoff path against a simulated flaky connection — and
@@ -80,7 +80,7 @@ mod tests {
 }
 ```
 
-**Why this way:** naming the reason directly in the attribute — rather
+Naming the reason directly in the attribute — rather
 than leaving a bare `#[ignore]` and a separate comment, or no explanation
 at all — means anyone looking at `cargo test`'s output already knows
 whether a given skipped test is worth running with `--include-ignored`

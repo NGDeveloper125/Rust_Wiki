@@ -20,7 +20,9 @@ always). Comparing two values whose type doesn't implement `PartialEq` is
 a compile error, not a runtime failure — there's no default "compare by
 reference identity" fallback the way some languages have.
 
-## Basic usage example
+## Usage examples
+
+### Comparing two values for equality
 
 ```
 let a = 5;
@@ -33,9 +35,7 @@ Rust's grammar rejects chained comparison operators outright (rustc
 reports "comparison operators cannot be chained" and suggests
 `a == b && b == c`); the expression never even reaches trait resolution.
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 Rejecting a request whose version doesn't match what the server supports
 is a plain equality check — `==` compares the field directly rather than
@@ -54,14 +54,14 @@ fn is_valid(request: &Request) -> bool {
 }
 ```
 
-**Why this way:** deriving `PartialEq` on the surrounding types (rather
+Deriving `PartialEq` on the surrounding types (rather
 than hand-rolling comparisons field by field) keeps `==` checks like this
 correct as fields are added — the
 [API Guidelines](https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits)
 recommend eagerly implementing `PartialEq` wherever structural equality
 is the intended comparison.
 
-### Scenario: Testing
+### Testing
 
 `assert_eq!` uses `==`/`PartialEq` under the hood, but — unlike a bare
 `assert!(a == b)` — prints both values on failure, which is why it's the
@@ -79,7 +79,7 @@ fn computes_total_price() {
 }
 ```
 
-**Why this way:** the [Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
+The [Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 recommends `assert_eq!`/`assert_ne!` over a bare `assert!(a == b)`
 specifically because the macro captures and prints both operands when
 the assertion fails, saving a debugging round trip.

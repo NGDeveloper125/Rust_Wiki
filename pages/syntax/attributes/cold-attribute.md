@@ -35,7 +35,9 @@ success path's compiled code small and branch-predictor-friendly, since
 the compiler no longer has to interleave cold error-formatting logic
 into the function actually being optimized for the common case.
 
-## Basic usage example
+## Usage examples
+
+### Marking a rarely-called function as cold
 
 ```
 #[cold] // <- hints that this function is rarely called; keeps it out of the hot path's inlining
@@ -51,9 +53,7 @@ fn clamp_index(value: i32, len: usize) -> usize {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 A request-validation function has a fast, common success path and a rare
 failure path that builds a detailed error message — splitting the error
@@ -78,7 +78,7 @@ fn validate_order_total(total_cents: i64) -> Result<(), ValidationError> {
 }
 ```
 
-**Why this way:** `#[cold]` communicates a likelihood the compiler can't
+`#[cold]` communicates a likelihood the compiler can't
 infer purely from control flow — that this particular branch is expected
 to run rarely — so the optimizer can prioritize the success path's
 instruction density and branch prediction over the failure path's; the

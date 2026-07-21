@@ -14,7 +14,9 @@ see_also: ["^"]
 overloadable via `std::ops::BitXorAssign`. A classic use is toggling bits:
 `flags ^= mask` flips exactly the bits set in `mask`.
 
-## Basic usage example
+## Usage examples
+
+### Toggling bits in place
 
 ```
 let mut flags = 0b1010u8;
@@ -24,9 +26,7 @@ flags ^= 0b0011; // <- toggles the bits set in the mask, in place
 **Restriction:** the left-hand side must be a mutable binding
 (`let mut`) — `^=` assigns in place.
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 `^=` flips a specific bit without needing to know its current state
 first — XOR-ing a bit in twice restores the original value.
@@ -41,7 +41,7 @@ settings ^= FLAG_MUTED; // toggling the same bit again restores the original val
 assert_eq!(settings, FLAG_NOTIFY);
 ```
 
-**Why this way:** toggling with `^=` is the documented idiom on
+Toggling with `^=` is the documented idiom on
 [`BitXorAssign`](https://doc.rust-lang.org/std/ops/trait.BitXorAssign.html)
 for flipping a bit regardless of its current value — see
 [`+=`](plus-equals.md) for the general notes shared across the

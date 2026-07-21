@@ -30,7 +30,9 @@ exact match, only that the panic message contains the given text
 somewhere, which keeps the test from breaking over an unrelated wording
 tweak elsewhere in the message.
 
-## Basic usage example
+## Usage examples
+
+### Asserting a panic with an expected message
 
 ```
 struct OrderId(u32);
@@ -51,9 +53,7 @@ fn rejects_zero_order_id() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 A constructor that panics on invalid input — rather than returning
 `Result` — needs its panic behavior tested just as much as a
@@ -89,7 +89,7 @@ mod tests {
 }
 ```
 
-**Why this way:** without `expected`, `rejects_zero_quantity` would also
+Without `expected`, `rejects_zero_quantity` would also
 "pass" if `PositiveQuantity::new` panicked for a completely unrelated
 reason — an integer overflow elsewhere in the function, say — masking a
 real bug behind a green test; the

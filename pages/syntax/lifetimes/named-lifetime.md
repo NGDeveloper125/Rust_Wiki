@@ -52,7 +52,9 @@ programmatically, not something to reach for by hand; essentially all real
 code sticks to short conventional names like `'a`, `'b`, or a descriptive
 `'de` (serde's deserializer lifetime).
 
-## Basic usage example
+## Usage examples
+
+### Declaring a lifetime parameter on a struct
 
 ```
 struct Excerpt<'a> {
@@ -64,9 +66,7 @@ let excerpt = Excerpt { text: &novel[0..17] };
 println!("{}", excerpt.text);
 ```
 
-## Best practices & deeper information
-
-### Scenario: Sharing data with multiple references
+### Sharing data with multiple references
 
 A type that stores a borrowed slice, rather than owning its data, has to
 name a lifetime parameter so the compiler can tie the struct's own validity
@@ -89,14 +89,14 @@ let viewer = LogViewer { entries: &history }; // <- the borrow's lifetime become
 println!("{:?}", viewer.latest());
 ```
 
-**Why this way:** a struct holding a reference must name a lifetime
+A struct holding a reference must name a lifetime
 parameter tying the struct's own validity to the data it borrows from, so
 the compiler can reject any attempt to use `viewer` after `history` goes
 away — the
 [Book's lifetime chapter](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html)
 covers this as the reason reference-holding structs need `'a` at all.
 
-### Scenario: Writing generic code
+### Writing generic code
 
 Choosing between a possibly-present override and an always-present
 fallback needs an explicit outlives bound so the compiler knows the
@@ -121,13 +121,13 @@ let result;
 }
 ```
 
-**Why this way:** without the `'f: 'p` bound, the compiler has no reason to
+Without the `'f: 'p` bound, the compiler has no reason to
 believe a `&'f str` is valid anywhere a `&'p str` is expected — the
 [Rust Reference's lifetime-bounds section](https://doc.rust-lang.org/reference/trait-bounds.html#lifetime-bounds)
 documents `'a: 'b` as exactly this kind of outlives constraint between two
 declared lifetime parameters.
 
-### Scenario: Working with collections
+### Working with collections
 
 Searching a two-dimensional collection for a target value needs to break
 out of both the outer and inner loop at once — a loop label, written with
@@ -155,7 +155,7 @@ let mut found = None;
 println!("{found:?}");
 ```
 
-**Why this way:** an unlabeled `break` only ever exits the innermost loop —
+An unlabeled `break` only ever exits the innermost loop —
 the [Rust Reference's labelled block/loop section](https://doc.rust-lang.org/reference/expressions/loop-expr.html#labelled-block-expressions)
 documents loop labels as the standard way to target an outer loop
 explicitly instead of restructuring the search with a found-flag and extra

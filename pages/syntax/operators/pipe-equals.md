@@ -14,16 +14,16 @@ see_also: ["|"]
 overloadable via `std::ops::BitOrAssign`. Commonly used to set flag bits
 in a bitmask.
 
-## Basic usage example
+## Usage examples
+
+### ORing a value into a variable in place
 
 ```
 let mut flags = 0b1000u8;
 flags |= 0b0010; // <- `|=` ORs the right operand into `flags` in place
 ```
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Setting an individual flag bit on a status word is the canonical `|=`
 use — it turns one bit on without disturbing the others, in place.
@@ -41,7 +41,7 @@ assert_eq!(status, FLAG_READY | FLAG_LOGGING);
 assert_eq!(status & FLAG_ERROR, 0); // ERROR was never touched
 ```
 
-**Why this way:** `status |= FLAG` mutates the existing word in place
+`status |= FLAG` mutates the existing word in place
 instead of rebuilding it from scratch, which matters once other bits are
 already meaningfully set — the same in-place-mutation reasoning as
 [`+=`](plus-equals.md), specialized to bitwise OR via `BitOrAssign`.

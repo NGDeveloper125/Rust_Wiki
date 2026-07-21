@@ -33,16 +33,16 @@ Using `unsized` as an ordinary identifier is a compile error today. The
 raw-identifier form `r#unsized` is legal, the same escape hatch every
 reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### The `unsized` reservation error and raw-identifier escape hatch
 
 ```
 let unsized = 5;     // error: expected identifier, found reserved keyword `unsized`
 let r#unsized = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Writing generic code
+### Writing generic code
 
 Accepting a dynamically-sized type behind a reference doesn't need the
 reserved `unsized` keyword — the existing `?Sized` bound already relaxes
@@ -60,7 +60,7 @@ let via_str: &str = "reading";
 println!("{}", describe(via_str)); // str is unsized; `?Sized` is what makes this compile
 ```
 
-**Why this way:** without `?Sized`, `T: Display` alone would implicitly
+Without `?Sized`, `T: Display` alone would implicitly
 require `T: Sized`, ruling out `str` and other dynamically-sized types
 entirely — the
 [Rust Reference on trait and lifetime bounds](https://doc.rust-lang.org/reference/trait-bounds.html)

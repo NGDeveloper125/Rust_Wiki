@@ -18,7 +18,9 @@ in release builds) rather than producing infinity or undefined behavior;
 floating-point division by zero instead follows IEEE 754 and produces
 `inf`, `-inf`, or `NaN`.
 
-## Basic usage example
+## Usage examples
+
+### Dividing two integers with truncation
 
 ```
 let quotient = 7 / 2; // <- `/` divides, truncating toward zero
@@ -27,9 +29,7 @@ let quotient = 7 / 2; // <- `/` divides, truncating toward zero
 **Restriction:** dividing an integer by zero panics unconditionally, even
 in release builds.
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Computing an average from a sum and a count is ordinary `/`, and the
 truncation behavior this page's Explanation describes is exactly why
@@ -46,13 +46,13 @@ assert_eq!(average_ms, 301);
 let average_ms_f = total_ms as f64 / sample_count as f64; // 301.25, precise
 ```
 
-**Why this way:** casting to a float before dividing is the standard fix
+Casting to a float before dividing is the standard fix
 when truncation would silently discard a meaningful fraction — integer
 `/` always rounds toward zero, never to the nearest value, a contrast the
 [`div_euclid` docs](https://doc.rust-lang.org/std/primitive.i32.html#method.div_euclid)
 spell out against Euclidean division.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Where the divisor isn't guaranteed to be nonzero — say, an average
 computed over a possibly-empty batch of readings — `checked_div` turns
@@ -67,13 +67,13 @@ assert_eq!(average(100, 4), Some(25));
 assert_eq!(average(100, 0), None); // no panic: an empty batch is a normal case
 ```
 
-**Why this way:** `checked_div` makes the zero-divisor case an explicit
+`checked_div` makes the zero-divisor case an explicit
 branch instead of an unconditional panic — the
 [standard library docs](https://doc.rust-lang.org/std/primitive.i32.html#method.checked_div)
-document that it returns `None` on a zero divisor. Reaching for it
-whenever the divisor comes from data the function doesn't fully control
+document that it returns `None` on a zero divisor. This is worth reaching
+for whenever the divisor comes from data the function doesn't fully control
 (as opposed to a compile-time-known nonzero constant, where bare `/` is
-fine) is this wiki's recommendation.
+fine).
 
 ## Embedded Rust Notes
 

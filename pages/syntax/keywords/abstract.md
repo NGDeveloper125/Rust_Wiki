@@ -35,19 +35,14 @@ a real name genuinely collides with it (for example, code generated from,
 or bound to, another language's API that happens to use the word
 `abstract`).
 
-## Basic usage example
+## Usage examples
+
+### Using the raw-identifier escape hatch
 
 ```
 let abstract = 5;     // error: expected identifier, found reserved keyword `abstract`
 let r#abstract = 5;   // ok: the raw-identifier form escapes the reservation
 ```
-
-## Best practices & deeper information
-
-There is no best-practice scenario to show here: `abstract` has no
-function in today's Rust, so any "usage" example would be fiction. The
-one genuinely useful thing to know is the raw-identifier escape hatch
-shown above.
 
 ## Embedded Rust Notes
 

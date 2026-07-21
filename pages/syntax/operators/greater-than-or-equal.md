@@ -13,7 +13,9 @@ see_also: [">"]
 `>=` is the greater-than-or-equal comparison, part of the same
 `std::cmp::PartialOrd` trait as `<`, `<=`, and `>`.
 
-## Basic usage example
+## Usage examples
+
+### Checking a greater-than-or-equal comparison
 
 ```
 let a = 5;
@@ -24,9 +26,7 @@ let ok = a >= b; // <- true if `a` is greater than or equal to `b`
 **Restriction:** comparisons can't be chained like in Python —
 `a >= b >= c` doesn't compile; write `a >= b && b >= c` instead.
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 `>=` enforces an inclusive minimum, and naming the threshold as a
 constant rather than inlining a magic number keeps the check
@@ -45,7 +45,7 @@ fn is_eligible(applicant: &Applicant) -> bool {
 }
 ```
 
-**Why this way:** naming `MIN_CREDIT_SCORE` gives the boundary one place
+Naming `MIN_CREDIT_SCORE` gives the boundary one place
 to update and makes the `>=` comparison read as "at least this much"
 rather than a bare number whose meaning has to be inferred — see
 [`<`](less-than.md) for the fuller treatment of ordering comparisons in

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::markdown;
-use crate::model::{FrontMatter, Page, Scenario, Section};
+use crate::model::{Example, FrontMatter, Page, Scenario, Section};
 
 fn split_frontmatter(raw: &str) -> Result<(&str, &str), String> {
     let raw = raw.strip_prefix('\u{feff}').unwrap_or(raw);
@@ -57,23 +57,63 @@ pub fn build_page(
             path.display()
         );
     }
-    let basic_usage_md = find_section(&h2, "Basic usage example").unwrap_or_default();
-    let best_practices_md =
-        find_section(&h2, "Best practices & deeper information").unwrap_or_default();
     let embedded_md = find_section(&h2, "Embedded Rust Notes").unwrap_or_default();
 
-    let (intro_md, scenario_blocks) = markdown::split_scenarios(best_practices_md);
-    let scenarios = scenario_blocks
-        .into_iter()
-        .map(|(title, scenario_md)| {
-            let (body_md, rationale_md) = markdown::split_rationale(&scenario_md);
-            Scenario {
-                title,
-                body_html: markdown::to_html(&body_md),
-                rationale_html: rationale_md.map(|r| markdown::to_html(&r)),
+    let (basic_usage_html, best_practices_intro_html, scenarios, usage_examples) = match section {
+        Section::Concepts => {
+            let basic_usage_md = find_section(&h2, "Basic usage example").unwrap_or_default();
+            let best_practices_md =
+                find_section(&h2, "Best practices & deeper information").unwrap_or_default();
+
+            let (intro_md, scenario_blocks) = markdown::split_scenarios(best_practices_md);
+            let scenarios = scenario_blocks
+                .into_iter()
+                .map(|(title, scenario_md)| {
+                    let (body_md, rationale_md) = markdown::split_rationale(&scenario_md);
+                    Scenario {
+                        title,
+                        body_html: markdown::to_html(&body_md),
+                        rationale_html: rationale_md.map(|r| markdown::to_html(&r)),
+                    }
+                })
+                .collect();
+
+            (
+                markdown::to_html(basic_usage_md),
+                markdown::to_html(&intro_md),
+                scenarios,
+                Vec::new(),
+            )
+        }
+        Section::Syntax => {
+            if find_section(&h2, "Basic usage example").is_some()
+                || find_section(&h2, "Best practices & deeper information").is_some()
+            {
+                eprintln!(
+                    "  warning: {} — syntax page still has an old 'Basic usage example' or \
+                     'Best practices & deeper information' heading; migrate it to a single \
+                     '## Usage examples' section.",
+                    path.display()
+                );
             }
-        })
-        .collect();
+            let examples_md = find_section(&h2, "Usage examples");
+            if examples_md.is_none() {
+                eprintln!(
+                    "  warning: {} — syntax page is missing a '## Usage examples' section.",
+                    path.display()
+                );
+            }
+            let examples = markdown::split_examples(examples_md.unwrap_or_default())
+                .into_iter()
+                .map(|(title, example_md)| Example {
+                    title,
+                    body_html: markdown::to_html(&example_md),
+                })
+                .collect();
+
+            (String::new(), String::new(), Vec::new(), examples)
+        }
+    };
 
     Ok(Page {
         front,
@@ -82,9 +122,10 @@ pub fn build_page(
         slug: slug.to_string(),
         href: href.to_string(),
         explanation_html: markdown::to_html(explanation_md),
-        basic_usage_html: markdown::to_html(basic_usage_md),
-        best_practices_intro_html: markdown::to_html(&intro_md),
+        basic_usage_html,
+        best_practices_intro_html,
         scenarios,
+        usage_examples,
         embedded_notes_html: markdown::to_html(embedded_md),
     })
 }

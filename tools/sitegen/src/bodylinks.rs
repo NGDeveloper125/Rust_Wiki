@@ -96,5 +96,8 @@ pub fn rewrite_all(pages: &mut [Page]) {
                 s.rationale_html = Some(rewrite_links_in(&r, &current_dir, depth, &known));
             }
         }
+        for ex in page.usage_examples.iter_mut() {
+            ex.body_html = rewrite_links_in(&ex.body_html, &current_dir, depth, &known);
+        }
     }
 }

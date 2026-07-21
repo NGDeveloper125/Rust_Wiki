@@ -47,7 +47,9 @@ for what `poll`/`Future` actually are, and
 [Async/await](../../concepts/concurrency-async/async-await.md) for when
 reaching for this suspension model is the right call in the first place.
 
-## Basic usage example
+## Usage examples
+
+### Awaiting a future with `.await`
 
 ```
 async fn fetch_greeting() -> String {
@@ -60,9 +62,7 @@ async fn greet() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Async tasks
+### Async tasks
 
 Fetching a product's price and its stock count from two independent
 services shouldn't be written as two back-to-back `.await`s when the
@@ -98,7 +98,7 @@ async fn main() {
 }
 ```
 
-**Why this way:** each `.await` only suspends until its own future
+Each `.await` only suspends until its own future
 resolves, so writing two of them back-to-back for independent work
 serializes their latencies; `tokio::join!` polls both futures under one
 concurrent point instead, finishing in roughly the slower call's time —

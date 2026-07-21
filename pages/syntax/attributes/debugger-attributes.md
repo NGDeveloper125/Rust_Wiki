@@ -48,7 +48,9 @@ whose types or macros are widely used and would benefit from a
 noticeably better debugging experience for everyone downstream, not to
 day-to-day application code.
 
-## Basic usage example
+## Usage examples
+
+### Attributing a macro's expanded code to its call site
 
 ```
 #[collapse_debuginfo(yes)] // <- attributes this macro's expanded code to each call site, not its own definition
@@ -59,9 +61,7 @@ macro_rules! double {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A widely-used logging macro expands to a fair amount of internal
 plumbing; without `#[collapse_debuginfo]`, stepping through a call to it
@@ -81,7 +81,7 @@ fn process_order(order_id: u32) {
 }
 ```
 
-**Why this way:** a caller stepping through `process_order` is almost
+A caller stepping through `process_order` is almost
 always interested in their own control flow, not in re-deriving how
 `log_event!` itself expands — the
 [Rust Reference](https://doc.rust-lang.org/reference/attributes/debugger.html#the-collapse_debuginfo-attribute)

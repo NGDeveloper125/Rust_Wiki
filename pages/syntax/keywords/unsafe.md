@@ -69,7 +69,9 @@ full mental model (contract, not compiler bypass) and
 [The undefined-behavior boundary](../../concepts/memory-unsafe/the-undefined-behavior-boundary.md)
 for what goes wrong when the contract is violated.
 
-## Basic usage example
+## Usage examples
+
+### Dereferencing a raw pointer inside an `unsafe` block
 
 ```
 let value: i32 = 10;
@@ -77,9 +79,7 @@ let ptr = &value as *const i32;
 let read = unsafe { *ptr }; // <- `unsafe` block: required to dereference a raw pointer
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A firmware updater needs a CRC-32 checksum routine from a vendor-supplied
 C library; the compiler has no way to check what that foreign function
@@ -101,14 +101,14 @@ fn checksum(firmware_image: &[u8]) -> u32 {
 }
 ```
 
-**Why this way:** the compiler can verify the *signature* of `crc32` but
+The compiler can verify the *signature* of `crc32` but
 nothing about its body or side effects, so `unsafe` marks the exact call
 site where a human is vouching for the contract instead — the
 [Rustonomicon's FFI chapter](https://doc.rust-lang.org/nomicon/ffi.html)
 treats every call across this boundary as needing exactly this kind of
 manual justification.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 An audio ring buffer wants to skip bounds checks on its hot read/write
 path without ever letting a caller trigger an out-of-bounds access — the
@@ -143,7 +143,7 @@ impl AudioRingBuffer {
 }
 ```
 
-**Why this way:** keeping `write_unchecked` private and calling it from
+Keeping `write_unchecked` private and calling it from
 exactly one already-checked call site is the "contain unsafety in small
 modules" idiom described on [Unsafe Rust](../../concepts/memory-unsafe/unsafe-rust.md) —
 every other method on `AudioRingBuffer` stays ordinary safe code, and the

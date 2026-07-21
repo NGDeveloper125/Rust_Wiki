@@ -50,7 +50,9 @@ what this attribute is for; `std` code that wants to customize panic
 runtime-configurable mechanism built on top of the standard panic
 handler, not a replacement for it.
 
-## Basic usage example
+## Usage examples
+
+### Defining a minimal panic handler in a #![no_std] binary
 
 ```
 #![no_std]
@@ -63,9 +65,7 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A `#![no_std]` firmware binary needs a panic handler before it links at
 all — the minimal, universally-applicable choice is to loop forever,
@@ -93,7 +93,7 @@ pub extern "C" fn _start() -> ! {
 }
 ```
 
-**Why this way:** `#![no_std]` removes `std`'s built-in panic handler
+`#![no_std]` removes `std`'s built-in panic handler
 along with everything else `std` provides, so the crate must supply its
 own or fail to link — the
 [embedded Rust book](https://doc.rust-lang.org/stable/embedded-book/start/panicking.html)
@@ -102,7 +102,7 @@ reaching for a published crate like `panic-halt` in real projects instead
 of hand-writing this repeatedly, so the failure behavior is a deliberate,
 reviewed choice rather than an ad hoc one per crate.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 A project wants a panic to actually restart the device rather than sit
 halted — the panic handler triggers a hardware reset instead of looping,
@@ -125,7 +125,7 @@ fn reset_device() -> ! {
 }
 ```
 
-**Why this way:** because exactly one `#[panic_handler]` exists for the
+Because exactly one `#[panic_handler]` exists for the
 whole binary, the crate's chosen recovery policy — halt for
 debuggability during development, reset for resilience in a deployed
 device — is a single, crate-wide decision; the

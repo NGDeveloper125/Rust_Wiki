@@ -47,7 +47,9 @@ IoResult;`) rather than casting a value — the keyword is shared, but the
 two uses have nothing else in common; the full renaming grammar belongs
 on the [`use`](use.md) page.
 
-## Basic usage example
+## Usage examples
+
+### Casting between numeric types
 
 ```
 let count: u32 = 10;
@@ -59,9 +61,7 @@ let total: i64 = count as i64; // <- `as` widens u32 to i64 explicitly
 call site; reach for `u8::try_from(1000i32)` instead whenever the value
 might not fit and the caller needs to detect that.
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Averaging integer readings requires converting at least one operand to a
 floating-point type before dividing, since Rust never converts between
@@ -75,14 +75,14 @@ let average = total as f64 / readings.len() as f64; // <- both operands cast to 
 println!("average heart rate: {average:.1}");
 ```
 
-**Why this way:** `total / readings.len()` wouldn't compile at all —
+`total / readings.len()` wouldn't compile at all —
 `u32` divided by `usize` is a type mismatch — and even if the types
 matched, integer division would silently truncate the result; casting
 both sides to `f64` first is the direct way to get a fractional average,
 rather than routing through a fallible `TryFrom` for a conversion that
 can't actually fail here.
 
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Casting a fieldless enum variant to its integer discriminant with `as` is
 the standard way to turn a typed value back into the raw byte a register
@@ -101,7 +101,7 @@ fn to_register_byte(status: LinkStatus) -> u8 {
 }
 ```
 
-**Why this way:** `as` is the only way to go from a fieldless enum back
+`as` is the only way to go from a fieldless enum back
 to its discriminant value — there's no method for it — and pairing it
 with an explicit `#[repr(u8)]` (see [`#[repr(...)]`](../attributes/repr.md))
 guarantees the byte `as` produces matches the width the register or

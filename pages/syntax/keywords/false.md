@@ -16,15 +16,15 @@ see_also: [true]
 See [`true`](true.md) for the surrounding notes on `bool` as a distinct,
 non-numeric type with no implicit conversions.
 
-## Basic usage example
+## Usage examples
+
+### The `false` boolean literal
 
 ```
 let done: bool = false; // <- `false` is the boolean literal for a false value
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 A struct of feature flags implements `Default` so any new, unreleased
 feature starts disabled unless explicitly opted into — `false` is the
@@ -45,7 +45,7 @@ impl Default for FeatureFlags {
 }
 ```
 
-**Why this way:** defaulting risky or unfinished behavior to `false`
+Defaulting risky or unfinished behavior to `false`
 means a missing configuration value fails closed rather than open. Making
 that the `Default` also lines up with the API Guidelines'
 [C-COMMON-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits),

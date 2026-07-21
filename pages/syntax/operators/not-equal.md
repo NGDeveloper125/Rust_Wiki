@@ -15,16 +15,16 @@ by `std::cmp::PartialEq` (a single trait supplies both `eq` and, by
 default, `ne` as `!self.eq(other)`); a type essentially never needs to
 implement `!=` separately from `==`.
 
-## Basic usage example
+## Usage examples
+
+### Testing for inequality
 
 ```
 let state = 3;
 let ready = state != 0; // <- `!=` tests for inequality
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 A guard clause that rejects a sentinel or placeholder value reads more
 directly with `!=` than with a negated `==`, and is a common first line
@@ -43,7 +43,7 @@ assert!(set_channel(0).is_err());
 assert!(set_channel(4).is_ok());
 ```
 
-**Why this way:** `channel != 0` reads as "channel is set" more directly
+`channel != 0` reads as "channel is set" more directly
 than `!(channel == 0)`, and the compiler treats them identically since
 `!=` is `PartialEq::ne`, not a separate check — see
 [`==`](equal-equal.md) for the fuller treatment of the underlying trait

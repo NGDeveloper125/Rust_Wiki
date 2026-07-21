@@ -17,7 +17,9 @@ octal notation (`0755`), Rust requires the explicit `0o` prefix, so a
 literal like `0755` is just decimal 755, never accidentally
 misinterpreted as octal.
 
-## Basic usage example
+## Usage examples
+
+### Assigning a file permission mode
 
 ```
 let mode = 0o644; // <- `0o` prefix marks a base-8 (octal) integer literal
@@ -27,9 +29,7 @@ let mode = 0o644; // <- `0o` prefix marks a base-8 (octal) integer literal
 `0o8` is a compile error (underscores and a type suffix like `0o644_u16`
 are still allowed).
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Unix-style file permission bits are conventionally written and read in
 octal, since each digit maps exactly onto one `rwx` triplet.
@@ -44,7 +44,7 @@ let other_bits = mode & 0o7;
 assert_eq!((owner_bits, group_bits, other_bits), (0o7, 0o5, 0o5));
 ```
 
-**Why this way:** Unix permission tooling (`chmod 755`, `ls -l`) is itself
+Unix permission tooling (`chmod 755`, `ls -l`) is itself
 built around octal because each digit is one 3-bit `rwx` group — a
 mapping that's lost if the same mode is written in hex or decimal; for
 masks that aren't naturally 3-bit-grouped, hex is the more common

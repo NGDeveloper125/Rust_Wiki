@@ -18,7 +18,9 @@ As with `/** */` vs `///`, this form is rarely used in idiomatic Rust —
 `//!` is the conventional choice — but both are equivalent to the
 compiler.
 
-## Basic usage example
+## Usage examples
+
+### Documenting the enclosing module
 
 ```
 /*! This module implements the parser's tokenizer. */
@@ -31,9 +33,7 @@ fn tokenize() {}
 normally placed at the top of the file it applies to. In practice,
 prefer `//!` (see [`//!`](inner-line-doc-comment.md)); this form is rare.
 
-## Best practices & deeper information
-
-### Scenario: Documenting an API
+### Documenting an API
 
 `/*! */` documents its enclosing module/crate exactly like `//!` — again,
 purely a stylistic choice, and `//!` is what idiomatic code uses.
@@ -51,7 +51,7 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
 pub struct ParseError;
 ```
 
-**Why this way:** see [`//!`](inner-line-doc-comment.md) for the full
+See [`//!`](inner-line-doc-comment.md) for the full
 treatment (crate-root landing page, stating module invariants once) —
 everything there applies here unchanged. `/*! */` is rare enough in real
 codebases that introducing it fresh mostly just surprises readers

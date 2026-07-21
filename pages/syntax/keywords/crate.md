@@ -25,7 +25,9 @@ crate is and why the crate boundary matters architecturally (it's also
 the ceiling `pub(crate)` visibility draws); this page is about writing the
 `crate::` path prefix itself.
 
-## Basic usage example
+## Usage examples
+
+### Referring to the crate root with `crate::`
 
 ```
 fn format_timestamp(seconds: u64) -> String { // a crate-root helper
@@ -40,9 +42,7 @@ mod logging {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A reporting module nested three levels deep still needs the crate root's
 `current_user_id` helper — `crate::` reaches it directly, regardless of
@@ -65,7 +65,7 @@ pub mod reports {
 }
 ```
 
-**Why this way:** `crate::current_user_id()` names the same path no
+`crate::current_user_id()` names the same path no
 matter which module writes it, so moving `csv` to a different nesting
 depth later doesn't change how it refers back to the root — unlike a
 relative `super::super::...` chain, which would need editing every time a

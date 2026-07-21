@@ -46,7 +46,9 @@ and specific items from it, instead of two separate `use` statements.
 from within a module, meaning "look in this same module"), though `use
 {self, ...}` grouped-import is by far the more common sighting.
 
-## Basic usage example
+## Usage examples
+
+### Reading a value through `&self`
 
 ```
 struct Order { total_cents: u64 }
@@ -58,9 +60,7 @@ impl Order {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Implementing traits
+### Implementing traits
 
 A builder type's chained methods take `self` by value, consuming and
 returning the modified builder each step, while a plain inspection method
@@ -89,14 +89,14 @@ let builder = builder.retries(3); // <- consumes the old `builder` binding, retu
 println!("{}", builder.url());
 ```
 
-**Why this way:** an owned `self` receiver is what makes fluent method
+An owned `self` receiver is what makes fluent method
 chaining possible — each call consumes the previous builder state and
 hands back a new one — while `&self` on `url` signals "just reading, you
 still own this afterward"; the
 [Rust Book's method-syntax chapter](https://doc.rust-lang.org/book/ch05-03-method-syntax.html)
 covers exactly this choice among `self`, `&self`, and `&mut self`.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 Importing both a module and specific items from it in one line uses the
 path-position sense of `self` — a distinct meaning from the receiver, but
@@ -115,7 +115,7 @@ fn copy_all(mut source: impl Read, mut sink: impl Write) -> io::Result<u64> {
 }
 ```
 
-**Why this way:** without the `self` in the group, `io::Error` and
+Without the `self` in the group, `io::Error` and
 `io::Result` would be unreachable unless the module was imported
 separately (`use std::io;` on its own line) — grouping `self` alongside
 specific items is the idiomatic way to get both without two `use`

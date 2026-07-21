@@ -34,7 +34,9 @@ reach for `panic!` over returning a `Result` — is the concept-level story
 covered in
 [Panic & unwinding](../../concepts/error-handling/panic-and-unwinding.md).
 
-## Basic usage example
+## Usage examples
+
+### Panicking with a formatted message
 
 ```
 fn set_volume(level: u8) {
@@ -45,9 +47,7 @@ fn set_volume(level: u8) {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 A payment gateway's internal charge function documents and enforces a
 precondition — the amount must already have been validated as positive by
@@ -72,7 +72,7 @@ let gateway = PaymentGateway;
 gateway.charge(1999);
 ```
 
-**Why this way:** the message is written for the developer who trips this
+The message is written for the developer who trips this
 precondition during development, not an end user, so it names the
 concrete value rather than a generic "invalid amount" — the API
 Guidelines'
@@ -80,7 +80,7 @@ Guidelines'
 item is why this is documented as a precondition instead of handled some
 other way.
 
-### Scenario: Testing
+### Testing
 
 A `should_panic` test locks in that the exact formatted message from a
 `panic!` call names the field that failed validation, so a future
@@ -107,7 +107,7 @@ fn rejects_zero_channel() {
 }
 ```
 
-**Why this way:** the
+The
 [Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html#checking-for-panics-with-should_panic)
 recommends `should_panic(expected = ...)` over a bare `should_panic`
 specifically so pinning down the `panic!` message's wording, not merely

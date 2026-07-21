@@ -40,16 +40,16 @@ Using `try` as an ordinary identifier is a compile error in the 2018
 edition and later. The raw-identifier form `r#try` is legal in any
 edition, the same escape hatch every reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### The `try` reservation error and raw-identifier escape hatch
 
 ```
 let try = 5;     // error (2018 edition+): expected identifier, found reserved keyword `try`
 let r#try = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 `try { }` would let a function scope error propagation to part of its
 body instead of the whole thing. Today's real equivalent is pulling that
@@ -70,7 +70,7 @@ fn process(raw: &str) -> String {
 }
 ```
 
-**Why this way:** without a stable `try { }` block, scoping `?` to less
+Without a stable `try { }` block, scoping `?` to less
 than a whole function means introducing a helper closure or function
 purely for that purpose — extra indirection that a `try { }` expression
 would remove by letting `?` short-circuit out of the block itself
