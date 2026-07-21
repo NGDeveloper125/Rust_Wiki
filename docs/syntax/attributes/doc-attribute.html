@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -989,25 +988,19 @@ follow.</li>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[doc(alias = "size")] // &lt;- makes this method findable in rustdoc search under "size" too
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Registering an alternate search term for rustdoc</h3>
+            <pre><code class="rust">#[doc(alias = "size")] // &lt;- makes this method findable in rustdoc search under "size" too
 pub fn len(&amp;self) -&gt; usize {
     self.items.len()
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Documenting an API</h3>
             <p>A derive macro generates a helper trait implementation that references an
 internal type the macro needs public for the expansion to compile, but
@@ -1025,21 +1018,16 @@ impl SensorReadingFieldNames {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a macro-generated support type frequently has to be
+<p>A macro-generated support type frequently has to be
 <code>pub</code> purely so the expanded code compiles in the caller's crate, even
 though no human is meant to use it directly — the
 <a href="https://doc.rust-lang.org/rustdoc/write-documentation/the-doc-attribute.html#hidden">rustdoc book</a>
 documents <code>#[doc(hidden)]</code> as exactly this "publicly reachable, not
 publicly documented" escape hatch, distinct from actually making the item
 private (which would break the very macro expansion it exists to support).</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A crate's real implementation lives in a private internal module, but the
 type is re-exported at the crate root as the officially supported way to
@@ -1062,8 +1050,7 @@ through an internal module they were never meant to know exists.</p>
 #[doc(inline)] // &lt;- shows DiscountCalculator's full docs here, not just a link to internal_pricing_engine
 pub use internal_pricing_engine::DiscountCalculator;
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>#[doc(inline)]</code>, rustdoc's default re-export
+<p>Without <code>#[doc(inline)]</code>, rustdoc's default re-export
 rendering is a short link back to <code>internal_pricing_engine</code>, which is a
 confusing detour for a module that isn't meant to be part of the public
 API surface at all — the
@@ -1071,7 +1058,7 @@ API surface at all — the
 documents <code>inline</code> as the way to make a re-export's documentation page
 self-contained when the internal path it came from isn't meant to be
 navigated to directly.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1088,7 +1075,7 @@ identically for <code>#![no_std]</code> crates — a HAL crate's macro-generated
 register-access internals are exactly the kind of thing <code>#[doc(hidden)]</code>
 is reached for in embedded codebases specifically.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

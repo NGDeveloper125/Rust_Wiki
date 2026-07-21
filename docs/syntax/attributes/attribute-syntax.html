@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1007,9 +1006,12 @@ is already general enough to carry it.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![allow(dead_code)] // &lt;- inner attribute: applies to the enclosing module/crate, not to what follows
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Combining outer and inner attributes</h3>
+            <pre><code class="rust">#![allow(dead_code)] // &lt;- inner attribute: applies to the enclosing module/crate, not to what follows
 
 #[derive(Debug)] // &lt;- outer attribute: applies only to the struct immediately below
 struct Reading {
@@ -1017,17 +1019,8 @@ struct Reading {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>The same kind of item — here, a module — can be annotated from the
 outside (an outer attribute on the <code>mod</code> item, from the parent's point of
@@ -1043,23 +1036,18 @@ mod metrics {
     pub fn record_latency(_ms: u64) {}
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> an outer attribute reads naturally when a <em>caller</em> of an
+<p>An outer attribute reads naturally when a <em>caller</em> of an
 item is making a decision about it (whether to compile <code>mod metrics</code> at
 all); an inner attribute reads naturally when an item is making a
 statement about <em>itself</em> (this crate root allows a specific Clippy lint
 everywhere within it) — the
 <a href="https://doc.rust-lang.org/reference/attributes.html">Rust Reference</a>
 documents both forms as applying to "the item enclosing it" (inner) vs.
-"the item following it" (outer), and idiomatic code picks whichever
+"the item following it" (outer), and code picks whichever
 direction matches who owns the decision.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p><code>#[cfg(test)]</code> (outer, gating a whole module from the outside) and
 <code>#[test]</code> (outer, marking one function inside it) are two independent
@@ -1080,8 +1068,7 @@ mod tests {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> keeping compilation-gating (<code>cfg</code>) and test-discovery
+<p>Keeping compilation-gating (<code>cfg</code>) and test-discovery
 (<code>test</code>) as two separate, composable attributes — rather than one
 attribute trying to do both — is what lets the same <code>#[cfg(test)]</code> module
 also hold non-test helper functions, or lets <code>#[test]</code> be combined with
@@ -1089,7 +1076,7 @@ also hold non-test helper functions, or lets <code>#[test]</code> be combined wi
 grammar having to anticipate every combination in advance; see
 <a href="../../concepts/testing-tooling/unit-tests.html">Unit tests</a> for the full
 picture of how <code>cargo test</code> uses this pairing.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1106,7 +1093,7 @@ identically whether or not the crate links <code>std</code>. <code>#![no_std]</c
 just an ordinary inner attribute applied to a crate root; see
 <a href="../../syntax/attributes/no-std-attribute.html"><code>#![no_std]</code></a> for what that specific attribute does.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

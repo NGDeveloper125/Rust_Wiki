@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,9 +986,12 @@ day-to-day application code.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[collapse_debuginfo(yes)] // &lt;- attributes this macro's expanded code to each call site, not its own definition
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Attributing a macro's expanded code to its call site</h3>
+            <pre><code class="rust">#[collapse_debuginfo(yes)] // &lt;- attributes this macro's expanded code to each call site, not its own definition
 macro_rules! double {
     ($value:expr) =&gt; {
         $value * 2
@@ -997,17 +999,8 @@ macro_rules! double {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A widely-used logging macro expands to a fair amount of internal
 plumbing; without <code>#[collapse_debuginfo]</code>, stepping through a call to it
@@ -1024,15 +1017,14 @@ fn process_order(order_id: u32) {
     log_event!(format!("processing order {order_id}")); // &lt;- debugger steps through this line, not the macro body
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a caller stepping through <code>process_order</code> is almost
+<p>A caller stepping through <code>process_order</code> is almost
 always interested in their own control flow, not in re-deriving how
 <code>log_event!</code> itself expands — the
 <a href="https://doc.rust-lang.org/reference/attributes/debugger.html#the-collapse_debuginfo-attribute">Rust Reference</a>
 documents <code>collapse_debuginfo</code> as the mechanism for choosing that behavior
 per macro, appropriate for macros meant to feel like ordinary statements
 rather than something a caller needs to debug into.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1053,7 +1045,7 @@ convention); a <code>#[debugger_visualizer(...)]</code> written specifically for
 Natvis has no effect on a GDB-based embedded debugging session, and vice
 versa.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -44,7 +44,9 @@ similar) — needs neither `extern crate alloc;` nor
 moment a `#![no_std]` crate wants `Vec`, `Box`, `String`, or anything else
 from `alloc`.
 
-## Basic usage example
+## Usage examples
+
+### Registering a minimal global allocator
 
 ```
 #![no_std]
@@ -65,9 +67,7 @@ unsafe impl GlobalAlloc for DummyAllocator {
 static ALLOCATOR: DummyAllocator = DummyAllocator;
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A `#![no_std]` firmware crate wants to use `alloc::vec::Vec` for a
 sensor-reading buffer, which requires wiring up a heap allocator first —
@@ -111,7 +111,7 @@ static HEAP: BumpAllocator = BumpAllocator {
 };
 ```
 
-**Why this way:** `alloc`'s collection types have no allocator to call
+`alloc`'s collection types have no allocator to call
 into until one is designated with `#[global_allocator]`; a bump allocator
 is the simplest correct implementation for firmware with a small, known
 memory budget and no need to free individual allocations — the

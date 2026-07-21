@@ -26,16 +26,16 @@ Using `priv` as an ordinary identifier is a compile error today. The
 raw-identifier form `r#priv` is legal, the same escape hatch every
 reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### Using the raw-identifier escape hatch
 
 ```
 let priv = 5;     // error: expected identifier, found reserved keyword `priv`
 let r#priv = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 Today's visibility model expresses exactly what `priv` used to express,
 just with the default flipped: a struct's fields stay private unless
@@ -59,7 +59,7 @@ impl Account {
 }
 ```
 
-**Why this way:** if `balance` were public, nothing would stop external
+If `balance` were public, nothing would stop external
 code from setting it to a negative value directly; keeping it private
 (today's default, once `priv`'s job before 1.0) and exposing only a
 validating constructor and a read accessor is the same "invalid states

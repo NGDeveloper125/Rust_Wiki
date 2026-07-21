@@ -30,7 +30,9 @@ when the condition is false must exist and match the other branch's type.
 family under pattern matching — that matches a single pattern instead of
 testing a `bool`.
 
-## Basic usage example
+## Usage examples
+
+### Branching on a boolean condition
 
 ```
 let x = 5;
@@ -39,9 +41,7 @@ if x > 0 { // <- `if` branches on a boolean condition
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 Rejecting an out-of-range value at the top of a function, before doing
 any real work, is the guard-clause shape — `if` tests the invalid case
@@ -59,13 +59,13 @@ fn set_volume(level: i32) -> Result<(), String> {
 }
 ```
 
-**Why this way:** checking the invalid case first and returning keeps the
+Checking the invalid case first and returning keeps the
 rest of the function at one indentation level instead of nesting the
 valid path inside an `if`, an idiom the
 [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
 collection favors for reducing nesting.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 A malformed port string should stop `read_port` before any further
 processing happens — `if` here tests one condition at a time and returns
@@ -84,13 +84,13 @@ fn read_port(raw: &str) -> Result<u16, String> {
 }
 ```
 
-**Why this way:** `return` inside an `if` is type `!` (never), which
+`return` inside an `if` is type `!` (never), which
 coerces to whatever type the surrounding context expects — the
 [Reference's page on the never type](https://doc.rust-lang.org/reference/types/never.html)
 is why this early exit can appear alongside other branches without a type
 mismatch.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Logging only the valid variant of a two-variant enum doesn't need a full
 `match` — `if let` matches the one pattern that matters and silently does
@@ -107,7 +107,7 @@ fn log_reading(reading: &Reading) {
 }
 ```
 
-**Why this way:** `if let` is exactly for the case where only one pattern
+`if let` is exactly for the case where only one pattern
 needs handling and the rest can be ignored — the
 [Book's section on `if let`](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 recommends it over `match` precisely to avoid writing a wildcard `_` arm

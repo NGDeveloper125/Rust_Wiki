@@ -52,7 +52,9 @@ type and none end with a semicolon, the whole `match` evaluates to whichever
 arm ran, and can sit on the right-hand side of a `let` or as a function's
 final expression.
 
-## Basic usage example
+## Usage examples
+
+### Matching on an enum's variants
 
 ```
 enum Direction { North, South, East, West }
@@ -73,9 +75,7 @@ println!("{degrees}");
 covered by some arm's pattern, or this fails to compile — see
 [exhaustiveness checking](../../concepts/pattern-matching/exhaustiveness-checking.md).
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A thermostat's incoming command needs to both identify its shape and, for
 the temperature-setting command, confirm the requested value is in a
@@ -101,13 +101,13 @@ fn describe(cmd: &ThermostatCommand) -> String {
 }
 ```
 
-**Why this way:** combining `|` for variants that share behavior and `@`
+Combining `|` for variants that share behavior and `@`
 for variants that need both a shape check and the underlying value keeps
 the dispatch in one `match` rather than a chain of separate `if`s — the
 [Rust Reference on match expressions](https://doc.rust-lang.org/reference/expressions/match-expr.html)
 documents both as first-class parts of an arm's pattern, not add-on sugar.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Classifying a sensor reading string needs different messages for a
 parse failure versus a suspiciously cold (but valid) reading — a guard
@@ -126,14 +126,14 @@ fn classify_reading(raw: &str) -> String {
 println!("{}", classify_reading("-4.5"));
 ```
 
-**Why this way:** matching on the `Result` directly, with a guard for the
+Matching on the `Result` directly, with a guard for the
 one `Ok` sub-case that needs different handling, avoids re-parsing or a
 second `if` after the match — the
 [Rust Book](https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html#extra-conditionals-with-match-guards)
 covers guards as exactly this kind of value-dependent refinement on an
 already-matched pattern.
 
-### Scenario: Validating input
+### Validating input
 
 Routing a delivery by distance needs every possible `u32` value handled,
 not just the bands anyone thought of in advance — the exhaustiveness
@@ -150,7 +150,7 @@ fn shipping_zone(distance_km: u32) -> &'static str {
 }
 ```
 
-**Why this way:** because `0..=1000` doesn't come close to covering every
+Because `0..=1000` doesn't come close to covering every
 `u32`, the compiler refuses to compile this without a final wildcard —
 the same exhaustiveness rule that requires every enum variant to appear
 also requires numeric patterns to visibly account for every value in

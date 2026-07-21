@@ -52,7 +52,9 @@ notably it has no effect through a `dyn Trait` call, since the concrete
 `Location` wiring is resolved statically per call site and a trait object
 call has erased which concrete call site is calling through it.
 
-## Basic usage example
+## Usage examples
+
+### Reporting the caller's location from a panic
 
 ```
 #[track_caller] // <- makes Location::caller() below report the CALLER's line, not this one
@@ -68,9 +70,7 @@ fn main() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Validating input
+### Validating input
 
 A configuration-loading helper used throughout an application validates
 a port number and panics on an invalid one; marking it `#[track_caller]`
@@ -92,7 +92,7 @@ fn main() {
 }
 ```
 
-**Why this way:** without `#[track_caller]`, every misconfigured call
+Without `#[track_caller]`, every misconfigured call
 anywhere in a large codebase would report the same unhelpful location —
 the `panic!` line inside `require_valid_port` itself — instead of the
 call site that actually passed the bad value; the
@@ -102,7 +102,7 @@ slice indexing use internally, and applying it to custom
 validation/assertion helpers extends the same caller-friendly diagnostics
 to application code.
 
-### Scenario: Testing
+### Testing
 
 A custom test-assertion helper used across a test suite should report a
 failed assertion at the line inside the *test* that called it, not at the
@@ -125,7 +125,7 @@ fn sensor_reading_matches_calibration() {
 }
 ```
 
-**Why this way:** `assert!` itself is `#[track_caller]`, so without
+`assert!` itself is `#[track_caller]`, so without
 marking `assert_within_tolerance` the same way, a failure would report
 the `assert!` line inside the shared helper — the same unhelpful,
 one-size-fits-all location for every test that uses it — instead of the

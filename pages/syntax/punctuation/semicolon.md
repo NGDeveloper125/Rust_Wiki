@@ -25,7 +25,9 @@ call site.
 [square brackets](square-brackets.md)), which is unrelated to its
 statement-terminator role.
 
-## Basic usage example
+## Usage examples
+
+### Controlling whether a block returns a value
 
 ```
 fn increment(x: i32) -> i32 {
@@ -40,9 +42,7 @@ fn increment_wrong(x: i32) -> i32 {
 **Restriction:** `increment_wrong` above fails to compile — its body
 evaluates to `()`, which doesn't match the declared `-> i32` return type.
 
-## Best practices & deeper information
-
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 An early-return guard clause needs its own `;`, while the function's
 final, successful value must not have one — mixing this up inside a
@@ -69,13 +69,13 @@ fn load_config(path: &str) -> Result<Config, ConfigError> {
 }
 ```
 
-**Why this way:** the compiler catches this mistake as a type mismatch
+The compiler catches this mistake as a type mismatch
 (`expected Result<Config, ConfigError>, found ()`) pointing at the
 function body — but the more reliable habit is to read a function's last
 line and ask "is this a statement or the return value?" before deciding
 whether it needs a `;`.
 
-### Scenario: Working with collections
+### Working with collections
 
 Inside `[Type; N]` and `[value; N]`, `;` separates a type/value from a
 compile-time length — a completely different grammatical role from
@@ -86,7 +86,7 @@ let buffer: [u8; 4] = [0; 4]; // <- both `;` here belong to array syntax, not st
 //           ^ type; length      ^ value; repeat count
 ```
 
-**Why this way:** `[0; 4]` avoids writing out `[0, 0, 0, 0]` by hand and,
+`[0; 4]` avoids writing out `[0, 0, 0, 0]` by hand and,
 unlike a `Vec`, the length is part of the type itself — see
 [Arrays vs `Vec`](../../concepts/types-data-modeling/arrays-vs-vec.md) for
 when a fixed-size array is the right choice over a growable one.

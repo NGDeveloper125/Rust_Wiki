@@ -22,18 +22,18 @@ still accepts full Unicode content (encoded as UTF-8, same as a normal
 string literal) — the constraint is "no embedded nul bytes," not
 "ASCII only."
 
-## Basic usage example
+## Usage examples
+
+### Producing a nul-terminated C string
 
 ```
 let name: &std::ffi::CStr = c"sensor01"; // <- c-string literal: produces `&CStr`, nul-terminated
 ```
 
-**Restriction:** the content cannot contain an embedded `\0` — a C
+The content cannot contain an embedded `\0` — a C
 string is nul-terminated, so an interior null byte is a compile error.
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Working with text
 
 Preparing a `CStr` constant that will eventually be handed to a C API is
 just a matter of writing the literal and holding onto it — the FFI call
@@ -50,7 +50,7 @@ fn device_name() -> &'static CStr {
 }
 ```
 
-**Why this way:** a `c"..."` literal produces its nul-terminated bytes at
+A `c"..."` literal produces its nul-terminated bytes at
 compile time, so a fixed constant like this never needs the fallible,
 allocating `CString::new(...).unwrap()` path at runtime — it hands back a
 `&'static CStr` directly (see the

@@ -38,7 +38,9 @@ subtle runtime surprise.
 beyond scope resolution — the items already written inside are unchanged,
 only what's implicitly visible to them.
 
-## Basic usage example
+## Usage examples
+
+### Blocking implicit prelude imports in a module
 
 ```
 #[no_implicit_prelude] // <- nothing from the standard prelude is implicitly in scope here
@@ -49,9 +51,7 @@ mod generated {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A schema-to-Rust codegen tool emits a module of generated field-accessor
 functions and wants an absolute guarantee that none of its generated
@@ -70,7 +70,7 @@ mod schema_generated {
 }
 ```
 
-**Why this way:** codegen tools produce identifiers programmatically and
+Codegen tools produce identifiers programmatically and
 can't always predict every name a future prelude addition might
 introduce; starting from a namespace with nothing implicit removes that
 entire class of surprise collision, which the

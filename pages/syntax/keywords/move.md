@@ -45,7 +45,9 @@ for when forcing capture-by-value is the right call in the first place).
 functions have no environment to capture from at all, so there is nothing
 for `move` to apply to. It is exclusively a closure/async-block modifier.
 
-## Basic usage example
+## Usage examples
+
+### Forcing a closure to capture by value
 
 ```
 let price = 19.99;
@@ -55,9 +57,7 @@ println!("{}", compute_total(3));
 println!("{price}"); // still valid: f64 is Copy, so `move` copied it rather than invalidating `price`
 ```
 
-## Best practices & deeper information
-
-### Scenario: Multi-threading
+### Multi-threading
 
 A spawned thread's closure has to own everything it touches, since the
 thread may still be running after the function that spawned it returns —
@@ -77,13 +77,13 @@ let handle = thread::spawn(move || {
 handle.join().unwrap();
 ```
 
-**Why this way:** `thread::spawn` requires its closure to be `'static`
+`thread::spawn` requires its closure to be `'static`
 because the new thread isn't bounded by the caller's stack frame, so nothing
 it captures may borrow from that frame — the
 [Book's concurrency chapter](https://doc.rust-lang.org/book/ch16-01-threads.html#using-move-closures-with-threads)
 covers `move` as the standard way to satisfy that bound.
 
-### Scenario: Message passing between threads
+### Message passing between threads
 
 A producer closure needs to own both the channel's `Sender` and the data it
 sends, so that the `Sender` is dropped (and the channel closed) exactly when
@@ -108,13 +108,13 @@ for received in rx {
 }
 ```
 
-**Why this way:** dropping every clone of the `Sender` is what signals the
+Dropping every clone of the `Sender` is what signals the
 receiving end that no more messages are coming — the
 [Book's message-passing chapter](https://doc.rust-lang.org/book/ch16-02-message-passing.html)
 relies on `move` to put the `Sender` inside the closure so it drops with it,
 rather than lingering in the spawning function's scope.
 
-### Scenario: Async tasks
+### Async tasks
 
 A task handed to an async runtime can outlive the function that spawned it,
 just like a thread — `move` follows `async` for exactly the same reason it
@@ -135,7 +135,7 @@ async fn process_batch(order_ids: Vec<u32>) {
 }
 ```
 
-**Why this way:** `tokio::spawn` requires its future to be `'static` for the
+`tokio::spawn` requires its future to be `'static` for the
 same reason `thread::spawn` does — the
 [Tokio tutorial](https://tokio.rs/tokio/tutorial/spawning) uses `async move`
 whenever a spawned task needs to own data from its surrounding function

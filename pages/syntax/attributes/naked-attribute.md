@@ -42,7 +42,9 @@ for the exact, target-specific constraints before writing one, since they
 are more likely to have shifted between Rust versions than most of the
 language.
 
-## Basic usage example
+## Usage examples
+
+### Writing a function with no compiler-generated prologue or epilogue
 
 ```
 #[unsafe(naked)] // <- no compiler-generated prologue/epilogue: the body is pure asm
@@ -51,9 +53,7 @@ pub extern "C" fn identity_trampoline() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 An interrupt controller on a microcontroller jumps directly to a handler
 address with no compiler-managed calling convention already in place —
@@ -77,7 +77,7 @@ extern "C" fn interrupt_handler() {
 }
 ```
 
-**Why this way:** an ordinary (non-naked) function assumes the calling
+An ordinary (non-naked) function assumes the calling
 convention's register-saving contract is already in effect, which is not
 guaranteed true at the exact instruction an interrupt vector jumps to —
 `#[naked]` exists specifically so this hand-off can be written by hand

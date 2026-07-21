@@ -22,19 +22,19 @@ different results for non-ASCII text. See
 [byte literal](byte-literal.md) for the ASCII-only, single-byte
 equivalent (`b'H'`).
 
-## Basic usage example
+## Usage examples
+
+### Producing a full Unicode char
 
 ```
 let grade: char = 'A'; // <- char literal: produces a `char`, a full Unicode scalar value
 ```
 
-**Restriction:** a char literal must contain exactly one Unicode scalar
+A char literal must contain exactly one Unicode scalar
 value — `'ab'` is a compile error, and lone surrogate-pair halves are
 never valid scalar values.
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A small hand-written tokenizer matches individual characters directly,
 including as inclusive range-pattern bounds.
@@ -58,12 +58,12 @@ fn classify(c: char) -> Token {
 }
 ```
 
-**Why this way:** matching `char` literals directly, including as range
+Matching `char` literals directly, including as range
 bounds, is exactly the form a small tokenizer needs, and the compiler
 enforces exhaustiveness over the match — a guarantee spelled out in the
 [Reference's pattern grammar](https://doc.rust-lang.org/reference/patterns.html).
 
-### Scenario: Working with text
+### Working with text
 
 A `char` is a decoded Unicode scalar value, not a byte — iterating text
 `char`-by-char avoids the panics that raw byte indexing risks on
@@ -81,7 +81,7 @@ let len_bytes = word.len();           // 5 bytes -- 'é' is 2 bytes in UTF-8
 assert_ne!(len_chars, len_bytes);
 ```
 
-**Why this way:** a `char` is always a full Unicode scalar value, so
+A `char` is always a full Unicode scalar value, so
 `.chars()` is the safe way to walk text that might contain multi-byte
 characters — a `str` can't be indexed by a single `usize` at all, and
 *slicing* it (`&s[0..n]`) panics if a bound falls inside a multi-byte

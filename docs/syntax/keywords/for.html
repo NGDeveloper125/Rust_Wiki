@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -976,24 +975,18 @@ same way <code>while</code>/<code>loop</code> do.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">for item in [1, 2, 3] { // &lt;- `for` iterates over anything implementing `IntoIterator`
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Iterating over a fixed array</h3>
+            <pre><code class="rust">for item in [1, 2, 3] { // &lt;- `for` iterates over anything implementing `IntoIterator`
     println!("{item}");
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Printing only the large orders from a list reads best as <code>for</code> driving an
 adaptor chain, rather than a <code>for</code> loop whose body starts with an <code>if</code>.</p>
@@ -1004,19 +997,14 @@ for total in orders.iter().filter(|&amp;&amp;t| t &gt; 20.0) {
     println!("large order: {total}");
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> letting <code>filter</code> express the condition keeps the loop
+<p>Letting <code>filter</code> express the condition keeps the loop
 body focused on what to <em>do</em> with each item rather than whether to do it
 — the
 <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html"><code>Iterator</code> trait docs</a>
 are themselves written around composing adaptors this way.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Message passing between threads</h3>
             <p>A worker thread sends results over a channel and then finishes; the
 receiving side drains everything sent with a plain <code>for</code> loop, which ends
@@ -1036,13 +1024,12 @@ for message in rx { // &lt;- `for` drains the receiver until the channel closes
     println!("{message}");
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>Receiver</code> implements <code>IntoIterator</code> (for both
+<p><code>Receiver</code> implements <code>IntoIterator</code> (for both
 <code>Receiver</code> and <code>&amp;Receiver</code>), so <code>for message in rx</code> blocks for the next
 message and stops cleanly once all senders have dropped — the
 <a href="https://doc.rust-lang.org/book/ch16-02-message-passing.html">Book's message-passing chapter</a>
 uses exactly this shape instead of a manual <code>loop</code> calling <code>.recv()</code>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1057,7 +1044,7 @@ uses exactly this shape instead of a manual <code>loop</code> calling <code>.rec
 <code>for</code> works exactly as it does with <code>std</code> collections — the <code>Iterator</code>
 machinery lives in <code>core</code>, not <code>std</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -20,19 +20,19 @@ with byte `0x89` = 137). What you can't write directly is a non-ASCII
 magic-number byte sequences where you specifically want raw bytes, not
 validated UTF-8 text.
 
-## Basic usage example
+## Usage examples
+
+### Producing a fixed-size byte array
 
 ```
 let magic: &[u8; 3] = b"GIF"; // <- byte string literal: produces `&[u8; N]`, not `&str`
 ```
 
-**Restriction:** *character* content must be ASCII (`b"café"` is an
+*Character* content must be ASCII (`b"café"` is an
 error), but `\xHH` escapes reach any byte `0x00`–`0xFF` — which is how a
 byte string still expresses non-ASCII bytes like `b"\xFF"`.
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 A multi-byte file-format signature — like PNG's 8-byte magic number —
 reads and compares cleanly as one byte string literal.
@@ -45,12 +45,12 @@ fn looks_like_png(data: &[u8]) -> bool {
 }
 ```
 
-**Why this way:** writing the whole magic number as one `b"..."` literal
+Writing the whole magic number as one `b"..."` literal
 keeps the exact byte sequence readable and comparable in a single place,
 checked against real input with
 [`slice::starts_with`](https://doc.rust-lang.org/std/primitive.slice.html#method.starts_with).
 
-### Scenario: Validating input
+### Validating input
 
 Checking a fixed byte signature before attempting to parse the rest of a
 stream turns "is this even the right format" into one cheap check up
@@ -67,7 +67,7 @@ fn parse_gzip_header(data: &[u8]) -> Result<(), &'static str> {
 }
 ```
 
-**Why this way:** validating the signature bytes before doing any real
+Validating the signature bytes before doing any real
 parsing work turns a malformed-input case into one obviously-correct
 check up front, instead of discovering the mismatch deep inside a
 partially-completed parse — rejecting bad input at the boundary keeps the

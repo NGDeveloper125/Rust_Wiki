@@ -946,8 +946,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -963,25 +962,19 @@ validated UTF-8 text.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let magic: &amp;[u8; 3] = b"GIF"; // &lt;- byte string literal: produces `&amp;[u8; N]`, not `&amp;str`
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Producing a fixed-size byte array</h3>
+            <pre><code class="rust">let magic: &amp;[u8; 3] = b"GIF"; // &lt;- byte string literal: produces `&amp;[u8; N]`, not `&amp;str`
 </code></pre>
-<p><strong>Restriction:</strong> <em>character</em> content must be ASCII (<code>b"café"</code> is an
+<p><em>Character</em> content must be ASCII (<code>b"café"</code> is an
 error), but <code>\xHH</code> escapes reach any byte <code>0x00</code>–<code>0xFF</code> — which is how a
 byte string still expresses non-ASCII bytes like <code>b"\xFF"</code>.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>A multi-byte file-format signature — like PNG's 8-byte magic number —
 reads and compares cleanly as one byte string literal.</p>
@@ -991,18 +984,13 @@ fn looks_like_png(data: &amp;[u8]) -&gt; bool {
     data.starts_with(PNG_SIGNATURE)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> writing the whole magic number as one <code>b"..."</code> literal
+<p>Writing the whole magic number as one <code>b"..."</code> literal
 keeps the exact byte sequence readable and comparable in a single place,
 checked against real input with
 <a href="https://doc.rust-lang.org/std/primitive.slice.html#method.starts_with"><code>slice::starts_with</code></a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Checking a fixed byte signature before attempting to parse the rest of a
 stream turns "is this even the right format" into one cheap check up
@@ -1016,13 +1004,12 @@ front.</p>
     Ok(())
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> validating the signature bytes before doing any real
+<p>Validating the signature bytes before doing any real
 parsing work turns a malformed-input case into one obviously-correct
 check up front, instead of discovering the mismatch deep inside a
 partially-completed parse — rejecting bad input at the boundary keeps the
 rest of the parser working only with data it has already vetted.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1037,7 +1024,7 @@ rest of the parser working only with data it has already vetted.</p>
 binary's read-only data with no allocation — ideal for protocol frame
 templates and lookup tables in embedded code.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

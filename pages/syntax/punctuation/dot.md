@@ -38,7 +38,9 @@ writing `(*my_box).len()` by hand. This mechanism is `Deref`-based and is
 covered from the token's own angle on the [`*`](../operators/asterisk.md)
 page rather than repeated here.
 
-## Basic usage example
+## Usage examples
+
+### Field access, tuple indexing, and method chaining
 
 ```
 struct Point { x: f64, y: f64 }
@@ -53,9 +55,7 @@ let text = "  Hello  ";
 println!("{}", text.trim().to_lowercase()); // <- `.` chains two method calls left to right
 ```
 
-## Best practices & deeper information
-
-### Scenario: Creating a new object
+### Creating a new object
 
 A builder's methods each take and return `Self`, so `.` chains them into
 one expression that reads as a sequence of configuration steps ending in
@@ -82,17 +82,17 @@ let request = RequestBuilder::new("https://api.example.com")
     .timeout_ms(2000); // <- `.` chains onto the value the previous call returned
 ```
 
-**Why this way:** each builder method returning `Self` is what makes
+Each builder method returning `Self` is what makes
 chaining with `.` possible at all — the
 [Rust Design Patterns book](https://rust-unofficial.github.io/patterns/patterns/creational/builder.html)
-covers this shape as the idiomatic way to assemble a many-field value
+covers this shape as a way to assemble a many-field value
 step by step, without needing a temporary mutable variable at the call
 site.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
-Reaching for `.0`/`.1` instead of a full destructuring pattern is the
-right call when only one field of a tuple or tuple struct is needed —
+Reaching for `.0`/`.1` instead of a full destructuring pattern works well
+when only one field of a tuple or tuple struct is needed —
 matching every field just to discard most of them adds ceremony a
 positional dot access avoids.
 
@@ -111,10 +111,10 @@ fn describe(color: &Rgb) -> String {
 }
 ```
 
-**Why this way:** `.0` is the more direct choice whenever the rest of the
-tuple genuinely isn't needed at that call site; reach for a `match`/`let`
-pattern instead the moment more than one field is being pulled out,
-since naming each field there reads more clearly than a run of numbered
+`.0` is the more direct choice whenever the rest of the
+tuple genuinely isn't needed at that call site, while a `match`/`let`
+pattern reads more clearly once more than one field is being pulled out,
+since naming each field there beats a run of numbered
 dot accesses.
 
 ## Embedded Rust Notes

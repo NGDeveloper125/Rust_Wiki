@@ -21,7 +21,9 @@ integers is a pure bit-shift, unrelated to C++'s
 overload of `<<` for stream output — Rust uses `{}`/`write!` and the
 `Display`/`Debug` traits for formatting instead.
 
-## Basic usage example
+## Usage examples
+
+### Left-shifting the bits of an integer
 
 ```
 let x = 1u8 << 3; // <- `<<` shifts the bits of `1u8` left by 3
@@ -33,9 +35,7 @@ shift amount is masked to the bit width (defined, but usually not what
 you meant) — use `checked_shl`/`wrapping_shl` to make the boundary case
 explicit.
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Turning a bit position into a single-bit mask — "the bit for pin 5" — is
 one of `<<`'s most common jobs, and reads far more clearly than writing
@@ -53,7 +53,7 @@ let enabled = pin_mask(0) | pin_mask(3) | pin_mask(5);
 assert_eq!(enabled, 0b0010_1001);
 ```
 
-**Why this way:** `1 << pin` names the intent ("the bit at this
+`1 << pin` names the intent ("the bit at this
 position") directly, whereas hand-computing the equivalent power-of-two
 literal invites off-by-one mistakes; the
 [Rust by Example bitwise chapter](https://doc.rust-lang.org/rust-by-example/primitives/literals.html)

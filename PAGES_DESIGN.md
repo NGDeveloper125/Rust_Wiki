@@ -25,10 +25,10 @@ examples than the official book, in a format we control.
 |   SIDEBAR      |                                                  |
 |                |   The page we are currently viewing.             |
 |  Expandable    |                                                  |
-|  area headers  |   3 sections per page:                           |
-|  (nav tree)    |   1. Explanation                                 |
-|                |   2. Basic usage example                         |
-|                |   3. Best practices / deep                       |
+|  area headers  |   Concept pages: Explanation / Basic usage /     |
+|  (nav tree)    |   Best practices / Embedded Rust Notes.          |
+|                |   Syntax pages: Explanation / Usage examples /   |
+|                |   Embedded Rust Notes (§1.3).                    |
 |                |                                                  |
 +----------------+--------------------------------------------------+
 ```
@@ -56,15 +56,28 @@ The two groups **cross-link bidirectionally** so a reader can jump from a
 concept to the syntax it uses, and from a syntax word to the concepts it
 belongs to.
 
-### 1.3 Page anatomy — three fixed sections
+### 1.3 Page anatomy
 
-Every page (both groups) has the same three sections, in order:
+The two page groups no longer share one fixed shape (see decision #13):
+
+**Concept pages** — four sections, in order:
 
 1. **Explanation** — the pure, plain explanation of what it is and what it does.
 2. **Basic usage example** — the simplest representative, runnable example.
 3. **Best practices & deeper information** — idioms, gotchas, scenario-specific
    guidance, performance notes, and anything else worth knowing. Structured as
-   scenario blocks from a fixed catalog — see [SECTION3_GUIDE.md](SECTION3_GUIDE.md).
+   scenario blocks from a fixed catalog — see [SECTION3_GUIDE.md](SECTION3_GUIDE.md)
+   (concept pages only).
+4. **Embedded Rust Notes** — see §2.5.
+
+**Syntax pages** — three sections, in order:
+
+1. **Explanation** — the pure, plain explanation of what it is and what it does.
+2. **Usage examples** — a list of titled, self-contained examples, each
+   showing a different way the token/syntax is used, with a short
+   explanation. No "best practice" framing and no fixed scenario catalog —
+   each page picks whichever uses are genuinely distinct for that token.
+3. **Embedded Rust Notes** — see §2.5.
 
 ---
 
@@ -74,7 +87,8 @@ These are the rules that keep pages uniform.
 
 ### 2.1 Page template
 
-Every page starts from the same skeleton (fields TBD once we pick a stack):
+Frontmatter fields are shared by both groups (fields TBD once we pick a
+stack); the body headings differ per §1.3:
 
 ```
 Title:            <the syntax word or concept name>
@@ -87,10 +101,20 @@ Embedded support: full | partial | none   (drives the Classic/Embedded
 Related concepts: [links]   (on syntax pages)
 Related syntax:   [links]   (on concept pages)
 See also:         [links to sibling pages]
+```
 
+Concept pages:
+```
 ## Explanation
 ## Basic usage example
 ## Best practices & deeper information
+## Embedded Rust Notes   (short delta note, see §2.5 — not a rewritten page)
+```
+
+Syntax pages:
+```
+## Explanation
+## Usage examples          (### <title> per example — see §1.3)
 ## Embedded Rust Notes   (short delta note, see §2.5 — not a rewritten page)
 ```
 
@@ -104,8 +128,10 @@ See also:         [links to sibling pages]
 ### 2.3 Examples
 
 - Every example must **compile** on a stated Rust edition (see §4.6).
-- Prefer minimal examples in the "Basic usage" section; save elaborate ones for
-  "Best practices."
+- Concept pages: prefer minimal examples in the "Basic usage" section; save
+  elaborate ones for "Best practices."
+- Syntax pages: no minimal/elaborate split — each "Usage examples" entry is
+  self-contained and sized to what it needs to show.
 - Consider linking each example to the **Rust Playground** so readers can run it.
 
 ### 2.4 Tone & sourcing
@@ -185,9 +211,9 @@ Practical consequence to handle (see §4.11): many tokens can't be filenames or
 URLs directly (`?`, `&`, `::`, `#`), so each needs a stable human-readable slug.
 
 ### 4.2 Syntax vs. concept — DECIDED: cover both sides in full, by angle
-Both groups get the **full, deep 3-section treatment** — we are NOT making
-syntax pages shallow stubs. The difference is the **angle**, and the two pages
-**point at each other** so the reader can jump between them:
+Both groups get the **full, deep treatment** — we are NOT making syntax pages
+shallow stubs. The difference is the **angle**, and the two pages **point at
+each other** so the reader can jump between them:
 
 - **Syntax page (e.g. `fn`)** — the token in code: how you write it, where it is
   legal, its exact grammar/forms, what it desugars to, syntax-level gotchas.
@@ -195,9 +221,12 @@ syntax pages shallow stubs. The difference is the **angle**, and the two pages
 - **Concept page (e.g. Functions)** — the idea in full: the mental model, why it
   exists, design guidance, tradeoffs, all the deeper info about using it well.
 
-Both pages carry Explanation + Basic usage + Best practices, written from their
-own angle. `fn` ⇄ Functions, `&` ⇄ Borrowing, `move` ⇄ Move semantics,
-`dyn` ⇄ Trait objects — each pair cross-links both ways.
+Both pages carry Explanation + Embedded Rust Notes, written from their own
+angle; the middle section differs (§1.3, decision #13) — concept pages carry
+Basic usage + Best practices, syntax pages carry Usage examples (the
+different ways to write the token, not best-practice guidance). `fn` ⇄
+Functions, `&` ⇄ Borrowing, `move` ⇄ Move semantics, `dyn` ⇄ Trait objects —
+each pair cross-links both ways.
 
 **Watch-out (still real):** because both sides are deep, we must avoid
 *accidental duplication* of the same paragraphs. Guideline: if content is about
@@ -293,7 +322,8 @@ check.
 | 9 | First vertical slice page set (§4.7) | _open_ | |
 | 10 | Sidebar/group membership | **Many-to-many** — a page may belong to multiple groups at once (e.g. a syntax token appearing under two concept areas, or a concept appearing under several taxonomies); no forced single "primary" group. Group names are listed on the page itself | 2026-07-18 |
 | 11 | Embedded Rust toggle (§2.5) | **Lightweight delta notes** — the 3 core sections stay hosted-Rust-only; one added "Embedded Rust Notes" block per page, driven by an `embedded_support: full/partial/none` field. `none` disables the toggle in the UI but the block still explains why | 2026-07-18 |
-| 12 | Section 3 structure (§1.3) | **Scenario-based** — a fixed catalog of real-world scenarios with stable titles (`### Scenario: …`); each page gets 2–4 blocks for only the scenarios where its item is load-bearing. Catalog, crate policy, sources, and QA rules in [SECTION3_GUIDE.md](SECTION3_GUIDE.md) | 2026-07-19 |
+| 12 | Section 3 structure (§1.3) | **Scenario-based** — a fixed catalog of real-world scenarios with stable titles (`### Scenario: …`); each page gets 2–4 blocks for only the scenarios where its item is load-bearing. Catalog, crate policy, sources, and QA rules in [SECTION3_GUIDE.md](SECTION3_GUIDE.md). **Concept pages only as of decision #13.** | 2026-07-19 |
+| 13 | Drop "Best practices" from syntax pages (§1.3) | **Syntax pages** replace "Basic usage example" + scenario-based "Best practices & deeper information" with a single **"Usage examples"** section: titled, self-contained examples covering the different ways the token is used, each with a short explanation — no best-practice framing, no fixed catalog. **Concept pages are unaffected**, keeping decision #12's scenario-based Best-practices structure verbatim | 2026-07-21 |
 
 ---
 

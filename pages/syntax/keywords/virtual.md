@@ -32,16 +32,16 @@ Using `virtual` as an ordinary identifier is a compile error today. The
 raw-identifier form `r#virtual` is legal, the same escape hatch every
 reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### The `virtual` reservation error and raw-identifier escape hatch
 
 ```
 let virtual = 5;     // error: expected identifier, found reserved keyword `virtual`
 let r#virtual = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Runtime polymorphism
+### Runtime polymorphism
 
 Dispatching a call to one of several different concrete types at
 runtime — the job a `virtual` method would do in a class hierarchy — is
@@ -74,7 +74,7 @@ fn checkout(method: &dyn PaymentMethod, cents: u64) {
 checkout(&CreditCard, 2599);
 ```
 
-**Why this way:** `dyn Trait` already gives Rust the runtime-dispatch
+`dyn Trait` already gives Rust the runtime-dispatch
 behavior a `virtual` keyword would provide in a class-based language, by
 dispatching through a trait object's vtable instead of a class
 hierarchy — see [Trait objects & dynamic dispatch](../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.md)

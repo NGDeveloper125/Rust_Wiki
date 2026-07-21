@@ -944,8 +944,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -977,9 +976,12 @@ compiler warning itself rather than requiring a trip to a changelog.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[deprecated(since = "1.2.0", note = "use `parse_duration_ms` instead")] // &lt;- warns at every call site
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Deprecating a function in favor of its replacement</h3>
+            <pre><code class="rust">#[deprecated(since = "1.2.0", note = "use `parse_duration_ms` instead")] // &lt;- warns at every call site
 pub fn parse_duration(input: &amp;str) -&gt; u64 {
     parse_duration_ms(input)
 }
@@ -989,17 +991,8 @@ pub fn parse_duration_ms(input: &amp;str) -&gt; u64 {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A library replaces an older, ambiguously-named function with a clearer
 one — rather than deleting the old function outright and breaking every
@@ -1024,8 +1017,7 @@ fn build_default_policy() -&gt; RetryPolicy {
     RetryPolicy::with_max_attempts(3) // &lt;- migrated call site: no warning
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> deprecating first and removing later, rather than
+<p>Deprecating first and removing later, rather than
 removing immediately, gives downstream crates a compiler-enforced,
 visible warning to act on across their own release cycle instead of a
 sudden hard break — the
@@ -1034,7 +1026,7 @@ and standard semver practice both treat "deprecate, then remove in a
 later breaking release" as the normal migration path for a stable public
 API, and naming the replacement directly in <code>note</code> is what makes the
 warning actionable rather than just a red flag.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1050,7 +1042,7 @@ diagnostic mechanism — it works identically in <code>#![no_std]</code> crates,
 just as useful there for a HAL crate migrating callers from an old
 peripheral API to a redesigned one across major versions.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

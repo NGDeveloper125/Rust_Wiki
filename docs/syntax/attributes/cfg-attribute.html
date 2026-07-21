@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -998,9 +997,12 @@ selects Unix-like targets excluding macOS specifically.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[cfg(target_os = "linux")] // &lt;- this whole function is removed from the build on any other OS
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Compiling different function bodies per target OS</h3>
+            <pre><code class="rust">#[cfg(target_os = "linux")] // &lt;- this whole function is removed from the build on any other OS
 fn platform_name() -&gt; &amp;'static str {
     "linux"
 }
@@ -1011,17 +1013,8 @@ fn platform_name() -&gt; &amp;'static str {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A driver crate supports several platforms, each with a genuinely
 different implementation module — <code>#[cfg(...)]</code> on the <code>mod</code> declarations
@@ -1044,8 +1037,7 @@ pub fn connect() {
     let _port = open_serial_port();
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> each backend module can freely call platform-specific
+<p>Each backend module can freely call platform-specific
 APIs that simply don't exist (and wouldn't compile) on the other
 platform, because <code>#[cfg(...)]</code> guarantees the excluded module's code is
 never handed to the compiler at all — the
@@ -1053,13 +1045,9 @@ never handed to the compiler at all — the
 documents <code>cfg</code> attributes as operating before macro expansion and
 type-checking for exactly this reason, unlike a runtime <code>if</code> which would
 require both backends to compile unconditionally.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>A struct carries an extra diagnostic field only in debug builds, keeping
 the release build's memory layout and binary size free of data nobody
@@ -1080,14 +1068,13 @@ impl RequestLog {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>#[cfg(...)]</code> on an individual struct field removes it
+<p><code>#[cfg(...)]</code> on an individual struct field removes it
 from the type's layout entirely in builds where the condition is false,
 so a release build pays zero size or allocation cost for a field that
 exists purely to help debugging — every place the field is named
 (declaration and every constructor) needs the matching <code>#[cfg(...)]</code>, or
 the mismatched builds fail to compile.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1106,7 +1093,7 @@ keep unsupported targets' code from ever being compiled, since much of
 that code (raw register addresses, chip-specific intrinsics) wouldn't
 even type-check against a different target's memory map.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

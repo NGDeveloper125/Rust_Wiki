@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -972,9 +971,12 @@ form useful for structuring multi-step logic without a <code>loop</code> at all.
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let done = true;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Exiting a `loop` immediately</h3>
+            <pre><code class="rust">let done = true;
 loop {
     if done {
         break; // &lt;- exits the loop immediately
@@ -987,17 +989,8 @@ those loops can terminate without executing any <code>break</code> (the conditio
 turns false or the iterator runs out), so a loop value would have no
 defined result.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Searching a slice of orders for one matching an id can be written as a
 manual loop over an iterator so that a match arm can <code>break</code> with the
@@ -1019,19 +1012,14 @@ let found = loop {
     }
 };
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> for a plain predicate search,
+<p>For a plain predicate search,
 <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.find"><code>Iterator::find</code></a>
 is more idiomatic than a hand-rolled loop; <code>break value</code> earns its keep
 once the search loop needs to do per-item work an adaptor chain can't
 express as cleanly.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>A loop draining a queue of commands can use <code>break</code> inside one arm of a
 <code>match</code> to stop only on a specific variant, while other variants keep the
@@ -1049,15 +1037,14 @@ while let Some(cmd) = queue.pop() {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> scoping the exit condition to one <code>match</code> arm reads more
+<p>Scoping the exit condition to one <code>match</code> arm reads more
 directly than a boolean flag checked after the match, and the
 <a href="https://doc.rust-lang.org/reference/expressions/loop-expr.html">Reference's loop expressions</a>
 confirm <code>break</code> is legal from any position textually inside the loop body,
 including nested inside a <code>match</code> — with two exceptions: it cannot cross
 a closure or <code>async</code> block boundary to exit an outer loop, and an
 unlabeled <code>break</code> always targets the nearest enclosing loop.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1070,7 +1057,7 @@ unlabeled <code>break</code> always targets the nearest enclosing loop.</p>
         </span>
         <p><strong>Full support.</strong> No <code>std</code> dependency; works identically in <code>#![no_std]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

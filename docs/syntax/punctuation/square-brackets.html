@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -976,9 +975,12 @@ see the <a href="../../concepts/types-data-modeling/arrays-vs-vec.html">Arrays v
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let arr: [i32; 3] = [1, 2, 3]; // &lt;- `[i32; 3]` is the type, `[1, 2, 3]` the literal
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Declaring array types, indexing, and slicing</h3>
+            <pre><code class="rust">let arr: [i32; 3] = [1, 2, 3]; // &lt;- `[i32; 3]` is the type, `[1, 2, 3]` the literal
 let first = arr[0];            // &lt;- `[0]` here is indexing
 let slice: &amp;[i32] = &amp;arr[1..3]; // &lt;- `[1..3]` here is slicing
 </code></pre>
@@ -986,17 +988,8 @@ let slice: &amp;[i32] = &amp;arr[1..3]; // &lt;- `[1..3]` here is slicing
 index/range is out of bounds — there is no <code>Option</code>-returning <code>[]</code> form
 (use <code>.get()</code> for that instead).</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p><code>.get(i)</code> returns <code>Option&lt;&amp;T&gt;</code> instead of panicking, which makes it the
 right default for indices that aren't already known to be in bounds —
@@ -1013,20 +1006,15 @@ match scores.get(5) {
     None =&gt; println!("no 6th score"),
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>[]</code> indexing is appropriate when an out-of-range index
+<p><code>[]</code> indexing is appropriate when an out-of-range index
 means the program's own logic is broken (a genuine bug, worth a panic);
 <code>.get()</code> is appropriate whenever the index could legitimately be
 out-of-range because of external input — the
 <a href="https://doc.rust-lang.org/std/primitive.slice.html#method.get">std docs for slice indexing</a>
-make this the documented alternative specifically to avoid the panic.</p>
-</div>
+document this as the alternative specifically to avoid the panic.</p>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>Slicing with <code>[ ]</code> doesn't copy — <code>&amp;arr[1..3]</code> borrows a view into the
 original array/<code>Vec</code>, so several slices of the same data can coexist
@@ -1037,12 +1025,11 @@ let tail = &amp;data[2..];  // &lt;- borrows the rest; both slices borrow `data`
 
 println!("{head:?} {tail:?}"); // fine: both are read-only shared borrows
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> because a slice is just a <code>(pointer, length)</code> view, not
+<p>Because a slice is just a <code>(pointer, length)</code> view, not
 an allocation, splitting data into overlapping or adjacent read-only
 views via <code>[ ]</code> is effectively free — no cloning needed, unlike languages
 where a "slice" implies a copy.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1057,7 +1044,7 @@ where a "slice" implies a copy.</p>
 <code>[T]</code> both live in <code>core</code>) — no <code>std</code> dependency, and fixed-size arrays
 are the single most-used data structure in allocator-free embedded code.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

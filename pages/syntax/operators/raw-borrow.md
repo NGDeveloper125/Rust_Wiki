@@ -52,7 +52,9 @@ memory layouts — packed structs, memory-mapped hardware registers, data
 handed over from C — where an intermediate reference could itself be
 invalid before you ever get the chance to read through it.
 
-## Basic usage example
+## Usage examples
+
+### Reading an unaligned field of a packed struct
 
 ```
 #[repr(packed)]
@@ -67,9 +69,7 @@ let value = unsafe { reading_ptr.read_unaligned() };
 println!("{value}");
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A public wrapper around a packed protocol frame exposes safe getters that
 read each field through `&raw const` and `read_unaligned`, rather than ever
@@ -94,14 +94,14 @@ impl FrameHeader {
 }
 ```
 
-**Why this way:** forming a direct reference to a misaligned field of a
+Forming a direct reference to a misaligned field of a
 `#[repr(packed)]` struct is undefined behavior, which is exactly what the
 [Rust Reference's raw borrow operators section](https://doc.rust-lang.org/reference/expressions/operator-expr.html#raw-borrow-operators)
 documents `&raw const`/`&raw mut` as existing to avoid — the getter never
 creates the invalid intermediate reference the old `&self.length as *const
 u32` idiom would.
 
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A C library hands back a pointer to a tightly packed struct matching an
 external wire format; reading one field for logging shouldn't risk
@@ -129,7 +129,7 @@ fn log_flags() {
 }
 ```
 
-**Why this way:** the
+The
 [Rustonomicon's guidance on working with externally-defined layouts](https://doc.rust-lang.org/nomicon/other-reprs.html)
 favors raw pointers over references whenever a layout's alignment and
 validity can't be locally guaranteed — `&raw const` is the tool that keeps

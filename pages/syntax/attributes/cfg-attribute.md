@@ -52,7 +52,9 @@ hold), `any(a, b)` is OR (at least one must hold), and `not(a)` is
 negation — for example, `#[cfg(all(unix, not(target_os = "macos")))]`
 selects Unix-like targets excluding macOS specifically.
 
-## Basic usage example
+## Usage examples
+
+### Compiling different function bodies per target OS
 
 ```
 #[cfg(target_os = "linux")] // <- this whole function is removed from the build on any other OS
@@ -66,9 +68,7 @@ fn platform_name() -> &'static str {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A driver crate supports several platforms, each with a genuinely
 different implementation module — `#[cfg(...)]` on the `mod` declarations
@@ -94,7 +94,7 @@ pub fn connect() {
 }
 ```
 
-**Why this way:** each backend module can freely call platform-specific
+Each backend module can freely call platform-specific
 APIs that simply don't exist (and wouldn't compile) on the other
 platform, because `#[cfg(...)]` guarantees the excluded module's code is
 never handed to the compiler at all — the
@@ -103,7 +103,7 @@ documents `cfg` attributes as operating before macro expansion and
 type-checking for exactly this reason, unlike a runtime `if` which would
 require both backends to compile unconditionally.
 
-### Scenario: Working with collections
+### Working with collections
 
 A struct carries an extra diagnostic field only in debug builds, keeping
 the release build's memory layout and binary size free of data nobody
@@ -127,7 +127,7 @@ impl RequestLog {
 }
 ```
 
-**Why this way:** `#[cfg(...)]` on an individual struct field removes it
+`#[cfg(...)]` on an individual struct field removes it
 from the type's layout entirely in builds where the condition is false,
 so a release build pays zero size or allocation cost for a field that
 exists purely to help debugging — every place the field is named

@@ -40,7 +40,9 @@ with `#[repr(C)]` so its layout matches the C compiler's exactly — see
 since an `enum`'s hidden discriminant gives the same "one of several
 shapes" behavior with safe reads.
 
-## Basic usage example
+## Usage examples
+
+### Writing and reading a union field
 
 ```
 #[repr(C)]
@@ -53,9 +55,7 @@ let value = RegisterValue { as_u32: 0x1234_5678 }; // <- writing a field is safe
 let bytes = unsafe { value.as_bytes }; // <- `union` reads require `unsafe`: the compiler can't verify which field is live
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A C library's header declares a `union` alongside a separate tag field
 telling callers which member is active; the Rust binding mirrors both the
@@ -83,7 +83,7 @@ fn describe(reading: &SensorReading) -> String {
 }
 ```
 
-**Why this way:** because a `union` carries no discriminant of its own,
+Because a `union` carries no discriminant of its own,
 every read is only as safe as the external tag it's paired with is
 accurate — the
 [Rust Reference](https://doc.rust-lang.org/reference/items/unions.html)

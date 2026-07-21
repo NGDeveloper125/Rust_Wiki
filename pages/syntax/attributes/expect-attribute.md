@@ -36,16 +36,16 @@ warning) for as long as it's genuinely still needed, and reappears (a new
 warning) the moment it stops being needed, instead of lingering silently
 like a stale `#[allow]` would.
 
-## Basic usage example
+## Usage examples
+
+### Suppressing a lint that must eventually fire again
 
 ```
 #[expect(dead_code)] // <- suppresses the lint, but warns if dead_code stops firing here
 fn planned_for_next_release() {}
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A refactor leaves one helper function temporarily unused while a caller
 is being rewritten in a follow-up change — `#[expect(dead_code)]` silences
@@ -64,7 +64,7 @@ fn current_pricing(price_cents: u32) -> u32 {
 }
 ```
 
-**Why this way:** an `#[allow(dead_code)]` here would keep silencing the
+An `#[allow(dead_code)]` here would keep silencing the
 lint indefinitely even after `legacy_discount_calculation` gets wired in
 and the lint would no longer fire anyway, leaving a stale, misleading
 annotation behind; `#[expect(...)]` instead produces
@@ -73,7 +73,7 @@ annotation behind; `#[expect(...)]` instead produces
 documents as the attribute's specific purpose — catching suppressions
 that have outlived their reason for existing.
 
-### Scenario: Testing
+### Testing
 
 A test module temporarily has one helper assertion function that isn't
 called by any test yet, while the rest of the suite is being written —
@@ -95,7 +95,7 @@ mod tests {
 }
 ```
 
-**Why this way:** once a real test starts calling `assert_within_cents`,
+Once a real test starts calling `assert_within_cents`,
 `dead_code` stops firing and the `#[expect]` itself becomes a visible
 `unfulfilled_lint_expectation` warning — a natural nudge to delete the now
 pointless attribute — instead of the suppression silently persisting

@@ -39,7 +39,9 @@ closing brace already ends it, the same rule that lets a `fn` or `impl`
 block go without one. A `(...)`- or `[...]`-delimited invocation used as
 a statement still needs the trailing `;` (`println!("ready");`).
 
-## Basic usage example
+## Usage examples
+
+### Equivalent delimiters for a list-like macro
 
 ```
 let a = vec!(1, 2, 3); // <- legal: () instead of the conventional [] for this list-like macro
@@ -47,9 +49,7 @@ let b = vec![1, 2, 3]; // <- idiomatic form for vec!, matching array-literal syn
 assert_eq!(a, b);      // <- both invocations expand identically
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A metrics module defines a thread-local counter with std's
 `thread_local!` macro, which expands into full item definitions — so, by
@@ -68,7 +68,7 @@ fn record_request() {
 }
 ```
 
-**Why this way:** the compiler would accept any of the three delimiter
+The compiler would accept any of the three delimiter
 pairs here, but `{...}` is the idiomatic signal that a macro's expansion
 is itself one or more items rather than a value — the same visual cue an
 ordinary `mod` or `impl` block gives, which is why

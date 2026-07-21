@@ -45,7 +45,9 @@ for which traits the compiler derives natively and their exact rules, and
 for how a crate builds its *own* derivable trait using this same
 attribute syntax.
 
-## Basic usage example
+## Usage examples
+
+### Deriving common traits mechanically
 
 ```
 #[derive(Debug, Clone, PartialEq)] // <- generates Debug, Clone, and PartialEq impls mechanically
@@ -56,9 +58,7 @@ let b = a.clone();
 println!("{:?} {}", b, a == b);
 ```
 
-## Best practices & deeper information
-
-### Scenario: Implementing traits
+### Implementing traits
 
 Reaching for `#[derive(...)]` first, and only dropping to a hand-written
 `impl` once the mechanical, field-by-field behavior stops being correct,
@@ -80,14 +80,14 @@ impl PartialEq for SensorReading {
 }
 ```
 
-**Why this way:** `#[derive(PartialEq)]` would compare `measured_at` too,
+`#[derive(PartialEq)]` would compare `measured_at` too,
 which isn't the intended meaning of equality here — the
 [API Guidelines' C-COMMON-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html)
 still recommends implementing `PartialEq`, just not necessarily via
 derive, whenever the mechanical field-by-field behavior isn't what's
 wanted.
 
-### Scenario: Testing
+### Testing
 
 `assert_eq!` requires both `PartialEq` (to compare the two sides) and
 `Debug` (to print them in the failure message) — deriving both together
@@ -104,7 +104,7 @@ fn totals_order_correctly() {
 }
 ```
 
-**Why this way:** without `#[derive(Debug)]`, this fails to *compile*,
+Without `#[derive(Debug)]`, this fails to *compile*,
 not just to pass — `assert_eq!` requires `Debug` on both sides to build
 its failure message, as the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)

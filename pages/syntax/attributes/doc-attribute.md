@@ -42,7 +42,9 @@ parentheses hold a meta item rather than a string.
   complete docs inlined at the root than as a link the reader has to
   follow.
 
-## Basic usage example
+## Usage examples
+
+### Registering an alternate search term for rustdoc
 
 ```
 #[doc(alias = "size")] // <- makes this method findable in rustdoc search under "size" too
@@ -51,9 +53,7 @@ pub fn len(&self) -> usize {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Documenting an API
+### Documenting an API
 
 A derive macro generates a helper trait implementation that references an
 internal type the macro needs public for the expansion to compile, but
@@ -74,7 +74,7 @@ impl SensorReadingFieldNames {
 }
 ```
 
-**Why this way:** a macro-generated support type frequently has to be
+A macro-generated support type frequently has to be
 `pub` purely so the expanded code compiles in the caller's crate, even
 though no human is meant to use it directly — the
 [rustdoc book](https://doc.rust-lang.org/rustdoc/write-documentation/the-doc-attribute.html#hidden)
@@ -82,7 +82,7 @@ documents `#[doc(hidden)]` as exactly this "publicly reachable, not
 publicly documented" escape hatch, distinct from actually making the item
 private (which would break the very macro expansion it exists to support).
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A crate's real implementation lives in a private internal module, but the
 type is re-exported at the crate root as the officially supported way to
@@ -108,7 +108,7 @@ mod internal_pricing_engine {
 pub use internal_pricing_engine::DiscountCalculator;
 ```
 
-**Why this way:** without `#[doc(inline)]`, rustdoc's default re-export
+Without `#[doc(inline)]`, rustdoc's default re-export
 rendering is a short link back to `internal_pricing_engine`, which is a
 confusing detour for a module that isn't meant to be part of the public
 API surface at all — the

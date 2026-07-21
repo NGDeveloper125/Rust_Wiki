@@ -44,7 +44,9 @@ paired with [repetition](repetition.md) to walk over several of them) is
 the escape hatch when a macro genuinely needs to see the raw tokens
 rather than have them parsed away.
 
-## Basic usage example
+## Usage examples
+
+### Matching an expression fragment
 
 ```
 macro_rules! print_typed {
@@ -54,9 +56,7 @@ macro_rules! print_typed {
 print_typed!(2 + 2); // <- prints 4
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 An assertion macro needs to see which comparison operator was written so
 it can pick the matching `assert!` message — but `expr` would swallow
@@ -83,7 +83,7 @@ let threshold = 100;
 assert_op!(pressure > threshold); // PREFER: `tt` keeps `>` visible so the matcher can pick the right arm
 ```
 
-**Why this way:** once a fragment matches as `expr`, it can't be
+Once a fragment matches as `expr`, it can't be
 inspected or re-matched by a later rule — the
 [Rust Reference's fragment-specifier semantics](https://doc.rust-lang.org/reference/macros-by-example.html#metavariables)
 document `expr` as producing an opaque AST node, which is exactly why

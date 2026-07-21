@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -972,9 +971,12 @@ back to the caller.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">enum ConnectionState {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Checking a variant without extracting its data</h3>
+            <pre><code class="rust">enum ConnectionState {
     Connected,
     Disconnected,
     Reconnecting { attempt: u32 },
@@ -984,17 +986,8 @@ let state = ConnectionState::Reconnecting { attempt: 2 };
 let is_reconnecting = matches!(state, ConnectionState::Reconnecting { .. }); // &lt;- true, without binding `attempt`
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>Filtering a list of jobs down to the ones currently active is a yes/no
 question per job — exactly what <code>matches!</code> is for instead of a full
@@ -1013,19 +1006,14 @@ fn is_active(status: &amp;JobStatus) -&gt; bool {
 let jobs = vec![JobStatus::Queued, JobStatus::Finished, JobStatus::Running { worker_id: 3 }];
 let active_count = jobs.iter().filter(|job| is_active(job)).count();
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/std/macro.matches.html">std docs</a> note that a
 <code>match</code> with two arms both returning <code>true</code>/<code>false</code> (or an <code>if let ... else</code>) says the same thing with more ceremony; <code>matches!</code> states the
 yes/no intent directly, including the <code>|</code> pattern-alternation shorthand
 for "any of these variants."</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Rejecting a request whose priority isn't one of a small allowed set uses
 a pattern guard to narrow one variant further by a field value.</p>
@@ -1043,13 +1031,12 @@ fn is_acceptable(priority: &amp;Priority) -&gt; bool {
 assert!(is_acceptable(&amp;Priority::High(2)));
 assert!(!is_acceptable(&amp;Priority::High(9)));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a pattern guard lets a single boolean check express
+<p>A pattern guard lets a single boolean check express
 "this variant, but only within these bounds," matching the
 <a href="https://doc.rust-lang.org/reference/expressions/match-expr.html#match-guards">Reference's match-guard semantics</a>
 exactly as it would inside a full <code>match</code> — without the extra arm and
 inner <code>if</code> a full <code>match</code> would otherwise need.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1064,7 +1051,7 @@ inner <code>if</code> a full <code>match</code> would otherwise need.</p>
 time and introduces no runtime dependency beyond the pattern match
 itself — identical under <code>#![no_std]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -20,19 +20,19 @@ character like `b'é'` is a compile error. To reach the rest of the
 [character literal](char-literal.md) (`'H'`), which produces a full
 Unicode `char` (4 bytes) instead of a `u8`.
 
-## Basic usage example
+## Usage examples
+
+### Producing a u8 byte value
 
 ```
 let byte: u8 = b'A'; // <- byte literal: produces a `u8` (65), not a `char`
 ```
 
-**Restriction:** the *character* form is ASCII-only (`b'é'` is a compile
+The *character* form is ASCII-only (`b'é'` is a compile
 error), but a `\xHH` byte escape reaches the full `0x00`–`0xFF` range
 (`b'\xFF'` = 255).
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Matching a single magic byte in a protocol header reads clearest against
 a byte literal, right inside the match pattern.
@@ -48,7 +48,7 @@ fn parse_frame(data: &[u8]) -> Option<&[u8]> {
 assert_eq!(parse_frame(&[0x7E, 1, 2, 3]), Some(&[1u8, 2, 3][..]));
 ```
 
-**Why this way:** matching against `b'\x7E'` directly reads as "this
+Matching against `b'\x7E'` directly reads as "this
 specific marker byte," clearer at the call site than comparing against a
 bare numeric constant like `126` — byte literals are valid patterns, as
 the [Reference's patterns chapter](https://doc.rust-lang.org/reference/patterns.html)

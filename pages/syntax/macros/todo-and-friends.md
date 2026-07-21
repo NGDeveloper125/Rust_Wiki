@@ -40,7 +40,9 @@ been handled, or code reached only after a prior check has already ruled
 a value out). Reaching it means an invariant the code relies on was
 actually false — a genuine bug, not missing work.
 
-## Basic usage example
+## Usage examples
+
+### Marking a permanently unsupported method
 
 ```
 trait Storage {
@@ -62,9 +64,7 @@ impl Storage for ReadOnlyStorage {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A `Shape` trait's area method is implemented for every variant except one
 still being built out — `todo!()` marks the honest gap during
@@ -92,12 +92,12 @@ impl Shape for Polygon {
 }
 ```
 
-**Why this way:** [Effective Rust](https://effective-rust.com/) treats
+[Effective Rust](https://effective-rust.com/) treats
 `todo!()` during active development as a signal to reviewers and
 teammates that the gap is expected to close, which `unimplemented!()`
 would misleadingly suggest is a deliberate, final design choice instead.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 An exhaustive `match` over an order's state machine has already handled
 every real transition; the final arm exists only as a safety net the type
@@ -120,7 +120,7 @@ fn next_state(state: OrderState) -> OrderState {
 }
 ```
 
-**Why this way:** `unreachable!()` documents an invariant enforced
+`unreachable!()` documents an invariant enforced
 elsewhere in the program (callers are expected to check for
 `OrderState::Delivered` before calling `next_state`), turning a silent
 logic bug into a loud, immediate panic instead of quietly continuing on

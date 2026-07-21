@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -989,26 +988,20 @@ for <code>move</code> to apply to. It is exclusively a closure/async-block modif
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let price = 19.99;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Forcing a closure to capture by value</h3>
+            <pre><code class="rust">let price = 19.99;
 let compute_total = move |quantity: u32| price * quantity as f64; // &lt;- forces `price` to be captured by value
 
 println!("{}", compute_total(3));
 println!("{price}"); // still valid: f64 is Copy, so `move` copied it rather than invalidating `price`
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Multi-threading</h3>
             <p>A spawned thread's closure has to own everything it touches, since the
 thread may still be running after the function that spawned it returns —
@@ -1025,19 +1018,14 @@ let handle = thread::spawn(move || {
 
 handle.join().unwrap();
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>thread::spawn</code> requires its closure to be <code>'static</code>
+<p><code>thread::spawn</code> requires its closure to be <code>'static</code>
 because the new thread isn't bounded by the caller's stack frame, so nothing
 it captures may borrow from that frame — the
 <a href="https://doc.rust-lang.org/book/ch16-01-threads.html#using-move-closures-with-threads">Book's concurrency chapter</a>
 covers <code>move</code> as the standard way to satisfy that bound.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Message passing between threads</h3>
             <p>A producer closure needs to own both the channel's <code>Sender</code> and the data it
 sends, so that the <code>Sender</code> is dropped (and the channel closed) exactly when
@@ -1059,19 +1047,14 @@ for received in rx {
     println!("got: {received}");
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> dropping every clone of the <code>Sender</code> is what signals the
+<p>Dropping every clone of the <code>Sender</code> is what signals the
 receiving end that no more messages are coming — the
 <a href="https://doc.rust-lang.org/book/ch16-02-message-passing.html">Book's message-passing chapter</a>
 relies on <code>move</code> to put the <code>Sender</code> inside the closure so it drops with it,
 rather than lingering in the spawning function's scope.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Async tasks</h3>
             <p>A task handed to an async runtime can outlive the function that spawned it,
 just like a thread — <code>move</code> follows <code>async</code> for exactly the same reason it
@@ -1089,13 +1072,12 @@ async fn process_batch(order_ids: Vec&lt;u32&gt;) {
     handle.await.unwrap();
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>tokio::spawn</code> requires its future to be <code>'static</code> for the
+<p><code>tokio::spawn</code> requires its future to be <code>'static</code> for the
 same reason <code>thread::spawn</code> does — the
 <a href="https://tokio.rs/tokio/tutorial/spawning">Tokio tutorial</a> uses <code>async move</code>
 whenever a spawned task needs to own data from its surrounding function
 rather than borrow it.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1112,7 +1094,7 @@ value costs nothing extra by itself (only <em>boxing</em> a closure, e.g.
 <code>#![no_std]</code> code (e.g. handing owned state to a <code>critical-section</code> closure
 or an RTIC task) as in hosted Rust.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

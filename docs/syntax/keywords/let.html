@@ -953,8 +953,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -982,22 +981,16 @@ and cannot be used where an expression is required.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let x = 5; // &lt;- `let` introduces a new binding named `x`
-</code></pre>
-
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
+            <h3 class="scenario-title">Introducing a new binding</h3>
+            <pre><code class="rust">let x = 5; // &lt;- `let` introduces a new binding named `x`
+</code></pre>
+
+          </div>
+        <div class="card">
             <h3 class="scenario-title">Creating a new object</h3>
             <p>A freshly constructed value is typically bound with <code>let</code> right where it
 is created, via a <code>new</code> constructor rather than a bare struct literal at
@@ -1015,19 +1008,14 @@ impl Order {
 
 let order = Order::new(1042, 59.99); // &lt;- `let` binds the freshly constructed value to `order`
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> an inherent <code>new</code> associated function is the
+<p>An inherent <code>new</code> associated function is the
 conventional constructor shape per the
 <a href="https://rust-lang.github.io/api-guidelines/predictability.html#constructors-are-static-inherent-methods-c-ctor">API Guidelines' C-CTOR</a>,
 and <code>let</code> binding its result immediately keeps construction and naming in
 one place.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>Several <code>let</code> bindings can each hold a shared reference to the same
 value at once — none of them take ownership, so the original stays
@@ -1038,18 +1026,13 @@ let a = &amp;config; // &lt;- `let` binds a shared reference; `config` isn't mov
 let b = &amp;config; // multiple shared references can coexist
 println!("{a} {b} {config}");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> any number of <code>&amp;T</code> references can be live
+<p>Any number of <code>&amp;T</code> references can be live
 simultaneously as long as no <code>&amp;mut T</code> exists at the same time — the
 <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">Book's chapter on references and borrowing</a>
 is the canonical statement of this rule.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Parsing a value that might fail and immediately propagating the error
 with <code>?</code> is one of the most common shapes a <code>let</code> binding takes in
@@ -1059,13 +1042,12 @@ fallible code.</p>
     Ok(timeout * 1000)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the <code>?</code> operator returns the <code>Err</code> variant to the
+<p>The <code>?</code> operator returns the <code>Err</code> variant to the
 caller immediately on failure, so by the time <code>let</code> finishes binding
 <code>timeout</code>, the rest of the function can treat it as certainly valid — see
 the
 <a href="https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator">Book's section on the <code>?</code> operator</a>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1080,7 +1062,7 @@ the
 <code>std</code> — bindings work identically in <code>#![no_std]</code> firmware, on the stack,
 exactly as on a hosted target.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

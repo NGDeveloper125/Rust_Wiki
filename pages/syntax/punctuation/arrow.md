@@ -28,16 +28,16 @@ lambda syntax uses `=>`.
 trait bounds spelled out explicitly, e.g. `where F: Fn(i32) -> i32`, and
 in a bare function-pointer type, `fn(i32) -> i32`.
 
-## Basic usage example
+## Usage examples
+
+### Declaring a function's return type
 
 ```
 fn add(a: i32, b: i32) -> i32 { a + b }
 //                      ^^ `->` introduces the return type, `i32`
 ```
 
-## Best practices & deeper information
-
-### Scenario: Writing generic code
+### Writing generic code
 
 `->` appears in the `Fn`-family trait bound itself, not just on the
 generic function that takes the closure — spelling out the bound is how
@@ -54,12 +54,12 @@ where
 apply_twice(3, |n| n * 2); // closure inferred to match Fn(i32) -> i32
 ```
 
-**Why this way:** writing the bound as `Fn(i32) -> i32` rather than a
-generic `F: Fn`-with-associated-types spelling is the idiomatic sugar the
+Writing the bound as `Fn(i32) -> i32` rather than a
+generic `F: Fn`-with-associated-types spelling is sugar the
 language provides specifically for closure/fn-pointer bounds, per the
 [Rust Reference on `Fn` traits](https://doc.rust-lang.org/reference/types/closure.html).
 
-### Scenario: Designing a public API
+### Designing a public API
 
 Return-type clarity at the call site is one of the cheapest readability
 wins available — `->` is where that type lives, and `impl Trait` in
@@ -73,7 +73,7 @@ pub fn config_keys() -> impl Iterator<Item = &'static str> {
 }
 ```
 
-**Why this way:** returning `impl Trait` rather than a concrete iterator
+Returning `impl Trait` rather than a concrete iterator
 type (or a boxed trait object) keeps the return type static-dispatched
 and zero-cost while hiding an implementation detail the caller shouldn't
 depend on. The

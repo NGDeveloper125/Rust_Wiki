@@ -30,7 +30,9 @@ distinct syntactic positions that are easy to conflate:
 mutable, not the type `i32`), but it *is* part of the type in the
 reference sense (`&mut T` and `&T` are different types entirely).
 
-## Basic usage example
+## Usage examples
+
+### Making a binding mutable with `let mut`
 
 ```
 let mut x = 5; // <- `mut` allows `x` to be reassigned
@@ -40,9 +42,7 @@ x = 6;
 **Restriction:** `mut` must appear at the binding site (`let mut x`); it
 cannot be added later to make an already-immutable binding mutable.
 
-## Best practices & deeper information
-
-### Scenario: Sharing state across threads
+### Sharing state across threads
 
 `mut` disappears from the signature when state is shared across threads —
 the mutability moves into the lock, and the `Arc` binding itself stays
@@ -68,12 +68,12 @@ for handle in handles {
 }
 ```
 
-**Why this way:** declaring the `Arc` binding `mut` would be misleading —
+Declaring the `Arc` binding `mut` would be misleading —
 interior mutability means the binding is never reassigned; Clippy flags
 unneeded `mut` bindings via
 [`unused_mut`](https://doc.rust-lang.org/rustc/lints/listing/warn-by-default.html#unused-mut).
 
-### Scenario: Modifying an existing object
+### Modifying an existing object
 
 An object with invariants to protect exposes a `&mut self` method rather
 than a public field a caller could set to any value directly.
@@ -92,13 +92,13 @@ let mut order = Order { total_cents: 4200, shipped: false }; // <- `mut` needed:
 order.mark_shipped();
 ```
 
-**Why this way:** routing mutation through a method rather than a public
+Routing mutation through a method rather than a public
 field keeps the invariant ("shipped only goes from false to true") in one
 place — the
 [Book's method-syntax chapter](https://doc.rust-lang.org/book/ch05-03-method-syntax.html)
 covers `&mut self` as the standard way to expose in-place mutation.
 
-### Scenario: Mutating through a reference
+### Mutating through a reference
 
 Doubling every price in a slice in place needs a mutable reference to
 each element, not just a mutable binding to the slice itself.
@@ -114,7 +114,7 @@ let mut prices = [9.99, 14.50, 3.25]; // <- `mut` required: `double_all` needs a
 double_all(&mut prices);
 ```
 
-**Why this way:** [`iter_mut`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut)
+[`iter_mut`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut)
 is the standard way to mutate every element of a slice in place without
 manual indexing, and the borrow checker guarantees only one `&mut`
 exists at a time, ruling out aliasing bugs at compile time.

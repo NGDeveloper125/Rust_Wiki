@@ -45,7 +45,9 @@ working — code that already relies on it continues to compile exactly as
 before; only the compiler's advice-generation ignores it as a candidate to
 recommend.
 
-## Basic usage example
+## Usage examples
+
+### Customizing the error message for an unimplemented trait
 
 ```
 #[diagnostic::on_unimplemented(
@@ -57,9 +59,7 @@ trait Renderable {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A UI framework's core trait is implemented by many types across an
 application; a plain, generic trait-bound error doesn't tell a newcomer
@@ -93,7 +93,7 @@ fn build_layout() {
 }
 ```
 
-**Why this way:** a generic "the trait bound `i32: Widget` is not
+A generic "the trait bound `i32: Widget` is not
 satisfied" tells a reader *that* something is wrong but not *what to do*
 about it, whereas a message written in the framework's own terms points
 directly at the fix; the
@@ -102,7 +102,7 @@ documents this attribute as intended for exactly this kind of
 domain-specific guidance on commonly-hit trait bounds, following the same
 pattern the standard library uses on `Iterator` and the `Fn` traits.
 
-### Scenario: Implementing traits
+### Implementing traits
 
 A serialization trait has both specific, hand-written impls for certain
 types and a broad blanket impl covering anything convertible through
@@ -123,7 +123,7 @@ impl<T: std::fmt::Display> ToWireFormat for T {
 }
 ```
 
-**Why this way:** without `do_not_recommend`, a compiler error involving
+Without `do_not_recommend`, a compiler error involving
 some type that implements neither `Display` nor `ToWireFormat` directly
 could suggest "implement `ToWireFormat`" by pointing at this blanket impl,
 which is technically accurate but unhelpful — the underlying gap is

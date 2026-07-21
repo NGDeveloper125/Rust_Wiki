@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -983,9 +982,12 @@ control the process's true entry point.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_main] // &lt;- suppresses generation of the ordinary Rust startup shim / `main` call
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Supplying a custom C-ABI entry point</h3>
+            <pre><code class="rust">#![no_main] // &lt;- suppresses generation of the ordinary Rust startup shim / `main` call
 
 #[unsafe(no_mangle)]
 pub extern "C" fn main(_argc: i32, _argv: *const *const u8) -&gt; i32 {
@@ -994,17 +996,8 @@ pub extern "C" fn main(_argc: i32, _argv: *const *const u8) -&gt; i32 {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>A <code>#![no_std]</code> firmware crate has no operating system to call a <code>main</code>
 symbol at all — the microcontroller's reset handler jumps directly to an
@@ -1027,14 +1020,13 @@ fn panic(_info: &amp;PanicInfo) -&gt; ! {
     loop {}
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>#[no_main]</code>, the compiler still expects to
+<p>Without <code>#[no_main]</code>, the compiler still expects to
 generate a call into a conventional <code>main</code>, which requires a C runtime
 this bare-metal target doesn't have; supplying <code>_start</code> directly under
 <code>#[no_mangle]</code> is the standard shape embedded HAL crates and the
 <a href="https://doc.rust-lang.org/stable/embedded-book/start/index.html">embedded Rust book</a>
 document for a custom entry point.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1052,7 +1044,7 @@ to the equivalent of <code>#![no_main]</code> plus a properly named, <code>#[no_
 reset-handler function, so application code just writes <code>#[entry] fn main() -&gt; !</code>. See <a href="../../syntax/attributes/no-std-attribute.html">#![no_std]</a> for the broader
 context <code>#[no_main]</code> almost always appears alongside.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

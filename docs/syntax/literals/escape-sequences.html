@@ -946,8 +946,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -976,26 +975,20 @@ see <a href="../../syntax/literals/raw-string-literal.html">raw string literal</
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let s = "tab\tnewline\n";
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Embedding escape sequences in a string</h3>
+            <pre><code class="rust">let s = "tab\tnewline\n";
 //          ^^ ^^ escape sequences, processed at compile time
 </code></pre>
-<p><strong>Restriction:</strong> a <code>\xNN</code> byte escape inside a <code>char</code>/<code>str</code> context is
+<p>A <code>\xNN</code> byte escape inside a <code>char</code>/<code>str</code> context is
 limited to <code>\x00</code>–<code>\x7F</code> (7-bit) — the full 8-bit range <code>\x00</code>–<code>\xFF</code> is
 only legal inside a byte (<code>b'...'</code>/<code>b"..."</code>) literal.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with text</h3>
             <p>Embedding <code>\n</code>/<code>\t</code> directly inside one string literal keeps a short
 multi-line template as a single readable value.</p>
@@ -1005,18 +998,13 @@ multi-line template as a single readable value.</p>
 
 print!("{}", format_receipt("widget", 3, 499));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> embedding <code>\n</code>/<code>\t</code> inside one literal keeps the
+<p>Embedding <code>\n</code>/<code>\t</code> inside one literal keeps the
 template readable as "the shape of the output" in one place, rather than
 splicing separate pieces together — the escapes are resolved once, at
 compile time, into the exact bytes the string holds.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Serializing and deserializing</h3>
             <p>Rust's compile-time escape rules and JSON's runtime string-escaping rules
 look similar but aren't identical — worth knowing before hand-building
@@ -1030,13 +1018,12 @@ let heart: char = '\u{2764}'; // &lt;- Rust escape sequence: braced hex, resolve
 // The raw string below holds that JSON text verbatim; rustc never interprets the `❤`.
 let json_fragment = r#"{"symbol": "❤"}"#; // &lt;- `❤` here is JSON syntax, untouched by Rust
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> Rust's escape rules and JSON's string-escape rules
+<p>Rust's escape rules and JSON's string-escape rules
 differ in small but real ways (braced vs unbraced <code>\u</code>, no <code>\x</code> byte
 escape in JSON at all) — the practical consequence is to let a JSON
 library like <a href="https://serde.rs/">serde_json</a> own all JSON escaping rather
 than hand-building JSON text with Rust string literals.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1050,7 +1037,7 @@ than hand-building JSON text with Rust string literals.</p>
         <p><strong>Full support.</strong> Pure lexical processing, resolved entirely at compile
 time — no <code>std</code> dependency.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

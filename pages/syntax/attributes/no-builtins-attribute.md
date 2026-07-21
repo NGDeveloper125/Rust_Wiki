@@ -37,16 +37,16 @@ bare-metal/freestanding crates — most `#![no_std]` embedded application
 code sits on top of a runtime crate that already handles this and never
 needs to reach for `#![no_builtins]` itself.
 
-## Basic usage example
+## Usage examples
+
+### Disabling implicit libc-builtin substitution
 
 ```
 #![no_std]
 #![no_builtins] // <- forbids the compiler from silently assuming a libc-provided memcpy/memset exist
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A minimal kernel crate provides its own low-level memory primitives
 rather than linking against any C runtime — `#![no_builtins]` guarantees
@@ -72,7 +72,7 @@ pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, n: usize) -> *mut
 }
 ```
 
-**Why this way:** without `#![no_builtins]`, the compiler may still lower
+Without `#![no_builtins]`, the compiler may still lower
 some Rust code into a call to `memcpy` even though this crate defines its
 own — in an environment with no C runtime, an unexpected implicit call
 to a symbol nothing provides is a link failure at best; the

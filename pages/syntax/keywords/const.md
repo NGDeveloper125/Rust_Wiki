@@ -30,15 +30,15 @@ rather than by another type.
 Naming convention is `SCREAMING_SNAKE_CASE`. `const` bindings are always
 implicitly immutable — `const mut` does not exist.
 
-## Basic usage example
+## Usage examples
+
+### Declaring a compile-time constant
 
 ```
 const MAX_POINTS: u32 = 100_000; // <- `const` declares a compile-time constant
 ```
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 A buffer size that's a fixed multiple of a record size is exactly the
 kind of arithmetic `const` is for — it's computed once, at compile time,
@@ -54,14 +54,14 @@ fn should_retry(attempt: u8) -> bool {
 }
 ```
 
-**Why this way:** the initializer expression runs through the compiler's
+The initializer expression runs through the compiler's
 const evaluator rather than at runtime, so `BUFFER_CAPACITY` costs nothing
 beyond the final value — the
 [Reference's constant items](https://doc.rust-lang.org/reference/items/constant-items.html)
 page confirms the initializer must itself be a const expression, which is
 exactly what makes this guarantee possible.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A library that wants callers to know its default timeout, and to be able
 to reference it by name instead of a magic number, exposes the value as a
@@ -78,7 +78,7 @@ pub fn connect_with_default_timeout() {
 fn connect(_timeout_secs: u64) {}
 ```
 
-**Why this way:** `SCREAMING_SNAKE_CASE` for constants is codified in the
+`SCREAMING_SNAKE_CASE` for constants is codified in the
 [API Guidelines' casing conventions](https://rust-lang.github.io/api-guidelines/naming.html#casing-conforms-to-rfc-430-c-case),
 and publishing the constant lets downstream code refer to
 `DEFAULT_TIMEOUT_SECS` by name instead of duplicating the literal `30` at

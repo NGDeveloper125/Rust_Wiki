@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -966,22 +965,16 @@ taken literally.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let msg = "connected"; // &lt;- string literal: produces `&amp;'static str`, not `String`
-</code></pre>
-
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
+            <h3 class="scenario-title">Producing a &amp;str from a literal</h3>
+            <pre><code class="rust">let msg = "connected"; // &lt;- string literal: produces `&amp;'static str`, not `String`
+</code></pre>
+
+          </div>
+        <div class="card">
             <h3 class="scenario-title">Working with text</h3>
             <p>A <code>format!</code> template is itself a string literal, with captured
 identifiers keeping the placeholder and its value next to each other.</p>
@@ -992,19 +985,14 @@ identifiers keeping the placeholder and its value next to each other.</p>
 let msg = format_status("temp-01", 21.53);
 assert_eq!(msg, "sensor \"temp-01\" reported 21.5");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> captured-identifier syntax (<code>{sensor_id}</code>) keeps the
+<p>Captured-identifier syntax (<code>{sensor_id}</code>) keeps the
 template and its values together instead of separated into positional
 arguments — the inline-capture form is documented in the
 <a href="https://doc.rust-lang.org/std/fmt/index.html">std <code>std::fmt</code> docs</a> and
 reads best once a template has more than a placeholder or two.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A function parameter should ask for the least ownership it needs — <code>&amp;str</code>
 accepts a literal directly, with no allocation, while still working for
@@ -1022,19 +1010,14 @@ pub fn greet_owned(name: String) -&gt; String {
 let a = greet("guest");                     // &lt;- string literal passed directly, no allocation
 let b = greet_owned("guest".to_string());   // caller must allocate just to satisfy the signature
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> accepting <code>&amp;str</code> instead of <code>String</code> lets a caller pass
+<p>Accepting <code>&amp;str</code> instead of <code>String</code> lets a caller pass
 a literal with zero allocation while still accepting an owned <code>String</code>
 where one already exists — the
 <a href="https://doc.rust-lang.org/book/ch04-03-slices.html#string-slices-as-parameters">Book's "String Slices as Parameters"</a>
 makes exactly this argument for preferring <code>&amp;str</code> in a signature.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>An error message built with a string literal template should include the
 offending input, not just describe the category of failure.</p>
@@ -1049,13 +1032,12 @@ fn parse_port(input: &amp;str) -&gt; Result&lt;u16, ParseError&gt; {
     })
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> including the offending value in the message gives the
+<p>Including the offending value in the message gives the
 caller enough information to fix the problem without re-deriving it,
 which the
 <a href="https://doc.rust-lang.org/book/ch09-00-error-handling.html">Book's error-handling chapter</a>
 treats as basic error-message hygiene.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1071,7 +1053,7 @@ all — it's baked into the binary's read-only data section, which is
 exactly why string literals (log messages, error strings) are so cheap
 to use freely in embedded code even with no heap configured.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

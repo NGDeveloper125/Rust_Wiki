@@ -41,7 +41,9 @@ fits a given problem, is design territory covered on the
 [Enums (algebraic data types)](../../concepts/types-data-modeling/enums-algebraic-data-types.md)
 concept page; this page covers only the declaration grammar.
 
-## Basic usage example
+## Usage examples
+
+### Declaring an enum with all three variant kinds
 
 ```
 enum Status {
@@ -53,9 +55,7 @@ enum Status {
 let s = Status::Paused(30); // <- `enum` values are always one specific variant
 ```
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Each variant kind is destructured in a `match` arm with the same grammar
 it was declared with — unit-like variants need no parentheses or braces
@@ -78,14 +78,14 @@ fn area(shape: &Shape) -> f64 {
 }
 ```
 
-**Why this way:** matching each variant with its own declared shape means
+Matching each variant with its own declared shape means
 there's exactly one way to write the pattern for a given variant, so a
 reader who knows the `enum` declaration already knows how every `match`
 arm on it will look — the
 [Rust Book](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html)
 introduces all three variant forms together for this reason.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 Marking a public, growth-prone enum `#[non_exhaustive]` is written as an
 attribute directly above the `enum` item, not as part of the variant list
@@ -100,7 +100,7 @@ pub enum PaymentMethod {
 }
 ```
 
-**Why this way:** `#[non_exhaustive]` is the attribute-level tool for
+`#[non_exhaustive]` is the attribute-level tool for
 enums a library expects to grow — see
 [`#[non_exhaustive]`](../attributes/non-exhaustive.md) for the full
 grammar and its effect on downstream `match`es, which the

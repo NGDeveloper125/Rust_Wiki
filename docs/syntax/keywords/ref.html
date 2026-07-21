@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -989,9 +988,12 @@ a reference during the match, regardless of what the scrutinee's type is.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Ticket { code: String }
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Borrowing a field with `ref` instead of moving it</h3>
+            <pre><code class="rust">struct Ticket { code: String }
 
 let ticket = Ticket { code: String::from("A-102") };
 let Ticket { ref code } = ticket; // &lt;- `ref` borrows `code` instead of moving it out of `ticket`
@@ -1000,17 +1002,8 @@ println!("{code}");
 println!("{}", ticket.code); // still valid: `code` was only borrowed, `ticket` wasn't consumed
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>Matching directly on an owned enum (not a reference to one) while still
 needing to return that same value afterward requires borrowing the field
@@ -1031,20 +1024,15 @@ fn log_tracking(shipment: Shipment) -&gt; Shipment {
     shipment // still whole: only `tracking_code` was borrowed during the match, never moved
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> matching <code>shipment</code> by value would otherwise move
+<p>Matching <code>shipment</code> by value would otherwise move
 <code>tracking_code</code> out of it the moment that arm's pattern binds, making
 <code>shipment</code> only partially usable afterward — the
 <a href="https://doc.rust-lang.org/reference/patterns.html#binding-modes">Rust Reference's binding modes section</a>
 documents <code>ref</code> as exactly the tool for keeping a matched-on value intact
 when its scrutinee isn't already a reference.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>Destructuring a struct to read one field while continuing to use the whole
 struct afterward needs that one field bound by reference, not moved out.</p>
@@ -1058,20 +1046,15 @@ let Invoice { ref number, .. } = invoice; // &lt;- `ref` borrows `number`, leavi
 
 println!("{number} totals {}", invoice.total_cents); // both `number` and `invoice` are usable here
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>ref</code>, binding <code>number</code> in this pattern would move
+<p>Without <code>ref</code>, binding <code>number</code> in this pattern would move
 the <code>String</code> out of <code>invoice</code>, making <code>invoice.total_cents</code> (and the rest of
 <code>invoice</code>) inaccessible afterward — the
 <a href="https://doc.rust-lang.org/reference/patterns.html#binding-modes">Rust Reference</a>
 covers <code>ref</code> as the way to keep the source place valid when only one field
 needs to be shared out of it.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Mutating through a reference</h3>
             <p>Mutating one field of an owned enum in place, through a <code>match</code>, needs
 <code>ref mut</code> — without it, a <code>Copy</code> field like a counter would bind as a
@@ -1093,14 +1076,13 @@ fn record_retry(mut task: Task) -&gt; Task {
     task
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>u32</code> is <code>Copy</code>, so without <code>ref mut</code> the pattern would
+<p><code>u32</code> is <code>Copy</code>, so without <code>ref mut</code> the pattern would
 bind <code>retries</code> as an independent copy and <code>*retries += 1</code> would mutate
 nothing that survives the match — the
 <a href="https://doc.rust-lang.org/reference/patterns.html#binding-modes">Rust Reference's binding modes section</a>
 is explicit that <code>ref mut</code> is required to get a genuine mutable borrow into
 the matched place itself.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1115,7 +1097,7 @@ the matched place itself.</p>
 runtime representation and no allocation — identical behavior in
 <code>#![no_std]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

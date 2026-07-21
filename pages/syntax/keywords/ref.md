@@ -44,7 +44,9 @@ matches against a reference (it expects the scrutinee to already be a
 reference and "un-borrows" one layer), while `ref pattern-binding` produces
 a reference during the match, regardless of what the scrutinee's type is.
 
-## Basic usage example
+## Usage examples
+
+### Borrowing a field with `ref` instead of moving it
 
 ```
 struct Ticket { code: String }
@@ -56,9 +58,7 @@ println!("{code}");
 println!("{}", ticket.code); // still valid: `code` was only borrowed, `ticket` wasn't consumed
 ```
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Matching directly on an owned enum (not a reference to one) while still
 needing to return that same value afterward requires borrowing the field
@@ -82,14 +82,14 @@ fn log_tracking(shipment: Shipment) -> Shipment {
 }
 ```
 
-**Why this way:** matching `shipment` by value would otherwise move
+Matching `shipment` by value would otherwise move
 `tracking_code` out of it the moment that arm's pattern binds, making
 `shipment` only partially usable afterward — the
 [Rust Reference's binding modes section](https://doc.rust-lang.org/reference/patterns.html#binding-modes)
 documents `ref` as exactly the tool for keeping a matched-on value intact
 when its scrutinee isn't already a reference.
 
-### Scenario: Sharing data with multiple references
+### Sharing data with multiple references
 
 Destructuring a struct to read one field while continuing to use the whole
 struct afterward needs that one field bound by reference, not moved out.
@@ -106,14 +106,14 @@ let Invoice { ref number, .. } = invoice; // <- `ref` borrows `number`, leaving 
 println!("{number} totals {}", invoice.total_cents); // both `number` and `invoice` are usable here
 ```
 
-**Why this way:** without `ref`, binding `number` in this pattern would move
+Without `ref`, binding `number` in this pattern would move
 the `String` out of `invoice`, making `invoice.total_cents` (and the rest of
 `invoice`) inaccessible afterward — the
 [Rust Reference](https://doc.rust-lang.org/reference/patterns.html#binding-modes)
 covers `ref` as the way to keep the source place valid when only one field
 needs to be shared out of it.
 
-### Scenario: Mutating through a reference
+### Mutating through a reference
 
 Mutating one field of an owned enum in place, through a `match`, needs
 `ref mut` — without it, a `Copy` field like a counter would bind as a
@@ -138,7 +138,7 @@ fn record_retry(mut task: Task) -> Task {
 }
 ```
 
-**Why this way:** `u32` is `Copy`, so without `ref mut` the pattern would
+`u32` is `Copy`, so without `ref mut` the pattern would
 bind `retries` as an independent copy and `*retries += 1` would mutate
 nothing that survives the match — the
 [Rust Reference's binding modes section](https://doc.rust-lang.org/reference/patterns.html#binding-modes)

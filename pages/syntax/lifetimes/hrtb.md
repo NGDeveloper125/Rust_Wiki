@@ -42,7 +42,9 @@ elision genuinely can't produce the higher-ranked bound on its own (for
 instance, a bound spanning multiple arguments that must share one
 universally-quantified lifetime).
 
-## Basic usage example
+## Usage examples
+
+### Accepting a closure that works for any lifetime
 
 ```
 fn find_first<'s>(text: &'s str, matches: impl for<'a> Fn(&'a str) -> bool) -> Option<&'s str> {
@@ -53,9 +55,7 @@ fn find_first<'s>(text: &'s str, matches: impl for<'a> Fn(&'a str) -> bool) -> O
 find_first("sensor offline retry", |w| w.starts_with("r"));
 ```
 
-## Best practices & deeper information
-
-### Scenario: Writing generic code
+### Writing generic code
 
 A function that accepts a validation closure and calls it with several
 short-lived string slices, each borrowed only for the duration of one
@@ -76,7 +76,7 @@ let all_positive = validate_all(&readings, |value| {
 });
 ```
 
-**Why this way:** each call to `is_valid` inside the loop passes a
+Each call to `is_valid` inside the loop passes a
 reference whose lifetime is tied to that specific iteration — no single
 named lifetime in `validate_all`'s own signature could stand in for all
 of them, so the bound has to be universally quantified over every
@@ -84,7 +84,7 @@ possible lifetime via `for<'a>`, as the
 [Rust Reference's higher-ranked trait bounds section](https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds)
 describes.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A callback-taking API that stores the closure and invokes it later, with
 borrowed data whose lifetime differs on every invocation, must bound the
@@ -111,7 +111,7 @@ let parser = Parser { on_token: |t: &str| println!("token: {t}") };
 parser.run("start measuring stop");
 ```
 
-**Why this way:** giving `Parser` its own named lifetime parameter and
+Giving `Parser` its own named lifetime parameter and
 bounding `F: Fn(&'p str)` against it would tie every call to one fixed
 lifetime `'p` chosen when `Parser` is constructed — but the `&str`s
 passed to `on_token` are created fresh inside `run`, with a shorter

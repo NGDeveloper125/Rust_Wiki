@@ -945,8 +945,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -991,9 +990,12 @@ call has erased which concrete call site is calling through it.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[track_caller] // &lt;- makes Location::caller() below report the CALLER's line, not this one
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reporting the caller's location from a panic</h3>
+            <pre><code class="rust">#[track_caller] // &lt;- makes Location::caller() below report the CALLER's line, not this one
 fn require_positive(value: i32) {
     if value &lt;= 0 {
         let loc = std::panic::Location::caller();
@@ -1006,17 +1008,8 @@ fn main() {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>A configuration-loading helper used throughout an application validates
 a port number and panics on an invalid one; marking it <code>#[track_caller]</code>
@@ -1035,8 +1028,7 @@ fn main() {
     println!("listening on {port}");
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without <code>#[track_caller]</code>, every misconfigured call
+<p>Without <code>#[track_caller]</code>, every misconfigured call
 anywhere in a large codebase would report the same unhelpful location —
 the <code>panic!</code> line inside <code>require_valid_port</code> itself — instead of the
 call site that actually passed the bad value; the
@@ -1045,13 +1037,9 @@ describes this as exactly the mechanism <code>Option::unwrap</code>/<code>expect
 slice indexing use internally, and applying it to custom
 validation/assertion helpers extends the same caller-friendly diagnostics
 to application code.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p>A custom test-assertion helper used across a test suite should report a
 failed assertion at the line inside the <em>test</em> that called it, not at the
@@ -1071,8 +1059,7 @@ fn sensor_reading_matches_calibration() {
     assert_within_tolerance(reading, 21.5, 0.05); // &lt;- failure reports THIS line
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>assert!</code> itself is <code>#[track_caller]</code>, so without
+<p><code>assert!</code> itself is <code>#[track_caller]</code>, so without
 marking <code>assert_within_tolerance</code> the same way, a failure would report
 the <code>assert!</code> line inside the shared helper — the same unhelpful,
 one-size-fits-all location for every test that uses it — instead of the
@@ -1081,7 +1068,7 @@ pattern the
 <a href="https://doc.rust-lang.org/reference/attributes/codegen.html#the-track_caller-attribute">Rust Reference</a>
 describes for custom assertion helpers that want to preserve
 <code>assert!</code>-quality diagnostics through a layer of indirection.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1100,7 +1087,7 @@ default, so the file/line a <code>#[track_caller]</code>-annotated helper report
 may be the only diagnostic information available about where a
 validation failure actually originated.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

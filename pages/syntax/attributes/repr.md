@@ -56,7 +56,9 @@ layout guarantees each one makes — is covered on the
 concept page; this page covers the attribute's grammar and legal
 combinations.
 
-## Basic usage example
+## Usage examples
+
+### Requesting a C-compatible layout
 
 ```
 #[repr(C)] // <- requests a stable, C-compatible layout instead of the default repr(Rust)
@@ -66,9 +68,7 @@ struct Point {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A struct shared with a C library often needs more than one layout
 guarantee at once — here, a C-compatible field order plus zero padding,
@@ -89,7 +89,7 @@ fn payload_len(header: &FrameHeader) -> u16 {
 }
 ```
 
-**Why this way:** `#[repr(C, packed)]` combines both modifiers in a
+`#[repr(C, packed)]` combines both modifiers in a
 single attribute — writing `#[repr(C)] #[repr(packed)]` as two separate
 attributes on the same item is legal but conflates two independent
 requests where one attribute reads as a single, deliberate layout
@@ -98,7 +98,7 @@ decision; the
 documents `repr` modifiers as combinable within one attribute for exactly
 this reason.
 
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 A protocol's status byte maps directly onto a fieldless enum; pinning the
 discriminant width with an integer repr, alongside explicit discriminant
@@ -116,14 +116,14 @@ enum LinkStatus {
 let byte: u8 = LinkStatus::Up as u8; // <- `as` reads the u8 discriminant `#[repr(u8)]` guarantees
 ```
 
-**Why this way:** without an integer repr, the compiler is free to pick
+Without an integer repr, the compiler is free to pick
 whatever discriminant width it wants for a field-less enum — the
 [Rust Reference](https://doc.rust-lang.org/reference/type-layout.html#reprc-enums)
 specifies `#[repr(u8)]` and its siblings as the way to pin that width
 down so a cast to the integer type is guaranteed stable across compiler
 versions.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A newtype wrapper meant to cross an ABI boundary as if it were its inner
 type needs `#[repr(transparent)]` specifically — not `#[repr(C)]`, which
@@ -134,7 +134,7 @@ doesn't make the same single-field guarantee.
 pub struct SensorId(u32);
 ```
 
-**Why this way:** `#[repr(C)]` on a single-field tuple struct happens to
+`#[repr(C)]` on a single-field tuple struct happens to
 produce the same layout in practice, but only `#[repr(transparent)]`
 makes it a guarantee the compiler enforces — attempting it on a type with
 more than one non-zero-sized field is a compile error, which is the

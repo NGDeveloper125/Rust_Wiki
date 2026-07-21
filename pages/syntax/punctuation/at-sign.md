@@ -36,7 +36,9 @@ enum-variant pattern, `@` can bind one field's value while the rest of the
 pattern still [destructures](../../concepts/pattern-matching/destructuring.md)
 the surrounding shape, e.g. `Reading { value: v @ 0.0..=100.0, .. }`.
 
-## Basic usage example
+## Usage examples
+
+### Binding a name while matching a range pattern
 
 ```
 let reading = 42;
@@ -48,9 +50,7 @@ match reading {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Classifying an engine's RPM into a warning band still needs the exact
 reading for the log message — `@` keeps both the classification and the
@@ -78,14 +78,14 @@ fn classify(rpm: u32) -> (EngineState, String) {
 println!("{}", classify(6200).1);
 ```
 
-**Why this way:** without `@`, reporting the exact rpm in the warning
+Without `@`, reporting the exact rpm in the warning
 message would need a second lookup or a re-derivation of the value the
 pattern already had in hand — the
 [Rust Reference on identifier patterns](https://doc.rust-lang.org/reference/patterns.html#identifier-patterns)
 documents `@` as exactly this: binding a name to a value a sub-pattern has
 already matched.
 
-### Scenario: Validating input
+### Validating input
 
 Rejecting an out-of-range port still needs to say which value was invalid
 — `@` retains the checked value so it can flow straight into the `Ok`
@@ -100,7 +100,7 @@ fn validate_port(candidate: i32) -> Result<u16, String> {
 }
 ```
 
-**Why this way:** the alternative — matching `1..=65535` with no binding,
+The alternative — matching `1..=65535` with no binding,
 then re-reading `candidate` inside the arm — works but discards the
 guarantee the pattern already established; binding with `@` makes the
 "this value, already checked" relationship explicit at the type level, not

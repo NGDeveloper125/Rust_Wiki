@@ -29,7 +29,9 @@ what's being iterated:
 and cannot yield a value via `break value;`. It accepts a loop label the
 same way `while`/`loop` do.
 
-## Basic usage example
+## Usage examples
+
+### Iterating over a fixed array
 
 ```
 for item in [1, 2, 3] { // <- `for` iterates over anything implementing `IntoIterator`
@@ -37,9 +39,7 @@ for item in [1, 2, 3] { // <- `for` iterates over anything implementing `IntoIte
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 Printing only the large orders from a list reads best as `for` driving an
 adaptor chain, rather than a `for` loop whose body starts with an `if`.
@@ -53,13 +53,13 @@ for total in orders.iter().filter(|&&t| t > 20.0) {
 }
 ```
 
-**Why this way:** letting `filter` express the condition keeps the loop
+Letting `filter` express the condition keeps the loop
 body focused on what to *do* with each item rather than whether to do it
 — the
 [`Iterator` trait docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html)
 are themselves written around composing adaptors this way.
 
-### Scenario: Message passing between threads
+### Message passing between threads
 
 A worker thread sends results over a channel and then finishes; the
 receiving side drains everything sent with a plain `for` loop, which ends
@@ -82,7 +82,7 @@ for message in rx { // <- `for` drains the receiver until the channel closes
 }
 ```
 
-**Why this way:** `Receiver` implements `IntoIterator` (for both
+`Receiver` implements `IntoIterator` (for both
 `Receiver` and `&Receiver`), so `for message in rx` blocks for the next
 message and stops cleanly once all senders have dropped — the
 [Book's message-passing chapter](https://doc.rust-lang.org/book/ch16-02-message-passing.html)

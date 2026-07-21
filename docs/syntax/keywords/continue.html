@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -965,9 +964,12 @@ explicitly with <code>continue 'label;</code> from inside a nested loop.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">for x in 0..5 {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Skipping an iteration with `continue`</h3>
+            <pre><code class="rust">for x in 0..5 {
     if x == 2 {
         continue; // &lt;- skips the rest of this iteration, jumps to `x = 3`
     }
@@ -975,17 +977,8 @@ explicitly with <code>continue 'label;</code> from inside a nested loop.</p>
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Averaging a batch of raw sensor readings means some entries won't parse —
 <code>continue</code> skips a malformed one and moves straight to the next, without
@@ -1004,19 +997,14 @@ for raw in readings {
 
 let average = total / count as f64;
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> pairing <code>continue</code> with a <code>let ... else</code> guard keeps the
+<p>Pairing <code>continue</code> with a <code>let ... else</code> guard keeps the
 "happy path" of the loop body unindented — the
 <a href="https://doc.rust-lang.org/book/ch06-03-if-let.html">Book's <code>let...else</code> section</a>
 frames this "stay on the happy path" shape as the reason <code>let...else</code>
 exists, over wrapping the rest of the iteration in a nested <code>if</code>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Building a list of valid users from raw records means rejecting
 out-of-range ages as they're encountered, without aborting the whole
@@ -1033,14 +1021,13 @@ for (name, age) in raw_ages {
     valid_users.push(User { name: name.to_string(), age });
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> rejecting one bad record with <code>continue</code> keeps
+<p>Rejecting one bad record with <code>continue</code> keeps
 validation co-located with iteration for a one-off batch; when the same
 validation logic is needed at multiple call sites, prefer a constructor
 that returns <code>Result</code> instead, per the
 <a href="https://rust-unofficial.github.io/patterns/">Rust Design Patterns</a> idea
 of making invalid states unrepresentable rather than filtered out ad hoc.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1053,7 +1040,7 @@ of making invalid states unrepresentable rather than filtered out ad hoc.</p>
         </span>
         <p><strong>Full support.</strong> No <code>std</code> dependency; works identically in <code>#![no_std]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

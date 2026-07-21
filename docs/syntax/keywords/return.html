@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -968,9 +967,12 @@ expression position, e.g. <code>let x = if cond { return; } else { 5 };</code>.<
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn abs(x: i32) -&gt; i32 {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Exiting a function early with `return`</h3>
+            <pre><code class="rust">fn abs(x: i32) -&gt; i32 {
     if x &lt; 0 {
         return -x; // &lt;- exits the function immediately with `-x`
     }
@@ -982,17 +984,8 @@ the last expression in the body (no trailing <code>;</code>) is returned implici
 and idiomatic Rust reserves an explicit <code>return</code> for early exits like the
 branch above. A trailing <code>return x;</code> is perfectly legal, just unidiomatic.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Inside a single <code>match</code> arm that needs to diverge from the rest of the
 function, <code>return</code> is often clearer than restructuring the whole function
@@ -1005,18 +998,13 @@ around <code>?</code>.</p>
     Ok(value)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> when the error needs to be reformatted rather than
+<p>When the error needs to be reformatted rather than
 passed straight through, <code>return</code> inside the failing arm reads more
 directly than threading a <code>map_err</code> into a <code>?</code> chain — see the
 <a href="https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html">Book's chapter on recoverable errors</a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>A guard clause at the top of a function checks for invalid input and
 <code>return</code>s immediately, so the rest of the function can assume the value
@@ -1028,13 +1016,12 @@ is valid.</p>
     Ok(())
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> checking the invalid case first and returning keeps the
+<p>Checking the invalid case first and returning keeps the
 rest of the function at a single indentation level instead of nesting the
 valid path inside an <code>if</code> — the
 <a href="https://rust-unofficial.github.io/patterns/">Rust Design Patterns</a>
 favor this guard-clause shape over deep nesting.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1049,7 +1036,7 @@ favor this guard-clause shape over deep nesting.</p>
 <code>fn main() -&gt; !</code> never returns at all — <code>return</code> is used for early exits
 from ordinary functions, same as on a hosted target.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

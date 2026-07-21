@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -989,9 +988,12 @@ covers the grammar of <code>pub</code> and its scoped forms.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">mod billing {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Making a struct and field visible outside its module</h3>
+            <pre><code class="rust">mod billing {
     pub struct Invoice {   // &lt;- `pub`: visible outside the `billing` module
         pub total_cents: u64,
     }
@@ -1000,17 +1002,8 @@ covers the grammar of <code>pub</code> and its scoped forms.</p>
 let invoice = billing::Invoice { total_cents: 4200 };
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A cache crate splits its storage and eviction logic into separate
 modules that need to share an internal entry type — <code>pub(crate)</code> lets them
@@ -1033,21 +1026,16 @@ do that without the type ever becoming part of the crate's public API.</p>
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> each scoped form draws the visibility boundary at
+<p>Each scoped form draws the visibility boundary at
 exactly the module that needs it — <code>pub(crate)</code> shares <code>internal</code> across
 the crate, <code>pub(super)</code>/<code>pub(in path)</code> narrow individual functions further
 still — so nothing here is visible any wider than the code that actually
 uses it requires, matching the general shrink-visibility-first stance in
 the
 <a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">API Guidelines' future-proofing chapter</a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>A <code>Temperature</code> type must never represent a value below absolute zero, so
 its field stays private and <code>pub</code> is applied only to the constructor and
@@ -1070,13 +1058,12 @@ impl Temperature {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> applying <code>pub</code> to the constructor and getter but not the
+<p>Applying <code>pub</code> to the constructor and getter but not the
 field means "never below absolute zero" is enforced by the type itself,
 which is exactly what the
 <a href="https://rust-lang.github.io/api-guidelines/future-proofing.html#structs-have-private-fields-c-struct-private">API Guidelines' C-STRUCT-PRIVATE</a>
 item recommends private fields for.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1094,7 +1081,7 @@ hosted code — commonly <code>pub(crate)</code> for register-access helpers sha
 between a driver's own submodules but never exposed to firmware code
 using the driver.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

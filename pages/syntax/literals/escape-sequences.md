@@ -32,20 +32,20 @@ introduces an escape sequence:
 None of these are processed inside a **raw** string/byte-string literal —
 see [raw string literal](raw-string-literal.md).
 
-## Basic usage example
+## Usage examples
+
+### Embedding escape sequences in a string
 
 ```
 let s = "tab\tnewline\n";
 //          ^^ ^^ escape sequences, processed at compile time
 ```
 
-**Restriction:** a `\xNN` byte escape inside a `char`/`str` context is
+A `\xNN` byte escape inside a `char`/`str` context is
 limited to `\x00`–`\x7F` (7-bit) — the full 8-bit range `\x00`–`\xFF` is
 only legal inside a byte (`b'...'`/`b"..."`) literal.
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Working with text
 
 Embedding `\n`/`\t` directly inside one string literal keeps a short
 multi-line template as a single readable value.
@@ -58,12 +58,12 @@ fn format_receipt(item: &str, qty: u32, price_cents: u32) -> String {
 print!("{}", format_receipt("widget", 3, 499));
 ```
 
-**Why this way:** embedding `\n`/`\t` inside one literal keeps the
+Embedding `\n`/`\t` inside one literal keeps the
 template readable as "the shape of the output" in one place, rather than
 splicing separate pieces together — the escapes are resolved once, at
 compile time, into the exact bytes the string holds.
 
-### Scenario: Serializing and deserializing
+### Serializing and deserializing
 
 Rust's compile-time escape rules and JSON's runtime string-escaping rules
 look similar but aren't identical — worth knowing before hand-building
@@ -80,7 +80,7 @@ let heart: char = '\u{2764}'; // <- Rust escape sequence: braced hex, resolved w
 let json_fragment = r#"{"symbol": "❤"}"#; // <- `❤` here is JSON syntax, untouched by Rust
 ```
 
-**Why this way:** Rust's escape rules and JSON's string-escape rules
+Rust's escape rules and JSON's string-escape rules
 differ in small but real ways (braced vs unbraced `\u`, no `\x` byte
 escape in JSON at all) — the practical consequence is to let a JSON
 library like [serde_json](https://serde.rs/) own all JSON escaping rather

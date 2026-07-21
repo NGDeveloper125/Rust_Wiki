@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -984,9 +983,12 @@ actually false — a genuine bug, not missing work.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait Storage {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Marking a permanently unsupported method</h3>
+            <pre><code class="rust">trait Storage {
     fn read(&amp;self, key: &amp;str) -&gt; Option&lt;String&gt;;
     fn delete(&amp;self, key: &amp;str);
 }
@@ -1005,17 +1007,8 @@ impl Storage for ReadOnlyStorage {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A <code>Shape</code> trait's area method is implemented for every variant except one
 still being built out — <code>todo!()</code> marks the honest gap during
@@ -1040,18 +1033,13 @@ impl Shape for Polygon {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <a href="https://effective-rust.com/">Effective Rust</a> treats
+<p><a href="https://effective-rust.com/">Effective Rust</a> treats
 <code>todo!()</code> during active development as a signal to reviewers and
 teammates that the gap is expected to close, which <code>unimplemented!()</code>
 would misleadingly suggest is a deliberate, final design choice instead.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>An exhaustive <code>match</code> over an order's state machine has already handled
 every real transition; the final arm exists only as a safety net the type
@@ -1071,8 +1059,7 @@ fn next_state(state: OrderState) -&gt; OrderState {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>unreachable!()</code> documents an invariant enforced
+<p><code>unreachable!()</code> documents an invariant enforced
 elsewhere in the program (callers are expected to check for
 <code>OrderState::Delivered</code> before calling <code>next_state</code>), turning a silent
 logic bug into a loud, immediate panic instead of quietly continuing on
@@ -1080,7 +1067,7 @@ bad state — the
 <a href="https://doc.rust-lang.org/reference/expressions/match-expr.html">Reference's exhaustiveness rules</a>
 require every arm to be present, but only the code's own logic can
 guarantee one of them never actually runs.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1095,7 +1082,7 @@ guarantee one of them never actually runs.</p>
 work identically in <code>#![no_std]</code>, with the same <code>#[panic_handler]</code>/
 unwind-vs-abort caveats as <a href="../../syntax/macros/panic-macro.html"><code>panic!</code></a> itself.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

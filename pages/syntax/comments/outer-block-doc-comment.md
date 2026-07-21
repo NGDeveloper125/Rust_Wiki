@@ -19,7 +19,9 @@ In practice `///` is far more idiomatic in the Rust ecosystem and is what
 `rustfmt`/community style favors; `/** */` is rarely seen in real
 codebases even though it's fully supported.
 
-## Basic usage example
+## Usage examples
+
+### Documenting a function
 
 ```
 /** <- this block doc comment documents the function immediately below it */
@@ -31,9 +33,7 @@ before the item it documents. In practice, prefer `///`
 (see [`///`](outer-line-doc-comment.md)); this form exists mostly for
 completeness.
 
-## Best practices & deeper information
-
-### Scenario: Documenting an API
+### Documenting an API
 
 `/** */` documents an item exactly like `///` — the choice between them
 is purely stylistic, and idiomatic Rust code overwhelmingly picks `///`.
@@ -48,7 +48,7 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
 pub struct ParseError;
 ```
 
-**Why this way:** `rustfmt` and community convention treat `///` as the
+`rustfmt` and community convention treat `///` as the
 default for item docs — see [`///`](outer-line-doc-comment.md) for the
 full treatment (summary/detail shape, doc tests, intra-doc links), all of
 which apply here unchanged. Reach for `/** */` only to match an existing

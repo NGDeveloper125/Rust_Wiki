@@ -17,15 +17,15 @@ Also commonly used with `bool` as an XOR/"exactly one of" operator, since
 `BitXor` is implemented for `bool` as well as the integer types (unlike
 `&&`/`||`, `^` never short-circuits — both operands are always evaluated).
 
-## Basic usage example
+## Usage examples
+
+### Computing a bitwise XOR
 
 ```
 let x = 0b1100 ^ 0b1010; // <- bitwise XOR: bits that differ become 1
 ```
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 XOR-ing a byte into a running accumulator, then XOR-ing the same byte in
 again later, cancels out — the property that makes `^` a cheap building
@@ -41,7 +41,7 @@ let check = checksum(&packet);
 println!("checksum: {check:#04x}");
 ```
 
-**Why this way:** XOR is mathematically self-cancelling (`x ^ y ^ y ==
+XOR is mathematically self-cancelling (`x ^ y ^ y ==
 x`), and that property is exactly why `^` (rather than `&`/`|`) — the
 operator behind the [`BitXor`](https://doc.rust-lang.org/std/ops/trait.BitXor.html)
 trait — is the natural choice whenever "combine, and let duplicates

@@ -20,7 +20,9 @@ it is part of a fixed grammar (`for PATTERN in EXPR { BLOCK }`,
 works in Python. Testing membership in a Rust collection is a method
 call instead (`collection.contains(&value)`).
 
-## Basic usage example
+## Usage examples
+
+### Binding a loop variable to a range
 
 ```
 for x in 0..10 { // <- `in` binds `x` to each value produced by `0..10`
@@ -33,9 +35,7 @@ for x in 0..10 { // <- `in` binds `x` to each value produced by `0..10`
 visibility — it is not a standalone membership-test operator the way
 `in` works in Python.
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 `in` binds whatever pattern precedes it to each item an iterator chain
 produces — including a destructured tuple, when the source yields pairs.
@@ -49,7 +49,7 @@ for (name, count) in inventory.into_iter().filter(|&(_, c)| c > 0) {
 }
 ```
 
-**Why this way:** destructuring directly in the pattern before `in` avoids
+Destructuring directly in the pattern before `in` avoids
 a separate destructuring `let` inside the loop body — the
 [`Iterator::filter`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter)
 adaptor narrows what's seen before `in` ever binds it. `in` itself has no

@@ -952,8 +952,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,25 +986,19 @@ concept pages; this page covers only the grammar each form requires.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Point { x: f64, y: f64 } // &lt;- `struct` declares a named-field type; no `;` after the `}`
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Declaring and instantiating a named-field struct</h3>
+            <pre><code class="rust">struct Point { x: f64, y: f64 } // &lt;- `struct` declares a named-field type; no `;` after the `}`
 
 let p = Point { x: 1.0, y: 2.0 };
 println!("{}", p.x);
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Creating a new object</h3>
             <p>Constructing a value of a named-field struct uses the same <code>Name { field: value, ... }</code> syntax the declaration introduced; the field-init shorthand
 and struct-update syntax (<code>..</code>) both reuse that same literal form.</p>
@@ -1021,20 +1014,15 @@ let base = Order { id, customer: "Alice".into(), total_cents: 1500 };
 
 let reordered = Order { total_cents: 2200, ..base }; // &lt;- `..base` fills every other field from `base`
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the field-init shorthand and <code>..</code> update syntax both
+<p>The field-init shorthand and <code>..</code> update syntax both
 come directly from the struct declaration's field list, so renaming a
 field is a single edit that the compiler will flag everywhere the old
 name was still expected — clippy's
 <a href="https://rust-lang.github.io/rust-clippy/master/#redundant_field_names"><code>redundant_field_names</code></a>
 lint nudges toward the shorthand form whenever the names already match.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>The same field list a <code>struct</code> declares can be destructured in a <code>let</code> or
 <code>match</code> pattern, binding each field to a local name in one step instead
@@ -1051,13 +1039,12 @@ println!("sensor {sensor_id}: {celsius}°C");
 // a `..` in a pattern ignores the remaining fields explicitly:
 let Reading { celsius, .. } = Reading { sensor_id: 8, celsius: 19.0 };
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> naming only the fields a function actually needs, with
+<p>Naming only the fields a function actually needs, with
 <code>..</code> for the rest, keeps the pattern resilient to a struct gaining new
 fields later — a bare <code>let Reading { sensor_id, celsius } = reading;</code>
 would stop compiling the moment a third field is added, forcing every
 destructuring site to be revisited.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1073,7 +1060,7 @@ allocator-free — the primary way embedded HAL crates model peripherals,
 register blocks, and driver state, with no difference in grammar or
 behavior under <code>#![no_std]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

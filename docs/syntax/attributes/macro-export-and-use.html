@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,25 +986,19 @@ older examples, but it's a legacy form now; new code should prefer
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[macro_export] // &lt;- opts this macro into being usable from other crates
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Exporting a macro so other crates can use it</h3>
+            <pre><code class="rust">#[macro_export] // &lt;- opts this macro into being usable from other crates
 macro_rules! log_event {
     ($msg:expr) =&gt; { println!("[event] {}", $msg) };
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A logging crate exports a formatting macro so downstream crates get the
 same convenience <code>println!</code>/<code>format!</code> already give them, without needing
@@ -1025,15 +1018,14 @@ fn start() {
     log_event!("sensor {} online", 7); // &lt;- resolves via the crate root, not telemetry's internal module path
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> macro visibility doesn't follow ordinary item
+<p>Macro visibility doesn't follow ordinary item
 visibility rules, so <code>#[macro_export]</code> is mandatory for any macro meant
 to be used outside its crate; importing the result with a plain <code>use</code>,
 rather than <code>#[macro_use]</code>, is exactly the improvement the
 <a href="https://doc.rust-lang.org/reference/macros-by-example.html#path-based-scope">Rust Reference's macro scoping rules</a>
 describe as the 2018-edition path-based alternative to the older,
 attribute-based import.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1051,7 +1043,7 @@ as part of name resolution, with no runtime footprint — identical under
 pin-definition macros; <code>#[macro_use]</code> still turns up in older,
 edition-2015-pinned embedded example code, but current crates use <code>use</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

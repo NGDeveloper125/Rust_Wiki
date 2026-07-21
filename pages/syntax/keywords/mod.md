@@ -33,7 +33,9 @@ mental model — why modules exist, how the tree maps to a public API — and
 for the file-lookup rule in fuller depth; this page covers the grammar of
 writing `mod` itself.
 
-## Basic usage example
+## Usage examples
+
+### Declaring an inline module
 
 ```
 mod shapes {                            // <- `mod` opens an inline module
@@ -48,9 +50,7 @@ let unit_circle = shapes::Circle { radius: 1.0 };
 println!("{}", shapes::area(&unit_circle));
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A small metrics library keeps its aggregation and reporting logic in
 separate files, loaded with `mod name;`, while re-exporting a short,
@@ -89,7 +89,7 @@ impl ConsoleExporter {
 }
 ```
 
-**Why this way:** the two `mod name;` declarations keep `aggregator` and
+The two `mod name;` declarations keep `aggregator` and
 `exporter` as separate files mirroring the module tree on disk, while the
 `pub use` re-exports mean callers depend on `crate::Counter` and
 `crate::ConsoleExporter` rather than on knowing the internal file layout —
@@ -97,7 +97,7 @@ the curation the
 [API Guidelines' future-proofing chapter](https://rust-lang.github.io/api-guidelines/future-proofing.html)
 recommends for a stable public surface.
 
-### Scenario: Testing
+### Testing
 
 A unit test module uses the *inline* form of `mod` — `mod name { ... }` —
 rather than a separate file, since the tests live right alongside the code
@@ -119,7 +119,7 @@ mod tests {                     // <- `mod` here is inline (`mod name { ... }`),
 }
 ```
 
-**Why this way:** an inline `mod tests { ... }` compiled only under
+An inline `mod tests { ... }` compiled only under
 `#[cfg(test)]` keeps the tests next to the code they cover instead of in a
 separate file, the layout the
 [Rust Book's testing chapter](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)

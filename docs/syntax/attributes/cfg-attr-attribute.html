@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -980,25 +979,19 @@ the item is written once, and only the extra attribute is conditional.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[cfg_attr(test, derive(Debug))] // &lt;- derives Debug only when compiling for `cargo test`
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Conditionally deriving a trait for test builds</h3>
+            <pre><code class="rust">#[cfg_attr(test, derive(Debug))] // &lt;- derives Debug only when compiling for `cargo test`
 struct Reading {
     celsius: f64,
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p>A domain type doesn't need <code>Debug</code> in ordinary builds, but test code
 constantly wants it for <code>assert_eq!</code> failure messages and <code>dbg!</code> output —
@@ -1026,8 +1019,7 @@ mod tests {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>assert_eq!</code> needs both <code>Debug</code> (to print the failure
+<p><code>assert_eq!</code> needs both <code>Debug</code> (to print the failure
 message) and <code>PartialEq</code> (to compare) on <code>OrderTotal</code>, but a published
 library's normal build gains nothing from either derive on a purely
 internal amount type — <code>cfg_attr</code> keeps both traits scoped to exactly the
@@ -1035,13 +1027,9 @@ builds that need them, which the
 <a href="https://doc.rust-lang.org/reference/conditional-compilation.html#the-cfg_attr-attribute">Rust Reference</a>
 documents as <code>cfg_attr</code>'s purpose: attaching an attribute conditionally
 without writing the item itself twice.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A struct needs <code>#[repr(C)]</code> only when built for a specific target that
 crosses an FFI boundary, while other targets are free to let the compiler
@@ -1053,13 +1041,12 @@ pub struct FrameHeader {
     pub flags: u8,
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> writing the struct out twice — once <code>#[repr(C)]</code> gated
+<p>Writing the struct out twice — once <code>#[repr(C)]</code> gated
 to Linux, once without a repr gated to everything else — would risk the
 two copies' field lists drifting apart over time; <code>cfg_attr</code> keeps exactly
 one field list as the single source of truth while only the layout
 attribute varies by target.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1078,7 +1065,7 @@ a <code>no_std</code>-friendly logging format only when the crate's <code>defmt<
 is enabled, without a second copy of the type for builds that don't use
 it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

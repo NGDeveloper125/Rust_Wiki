@@ -34,7 +34,9 @@ loading a file generated at build time into an ordinary module path. See
 the default file-lookup convention works; this page covers only the
 override.
 
-## Basic usage example
+## Usage examples
+
+### Selecting a platform-specific file with #[cfg] and #[path]
 
 ```
 #[cfg(target_os = "windows")]
@@ -46,9 +48,7 @@ mod backend;
 mod backend;
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A cross-platform crate exposes one `backend` module to the rest of its
 code, but the actual implementation file differs per target OS —
@@ -79,7 +79,7 @@ pub fn current_user_home() -> String {
 }
 ```
 
-**Why this way:** pairing `#[path]` with `#[cfg(...)]` keeps one logical
+Pairing `#[path]` with `#[cfg(...)]` keeps one logical
 `backend` module name across platforms while routing to a genuinely
 different file per target, rather than `#[cfg]`-gating code inline inside
 a single shared file — the exact override behavior is documented in the

@@ -37,7 +37,9 @@ build pipelines that compile a file without a surrounding Cargo project;
 inside an ordinary Cargo-managed crate, the package name in `Cargo.toml`
 is the conventional place to control this.
 
-## Basic usage example
+## Usage examples
+
+### Setting the crate type and name without Cargo
 
 ```
 #![crate_type = "lib"] // <- rustc-only: produces an rlib without a surrounding Cargo project
@@ -48,9 +50,7 @@ pub fn version() -> &'static str {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A small internal tool is compiled directly with `rustc` as part of a
 custom build pipeline, with no `Cargo.toml` in the picture — the crate
@@ -66,7 +66,7 @@ fn main() {
 }
 ```
 
-**Why this way:** in an ordinary Cargo-managed project, `[lib]
+In an ordinary Cargo-managed project, `[lib]
 crate-type` and the package `name` in `Cargo.toml` are the idiomatic,
 single source of truth for both of these, and duplicating them into
 `#![crate_type]`/`#![crate_name]` as well is generally avoided since the

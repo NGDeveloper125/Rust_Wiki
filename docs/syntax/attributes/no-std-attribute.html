@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1028,26 +1027,20 @@ logic through a third, shared <code>#![no_std]</code> library crate both depend 
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std] // &lt;- opts this crate out of linking std; only `core` is available by default
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Opting a crate out of the standard library</h3>
+            <pre><code class="rust">#![no_std] // &lt;- opts this crate out of linking std; only `core` is available by default
 
 pub fn add(a: i32, b: i32) -&gt; i32 {
     a + b // ordinary arithmetic needs nothing beyond core
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A firmware crate for a microcontroller needs the minimal skeleton every
 <code>#![no_std]</code> binary starts from: no heap, a custom entry point, and a
@@ -1073,8 +1066,7 @@ pub fn add(a: i32, b: i32) -&gt; i32 {
     a + b // ordinary core-only logic works exactly as it does under std
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> this is the minimal shape every <code>#![no_std]</code> binary
+<p>This is the minimal shape every <code>#![no_std]</code> binary
 needs — a panic handler and (absent an OS-provided one) a custom entry
 point — before any application logic can be added; the
 <a href="https://doc.rust-lang.org/stable/embedded-book/start/index.html">embedded Rust book's minimal example</a>
@@ -1082,13 +1074,9 @@ builds up from exactly this skeleton, and in practice most real firmware
 gets <code>#[no_main]</code>'s entry point and the panic handler from a hardware
 support crate (<code>cortex-m-rt</code>, <code>panic-halt</code>) rather than writing them out
 by hand as shown here for clarity.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Once a <code>#![no_std]</code> crate needs heap-allocated collections — say, a
 buffer of recent sensor readings — it opts into <code>alloc</code> explicitly and
@@ -1110,15 +1098,14 @@ pub fn recent_readings(history: &amp;mut Vec&lt;i32&gt;, new_reading: i32) {
 // embedded-alloc) must also be defined somewhere in this binary — see
 // the #[global_allocator] page for a complete example.
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>alloc</code> is a deliberately separate tier between <code>core</code>
+<p><code>alloc</code> is a deliberately separate tier between <code>core</code>
 and <code>std</code> precisely so a <code>#![no_std]</code> crate can choose "no heap at all"
 or "heap available, but I still supply my own allocator and have no OS
 underneath it" — the
 <a href="https://doc.rust-lang.org/stable/embedded-book/collections/index.html">embedded Rust book</a>
 documents this as the standard path to using <code>Vec</code>/<code>String</code> in firmware,
 distinct from a full <code>std</code> dependency.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1143,7 +1130,7 @@ than restate each affected concept's story here, see: the
 typically <code>panic = "abort"</code>) — each covers the specific delta in depth
 without duplicating it here.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

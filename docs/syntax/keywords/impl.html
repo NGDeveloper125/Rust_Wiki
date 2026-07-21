@@ -951,8 +951,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,9 +986,12 @@ by-position-disambiguation pattern seen with tokens like <a href="../../syntax/o
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Cat;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Inherent impl block alongside a trait impl block</h3>
+            <pre><code class="rust">struct Cat;
 
 impl Cat { // &lt;- inherent impl block: no trait involved
     fn new() -&gt; Self { Cat }
@@ -1004,17 +1006,8 @@ impl Greet for Cat { // &lt;- trait impl block: connects Greet's methods to Cat
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Runtime polymorphism</h3>
             <p>A plugin system needs many unrelated types behind one interface — each
 type gets its own <code>impl Trait for Type</code> block, and callers hold them all
@@ -1042,19 +1035,14 @@ for command in &amp;commands {
     command.run("status: ready");
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> each <code>impl Command for ...</code> block is independent and can
+<p>Each <code>impl Command for ...</code> block is independent and can
 live in its own module or crate, which is exactly the decoupling
 <a href="../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.html">trait objects &amp; dynamic dispatch</a>
 relies on — the trait, not a shared base type, is what ties these
 implementations together.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Writing generic code</h3>
             <p>A function that only reads its argument through one trait's methods can
 accept <code>impl Trait</code> in argument position instead of a generic type
@@ -1067,15 +1055,14 @@ cost of the caller being unable to name the type explicitly.</p>
 log_reading(21.5);
 log_reading("overheating");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>impl Trait</code> in argument position desugars to the same
+<p><code>impl Trait</code> in argument position desugars to the same
 monomorphized generic function as <code>fn log_reading&lt;T: Display&gt;(value: T)</code>
 — see
 <a href="../../concepts/traits-polymorphism/static-dispatch-monomorphization.html">static dispatch &amp; monomorphization</a>
-for why this costs nothing at runtime; reach for an explicit generic
-parameter instead once the signature needs to refer to <code>T</code> more than
-once (e.g. two parameters that must share the same concrete type).</p>
-</div>
+for why this costs nothing at runtime. An explicit generic parameter
+becomes useful once the signature needs to refer to <code>T</code> more than once
+(e.g. two parameters that must share the same concrete type).</p>
+
           </div>
         </div>
       </section>
@@ -1092,7 +1079,7 @@ driver crates are built almost entirely out of <code>impl Trait for Type</code>
 blocks connecting a vendor's peripheral type to the hardware-abstraction
 traits.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

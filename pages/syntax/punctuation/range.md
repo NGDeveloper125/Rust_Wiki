@@ -42,7 +42,9 @@ a `1...5` range expression), and in pattern position current Rust rejects
 it outright rather than merely warning. There is no reason to write it in
 new code — `..=` is its direct, and only, replacement.
 
-## Basic usage example
+## Usage examples
+
+### Iterating over an exclusive range
 
 ```
 for i in 0..5 { // <- `..` exclusive range: yields 0, 1, 2, 3, 4
@@ -50,9 +52,7 @@ for i in 0..5 { // <- `..` exclusive range: yields 0, 1, 2, 3, 4
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 Averaging a fixed-size window of recent sensor readings needs a slice of
 exactly that window — an exclusive range expression is the index that
@@ -69,13 +69,13 @@ let readings = [21.0, 21.4, 21.6, 22.1, 21.9];
 println!("{:.2}", moving_average(&readings, 1, 3));
 ```
 
-**Why this way:** `start..end` reads as "from `start`, up to but not
+`start..end` reads as "from `start`, up to but not
 including `end`," matching how `slice.len()` and index arithmetic already
 work in Rust — the
 [std docs on slice indexing](https://doc.rust-lang.org/std/primitive.slice.html)
 use this same half-open convention throughout the standard library.
 
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Summarizing a list of scores needs different handling for an empty list, a
 single score, and everything else — `..` in a slice pattern matches "the
@@ -96,13 +96,13 @@ fn summarize(scores: &[u32]) -> String {
 println!("{}", summarize(&[92, 87, 95]));
 ```
 
-**Why this way:** a slice pattern with `..` is exhaustive over "any
+A slice pattern with `..` is exhaustive over "any
 length ≥ 1" in one arm, instead of writing out a separate arm per possible
 length — the
 [Rust Reference on slice patterns](https://doc.rust-lang.org/reference/patterns.html#slice-patterns)
 documents `..` as matching zero or more elements at that position.
 
-### Scenario: Numeric computation
+### Numeric computation
 
 Assigning a letter grade from a numeric score is a direct fit for
 inclusive range patterns, since a grade boundary (100) belongs to the band
@@ -121,7 +121,7 @@ fn letter_grade(score: u8) -> char {
 println!("{}", letter_grade(90));
 ```
 
-**Why this way:** writing `90..=100` states the boundary directly, where a
+Writing `90..=100` states the boundary directly, where a
 bare `90..101` (or two overlapping-looking `90..100` arms) would leave a
 reader to double-check whether the endpoint is included — the
 [Rust Reference on range patterns](https://doc.rust-lang.org/reference/patterns.html#range-patterns)

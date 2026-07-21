@@ -31,16 +31,16 @@ Rust (module paths, `use` statements) are crate-rooted.
 for `src/email/templates/welcome.txt`, not a `templates/` folder at the
 crate root.
 
-## Basic usage example
+## Usage examples
+
+### Embedding a text template and a binary file at compile time
 
 ```
 const WELCOME_TEMPLATE: &str = include_str!("welcome_template.txt"); // <- resolved relative to *this* file, not the crate root
 const LOGO_PNG: &[u8] = include_bytes!("logo.png");                  // <- embedded as a byte array, no encoding requirement
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A CLI tool embeds its default config as a template at compile time, so
 the binary is self-contained and needs no external file to run `--init`.
@@ -54,13 +54,13 @@ fn write_default_config(path: &std::path::Path) -> std::io::Result<()> {
 }
 ```
 
-**Why this way:** the
+The
 [std docs](https://doc.rust-lang.org/std/macro.include_str.html) note
 that embedding a template at compile time removes an entire runtime
 failure mode — the template file being missing or misplaced relative to
 the installed binary — at the cost of needing a rebuild to change it.
 
-### Scenario: Testing
+### Testing
 
 A parser's test suite loads its sample input from a fixture file instead
 of inlining a large literal string in the test source.
@@ -77,7 +77,7 @@ fn counts_lines_in_fixture() {
 }
 ```
 
-**Why this way:** keeping fixture data in its own file, loaded via
+Keeping fixture data in its own file, loaded via
 `include_str!`, rather than a large inline string literal keeps the test
 function readable and lets the fixture be viewed, edited, and diffed as
 ordinary text — a shape the

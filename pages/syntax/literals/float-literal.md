@@ -21,19 +21,19 @@ directly — `2.abs()`, `(2.).abs()`, and `2. .abs()` all fail as an
 ambiguous numeric type. To call a method, use a fully written, suffixed
 literal instead: `2.0_f64.abs()`.
 
-## Basic usage example
+## Usage examples
+
+### Defaulting to f64
 
 ```
 let temp = 36.6; // <- float literal: the decimal point makes this an `f64` by default
 ```
 
-**Restriction:** you can't call a method on a bare `2.` — `2.abs()`,
+You can't call a method on a bare `2.` — `2.abs()`,
 `2 .abs()`, and `(2.).abs()` all fail as an ambiguous numeric type. Write
 a suffixed literal like `2.0_f64.abs()` when a method call is needed.
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 A unit-conversion formula reads clearest when every literal in it is
 visibly floating-point, including whole numbers.
@@ -46,12 +46,12 @@ fn celsius_to_fahrenheit(c: f64) -> f64 {
 let reading = celsius_to_fahrenheit(21.5);
 ```
 
-**Why this way:** writing whole-number operands as `32.0` rather than
+Writing whole-number operands as `32.0` rather than
 `32` keeps every value in the expression visibly floating-point, so a
 type mismatch shows up as a compile error at the exact spot it was
 introduced instead of relying on inference to paper over it.
 
-### Scenario: Validating input
+### Validating input
 
 Float equality is unreliable, so validating a measurement against a
 target uses a small tolerance instead of `==`.
@@ -66,7 +66,7 @@ fn is_close_to_target(measured: f64, target: f64) -> bool {
 assert!(is_close_to_target(98.6000001, 98.6));
 ```
 
-**Why this way:** direct `==` on floats fails for values that are
+Direct `==` on floats fails for values that are
 mathematically equal but differ in their last bit due to rounding;
 comparing against an epsilon threshold is the standard workaround, which
 is why [Clippy's `float_cmp` lint](https://rust-lang.github.io/rust-clippy/master/index.html#float_cmp)

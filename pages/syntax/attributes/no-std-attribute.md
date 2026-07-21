@@ -83,7 +83,9 @@ both a `#![no_std]` firmware crate and an ordinary `std` host-side tool
 simply keeps them as two separate crates, sharing `#![no_std]`-compatible
 logic through a third, shared `#![no_std]` library crate both depend on.
 
-## Basic usage example
+## Usage examples
+
+### Opting a crate out of the standard library
 
 ```
 #![no_std] // <- opts this crate out of linking std; only `core` is available by default
@@ -93,9 +95,7 @@ pub fn add(a: i32, b: i32) -> i32 {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A firmware crate for a microcontroller needs the minimal skeleton every
 `#![no_std]` binary starts from: no heap, a custom entry point, and a
@@ -124,7 +124,7 @@ pub fn add(a: i32, b: i32) -> i32 {
 }
 ```
 
-**Why this way:** this is the minimal shape every `#![no_std]` binary
+This is the minimal shape every `#![no_std]` binary
 needs — a panic handler and (absent an OS-provided one) a custom entry
 point — before any application logic can be added; the
 [embedded Rust book's minimal example](https://doc.rust-lang.org/stable/embedded-book/start/index.html)
@@ -133,7 +133,7 @@ gets `#[no_main]`'s entry point and the panic handler from a hardware
 support crate (`cortex-m-rt`, `panic-halt`) rather than writing them out
 by hand as shown here for clarity.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Once a `#![no_std]` crate needs heap-allocated collections — say, a
 buffer of recent sensor readings — it opts into `alloc` explicitly and
@@ -158,7 +158,7 @@ pub fn recent_readings(history: &mut Vec<i32>, new_reading: i32) {
 // the #[global_allocator] page for a complete example.
 ```
 
-**Why this way:** `alloc` is a deliberately separate tier between `core`
+`alloc` is a deliberately separate tier between `core`
 and `std` precisely so a `#![no_std]` crate can choose "no heap at all"
 or "heap available, but I still supply my own allocator and have no OS
 underneath it" — the

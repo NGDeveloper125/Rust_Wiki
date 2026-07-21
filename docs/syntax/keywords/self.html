@@ -954,8 +954,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -995,9 +994,12 @@ from within a module, meaning "look in this same module"), though <code>use {sel
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Order { total_cents: u64 }
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reading a value through `&amp;self`</h3>
+            <pre><code class="rust">struct Order { total_cents: u64 }
 
 impl Order {
     fn total(&amp;self) -&gt; u64 { // &lt;- `&amp;self`: reads the receiver, caller keeps ownership
@@ -1006,17 +1008,8 @@ impl Order {
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Implementing traits</h3>
             <p>A builder type's chained methods take <code>self</code> by value, consuming and
 returning the modified builder each step, while a plain inspection method
@@ -1042,20 +1035,15 @@ let builder = RequestBuilder { url: "https://api.example.com".into(), retries: 0
 let builder = builder.retries(3); // &lt;- consumes the old `builder` binding, returns a new one
 println!("{}", builder.url());
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> an owned <code>self</code> receiver is what makes fluent method
+<p>An owned <code>self</code> receiver is what makes fluent method
 chaining possible — each call consumes the previous builder state and
 hands back a new one — while <code>&amp;self</code> on <code>url</code> signals "just reading, you
 still own this afterward"; the
 <a href="https://doc.rust-lang.org/book/ch05-03-method-syntax.html">Rust Book's method-syntax chapter</a>
 covers exactly this choice among <code>self</code>, <code>&amp;self</code>, and <code>&amp;mut self</code>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>Importing both a module and specific items from it in one line uses the
 path-position sense of <code>self</code> — a distinct meaning from the receiver, but
@@ -1071,14 +1059,13 @@ fn copy_all(mut source: impl Read, mut sink: impl Write) -&gt; io::Result&lt;u64
     std::io::copy(&amp;mut source, &amp;mut sink)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> without the <code>self</code> in the group, <code>io::Error</code> and
+<p>Without the <code>self</code> in the group, <code>io::Error</code> and
 <code>io::Result</code> would be unreachable unless the module was imported
 separately (<code>use std::io;</code> on its own line) — grouping <code>self</code> alongside
 specific items is the idiomatic way to get both without two <code>use</code>
 statements, as shown throughout the
 <a href="https://doc.rust-lang.org/reference/items/use-declarations.html">Rust Reference's use-declarations section</a>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1094,7 +1081,7 @@ statements, as shown throughout the
 the module-path sense of <code>self</code> in <code>use</code> statements is likewise pure
 compile-time name resolution, with no <code>std</code> dependency either way.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

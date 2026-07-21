@@ -19,7 +19,9 @@ extra allocation, which matters for types like `String` or `Vec`), though
 for simple numeric types the two behave identically. The left operand
 must be a mutable place — `x` must be declared `let mut x`.
 
-## Basic usage example
+## Usage examples
+
+### Adding to a mutable binding in place
 
 ```
 let mut x = 5;
@@ -29,9 +31,7 @@ x += 1; // <- `+=` adds the right operand into `x` in place
 **Restriction:** the left operand must be a mutable place — `x` has to be
 declared with `let mut x`, or this won't compile.
 
-## Best practices & deeper information
-
-### Scenario: Modifying an existing object
+### Modifying an existing object
 
 An account balance is a natural home for `+=` — the balance is a field
 mutated in place each time a deposit posts, rather than a whole new
@@ -54,13 +54,13 @@ checking.deposit(750);
 assert_eq!(checking.balance, 13_250);
 ```
 
-**Why this way:** a `&mut self` method that uses `+=` on its own field
+A `&mut self` method that uses `+=` on its own field
 keeps the mutation local and auditable — the alternative of returning a
 new `Account` on every deposit would work but adds ceremony for a value
 type that's meant to change over its lifetime. The `&mut self` method
 syntax itself is covered in [the Book](https://doc.rust-lang.org/book/ch05-03-method-syntax.html).
 
-### Scenario: Working with collections
+### Working with collections
 
 Accumulating a running total while iterating is the textbook use of
 `+=`; it's worth contrasting with re-binding a fresh `let total = ...` on
@@ -80,7 +80,7 @@ assert_eq!(total, 5549);
 let total: i32 = orders.iter().sum();
 ```
 
-**Why this way:** the explicit `for` loop with `+=` is the clearest form
+The explicit `for` loop with `+=` is the clearest form
 when the accumulation is interleaved with other per-item work; when
 summing is the *only* thing happening, `Iterator::sum` from the
 [standard library docs](https://doc.rust-lang.org/std/iter/trait.Sum.html)

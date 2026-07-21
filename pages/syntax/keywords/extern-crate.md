@@ -36,7 +36,9 @@ See [`extern`](extern.md) for the unrelated FFI/ABI use of the plain
 `extern` keyword (`extern "C" fn`, `extern` blocks) — this page covers
 only the crate-declaration form, `extern crate`.
 
-## Basic usage example
+## Usage examples
+
+### Opting a no_std crate into alloc
 
 ```
 #![no_std]
@@ -46,9 +48,7 @@ extern crate alloc; // <- still required today: opts a `#![no_std]` crate into t
 use alloc::vec::Vec;
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A `#![no_std]` library crate offers a `Vec`-returning public function, so
 it needs `alloc` explicitly linked before it can use `alloc::vec::Vec` at
@@ -71,7 +71,7 @@ pub fn duplicate_last(values: &[u32]) -> Vec<u32> { // <- public API returning a
 }
 ```
 
-**Why this way:** `alloc` sits between `core` (always available,
+`alloc` sits between `core` (always available,
 allocation-free) and `std` (requires an OS), so a `#![no_std]` crate that
 still wants heap-allocating types opts into it explicitly with
 `extern crate alloc;` rather than gaining it implicitly — the requirement

@@ -953,8 +953,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1014,24 +1013,18 @@ for what goes wrong when the contract is violated.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let value: i32 = 10;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Dereferencing a raw pointer inside an `unsafe` block</h3>
+            <pre><code class="rust">let value: i32 = 10;
 let ptr = &amp;value as *const i32;
 let read = unsafe { *ptr }; // &lt;- `unsafe` block: required to dereference a raw pointer
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>A firmware updater needs a CRC-32 checksum routine from a vendor-supplied
 C library; the compiler has no way to check what that foreign function
@@ -1050,20 +1043,15 @@ fn checksum(firmware_image: &amp;[u8]) -&gt; u32 {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the compiler can verify the <em>signature</em> of <code>crc32</code> but
+<p>The compiler can verify the <em>signature</em> of <code>crc32</code> but
 nothing about its body or side effects, so <code>unsafe</code> marks the exact call
 site where a human is vouching for the contract instead — the
 <a href="https://doc.rust-lang.org/nomicon/ffi.html">Rustonomicon's FFI chapter</a>
 treats every call across this boundary as needing exactly this kind of
 manual justification.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>An audio ring buffer wants to skip bounds checks on its hot read/write
 path without ever letting a caller trigger an out-of-bounds access — the
@@ -1095,14 +1083,13 @@ impl AudioRingBuffer {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> keeping <code>write_unchecked</code> private and calling it from
+<p>Keeping <code>write_unchecked</code> private and calling it from
 exactly one already-checked call site is the "contain unsafety in small
 modules" idiom described on <a href="../../concepts/memory-unsafe/unsafe-rust.html">Unsafe Rust</a> —
 every other method on <code>AudioRingBuffer</code> stays ordinary safe code, and the
 one invariant the module relies on (<code>len &lt;= samples.len()</code>) is enforced
 in a single place.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1122,7 +1109,7 @@ and the main loop are all routine, and every one of them requires
 expose a safe, typed API (the <code>embedded-hal</code> traits) to the rest of the
 firmware.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

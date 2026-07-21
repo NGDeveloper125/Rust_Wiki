@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -986,25 +985,19 @@ specific mode) rather than whatever the crate's default is.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[target_feature(enable = "avx2")] // &lt;- compiles this function assuming AVX2 is available
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Enabling a CPU feature for a single function</h3>
+            <pre><code class="rust">#[target_feature(enable = "avx2")] // &lt;- compiles this function assuming AVX2 is available
 unsafe fn sum_avx2(data: &amp;[f32]) -&gt; f32 {
     data.iter().sum() // a real implementation would use AVX2 intrinsics directly
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Numeric computation</h3>
             <p>A signal-processing library sums large buffers of samples far more often
 than anything else it does, so it ships both a portable baseline
@@ -1027,8 +1020,7 @@ fn sum_baseline(data: &amp;[f32]) -&gt; f32 {
     data.iter().sum()
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>is_x86_feature_detected!</code> performs the runtime CPU
+<p><code>is_x86_feature_detected!</code> performs the runtime CPU
 check that discharges the <code>unsafe</code> contract <code>#[target_feature]</code> imposes —
 calling <code>sum_avx2</code> without first confirming AVX2 is present is undefined
 behavior on a CPU lacking it, which the
@@ -1036,7 +1028,7 @@ behavior on a CPU lacking it, which the
 and <code>std::arch</code> documentation both specify as the required pattern:
 gate every <code>target_feature</code>-enabled call behind an explicit runtime
 detection, never an assumption based on the compilation target alone.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1057,7 +1049,7 @@ without <code>std</code>, though runtime feature detection macros like
 a fixed microcontroller more commonly knows its CPU features at compile
 time via the target spec itself, rather than detecting them at runtime.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

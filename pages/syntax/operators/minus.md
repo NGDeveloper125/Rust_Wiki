@@ -25,7 +25,9 @@ that overflows, such as the literal `0u8 - 1`, never gets that far — it's
 rejected at compile time by the deny-by-default `arithmetic_overflow`
 lint.
 
-## Basic usage example
+## Usage examples
+
+### Subtracting two numbers
 
 ```
 let diff = 10 - 3; // <- binary `-` subtracts the right operand
@@ -36,9 +38,7 @@ in debug builds; release builds wrap instead, unless you use a checked
 method like `checked_sub`. A constant expression like `0u8 - 1` is a
 compile error instead (deny-by-default `arithmetic_overflow` lint).
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 A sensor reading's delta from a setpoint is a common place binary `-`
 shows up — and a good spot to reach for `checked_sub` instead of the bare
@@ -56,13 +56,13 @@ fn safe_battery_drop(before: u8, after: u8) -> Option<u8> {
 let delta = temperature_delta(20, 17); // -3: three degrees below setpoint
 ```
 
-**Why this way:** signed deltas (`i32`, not `u32`) let "below setpoint"
+Signed deltas (`i32`, not `u32`) let "below setpoint"
 be a negative number instead of an underflow; for unsigned subtraction
 where the operands' order isn't guaranteed, `checked_sub` turns a
 potential panic into an `Option` the caller must handle, per the
 [standard library docs](https://doc.rust-lang.org/std/primitive.u8.html#method.checked_sub).
 
-### Scenario: Working with collections
+### Working with collections
 
 Computing pairwise differences between consecutive elements — e.g. the
 gaps between successive sensor readings — is a natural fit for
@@ -79,7 +79,7 @@ let deltas: Vec<f64> = readings
 assert_eq!(deltas, vec![2.5, -1.5, 2.5]);
 ```
 
-**Why this way:** `windows(2)` avoids manually indexing with `i` and
+`windows(2)` avoids manually indexing with `i` and
 `i - 1` (an off-by-one hazard), letting `-` do the actual subtraction
 while the iterator adapter handles bounds — see the
 [standard library docs](https://doc.rust-lang.org/std/primitive.slice.html#method.windows)

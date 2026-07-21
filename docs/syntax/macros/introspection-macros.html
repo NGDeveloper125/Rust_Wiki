@@ -945,8 +945,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -984,23 +983,17 @@ plus <code>std::panic::Location::caller()</code> is the runtime equivalent used 
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let expr_text = stringify!(1 + 2);            // &lt;- "1 + 2", the source text, not the evaluated "3"
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Capturing source text and concatenating literals</h3>
+            <pre><code class="rust">let expr_text = stringify!(1 + 2);            // &lt;- "1 + 2", the source text, not the evaluated "3"
 let banner = concat!("build ", "v", "1.0.3"); // &lt;- joined into one &amp;'static str at compile time
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Testing</h3>
             <p>A small custom assertion macro reports the failed condition's own source
 text using <code>stringify!</code>, the same technique the standard <code>assert!</code> macro
@@ -1021,20 +1014,15 @@ struct Order { total: i64 }
 let order = Order { total: -5 };
 check_positive!(order.total); // panics: "expected order.total to be positive, got -5"
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> reporting the expression's own source text
+<p>Reporting the expression's own source text
 (<code>"order.total"</code>) rather than a hand-written label keeps the message
 accurate automatically as the macro is reused at different call sites —
 the same trick the
 <a href="https://doc.rust-lang.org/std/macro.stringify.html">std docs</a> describe
 <code>assert!</code> itself as relying on for its default panic message.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A lightweight logging macro tags every log line with its own source
 location, using <code>file!()</code>/<code>line!()</code>/<code>module_path!()</code> rather than
@@ -1053,14 +1041,13 @@ fn process_order(order_id: u64) {
     log_here!(format!("processing order {order_id}"));
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> baking the call site into the macro itself means every
+<p>Baking the call site into the macro itself means every
 call site gets accurate location info for free without the caller having
 to supply it — the same underlying technique logging crates in the
 ecosystem build their own logging macros on top of, per the
 <a href="https://doc.rust-lang.org/std/macro.file.html">std docs</a> for
 <code>file!</code>/<code>line!</code>/<code>module_path!</code>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1076,7 +1063,7 @@ source text and build metadata — none has any runtime dependency on
 <code>std</code> or an OS, so they work identically, with zero cost, under
 <code>#![no_std]</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

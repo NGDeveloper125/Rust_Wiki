@@ -24,7 +24,9 @@ item breaks the association (blank lines alone don't — a doc comment
 desugars to an outer `#[doc = "..."]` attribute, and whitespace between
 an attribute and its item is insignificant).
 
-## Basic usage example
+## Usage examples
+
+### Documenting a function
 
 ```
 /// <- this doc comment documents the function immediately below it
@@ -38,9 +40,7 @@ fn add(a: i32, b: i32) -> i32 {
 unrelated code or another item in between redirects (or breaks) the
 association. Blank lines alone are harmless.
 
-## Best practices & deeper information
-
-### Scenario: Documenting an API
+### Documenting an API
 
 A well-formed `///` comment leads with a one-line summary (used in
 listings/search), then expands with usage details — the shape `cargo doc`
@@ -61,14 +61,14 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
 pub struct ParseError;
 ```
 
-**Why this way:** the summary-then-detail shape and the `# Errors`
+The summary-then-detail shape and the `# Errors`
 section heading are conventions from the
 [rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html)
 and the [API Guidelines' C-FAILURE](https://rust-lang.github.io/api-guidelines/documentation.html#function-docs-include-error-panic-and-safety-considerations-c-failure) —
 callers scanning generated docs expect failure conditions called out
 explicitly, not buried in prose.
 
-### Scenario: Testing
+### Testing
 
 By default, a fenced code block inside a `///` comment on a library item
 is compiled and executed as a **doc test** by `cargo test` (annotations
@@ -87,12 +87,12 @@ pub fn add(a: i32, b: i32) -> i32 {
 }
 ```
 
-**Why this way:** a doc test is the one kind of example guaranteed to
+A doc test is the one kind of example guaranteed to
 stay accurate — if `add`'s behavior changes and the example wasn't
 updated, `cargo test` fails instead of leaving stale documentation on the
 page.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 Cross-referencing related items with an intra-doc link (`` [`Type`] ``)
 lets a reader jump straight from one API's docs to another's, without
@@ -108,7 +108,7 @@ pub struct ParsedDuration {
 }
 ```
 
-**Why this way:** intra-doc links are resolved and checked by `rustdoc`
+Intra-doc links are resolved and checked by `rustdoc`
 itself — a broken reference becomes a build-time warning instead of a
 silently dead link, which the
 [rustdoc book](https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html)

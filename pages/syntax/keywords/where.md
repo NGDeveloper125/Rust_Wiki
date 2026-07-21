@@ -44,7 +44,9 @@ In every one of these, `T: Bound` syntax after `<T>` simply has nowhere
 to go, because what's being constrained isn't `T` directly — `where` is
 required, not stylistic, in these cases.
 
-## Basic usage example
+## Usage examples
+
+### Relocating a bound to a `where` clause
 
 ```
 fn largest<T>(items: &[T]) -> &T
@@ -59,9 +61,7 @@ where
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Writing generic code
+### Writing generic code
 
 A function generic over an iterator needs to bound the iterator's
 *yielded* type, not the iterator type itself — there's no way to write
@@ -83,14 +83,14 @@ print_all(vec![1, 2, 3]);
 print_all(["west", "east"]);
 ```
 
-**Why this way:** `T::Item` names a type reachable *through* `T`, not `T`
+`T::Item` names a type reachable *through* `T`, not `T`
 itself, so there's no `<T::Item: Display>` position to write the bound in
 — the
 [Rust Reference's where-clauses section](https://doc.rust-lang.org/reference/items/generics.html#where-clauses)
 confirms this associated-type-bound form is only legal inside a `where`
 clause.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A function with two type parameters, each carrying more than one bound,
 reads far better with the bounds moved to `where` than crammed into the
@@ -122,7 +122,7 @@ where
 }
 ```
 
-**Why this way:** the
+The
 [Rust Book](https://doc.rust-lang.org/book/ch10-02-traits.html#clearer-trait-bounds-with-where-clauses)
 recommends `where` once a signature has more than one bounded type
 parameter, precisely so the function name and parameter list stay

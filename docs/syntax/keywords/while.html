@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -974,29 +973,23 @@ enclosing loop.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let mut count = 0;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Looping while a condition holds</h3>
+            <pre><code class="rust">let mut count = 0;
 while count &lt; 10 { // &lt;- repeats the block while the condition is `true`
     count += 1;
 }
 </code></pre>
-<p><strong>Restriction:</strong> a <code>while</code> loop always evaluates to <code>()</code> and cannot
+<p>A <code>while</code> loop always evaluates to <code>()</code> and cannot
 produce a value via <code>break value;</code>, unlike <code>loop</code> — the loop can end
 without any <code>break</code> running (the condition turns false), so there would
 be no value to yield.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Message passing between threads</h3>
             <p>Draining whatever messages are currently queued, without blocking the
 thread if the channel is momentarily empty, is a <code>while let</code> over
@@ -1011,18 +1004,13 @@ fn drain_pending(rx: &amp;mpsc::Receiver&lt;String&gt;) {
     // falls through here once nothing is queued right now (the channel isn't necessarily closed)
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <a href="https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv"><code>Receiver::try_recv</code></a>
+<p><a href="https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv"><code>Receiver::try_recv</code></a>
 never blocks, so the <code>while</code> condition simply stops being true once the
 queue is momentarily empty — contrast with <code>for message in rx</code> (see
 <a href="../../syntax/keywords/for.html"><code>for</code></a>), which blocks until the channel closes entirely.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Retrying against a work queue of candidate values until one parses
 successfully is a <code>while let Some(...)</code> loop popping the next candidate
@@ -1038,15 +1026,14 @@ while let Some(entry) = pending.pop() {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>while let Some(...) = queue.pop()</code> is the general
+<p><code>while let Some(...) = queue.pop()</code> is the general
 shape for "keep trying until the source runs out or a condition is met"
 when the source isn't an iterator (over an iterator, a <code>for</code> loop is the
 idiomatic form — Clippy's <code>while_let_on_iterator</code> lint suggests exactly
 that rewrite) — the
 <a href="https://doc.rust-lang.org/reference/expressions/loop-expr.html">Reference's loop expressions</a>
 page defines exactly this semantics for <code>while let</code>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1061,7 +1048,7 @@ page defines exactly this semantics for <code>while let</code>.</p>
 embedded code (spinning on a status register bit until a peripheral is
 ready) when interrupts aren't used instead.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

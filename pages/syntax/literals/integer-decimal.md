@@ -21,15 +21,15 @@ type suffix can be attached directly with no space (`42u8`, `1_000i64`)
 to pin the literal's type explicitly — see
 [integer suffixes](integer-suffixes.md).
 
-## Basic usage example
+## Usage examples
+
+### Writing everyday quantities in decimal
 
 ```
 let count = 42; // <- decimal integer literal: base 10, no prefix needed
 ```
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Decimal is the natural base for everyday quantities — order counts, prices
 in cents — and feeds straight into checked arithmetic when the inputs
@@ -44,14 +44,14 @@ let subtotal = total_cents(1999, 3); // <- decimal literals: the natural base fo
 assert_eq!(subtotal, Some(5997));
 ```
 
-**Why this way:** `checked_mul` turns a would-be silent overflow into an
+`checked_mul` turns a would-be silent overflow into an
 explicit `None` the caller must handle — the
 [std docs for `checked_mul`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_mul)
 document that `None`-on-overflow behavior. Preferring it over plain `*`
-whenever an operand could come from outside the function is the safe
-default.
+whenever an operand could come from outside the function avoids that
+silent overflow.
 
-### Scenario: Creating a new object
+### Creating a new object
 
 A `Default` impl built from plain decimal literals gives callers a
 documented, zero-argument starting point instead of forcing every call
@@ -73,7 +73,7 @@ impl Default for RetryPolicy {
 }
 ```
 
-**Why this way:** implementing `Default` with straightforward literal
+Implementing `Default` with straightforward literal
 values documents the intended starting point at one place, which the
 [API Guidelines' C-COMMON-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits)
 recommends for any type with an obvious default.

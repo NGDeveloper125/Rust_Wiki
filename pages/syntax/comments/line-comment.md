@@ -18,7 +18,9 @@ can either sit on its own line or trail after code on the same line.
 Nesting doesn't apply, since a line comment simply consumes the rest of
 the line regardless of what characters follow.
 
-## Basic usage example
+## Usage examples
+
+### Standalone and trailing comments
 
 ```
 fn main() {
@@ -28,9 +30,7 @@ fn main() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Testing
+### Testing
 
 A `//` comment above a non-obvious test case records *why* that specific
 input is being checked, so a future reader (including yourself in six
@@ -47,11 +47,11 @@ fn rejects_empty_username() {
 }
 ```
 
-**Why this way:** the comment explains *why* the test exists, not *what*
+The comment explains *why* the test exists, not *what*
 the code does — the assertion already says what; only the ticket/context
 behind an easy-to-delete-looking test case is worth spelling out.
 
-### Scenario: Documenting an API
+### Documenting an API
 
 `//` and `///` look almost identical but serve opposite audiences: `//`
 is for the next person reading the source, `///` is for the next person
@@ -74,7 +74,7 @@ pub fn parse_duration(input: &str) -> Result<u64, ParseError> {
 }
 ```
 
-**Why this way:** anything the caller needs to know (accepted formats,
+Anything the caller needs to know (accepted formats,
 error conditions, examples) belongs in a `///` doc comment — see
 [`///`](outer-line-doc-comment.md) — where `cargo doc` and IDE tooltips
 surface it. By universal community convention, `//` is for notes aimed at

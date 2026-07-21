@@ -17,7 +17,9 @@ result takes the sign of the dividend (`-7 % 2 == -1`, not `1`), which
 differs from the mathematical modulo used by some other languages. Like
 `/`, `%` panics on division by zero for integers.
 
-## Basic usage example
+## Usage examples
+
+### Computing a remainder
 
 ```
 let r = 7 % 2; // <- `%` computes the remainder
@@ -26,9 +28,7 @@ let r = 7 % 2; // <- `%` computes the remainder
 **Restriction:** dividing (or taking the remainder) by zero panics
 unconditionally for integers, even in release builds.
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Wrapping a ring buffer index into range is one of `%`'s most common
 jobs — `(idx + 1) % len` computes the next slot without ever needing a
@@ -51,7 +51,7 @@ buf.advance();
 assert_eq!(buf.next, 0); // wrapped past the end back to slot 0
 ```
 
-**Why this way:** `% len` only wraps correctly because `len` is never
+`% len` only wraps correctly because `len` is never
 zero for a fixed-size array — for a length that could legitimately be
 zero, prefer `checked_rem` over risking the panic this page's
 Explanation calls out, per the

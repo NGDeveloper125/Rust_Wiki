@@ -16,19 +16,19 @@ Underscores are especially common here to group digits into readable
 nibbles/bytes, as in that example — purely cosmetic, no effect on the
 value.
 
-## Basic usage example
+## Usage examples
+
+### Writing a binary bitmask
 
 ```
 let mask = 0b0000_0001; // <- `0b` prefix marks a base-2 (binary) integer literal
 ```
 
-**Restriction:** only the *digits* `0` and `1` may appear after the `0b`
+Only the *digits* `0` and `1` may appear after the `0b`
 prefix — any other digit is a compile error (though underscores and a
 type suffix like `0b1010_u8` are still allowed).
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 A single status flag reads clearest written in binary — the bit position
 is visible directly in the digits, with nothing to mentally translate.
@@ -42,7 +42,7 @@ if status & ENABLED != 0 {
 }
 ```
 
-**Why this way:** writing a lone flag as `0b0001` keeps the bit position
+Writing a lone flag as `0b0001` keeps the bit position
 obvious next to sibling flag constants; once a mask spans several bits at
 once, hex reads more compactly — see
 [integer-hexadecimal](integer-hexadecimal.md) for that convention, which

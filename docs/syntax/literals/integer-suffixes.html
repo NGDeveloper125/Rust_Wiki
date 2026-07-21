@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -969,24 +968,18 @@ indices and lengths.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let port = 8080u16; // &lt;- `u16` suffix pins the literal's type explicitly
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Pinning a port number's type</h3>
+            <pre><code class="rust">let port = 8080u16; // &lt;- `u16` suffix pins the literal's type explicitly
 </code></pre>
 <p><strong>Restriction:</strong> the literal's value must fit within the suffixed
 type's range — <code>300u8</code> is a compile error since <code>u8</code> maxes out at 255.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Numeric computation</h3>
             <p>Without a suffix, a bare integer literal defaults to <code>i32</code> — which is
 wrong the moment the value needs to be wider, and can fail to compile
@@ -1003,19 +996,14 @@ let offset_bad = file_offset(3, bad_size as u64);
 let block_size = 4096u64; // &lt;- `u64` suffix: matches `file_offset`'s parameter type, no cast needed
 let offset = file_offset(3, block_size);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> suffixing the literal at its definition removes the
+<p>Suffixing the literal at its definition removes the
 need for an <code>as</code> cast later — casts are exactly where
 <a href="https://rust-lang.github.io/rust-clippy/master/index.html#cast_possible_truncation">Clippy's cast-truncation lints</a>
 look for accidental narrowing, so pinning the type once, early, avoids
 the whole class of bug.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A public constant's type is part of its contract with downstream crates —
 suffixing the literal documents the exact intended width at the
@@ -1027,14 +1015,13 @@ pub fn check_payload(len: usize) -&gt; bool {
     len &lt;= MAX_PAYLOAD_BYTES as usize
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> matching the literal's suffix to the constant's
+<p>Matching the literal's suffix to the constant's
 declared type keeps the intended width visible even if the value is ever
 copied into a doc example or another context without the surrounding
 type annotation — the kind of predictability the
 <a href="https://rust-lang.github.io/api-guidelines/predictability.html">API Guidelines' predictability chapter</a>
 asks public items to favor.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1050,7 +1037,7 @@ pointer-sized on embedded targets, but that width is often much narrower
 than on a desktop host (commonly 32-bit, sometimes 16-bit on very small
 parts) — don't assume <code>usize</code> means "at least 64 bits" in embedded code.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

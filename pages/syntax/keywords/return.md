@@ -24,7 +24,9 @@ of type `!` (never) — it never evaluates to anything at its own call
 site, because control has already left — which lets it appear in
 expression position, e.g. `let x = if cond { return; } else { 5 };`.
 
-## Basic usage example
+## Usage examples
+
+### Exiting a function early with `return`
 
 ```
 fn abs(x: i32) -> i32 {
@@ -40,9 +42,7 @@ the last expression in the body (no trailing `;`) is returned implicitly,
 and idiomatic Rust reserves an explicit `return` for early exits like the
 branch above. A trailing `return x;` is perfectly legal, just unidiomatic.
 
-## Best practices & deeper information
-
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Inside a single `match` arm that needs to diverge from the rest of the
 function, `return` is often clearer than restructuring the whole function
@@ -58,12 +58,12 @@ fn parse_temperature(raw: &str) -> Result<f64, String> {
 }
 ```
 
-**Why this way:** when the error needs to be reformatted rather than
+When the error needs to be reformatted rather than
 passed straight through, `return` inside the failing arm reads more
 directly than threading a `map_err` into a `?` chain — see the
 [Book's chapter on recoverable errors](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html).
 
-### Scenario: Validating input
+### Validating input
 
 A guard clause at the top of a function checks for invalid input and
 `return`s immediately, so the rest of the function can assume the value
@@ -78,7 +78,7 @@ fn set_fan_speed(percent: i32) -> Result<(), String> {
 }
 ```
 
-**Why this way:** checking the invalid case first and returning keeps the
+Checking the invalid case first and returning keeps the
 rest of the function at a single indentation level instead of nesting the
 valid path inside an `if` — the
 [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)

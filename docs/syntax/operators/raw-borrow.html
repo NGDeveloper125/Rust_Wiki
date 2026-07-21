@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -997,9 +996,12 @@ invalid before you ever get the chance to read through it.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[repr(packed)]
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reading an unaligned field of a packed struct</h3>
+            <pre><code class="rust">#[repr(packed)]
 struct SensorFrame {
     tag: u8,
     reading: u32, // &lt;- may end up unaligned inside a packed struct
@@ -1011,17 +1013,8 @@ let value = unsafe { reading_ptr.read_unaligned() };
 println!("{value}");
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A public wrapper around a packed protocol frame exposes safe getters that
 read each field through <code>&amp;raw const</code> and <code>read_unaligned</code>, rather than ever
@@ -1043,19 +1036,14 @@ impl FrameHeader {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> forming a direct reference to a misaligned field of a
+<p>Forming a direct reference to a misaligned field of a
 <code>#[repr(packed)]</code> struct is undefined behavior, which is exactly what the
 <a href="https://doc.rust-lang.org/reference/expressions/operator-expr.html#raw-borrow-operators">Rust Reference's raw borrow operators section</a>
 documents <code>&amp;raw const</code>/<code>&amp;raw mut</code> as existing to avoid — the getter never
 creates the invalid intermediate reference the old <code>&amp;self.length as *const u32</code> idiom would.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>A C library hands back a pointer to a tightly packed struct matching an
 external wire format; reading one field for logging shouldn't risk
@@ -1080,15 +1068,14 @@ fn log_flags() {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the
+<p>The
 <a href="https://doc.rust-lang.org/nomicon/other-reprs.html">Rustonomicon's guidance on working with externally-defined layouts</a>
 favors raw pointers over references whenever a layout's alignment and
 validity can't be locally guaranteed — <code>&amp;raw const</code> is the tool that keeps
 this idiomatic instead of relying on <code>&amp;(*status_ptr).flags as *const u32</code>,
 which briefly forms a reference the incoming layout may not actually
 satisfy.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1106,7 +1093,7 @@ register or a field of a packed protocol struct is precisely the situation
 where forming an intermediate reference risks undefined behavior that
 <code>&amp;raw</code> was added to let you avoid.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

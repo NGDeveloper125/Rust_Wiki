@@ -32,7 +32,9 @@ concludes." It has no effect on ordinary statics that are already read
 somewhere in the Rust program; those are never eligible for elimination
 in the first place.
 
-## Basic usage example
+## Usage examples
+
+### Keeping a linker-section static from being stripped
 
 ```
 #[used] // <- keeps this static in the binary even though nothing in Rust reads it
@@ -42,9 +44,7 @@ static INIT_ENTRY: extern "C" fn() = init;
 extern "C" fn init() {}
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A microcontroller's linker script expects a table of function pointers at
 a fixed section so a boot ROM can find and call them; nothing in the Rust
@@ -61,7 +61,7 @@ unsafe extern "C" fn reset_handler() -> ! {
 }
 ```
 
-**Why this way:** the linker script, not any Rust code, is what reads
+The linker script, not any Rust code, is what reads
 `RESET_HANDLER` by address, so from the compiler's reachability analysis
 this static has zero readers and would otherwise be eliminated — the
 [Rust Reference on the `used` attribute](https://doc.rust-lang.org/reference/abi.html#the-used-attribute)

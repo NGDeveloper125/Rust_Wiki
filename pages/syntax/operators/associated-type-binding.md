@@ -44,7 +44,9 @@ covered on the
 concept page; this page covers only the constraint syntax used once a
 trait already has one.
 
-## Basic usage example
+## Usage examples
+
+### Binding an iterator's associated type
 
 ```
 fn print_all<T: Iterator<Item = String>>(items: T) {
@@ -55,9 +57,7 @@ fn print_all<T: Iterator<Item = String>>(items: T) {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Writing generic code
+### Writing generic code
 
 A function that sums an iterator's values only compiles for iterators
 whose `Item` is actually summable as `u32` — the associated-type binding
@@ -75,7 +75,7 @@ where
 let total = total_readings(vec![10, 20, 30].into_iter());
 ```
 
-**Why this way:** leaving off `Item = u32` and writing just `I: Iterator`
+Leaving off `Item = u32` and writing just `I: Iterator`
 wouldn't compile inside `.sum()`, since the compiler would have no
 concrete element type to sum — the
 [Book's generics chapter](https://doc.rust-lang.org/book/ch10-01-syntax.html)
@@ -83,7 +83,7 @@ covers trait bounds as the mechanism for telling the compiler exactly
 which operations a generic parameter supports, and an associated-type
 binding is how that extends to a trait's associated types specifically.
 
-### Scenario: Runtime polymorphism
+### Runtime polymorphism
 
 A plugin system that hands back a boxed, dynamically-dispatched iterator
 needs the binding to make `dyn Iterator` into a concrete, sized-behind-a-
@@ -98,7 +98,7 @@ fn even_numbers(limit: u32) -> Box<dyn Iterator<Item = u32>> {
 let evens: Vec<u32> = even_numbers(10).collect();
 ```
 
-**Why this way:** returning `Box<dyn Iterator<Item = u32>>` lets the
+Returning `Box<dyn Iterator<Item = u32>>` lets the
 function's actual iterator type (a `Filter<Range<u32>, _>` closure type,
 here) stay hidden behind the trait object, at the cost of one allocation
 and a vtable dispatch per call — the

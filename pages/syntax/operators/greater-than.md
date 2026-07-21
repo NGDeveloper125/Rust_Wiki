@@ -17,7 +17,9 @@ list (`Vec<T>`) — for nested generics like `Vec<Vec<T>>`, the parser
 splits the `>>` token into two closing angle brackets itself, so no space
 is needed between them.
 
-## Basic usage example
+## Usage examples
+
+### Checking whether one value is greater than another
 
 ```
 let a = 5;
@@ -28,9 +30,7 @@ let bigger = a > b; // <- true if `a` is greater than `b`
 **Restriction:** comparisons can't be chained like in Python —
 `a > b > c` doesn't compile; write `a > b && b > c` instead.
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 `f64` doesn't implement `Ord` (because of `NaN`), so finding the largest
 of several floating-point totals means comparing manually with `>`
@@ -52,7 +52,7 @@ let largest = orders.iter().reduce(|a, b| if b.total > a.total { b } else { a })
 println!("{:?}", largest.map(|o| o.id));
 ```
 
-**Why this way:** a `reduce`/`fold` with a manual `>` comparison is one
+A `reduce`/`fold` with a manual `>` comparison is one
 way to find an extreme value over types without a total order; the
 standard tools for floats are
 `max_by(|a, b| a.total.partial_cmp(&b.total).unwrap())` or

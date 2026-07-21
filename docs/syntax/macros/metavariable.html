@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -977,26 +976,20 @@ from, which matters once a macro is exported (see
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">macro_rules! double {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reusing a captured metavariable in the expansion</h3>
+            <pre><code class="rust">macro_rules! double {
     ($x:expr) =&gt; { $x + $x }; // &lt;- captures $x once, reuses it twice in the expansion
 }
 
 let n = double!(21); // &lt;- expands to 21 + 21
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A calibration helper captures a sensor-reading expression once as
 <code>$raw</code> and needs it both to build the returned value and to report the
@@ -1017,15 +1010,14 @@ fn read_sensor() -&gt; f64 {
 
 let (adjusted, original) = calibrate!(read_sensor(), 0.5); // &lt;- read_sensor() runs exactly once
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a metavariable re-emits the exact tokens it captured at
+<p>A metavariable re-emits the exact tokens it captured at
 every place it's written in the transcriber, so writing <code>$raw</code> twice
 would re-run <code>read_sensor()</code> twice — the
 <a href="https://doc.rust-lang.org/reference/macros-by-example.html">Rust Reference's macro expansion rules</a>
 describe substitution as textual, not value-sharing, which is why a
 side-effecting or expensive input is bound to a local variable before
 being reused.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1041,7 +1033,7 @@ during compilation, before any code is generated, so there's no
 <code>#![no_std]</code>-specific behavior — the mechanism is identical whether the
 expansion targets a hosted or bare-metal build.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

@@ -39,16 +39,16 @@ something that compiles — `#[cfg(...)]` on the whole function or module
 is the right tool whenever a branch shouldn't even attempt to compile on
 some target.
 
-## Basic usage example
+## Usage examples
+
+### Choosing a path separator at compile time
 
 ```
 let path_separator = if cfg!(target_os = "windows") { '\\' } else { '/' };
 // <- both branches are compiled on every target; cfg! only decides, at compile time, which one *runs*
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A logging helper picks a platform-appropriate line ending at compile
 time, without needing two separately-compiled versions of the function
@@ -63,14 +63,14 @@ fn format_log_line(message: &str) -> String {
 let line = format_log_line("service started");
 ```
 
-**Why this way:** the
+The
 [std docs](https://doc.rust-lang.org/std/macro.cfg.html) recommend
 `cfg!` for exactly this kind of small, always-compilable behavioral
 branch — since both platforms' logic is trivial and compiles fine
 everywhere, a runtime `cfg!` check inside one shared function is simpler
 than maintaining two `#[cfg]`-gated copies of the whole function.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 An internal helper reports a more detailed, less stable error message in
 debug builds and a terse, stable one in release, branching on
@@ -86,7 +86,7 @@ fn describe_failure(code: i32) -> String {
 }
 ```
 
-**Why this way:** the
+The
 [std docs](https://doc.rust-lang.org/std/macro.cfg.html) point to
 `cfg!(debug_assertions)` as the standard way to vary *behavior* by build
 profile without a custom Cargo feature — both message forms live in the

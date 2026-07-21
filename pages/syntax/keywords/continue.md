@@ -21,7 +21,9 @@ ones printed.
 way exiting a `loop` can. Like `break`, it can target a labeled outer loop
 explicitly with `continue 'label;` from inside a nested loop.
 
-## Basic usage example
+## Usage examples
+
+### Skipping an iteration with `continue`
 
 ```
 for x in 0..5 {
@@ -32,9 +34,7 @@ for x in 0..5 {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 Averaging a batch of raw sensor readings means some entries won't parse —
 `continue` skips a malformed one and moves straight to the next, without
@@ -56,13 +56,13 @@ for raw in readings {
 let average = total / count as f64;
 ```
 
-**Why this way:** pairing `continue` with a `let ... else` guard keeps the
+Pairing `continue` with a `let ... else` guard keeps the
 "happy path" of the loop body unindented — the
 [Book's `let...else` section](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 frames this "stay on the happy path" shape as the reason `let...else`
 exists, over wrapping the rest of the iteration in a nested `if`.
 
-### Scenario: Validating input
+### Validating input
 
 Building a list of valid users from raw records means rejecting
 out-of-range ages as they're encountered, without aborting the whole
@@ -82,7 +82,7 @@ for (name, age) in raw_ages {
 }
 ```
 
-**Why this way:** rejecting one bad record with `continue` keeps
+Rejecting one bad record with `continue` keeps
 validation co-located with iteration for a one-off batch; when the same
 validation logic is needed at multiple call sites, prefer a constructor
 that returns `Result` instead, per the

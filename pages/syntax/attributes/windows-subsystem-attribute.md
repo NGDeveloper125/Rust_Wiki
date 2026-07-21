@@ -32,7 +32,9 @@ nowhere visible to go, since there is no attached console to write to —
 a GUI application generally needs its own logging or message-box-based
 error reporting instead of relying on standard output.
 
-## Basic usage example
+## Usage examples
+
+### Suppressing the console window for a GUI app
 
 ```
 #![windows_subsystem = "windows"] // <- Windows-only: suppresses the console window at launch
@@ -42,9 +44,7 @@ fn main() {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A desktop configuration utility with its own graphical window looks
 unpolished if launching it flashes a console window behind the GUI —
@@ -59,7 +59,7 @@ fn main() {
 }
 ```
 
-**Why this way:** wrapping the attribute in `cfg_attr(windows, ...)`
+Wrapping the attribute in `cfg_attr(windows, ...)`
 keeps the crate portable — the attribute would otherwise need to be
 present unconditionally, which is harmless on Windows but reads as
 misleading boilerplate on every other target, since the attribute has no

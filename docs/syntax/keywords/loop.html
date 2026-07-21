@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -971,24 +970,18 @@ loop.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let result = loop { // &lt;- `loop` repeats the block forever until a `break`
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Producing a value from a loop with `break`</h3>
+            <pre><code class="rust">let result = loop { // &lt;- `loop` repeats the block forever until a `break`
     break 5;
 };
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Multi-threading</h3>
             <p>A worker thread that services jobs from a channel but also needs to do
 periodic housekeeping between jobs is a classic use for <code>loop</code> plus
@@ -1013,23 +1006,18 @@ fn spawn_worker(rx: mpsc::Receiver&lt;String&gt;) -&gt; thread::JoinHandle&lt;()
     })
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>recv_timeout</code> gives the loop three genuinely distinct
+<p><code>recv_timeout</code> gives the loop three genuinely distinct
 events — a job, a timeout for housekeeping, and channel shutdown — which
 no single <code>while</code> condition (or <code>for job in rx</code>) can express; the only
 exit is the channel closing. This extends the channel-receiving patterns
 in the
 <a href="https://doc.rust-lang.org/book/ch16-02-message-passing.html">Book's message-passing chapter</a>;
 note that when the only cases are "got a job" and "channel closed",
-prefer <code>for job in rx</code> — Clippy's <code>while_let_loop</code> lint flags the plain
-<code>loop</code>/<code>recv</code>/<code>match</code> version of that.</p>
-</div>
+<code>for job in rx</code> is preferred — Clippy's <code>while_let_loop</code> lint flags the
+plain <code>loop</code>/<code>recv</code>/<code>match</code> version of that.</p>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Message passing between threads</h3>
             <p>Polling a channel without blocking the thread — instead of calling the
 blocking <code>.recv()</code> — pairs <code>loop</code> with <code>try_recv</code>'s two distinct error
@@ -1056,12 +1044,11 @@ loop {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <a href="https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv"><code>Receiver::try_recv</code></a>
+<p><a href="https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv"><code>Receiver::try_recv</code></a>
 distinguishes "empty for now" from "disconnected," which a blocking
 <code>recv()</code> inside <code>loop</code> can't do — the sleep keeps this from becoming a
 busy-spin that pegs a CPU core while waiting.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1076,7 +1063,7 @@ busy-spin that pegs a CPU core while waiting.</p>
 <code>fn main() -&gt; !</code> in almost every embedded firmware entry point, since a
 bare-metal program never "exits" the way a hosted process does.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

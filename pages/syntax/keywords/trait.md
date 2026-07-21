@@ -35,7 +35,9 @@ for why this exists and what it buys you; the `:` here is the same trait
 bound syntax used on generic parameters, just attached to a trait
 declaration instead of a type parameter.
 
-## Basic usage example
+## Usage examples
+
+### Declaring a trait's method contract
 
 ```
 trait Greet { // <- `trait` declares the contract, no implementation yet
@@ -43,9 +45,7 @@ trait Greet { // <- `trait` declares the contract, no implementation yet
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Implementing traits
+### Implementing traits
 
 A trait that mixes one required method with one default method lets every
 implementer supply only the irreducible part, while sharing the rest.
@@ -66,13 +66,13 @@ impl Greet for Visitor {
 println!("{}", Visitor.greet());
 ```
 
-**Why this way:** declaring `name` as required and `greet` as a default
+Declaring `name` as required and `greet` as a default
 lets the `trait` capture exactly one piece of per-type information while
 generating the rest, which the
 [Rust Book](https://doc.rust-lang.org/book/ch10-02-traits.html) covers as
 the standard shape for a trait that's more than a bare method list.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A crate that wants callers to plug in their own storage backend declares
 a narrow `trait` as the extension point, rather than exposing an internal
@@ -95,7 +95,7 @@ impl<S: Storage> KeyValueStore<S> {
 }
 ```
 
-**Why this way:** keeping the `trait`'s method list minimal leaves room to
+Keeping the `trait`'s method list minimal leaves room to
 add backends later without breaking existing implementers — see
 [Traits](../../concepts/traits-polymorphism/traits.md) for the fuller
 design rationale behind shipping a trait as an API boundary.

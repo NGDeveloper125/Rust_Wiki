@@ -42,7 +42,9 @@ struct name itself visible while `x` is public and `y` stays private. See
 for the design rationale behind this kind of partial exposure — this page
 covers the grammar of `pub` and its scoped forms.
 
-## Basic usage example
+## Usage examples
+
+### Making a struct and field visible outside its module
 
 ```
 mod billing {
@@ -54,9 +56,7 @@ mod billing {
 let invoice = billing::Invoice { total_cents: 4200 };
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A cache crate splits its storage and eviction logic into separate
 modules that need to share an internal entry type — `pub(crate)` lets them
@@ -82,7 +82,7 @@ pub mod api {                          // <- plain `pub`: visible from outside t
 }
 ```
 
-**Why this way:** each scoped form draws the visibility boundary at
+Each scoped form draws the visibility boundary at
 exactly the module that needs it — `pub(crate)` shares `internal` across
 the crate, `pub(super)`/`pub(in path)` narrow individual functions further
 still — so nothing here is visible any wider than the code that actually
@@ -90,7 +90,7 @@ uses it requires, matching the general shrink-visibility-first stance in
 the
 [API Guidelines' future-proofing chapter](https://rust-lang.github.io/api-guidelines/future-proofing.html).
 
-### Scenario: Validating input
+### Validating input
 
 A `Temperature` type must never represent a value below absolute zero, so
 its field stays private and `pub` is applied only to the constructor and
@@ -116,7 +116,7 @@ impl Temperature {
 }
 ```
 
-**Why this way:** applying `pub` to the constructor and getter but not the
+Applying `pub` to the constructor and getter but not the
 field means "never below absolute zero" is enforced by the type itself,
 which is exactly what the
 [API Guidelines' C-STRUCT-PRIVATE](https://rust-lang.github.io/api-guidelines/future-proofing.html#structs-have-private-fields-c-struct-private)

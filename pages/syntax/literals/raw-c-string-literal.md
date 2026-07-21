@@ -16,7 +16,9 @@ see_also: [c-string-literal]
 Useful for FFI constants that both need the C-compatible nul-terminated
 representation and contain literal backslashes.
 
-## Basic usage example
+## Usage examples
+
+### Representing a firmware path for FFI
 
 ```
 let path: &std::ffi::CStr = cr"C:\firmware\boot"; // <- `cr"..."`: raw (no escapes) C string (&CStr)
@@ -26,9 +28,7 @@ let path: &std::ffi::CStr = cr"C:\firmware\boot"; // <- `cr"..."`: raw (no escap
 and matching `#` delimiters (`cr#"..."#`) are required if the text
 itself contains a `"`.
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Working with text
 
 A path handed to a C API needs both nul-termination and, often, literal
 backslashes — `cr"..."` prepares that value without pretending to make
@@ -45,7 +45,7 @@ fn firmware_path() -> &'static CStr {
 }
 ```
 
-**Why this way:** combining raw and C-string semantics avoids the double
+Combining raw and C-string semantics avoids the double
 burden of escaping every backslash *and* manually appending a nul
 terminator — see [C string literal](c-string-literal.md) for the
 nul-termination behavior this form inherits unchanged. Like `c"..."`,

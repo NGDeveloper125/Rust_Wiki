@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -978,24 +977,18 @@ followed by a type is the raw pointer type former.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let x = 5;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Dereferencing a reference</h3>
+            <pre><code class="rust">let x = 5;
 let r = &amp;x;
 let y = *r; // &lt;- `*` dereferences `r`, reading the value it points to
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>Reading through a smart pointer with explicit <code>*</code> is mostly needed
 outside method calls — for comparisons, formatting, or passing the
@@ -1010,18 +1003,13 @@ if *handle_a == *handle_b { // &lt;- `*` follows each handle to the String it po
     println!("both handles agree: {}", *handle_a); // &lt;- and again here, for formatting
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>Deref</code> lets <code>Rc&lt;T&gt;</code>/<code>Box&lt;T&gt;</code> be read as if they were a
+<p><code>Deref</code> lets <code>Rc&lt;T&gt;</code>/<code>Box&lt;T&gt;</code> be read as if they were a
 plain <code>&amp;T</code>, and auto-deref already handles method calls (<code>handle_a.len()</code>
 needs no <code>*</code>) — explicit <code>*</code> is reserved for the cases auto-deref doesn't
 cover, per the <a href="https://doc.rust-lang.org/book/ch15-02-deref.html">Book's Deref chapter</a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Mutating through a reference</h3>
             <p>Writing <code>*reference = value</code> (or a compound form like <code>*reference += value</code>) is how a function mutates the caller's data through a <code>&amp;mut</code>
 parameter, rather than rebinding its own local copy of the pointer.</p>
@@ -1033,13 +1021,12 @@ let mut temperature = 21.5;
 apply_offset(&amp;mut temperature, -0.3);
 println!("calibrated: {temperature}");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> per the <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">Book's references chapter</a>,
+<p>Per the <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">Book's references chapter</a>,
 writing <code>reading = ...</code> without the <code>*</code> is a type mismatch the compiler
 rejects (an <code>f64</code> can't be assigned to a <code>&amp;mut f64</code> place — rustc's
 E0308 suggests adding the <code>*</code>) — <code>*reading = ...</code> is what makes the
 write go through the reference to the value itself.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1055,7 +1042,7 @@ and raw-pointer dereference is exactly how embedded code reads/writes
 memory-mapped hardware registers via <code>unsafe { *addr }</code> or, more often, a
 volatile wrapper around it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

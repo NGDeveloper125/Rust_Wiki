@@ -27,7 +27,9 @@ Rust (it would assign `()` to `a`).
 associated-type bindings (`Item = T`), both unrelated to runtime
 assignment.
 
-## Basic usage example
+## Usage examples
+
+### Reassigning a mutable binding
 
 ```
 let mut count = 0;
@@ -37,9 +39,7 @@ count = 5; // <- `=` assigns 5 to `count`
 **Restriction:** reassigning with `=` requires the binding to be
 declared `mut` — `let x = 0; x = 1;` without `mut` is a compile error.
 
-## Best practices & deeper information
-
-### Scenario: Modifying an existing object
+### Modifying an existing object
 
 Reassigning a mutable binding with `=` replaces its value wholesale,
 which keeps the binding always representing one complete, valid state
@@ -56,12 +56,12 @@ let mut state = ConnectionState::Disconnected;
 state = ConnectionState::Connected; // <- `=` replaces the old value entirely, not piecemeal
 ```
 
-**Why this way:** replacing the whole binding in one `=` avoids any
+Replacing the whole binding in one `=` avoids any
 window where `state` is partially updated, echoing the "make invalid
 states unrepresentable" idea from [Effective Rust](https://effective-rust.com/)
 applied to a plain mutable variable rather than a struct's fields.
 
-### Scenario: Creating a new object
+### Creating a new object
 
 The `=` in a `let` binds a new value to a new name; unlike a later
 reassignment, this occurrence never requires `mut`.
@@ -75,7 +75,7 @@ struct Reading {
 let reading = Reading { sensor_id: 7, celsius: 21.4 }; // <- `=` binds the new value to `reading`
 ```
 
-**Why this way:** per the [Book's variables chapter](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html),
+Per the [Book's variables chapter](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html),
 bindings are immutable by default — add `mut` only once a binding is
 actually going to be reassigned later, keeping the default the more
 restrictive, safer one.

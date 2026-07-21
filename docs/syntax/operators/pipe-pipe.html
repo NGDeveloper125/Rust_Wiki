@@ -945,8 +945,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -964,23 +963,17 @@ of an expression is a closure's (empty) parameter list.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let a = 150;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Short-circuiting logical OR between two conditions</h3>
+            <pre><code class="rust">let a = 150;
 let out_of_range = a &lt; 0 || a &gt; 100; // &lt;- `||` short-circuiting logical OR
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Validating input</h3>
             <p>Rejecting a request that's either empty or over a configured limit reads
 naturally as an <code>||</code> of two independent conditions, with short-circuiting
@@ -995,19 +988,14 @@ fn reject(order_items: &amp;[u32]) -&gt; bool {
 assert!(reject(&amp;[]));
 assert!(!reject(&amp;[1, 2, 3]));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> ordering the cheaper, more-likely-true check first
+<p>Ordering the cheaper, more-likely-true check first
 lets short-circuiting skip the second check entirely on the common path,
 which the <a href="https://doc.rust-lang.org/reference/expressions/operator-expr.html#lazy-boolean-operators">Rust Reference</a>
 documents as guaranteed evaluation order, not just an optimization detail
 to rely on incidentally.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Guarding a fallible operation behind an <code>||</code> check lets the guard clause
 bail out via <code>?</code> before an operation that would otherwise panic or return
@@ -1025,15 +1013,14 @@ fn read_header(buf: &amp;[u8]) -&gt; Result&lt;u16, &amp;'static str&gt; {
 assert!(read_header(&amp;[0x01]).is_err());
 assert_eq!(read_header(&amp;[0x00, 0x2A]), Ok(42));
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> checking both failure conditions up front with <code>||</code>
+<p>Checking both failure conditions up front with <code>||</code>
 turns a potential panic (indexing into a too-short slice) into a handled
 <code>Err</code> — and short-circuiting means <code>buf[0]</code> on the right is only ever
 evaluated once the length check on the left has passed, in line with the
 fail-fast validation style the
 <a href="https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html">Book</a>
 recommends for recoverable input errors.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1048,7 +1035,7 @@ recommends for recoverable input errors.</p>
 closures both work identically in <code>#![no_std]</code> (closures don't require
 heap allocation unless they're boxed as <code>dyn Fn</code>).</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

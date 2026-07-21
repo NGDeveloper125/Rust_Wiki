@@ -19,7 +19,9 @@ from a chained comparison (`a < b, c > d` reads ambiguously); the
 "turbofish" `::<...>` exists specifically to disambiguate generics in
 expression position (see [`::`](path-separator.md)).
 
-## Basic usage example
+## Usage examples
+
+### Checking whether one value is less than another
 
 ```
 let a = 3;
@@ -30,9 +32,7 @@ let smaller = a < b; // <- true if `a` is less than `b`
 **Restriction:** comparisons can't be chained like in Python —
 `a < b < c` doesn't compile; write `a < b && b < c` instead.
 
-## Best practices & deeper information
-
-### Scenario: Working with collections
+### Working with collections
 
 When a sort needs custom logic — here, ordering support tickets by
 priority — `sort_by` takes a comparator where `<` defines what "comes
@@ -61,14 +61,14 @@ tickets.sort_by(|a, b| {
 });
 ```
 
-**Why this way:** [`Vec::sort_by`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.sort_by)
+[`Vec::sort_by`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.sort_by)
 gives full control over the ordering when a type doesn't derive `Ord` or
 the sort key needs custom logic (the expanded if/else comparator here is
 written out to spotlight `<` itself — `a.priority.cmp(&b.priority)` or
 `sort_by_key` is the usual shorthand); prefer `sort()`/`sort_by_key()`
 instead whenever a natural, derivable ordering already exists.
 
-### Scenario: Validating input
+### Validating input
 
 Bounds checks in Rust are conventionally exclusive at the top — a valid
 index is anything strictly less than the collection's length.
@@ -83,7 +83,7 @@ fn is_valid_index(buffer: &Buffer, index: usize) -> bool {
 }
 ```
 
-**Why this way:** `index < len` (not `<=`) matches the zero-based,
+`index < len` (not `<=`) matches the zero-based,
 exclusive-at-the-top convention that std's own range types and the
 `Index` panic message use, per the
 [std slice docs](https://doc.rust-lang.org/std/primitive.slice.html) —

@@ -62,7 +62,9 @@ parameter almost always appears behind a pointer (`&T`, `Box<T>`, `Rc<T>`)
 rather than taken or returned by value, since only pointer-sized things
 can be passed around without knowing the pointee's own size.
 
-## Basic usage example
+## Usage examples
+
+### Propagating a parse error out of a function
 
 ```
 fn parse_port(raw: &str) -> Result<u16, std::num::ParseIntError> {
@@ -75,9 +77,7 @@ fn parse_port(raw: &str) -> Result<u16, std::num::ParseIntError> {
 `Result`; moving the same line into a function returning `()` is a
 compile error, not a warning — see Explanation above.
 
-## Best practices & deeper information
-
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Loading a calibration offset from disk can fail two independent ways —
 the file might be missing, or its contents might not parse — and `?`
@@ -103,14 +103,14 @@ fn load_calibration_offset(path: &str) -> Result<f64, Box<dyn std::error::Error>
 // }
 ```
 
-**Why this way:** `?`'s legality is a purely syntactic property of the
+`?`'s legality is a purely syntactic property of the
 enclosing function's declared return type, not of any particular branch
 it's written inside, per the
 [Rust Reference's operator-expression chapter](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator) —
 changing `log_calibration_offset`'s signature is the only fix, commenting
 around the call is not.
 
-### Scenario: Writing generic code
+### Writing generic code
 
 A logging helper that accepts anything displayable shouldn't force
 callers to hand it an already-`Sized` value — bounding its parameter with
@@ -146,7 +146,7 @@ let boxed: Box<dyn Sensor> = Box::new(Thermometer);
 describe(&*boxed);
 ```
 
-**Why this way:** leaving the implicit `Sized` bound in place would
+Leaving the implicit `Sized` bound in place would
 reject both `log_reading("sensor-07")` and `describe(&*boxed)` at the
 type-check stage, since `str` and `dyn Sensor` have no compile-time-known
 size — `?Sized` is how a generic function opts into accepting them, per

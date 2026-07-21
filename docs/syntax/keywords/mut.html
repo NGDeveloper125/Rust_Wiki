@@ -950,8 +950,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -978,25 +977,19 @@ reference sense (<code>&amp;mut T</code> and <code>&amp;T</code> are different t
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let mut x = 5; // &lt;- `mut` allows `x` to be reassigned
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Making a binding mutable with `let mut`</h3>
+            <pre><code class="rust">let mut x = 5; // &lt;- `mut` allows `x` to be reassigned
 x = 6;
 </code></pre>
 <p><strong>Restriction:</strong> <code>mut</code> must appear at the binding site (<code>let mut x</code>); it
 cannot be added later to make an already-immutable binding mutable.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Sharing state across threads</h3>
             <p><code>mut</code> disappears from the signature when state is shared across threads —
 the mutability moves into the lock, and the <code>Arc</code> binding itself stays
@@ -1019,18 +1012,13 @@ for handle in handles {
     handle.join().unwrap();
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> declaring the <code>Arc</code> binding <code>mut</code> would be misleading —
+<p>Declaring the <code>Arc</code> binding <code>mut</code> would be misleading —
 interior mutability means the binding is never reassigned; Clippy flags
 unneeded <code>mut</code> bindings via
 <a href="https://doc.rust-lang.org/rustc/lints/listing/warn-by-default.html#unused-mut"><code>unused_mut</code></a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Modifying an existing object</h3>
             <p>An object with invariants to protect exposes a <code>&amp;mut self</code> method rather
 than a public field a caller could set to any value directly.</p>
@@ -1046,19 +1034,14 @@ impl Order {
 let mut order = Order { total_cents: 4200, shipped: false }; // &lt;- `mut` needed: `order` is mutated below
 order.mark_shipped();
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> routing mutation through a method rather than a public
+<p>Routing mutation through a method rather than a public
 field keeps the invariant ("shipped only goes from false to true") in one
 place — the
 <a href="https://doc.rust-lang.org/book/ch05-03-method-syntax.html">Book's method-syntax chapter</a>
 covers <code>&amp;mut self</code> as the standard way to expose in-place mutation.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Mutating through a reference</h3>
             <p>Doubling every price in a slice in place needs a mutable reference to
 each element, not just a mutable binding to the slice itself.</p>
@@ -1071,12 +1054,11 @@ each element, not just a mutable binding to the slice itself.</p>
 let mut prices = [9.99, 14.50, 3.25]; // &lt;- `mut` required: `double_all` needs a mutable borrow
 double_all(&amp;mut prices);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <a href="https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut"><code>iter_mut</code></a>
+<p><a href="https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut"><code>iter_mut</code></a>
 is the standard way to mutate every element of a slice in place without
 manual indexing, and the borrow checker guarantees only one <code>&amp;mut</code>
 exists at a time, ruling out aliasing bugs at compile time.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1091,7 +1073,7 @@ exists at a time, ruling out aliasing bugs at compile time.</p>
 code for <code>&amp;mut</code> access to peripheral registers and driver state — no
 <code>std</code> dependency at all.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

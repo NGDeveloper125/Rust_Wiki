@@ -52,7 +52,9 @@ Like `if`, an `if let`/`else` chain is an expression when every branch
 produces the same type — it can sit on the right of a `let`, though this is
 less common than using it purely for its side effects.
 
-## Basic usage example
+## Usage examples
+
+### Chaining if let / else if let / else
 
 ```
 enum ConfigValue {
@@ -74,9 +76,7 @@ if let ConfigValue::Number(n) = &value {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 A network frame handler needs different handling for a data payload versus
 a close frame, with anything else treated as a keepalive — `if let`/
@@ -102,13 +102,13 @@ fn describe(frame: &Frame) -> String {
 }
 ```
 
-**Why this way:** each pattern is tried in order until one matches, which
+Each pattern is tried in order until one matches, which
 reads as "which of these shapes is it" without the ceremony of a `match`'s
 arms for a case this small — the
 [Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
 introduces `if let` for exactly this "only some shapes need code" situation.
 
-### Scenario: Handling and propagating errors
+### Handling and propagating errors
 
 Reporting a metrics data point is best-effort: the caller only wants to log
 a failure, not stop the program over it — `if let Err(...)` isolates just
@@ -123,14 +123,14 @@ fn report_metric(result: Result<(), String>) {
 }
 ```
 
-**Why this way:** when the success case genuinely needs no follow-up, `if
+When the success case genuinely needs no follow-up, `if
 let Err(...)` avoids writing an `Ok(()) => {}` arm that would say nothing —
 the same "only one shape matters here" reasoning the
 [Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
 gives for preferring `if let` over a full `match` when only one outcome
 needs handling.
 
-### Scenario: Working with collections
+### Working with collections
 
 Looking up a product's stock count only has something useful to say when
 the SKU is known — `if let Some(...)` handles the found case, with `else`
@@ -149,7 +149,7 @@ fn describe_stock(inventory: &HashMap<String, u32>, sku: &str) -> String {
 }
 ```
 
-**Why this way:** `HashMap::get` returns `Option<&V>` specifically so a
+`HashMap::get` returns `Option<&V>` specifically so a
 missing key is an ordinary value to match on rather than a panic — `if
 let`/`else` gives both outcomes (found, not found) a place to go without
 the extra `None => ...` arm a full `match` would need here.

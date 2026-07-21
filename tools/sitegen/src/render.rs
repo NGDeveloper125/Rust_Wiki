@@ -160,17 +160,57 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
         )
     };
 
-    let scenarios_html: String = page
-        .scenarios
-        .iter()
-        .map(|s| {
-            let rationale = s
-                .rationale_html
-                .as_ref()
-                .map(|r| format!("<div class=\"rationale\">{r}</div>"))
-                .unwrap_or_default();
-            format!(
-                r#"<div class="card">
+    let (tabs_html, body_sections_html, core_section_word) = if page.section == Section::Syntax {
+        let examples_html: String = page
+            .usage_examples
+            .iter()
+            .map(|ex| {
+                format!(
+                    r#"<div class="card">
+            <h3 class="scenario-title">{title}</h3>
+            {body}
+          </div>"#,
+                    title = html_escape(&ex.title),
+                    body = ex.body_html,
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n        ");
+
+        let tabs = r#"<nav class="section-tabs" id="section-tabs">
+        <button class="tab on" data-target="explanation">Explanation</button>
+        <button class="tab" data-target="examples">Usage examples</button>
+      </nav>"#
+            .to_string();
+
+        let sections = format!(
+            r#"<section class="doc" id="explanation">
+        <h2 class="section-title">Explanation</h2>
+        {explanation}
+      </section>
+
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        {examples}
+        </div>
+      </section>"#,
+            explanation = page.explanation_html,
+            examples = examples_html,
+        );
+        (tabs, sections, "two")
+    } else {
+        let scenarios_html: String = page
+            .scenarios
+            .iter()
+            .map(|s| {
+                let rationale = s
+                    .rationale_html
+                    .as_ref()
+                    .map(|r| format!("<div class=\"rationale\">{r}</div>"))
+                    .unwrap_or_default();
+                format!(
+                    r#"<div class="card">
             <div class="scen-tag">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
               Scenario
@@ -179,29 +219,22 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
             {body}
             {rationale}
           </div>"#,
-                title = html_escape(&s.title),
-                body = s.body_html,
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n        ");
+                    title = html_escape(&s.title),
+                    body = s.body_html,
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n        ");
 
-    format!(
-        r#"      {breadcrumb}
-
-      {page_head}
-
-      {related}
-
-      <hr class="divider">
-
-      <nav class="section-tabs" id="section-tabs">
+        let tabs = r#"<nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
         <button class="tab" data-target="basic">Basic usage example</button>
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
-      </nav>
+      </nav>"#
+            .to_string();
 
-      <section class="doc" id="explanation">
+        let sections = format!(
+            r#"<section class="doc" id="explanation">
         <h2 class="section-title">Explanation</h2>
         {explanation}
       </section>
@@ -217,7 +250,27 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
         <div class="scenarios">
         {scenarios}
         </div>
-      </section>
+      </section>"#,
+            explanation = page.explanation_html,
+            basic_usage = page.basic_usage_html,
+            intro = page.best_practices_intro_html,
+            scenarios = scenarios_html,
+        );
+        (tabs, sections, "three")
+    };
+
+    format!(
+        r#"      {breadcrumb}
+
+      {page_head}
+
+      {related}
+
+      <hr class="divider">
+
+      {tabs_html}
+
+      {body_sections_html}
 
       <section class="doc" id="embedded">
         <h2 class="section-title">Embedded Rust Notes</h2>
@@ -226,7 +279,7 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
           Embedded support: {support_label}
         </span>
         {embedded}
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The {core_section_word} core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">
@@ -234,10 +287,6 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
         <span>Targets current stable Rust &middot; edition 2021</span>
       </div>
 "#,
-        explanation = page.explanation_html,
-        basic_usage = page.basic_usage_html,
-        intro = page.best_practices_intro_html,
-        scenarios = scenarios_html,
         embedded = page.embedded_notes_html,
         support_label = embedded_badge(support),
     )

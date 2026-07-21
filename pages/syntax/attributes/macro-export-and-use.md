@@ -43,7 +43,9 @@ compiles and still appears in edition-2015-era code and some crates'
 older examples, but it's a legacy form now; new code should prefer
 `use`.
 
-## Basic usage example
+## Usage examples
+
+### Exporting a macro so other crates can use it
 
 ```
 #[macro_export] // <- opts this macro into being usable from other crates
@@ -52,9 +54,7 @@ macro_rules! log_event {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A logging crate exports a formatting macro so downstream crates get the
 same convenience `println!`/`format!` already give them, without needing
@@ -77,7 +77,7 @@ fn start() {
 }
 ```
 
-**Why this way:** macro visibility doesn't follow ordinary item
+Macro visibility doesn't follow ordinary item
 visibility rules, so `#[macro_export]` is mandatory for any macro meant
 to be used outside its crate; importing the result with a plain `use`,
 rather than `#[macro_use]`, is exactly the improvement the

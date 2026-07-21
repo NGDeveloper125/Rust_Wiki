@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -997,9 +996,12 @@ unused in a local variable simply never runs its body.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">async fn fetch_status() -&gt; bool { // &lt;- `async fn`: calling it returns a Future; the body doesn't run yet
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Declaring an `async fn` and an `async move` block</h3>
+            <pre><code class="rust">async fn fetch_status() -&gt; bool { // &lt;- `async fn`: calling it returns a Future; the body doesn't run yet
     true
 }
 
@@ -1007,17 +1009,8 @@ let flag = true;
 let check_flag = async move { flag }; // &lt;- `async move` block: owns `flag` instead of borrowing it
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Async tasks</h3>
             <p>A metrics collector spawns one task per device, using an <code>async fn</code> for
 the network call itself and a separate <code>async move</code> block to pair a
@@ -1047,15 +1040,14 @@ async fn main() {
     }
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>tokio::spawn</code> requires its future to be <code>'static</code>, so
+<p><code>tokio::spawn</code> requires its future to be <code>'static</code>, so
 any block capturing local variables like <code>label</code> must use <code>async move</code> to
 take ownership of them rather than borrow — an <code>async fn</code>'s parameters
 need no such annotation because they're already owned by the time the
 function body runs, a distinction the
 <a href="https://tokio.rs/tokio/tutorial/spawning">Tokio tutorial</a> calls out
 explicitly for spawned tasks.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1075,7 +1067,7 @@ needs an embedded executor such as <code>embassy</code>, which supplies its own
 entry point (<code>#[embassy_executor::main]</code>) and polls the same
 <code>async</code>-produced futures.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

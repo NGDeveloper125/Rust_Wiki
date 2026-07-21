@@ -44,7 +44,9 @@ almost every real-world user is either the standard library itself,
 compiler tooling, or a project that has specifically chosen to track
 nightly.
 
-## Basic usage example
+## Usage examples
+
+### Enabling an unstable language feature on nightly
 
 ```
 // Nightly-only — this attribute and the feature it names are not available on stable/beta.
@@ -59,9 +61,7 @@ fn describe(value: Option<i32>) -> &'static str {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Designing a public API
+### Designing a public API
 
 A project deliberately tracks nightly Rust to use an unstabilized
 standard library API not available any other way, accepting the risk that
@@ -81,7 +81,7 @@ use std::iter::Step;
 // unstabilized capability at the time of writing, illustrative here.
 ```
 
-**Why this way:** because unstable features carry no compatibility
+Because unstable features carry no compatibility
 guarantee between nightly releases, a project reaching for
 `#![feature(...)]` is making a considered, ongoing maintenance commitment
 — tracking nightly, watching for breaking changes to the specific feature

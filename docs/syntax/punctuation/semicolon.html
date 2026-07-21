@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -968,9 +967,12 @@ statement-terminator role.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn increment(x: i32) -&gt; i32 {
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Controlling whether a block returns a value</h3>
+            <pre><code class="rust">fn increment(x: i32) -&gt; i32 {
     x + 1 // &lt;- no `;`: this expression IS the function's return value
 }
 
@@ -981,17 +983,8 @@ fn increment_wrong(x: i32) -&gt; i32 {
 <p><strong>Restriction:</strong> <code>increment_wrong</code> above fails to compile — its body
 evaluates to <code>()</code>, which doesn't match the declared <code>-&gt; i32</code> return type.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>An early-return guard clause needs its own <code>;</code>, while the function's
 final, successful value must not have one — mixing this up inside a
@@ -1015,19 +1008,14 @@ fn load_config(path: &amp;str) -&gt; Result&lt;Config, ConfigError&gt; {
     parse_config(&amp;text) // PREFER: no `;` — this expression IS the fn's return value
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the compiler catches this mistake as a type mismatch
+<p>The compiler catches this mistake as a type mismatch
 (<code>expected Result&lt;Config, ConfigError&gt;, found ()</code>) pointing at the
 function body — but the more reliable habit is to read a function's last
 line and ask "is this a statement or the return value?" before deciding
 whether it needs a <code>;</code>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Inside <code>[Type; N]</code> and <code>[value; N]</code>, <code>;</code> separates a type/value from a
 compile-time length — a completely different grammatical role from
@@ -1035,12 +1023,11 @@ statement-termination, disambiguated purely by appearing inside <code>[ ]</code>
 <pre><code class="rust">let buffer: [u8; 4] = [0; 4]; // &lt;- both `;` here belong to array syntax, not statements
 //           ^ type; length      ^ value; repeat count
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>[0; 4]</code> avoids writing out <code>[0, 0, 0, 0]</code> by hand and,
+<p><code>[0; 4]</code> avoids writing out <code>[0, 0, 0, 0]</code> by hand and,
 unlike a <code>Vec</code>, the length is part of the type itself — see
 <a href="../../concepts/types-data-modeling/arrays-vs-vec.html">Arrays vs <code>Vec</code></a> for
 when a fixed-size array is the right choice over a growable one.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1053,7 +1040,7 @@ when a fixed-size array is the right choice over a growable one.</p>
         </span>
         <p><strong>Full support.</strong> Pure statement-terminator grammar — no <code>std</code> dependency.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

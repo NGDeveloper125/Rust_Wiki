@@ -21,7 +21,9 @@ Like a normal string literal, the result type is `&str`; the only
 difference is how the literal's *source text* is interpreted, not the
 resulting type.
 
-## Basic usage example
+## Usage examples
+
+### Representing a Windows-style file path
 
 ```
 let path = r"C:\temp\file"; // <- `r"..."`: raw string, backslashes are literal, not escapes
@@ -31,9 +33,7 @@ let path = r"C:\temp\file"; // <- `r"..."`: raw string, backslashes are literal,
 `r#"..."#` needs the same number of `#` on both sides, chosen high
 enough to avoid ambiguity with any `#` sequences in the content.
 
-## Best practices & deeper information
-
-### Scenario: Working with text
+### Working with text
 
 A Windows path written as a normal string literal needs every backslash
 doubled — a raw string sidesteps that entirely.
@@ -48,7 +48,7 @@ let path = r"C:\Users\alice\AppData\config.toml"; // <- raw string literal: back
 assert_eq!(escaped, path);
 ```
 
-**Why this way:** a raw string removes the need to double every
+A raw string removes the need to double every
 backslash, which for a Windows path or a regex pattern (`r"\d+\.\d+"`)
 quickly becomes hard to both write correctly and review; see
 [string literal](string-literal.md) for the general escape-processing

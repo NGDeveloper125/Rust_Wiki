@@ -27,7 +27,9 @@ needs the *data* bound by the pattern, a real `match` or
 is the right tool instead, since `matches!` has nowhere to hand that data
 back to the caller.
 
-## Basic usage example
+## Usage examples
+
+### Checking a variant without extracting its data
 
 ```
 enum ConnectionState {
@@ -40,9 +42,7 @@ let state = ConnectionState::Reconnecting { attempt: 2 };
 let is_reconnecting = matches!(state, ConnectionState::Reconnecting { .. }); // <- true, without binding `attempt`
 ```
 
-## Best practices & deeper information
-
-### Scenario: Branching on data (pattern matching)
+### Branching on data (pattern matching)
 
 Filtering a list of jobs down to the ones currently active is a yes/no
 question per job — exactly what `matches!` is for instead of a full
@@ -64,14 +64,14 @@ let jobs = vec![JobStatus::Queued, JobStatus::Finished, JobStatus::Running { wor
 let active_count = jobs.iter().filter(|job| is_active(job)).count();
 ```
 
-**Why this way:** the
+The
 [std docs](https://doc.rust-lang.org/std/macro.matches.html) note that a
 `match` with two arms both returning `true`/`false` (or an `if let ...
 else`) says the same thing with more ceremony; `matches!` states the
 yes/no intent directly, including the `|` pattern-alternation shorthand
 for "any of these variants."
 
-### Scenario: Validating input
+### Validating input
 
 Rejecting a request whose priority isn't one of a small allowed set uses
 a pattern guard to narrow one variant further by a field value.
@@ -92,7 +92,7 @@ assert!(is_acceptable(&Priority::High(2)));
 assert!(!is_acceptable(&Priority::High(9)));
 ```
 
-**Why this way:** a pattern guard lets a single boolean check express
+A pattern guard lets a single boolean check express
 "this variant, but only within these bounds," matching the
 [Reference's match-guard semantics](https://doc.rust-lang.org/reference/expressions/match-expr.html#match-guards)
 exactly as it would inside a full `match` — without the extra arm and

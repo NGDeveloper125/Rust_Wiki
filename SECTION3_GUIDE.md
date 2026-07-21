@@ -1,10 +1,18 @@
 # Section 3 Guide — Scenario-Based Best Practices
 
+> **Scope: concept pages only** (`pages/concepts/**`), per
+> [PAGES_DESIGN.md](PAGES_DESIGN.md) decision #13. Syntax pages
+> (`pages/syntax/**`) no longer have a "Best practices & deeper information"
+> section — they use a lighter "Usage examples" section instead (no fixed
+> scenario catalog, no best-practice framing); see PAGES_DESIGN.md §1.3/§2.1
+> for that contract. Everything below this line describes concept pages'
+> Section 3 exactly as before.
+
 > This document defines how **Section 3** ("Best practices & deeper
 > information", per [PAGES_DESIGN.md](PAGES_DESIGN.md) §1.3/§2.1) is written
-> for every page. It is the working spec for the model/author doing the
-> writing: the scenario catalog, the per-page relevance rules, the example
-> format, the source list, and the QA checklist all live here.
+> for every concept page. It is the working spec for the model/author doing
+> the writing: the scenario catalog, the per-page relevance rules, the
+> example format, the source list, and the QA checklist all live here.
 >
 > Read this whole file before writing any Section 3 content.
 

@@ -949,8 +949,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -987,25 +986,19 @@ language.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[unsafe(naked)] // &lt;- no compiler-generated prologue/epilogue: the body is pure asm
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Writing a function with no compiler-generated prologue or epilogue</h3>
+            <pre><code class="rust">#[unsafe(naked)] // &lt;- no compiler-generated prologue/epilogue: the body is pure asm
 pub extern "C" fn identity_trampoline() {
     core::arch::naked_asm!("ret");
 }
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Crossing an FFI boundary</h3>
             <p>An interrupt controller on a microcontroller jumps directly to a handler
 address with no compiler-managed calling convention already in place —
@@ -1026,8 +1019,7 @@ extern "C" fn interrupt_handler() {
     // ordinary Rust code, safe to run once registers are saved
 }
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> an ordinary (non-naked) function assumes the calling
+<p>An ordinary (non-naked) function assumes the calling
 convention's register-saving contract is already in effect, which is not
 guaranteed true at the exact instruction an interrupt vector jumps to —
 <code>#[naked]</code> exists specifically so this hand-off can be written by hand
@@ -1037,7 +1029,7 @@ documents naked functions as intended for exactly this class of
 low-level trampoline, and the exact register set and asm syntax are
 target-specific rather than portable — this snippet's precise form
 compiles only for the ARM-family target it names.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1058,7 +1050,7 @@ support crate's <code>#[interrupt]</code> attribute, which generates an ordinary
 trampoline, so application code essentially never writes <code>#[naked]</code>
 itself.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

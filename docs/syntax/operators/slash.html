@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -962,24 +961,18 @@ floating-point division by zero instead follows IEEE 754 and produces
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let quotient = 7 / 2; // &lt;- `/` divides, truncating toward zero
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Dividing two integers with truncation</h3>
+            <pre><code class="rust">let quotient = 7 / 2; // &lt;- `/` divides, truncating toward zero
 </code></pre>
 <p><strong>Restriction:</strong> dividing an integer by zero panics unconditionally, even
 in release builds.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Numeric computation</h3>
             <p>Computing an average from a sum and a count is ordinary <code>/</code>, and the
 truncation behavior this page's Explanation describes is exactly why
@@ -993,19 +986,14 @@ assert_eq!(average_ms, 301);
 
 let average_ms_f = total_ms as f64 / sample_count as f64; // 301.25, precise
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> casting to a float before dividing is the standard fix
+<p>Casting to a float before dividing is the standard fix
 when truncation would silently discard a meaningful fraction — integer
 <code>/</code> always rounds toward zero, never to the nearest value, a contrast the
 <a href="https://doc.rust-lang.org/std/primitive.i32.html#method.div_euclid"><code>div_euclid</code> docs</a>
 spell out against Euclidean division.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Where the divisor isn't guaranteed to be nonzero — say, an average
 computed over a possibly-empty batch of readings — <code>checked_div</code> turns
@@ -1017,15 +1005,14 @@ the panic this page warns about into an <code>Option</code> the caller must hand
 assert_eq!(average(100, 4), Some(25));
 assert_eq!(average(100, 0), None); // no panic: an empty batch is a normal case
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> <code>checked_div</code> makes the zero-divisor case an explicit
+<p><code>checked_div</code> makes the zero-divisor case an explicit
 branch instead of an unconditional panic — the
 <a href="https://doc.rust-lang.org/std/primitive.i32.html#method.checked_div">standard library docs</a>
-document that it returns <code>None</code> on a zero divisor. Reaching for it
-whenever the divisor comes from data the function doesn't fully control
+document that it returns <code>None</code> on a zero divisor. This is worth reaching
+for whenever the divisor comes from data the function doesn't fully control
 (as opposed to a compile-time-known nonzero constant, where bare <code>/</code> is
-fine) is this wiki's recommendation.</p>
-</div>
+fine).</p>
+
           </div>
         </div>
       </section>
@@ -1041,7 +1028,7 @@ microcontrollers have no hardware integer divider, so <code>/</code> on those
 targets compiles to a (slower) software division routine — profile before
 assuming it's free.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

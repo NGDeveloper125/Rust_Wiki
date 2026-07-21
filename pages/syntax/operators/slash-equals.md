@@ -13,16 +13,16 @@ see_also: ["/"]
 `/=` divides the left operand by the right in place, overloadable via
 `std::ops::DivAssign`.
 
-## Basic usage example
+## Usage examples
+
+### Dividing a mutable binding in place
 
 ```
 let mut x = 7;
 x /= 2; // <- `/=` divides `x` in place, truncating toward zero
 ```
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Turning a running sum into a running average is a one-line job for
 `/=` once the count is known — dividing the accumulator in place instead
@@ -37,7 +37,7 @@ average /= samples.len() as f64; // <- `/=` turns the sum into an average in pla
 assert_eq!(average, 21.0);
 ```
 
-**Why this way:** dividing the same binding in place with `/=` reads as
+Dividing the same binding in place with `/=` reads as
 "this value, adjusted," matching the general in-place-assignment case
 made for [`+=`](plus-equals.md); watch the integer-truncation caveat this
 page's Explanation calls out if `average` were an integer type instead

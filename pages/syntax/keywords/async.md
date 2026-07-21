@@ -52,7 +52,9 @@ itself does not execute at all until the returned future is driven, via
 [`.await`](await.md) or by handing it to an executor. A future sitting
 unused in a local variable simply never runs its body.
 
-## Basic usage example
+## Usage examples
+
+### Declaring an `async fn` and an `async move` block
 
 ```
 async fn fetch_status() -> bool { // <- `async fn`: calling it returns a Future; the body doesn't run yet
@@ -63,9 +65,7 @@ let flag = true;
 let check_flag = async move { flag }; // <- `async move` block: owns `flag` instead of borrowing it
 ```
 
-## Best practices & deeper information
-
-### Scenario: Async tasks
+### Async tasks
 
 A metrics collector spawns one task per device, using an `async fn` for
 the network call itself and a separate `async move` block to pair a
@@ -98,7 +98,7 @@ async fn main() {
 }
 ```
 
-**Why this way:** `tokio::spawn` requires its future to be `'static`, so
+`tokio::spawn` requires its future to be `'static`, so
 any block capturing local variables like `label` must use `async move` to
 take ownership of them rather than borrow — an `async fn`'s parameters
 need no such annotation because they're already owned by the time the

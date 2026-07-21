@@ -71,7 +71,9 @@ as an ordinary identifier elsewhere.
 See [FFI](../../concepts/memory-unsafe/ffi.md) for why this boundary
 exists at all and how it fits into a real crate's design.
 
-## Basic usage example
+## Usage examples
+
+### Declaring a foreign function's signature
 
 ```
 unsafe extern "C" {
@@ -79,9 +81,7 @@ unsafe extern "C" {
 }
 ```
 
-## Best practices & deeper information
-
-### Scenario: Crossing an FFI boundary
+### Crossing an FFI boundary
 
 A media-processing crate needs both directions at once: calling a vendor
 compression library to shrink a buffer, and exposing a Rust callback that
@@ -115,7 +115,7 @@ pub extern "C" fn on_compress_progress(percent: u32) {
 }
 ```
 
-**Why this way:** `extern "C"` on both the declared foreign function and
+`extern "C"` on both the declared foreign function and
 the exported callback selects the same calling convention on each side of
 the boundary, which is what lets the two languages agree on how arguments
 and the return value are passed at all — the
@@ -123,7 +123,7 @@ and the return value are passed at all — the
 covers calling out and being called back as the two symmetric halves of
 one boundary.
 
-### Scenario: Designing a public API
+### Designing a public API
 
 A binding crate around a legacy timer/watchdog HAL header wants to let
 callers read the current tick count without writing `unsafe` themselves,
@@ -149,7 +149,7 @@ pub fn feed_watchdog() {
 }
 ```
 
-**Why this way:** marking only the genuinely side-effect-free declaration
+Marking only the genuinely side-effect-free declaration
 `safe` lets a wrapper crate be precise about which parts of a trusted C
 header are actually safe to expose directly, instead of either forcing
 `unsafe` on every foreign call or (worse) wrapping the whole header in a

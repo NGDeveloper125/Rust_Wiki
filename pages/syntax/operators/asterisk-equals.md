@@ -17,7 +17,9 @@ Unrelated to the dereference sense of `*` — `*=` is purely the compound
 arithmetic-assignment operator; there is no "deref-assign" reading of
 this token.
 
-## Basic usage example
+## Usage examples
+
+### Multiplying a value in place
 
 ```
 let mut x = 5;
@@ -27,9 +29,7 @@ x *= 3; // <- multiplies `x` by 3 in place
 **Restriction:** the left-hand side must be a mutable binding
 (`let mut`) — `*=` assigns in place.
 
-## Best practices & deeper information
-
-### Scenario: Numeric computation
+### Numeric computation
 
 Scaling a running value repeatedly — compounding growth over several
 steps — is a natural fit for `*=`, updating the value in place each
@@ -46,7 +46,7 @@ for _year in 0..5 {
 println!("after 5 years: {balance:.2}");
 ```
 
-**Why this way:** `*=` makes the "scale this value repeatedly" intent
+`*=` makes the "scale this value repeatedly" intent
 explicit at the call site instead of writing `balance = balance *
 growth_rate` each time — see [`+=`](plus-equals.md) for the general notes
 shared by every compound-assignment operator (mutable place required, its

@@ -26,19 +26,14 @@ Using `override` as an ordinary identifier is a compile error today. The
 raw-identifier form `r#override` is legal, the same escape hatch every
 reserved keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### Using the raw-identifier escape hatch
 
 ```
 let override = 5;     // error: expected identifier, found reserved keyword `override`
 let r#override = 5;   // ok: the raw-identifier form escapes the reservation
 ```
-
-## Best practices & deeper information
-
-There is no best-practice scenario to show here: `override` has no
-function in today's Rust, and no concrete proposal to build one around,
-so any "usage" example would be fiction. The one genuinely useful thing
-to know is the raw-identifier escape hatch shown above.
 
 ## Embedded Rust Notes
 

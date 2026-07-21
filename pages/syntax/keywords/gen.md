@@ -42,16 +42,16 @@ editions is unaffected until it migrates. The raw-identifier form
 `r#gen` is legal in any edition, the same escape hatch every reserved
 keyword offers.
 
-## Basic usage example
+## Usage examples
+
+### Escaping the reservation with a raw identifier
 
 ```
 let gen = 5;     // error (2024 edition): expected identifier, found reserved keyword `gen`
 let r#gen = 5;   // ok: the raw-identifier form escapes the reservation
 ```
 
-## Best practices & deeper information
-
-### Scenario: Async tasks
+### Async tasks
 
 `async fn` is the closest thing Rust has today to what `gen fn` would
 be — both desugar a function body with suspension points into a state
@@ -72,7 +72,7 @@ async fn lookup(id: u32) -> u32 {
 }
 ```
 
-**Why this way:** understanding `gen` is easiest by analogy to
+Understanding `gen` is easiest by analogy to
 `async`/`.await`, which already ships: both are ways of writing a
 sequential-looking function body that the compiler transforms into a
 resumable state machine, differing only in what triggers a suspension

@@ -13,16 +13,16 @@ see_also: ["<<"]
 `<<=` left-shifts the left operand by the right operand's amount, in
 place, overloadable via `std::ops::ShlAssign`.
 
-## Basic usage example
+## Usage examples
+
+### Left-shifting a value in place
 
 ```
 let mut x = 1u8;
 x <<= 3; // <- `<<=` left-shifts `x` in place
 ```
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 Building up a bitmask one field at a time — shifting previously-packed
 bits further left to make room for the next field — is a natural fit for
@@ -40,7 +40,7 @@ for &width in &field_widths {
 assert_eq!(mask, 0b0001_1111_1111);
 ```
 
-**Why this way:** accumulating into one `mut` binding with `<<=` avoids
+Accumulating into one `mut` binding with `<<=` avoids
 building and discarding an intermediate value on every iteration — the
 same in-place-mutation case made for [`+=`](plus-equals.md), here
 specialized to `ShlAssign`.

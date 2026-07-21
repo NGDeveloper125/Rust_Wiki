@@ -947,8 +947,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -963,25 +962,19 @@ must be a mutable place — <code>x</code> must be declared <code>let mut x</cod
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let mut x = 5;
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Adding to a mutable binding in place</h3>
+            <pre><code class="rust">let mut x = 5;
 x += 1; // &lt;- `+=` adds the right operand into `x` in place
 </code></pre>
 <p><strong>Restriction:</strong> the left operand must be a mutable place — <code>x</code> has to be
 declared with <code>let mut x</code>, or this won't compile.</p>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Modifying an existing object</h3>
             <p>An account balance is a natural home for <code>+=</code> — the balance is a field
 mutated in place each time a deposit posts, rather than a whole new
@@ -1001,19 +994,14 @@ checking.deposit(2_500);
 checking.deposit(750);
 assert_eq!(checking.balance, 13_250);
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> a <code>&amp;mut self</code> method that uses <code>+=</code> on its own field
+<p>A <code>&amp;mut self</code> method that uses <code>+=</code> on its own field
 keeps the mutation local and auditable — the alternative of returning a
 new <code>Account</code> on every deposit would work but adds ceremony for a value
 type that's meant to change over its lifetime. The <code>&amp;mut self</code> method
 syntax itself is covered in <a href="https://doc.rust-lang.org/book/ch05-03-method-syntax.html">the Book</a>.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with collections</h3>
             <p>Accumulating a running total while iterating is the textbook use of
 <code>+=</code>; it's worth contrasting with re-binding a fresh <code>let total = ...</code> on
@@ -1030,13 +1018,12 @@ assert_eq!(total, 5549);
 // Equivalent, more idiomatic for a one-shot fold:
 let total: i32 = orders.iter().sum();
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the explicit <code>for</code> loop with <code>+=</code> is the clearest form
+<p>The explicit <code>for</code> loop with <code>+=</code> is the clearest form
 when the accumulation is interleaved with other per-item work; when
 summing is the <em>only</em> thing happening, <code>Iterator::sum</code> from the
 <a href="https://doc.rust-lang.org/std/iter/trait.Sum.html">standard library docs</a>
 expresses the same intent with no mutable state at all.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1049,7 +1036,7 @@ expresses the same intent with no mutable state at all.</p>
         </span>
         <p><strong>Full support.</strong> <code>AddAssign</code> lives in <code>core::ops</code> — no <code>std</code> dependency.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

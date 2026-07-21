@@ -948,8 +948,7 @@
 
       <nav class="section-tabs" id="section-tabs">
         <button class="tab on" data-target="explanation">Explanation</button>
-        <button class="tab" data-target="basic">Basic usage example</button>
-        <button class="tab" data-target="best">Best practices &amp; deeper information</button>
+        <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
       <section class="doc" id="explanation">
@@ -1004,9 +1003,12 @@ doesn't paste an identifier directly against one of these characters.</p>
 
       </section>
 
-      <section class="doc" id="basic">
-        <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// 2021 edition and later:
+      <section class="doc" id="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Triggering the reserved-prefix and reserved-guard errors</h3>
+            <pre><code class="rust">// 2021 edition and later:
 let z = 1;
 // z"hey";   // error: prefix `z` is unknown (reserved syntax)
 let ok = "hey"; // fine: no adjacency between an identifier and a quote
@@ -1016,17 +1018,8 @@ let ok = "hey"; // fine: no adjacency between an identifier and a quote
 let ok2 = "literal"; // fine: an ordinary string literal, no leading `#"`
 </code></pre>
 
-      </section>
-
-      <section class="doc" id="best">
-        <h2 class="section-title">Best practices &amp; deeper information</h2>
-        
-        <div class="scenarios">
+          </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Working with text</h3>
             <p>A small templating helper that stitches an identifier-like tag onto a
 literal string, generated through a macro, can accidentally produce a
@@ -1043,21 +1036,16 @@ separator.</p>
 
 log_event!(order_placed, "customer checkout completed");
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> keeping the identifier and the string as two separate
+<p>Keeping the identifier and the string as two separate
 arguments passed through <code>println!</code>/<code>format!</code>, rather than concatenating
 their <em>tokens</em> together at macro-expansion time, avoids ever generating
 an <code>ident"..."</code> shape the 2021-edition reserved-prefix rule would reject
 — the
 <a href="https://doc.rust-lang.org/edition-guide/rust-2021/reserved-syntax.html">2021 edition guide's reserved syntax section</a>
 documents this exact prefix-adjacency case.</p>
-</div>
+
           </div>
         <div class="card">
-            <div class="scen-tag">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
-              Scenario
-            </div>
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A library author who likes the ergonomics of <code>sql"SELECT ..."</code>-style
 literal prefixes for a domain-specific string (as some other languages
@@ -1076,15 +1064,14 @@ let query = sql!("SELECT id FROM orders WHERE status = 'shipped'");
 // specifically so a *future* edition — not a third-party macro — can
 // claim new prefixes like this.
 </code></pre>
-
-            <div class="rationale"><p><strong>Why this way:</strong> the reserved-prefix rule exists precisely to keep
+<p>The reserved-prefix rule exists precisely to keep
 <code>letters"..."</code> available for the <em>language</em> to standardize later, not
-for individual crates to informally claim — designing the public API
-around an explicit macro call (<code>sql!(...)</code>) rather than chasing a
-prefix-literal syntax keeps the crate compatible with whatever a future
-edition eventually does with that space, per the
+for individual crates to informally claim — an explicit macro call
+(<code>sql!(...)</code>) instead of a prefix-literal syntax keeps the crate
+compatible with whatever a future edition eventually does with that
+space, per the
 <a href="https://doc.rust-lang.org/reference/tokens.html#reserved-prefixes">Rust Reference's tokens chapter</a>.</p>
-</div>
+
           </div>
         </div>
       </section>
@@ -1098,7 +1085,7 @@ edition eventually does with that space, per the
         <p><strong>Full support.</strong> Reserved syntax is a lexer-level restriction, identical
 in <code>#![no_std]</code> and hosted Rust alike.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
+        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
 
       <div class="footer-note">

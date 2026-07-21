@@ -17,7 +17,9 @@ byte string), as in `br"C:\data\raw"`.
 Useful when a fixed byte sequence contains literal backslashes you don't
 want interpreted as escapes.
 
-## Basic usage example
+## Usage examples
+
+### Representing a file path as raw bytes
 
 ```
 let path: &[u8] = br"D:\logs\out"; // <- `br"..."`: raw (no escapes) + byte string (&[u8; N])
@@ -27,9 +29,7 @@ let path: &[u8] = br"D:\logs\out"; // <- `br"..."`: raw (no escapes) + byte stri
 `"`, it must be wrapped in matching `#` delimiters — `br#"..."#` — with
 enough `#`s to avoid ambiguity.
 
-## Best practices & deeper information
-
-### Scenario: Bit manipulation and flags
+### Bit manipulation and flags
 
 A byte sequence that's naturally full of backslashes — a Windows-style
 path embedded as bytes — reads far better as a raw byte string.
@@ -44,7 +44,7 @@ let raw: &[u8] = br"C:\Windows\System32\drivers\etc\hosts"; // <- raw byte strin
 assert_eq!(escaped, raw);
 ```
 
-**Why this way:** a raw byte string avoids doubling every backslash in a
+A raw byte string avoids doubling every backslash in a
 byte sequence that's naturally full of them — see
 [byte string literal](byte-string-literal.md) for the escape-processing
 rules this form opts out of.
