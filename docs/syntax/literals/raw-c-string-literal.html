@@ -1005,13 +1005,38 @@ nul-termination behavior this form inherits unchanged. Like <code>c"..."</code>,
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>cr"..."</code> inherits both halves unchanged under <code>#![no_std]</code>: the
+<code>core::ffi::CStr</code> result from a C-string literal, and the raw,
+no-escape-processing text from a raw string. That combination is
+genuinely useful in embedded FFI work whenever the fixed, nul-terminated
+string handed to a vendor C HAL or SDK function itself contains
+backslashes — a Windows-style path baked into a host-side
+firmware-flashing tool that calls into a vendor's C flashing library, or
+a fixed pattern string passed to a C library's matching function —
+without needing to double every backslash on top of remembering the nul
+terminator.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Passing a firmware image path to a vendor C flashing SDK</h3>
+            <pre><code class="rust">use core::ffi::{c_char, CStr};
+
+extern "C" {
+    fn vendor_flash_load_image(path: *const c_char) -&gt; i32;
+}
+
+const IMAGE_PATH: &amp;CStr = cr"C:\firmware\images\app.bin"; // &lt;- `cr"..."`: raw (no escapes) + nul-terminated, ready for FFI
+
+fn flash_image() -&gt; i32 {
+    unsafe { vendor_flash_load_image(IMAGE_PATH.as_ptr()) }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

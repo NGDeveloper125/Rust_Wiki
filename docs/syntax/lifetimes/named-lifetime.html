@@ -1111,13 +1111,71 @@ checks.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Mechanically identical under <code>#![no_std]</code> in both of its meanings — a
+named lifetime parameter is erased before codegen, and a loop label is a
+compile-time-only jump target, neither carrying any runtime footprint on
+a hosted build or a bare-metal one. What changes is frequency, not
+meaning: explicit <code>'a</code> shows up in embedded code more often than in a
+lot of hosted application code, because <code>embedded-hal</code>-style driver
+structs are built around <em>borrowing</em> a peripheral rather than owning it
+outright. A driver that takes <code>&amp;'a mut SpiBus</code> instead of consuming the
+whole bus lets several drivers share one physical peripheral in turn,
+each one only holding the borrow for as long as it's actively in use —
+and that relationship has to be named with an explicit lifetime
+parameter on the driver struct, exactly like <code>Excerpt&lt;'a&gt;</code> above names
+the lifetime of the text it borrows. Loop labels don't get any
+embedded-specific twist; they're used for the same "break out of a
+nested loop" reason as anywhere else, including embedded code that scans
+a bus for a responding device.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Borrowing a shared SPI bus in a sensor driver</h3>
+            <pre><code class="rust">struct Bme280&lt;'a, SPI&gt; {
+    spi: &amp;'a mut SPI, // &lt;- `'a` ties this driver's validity to the borrowed bus, not to a bus it owns outright
+}
+
+impl&lt;'a, SPI&gt; Bme280&lt;'a, SPI&gt;
+where
+    SPI: embedded_hal::spi::SpiBus,
+{
+    fn new(spi: &amp;'a mut SPI) -&gt; Self {
+        Bme280 { spi }
+    }
+
+    fn read_temperature(&amp;mut self) -&gt; Result&lt;f32, SPI::Error&gt; {
+        let mut buf = [0u8; 4];
+        self.spi.read(&amp;mut buf)?;
+        Ok(f32::from_bits(u32::from_le_bytes(buf)))
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Scanning an I2C bus for a device address with a loop label</h3>
+            <pre><code class="rust">fn find_device_address(bus: &amp;mut impl embedded_hal::i2c::I2c) -&gt; Option&lt;u8&gt; {
+    let mut found = None;
+
+    'scan: for candidate in 0x08..=0x77 {
+        // &lt;- `'scan` is a loop label, the same `'ident` sigil as a lifetime but an unrelated meaning
+        for _attempt in 0..3 {
+            if bus.write(candidate, &amp;[]).is_ok() {
+                found = Some(candidate);
+                break 'scan; // &lt;- exits both loops at once, not just the retry loop
+            }
+        }
+    }
+
+    found
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

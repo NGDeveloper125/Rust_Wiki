@@ -1037,13 +1037,36 @@ than hand-building JSON text with Rust string literals.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Escape-sequence processing is pure lexical, compile-time work — it
+happens identically whether the target is hosted or <code>#![no_std]</code>, with
+no runtime or allocator involved at any point. The escapes that come up
+most in embedded code are exactly the control-character ones: <code>\r\n</code>
+line endings (many serial terminals and AT-command interfaces expect
+CRLF, not a bare <code>\n</code>), <code>\0</code> for a nul-terminated C string handed across
+FFI, and <code>\xNN</code> hex byte escapes for framing bytes or raw control codes —
+<code>\x1B</code> in particular is the ASCII ESC character that begins an
+ANSI/VT100 escape sequence, the standard way to color or position text
+on a serial terminal from firmware logging code.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Sending an ANSI color code over a serial terminal</h3>
+            <pre><code class="rust">fn log_error(uart: &amp;mut impl core::fmt::Write, message: &amp;str) {
+    let _ = write!(uart, "\x1B[31m{message}\x1B[0m\r\n"); // &lt;- `\x1B` escape: ANSI red-text, then reset, then CRLF line ending
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Framing a boot banner for a terminal that expects CRLF</h3>
+            <pre><code class="rust">const READY_BANNER: &amp;str = "boot ok\r\n"; // &lt;- `\r\n` escape sequence: CRLF line ending a serial terminal expects
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

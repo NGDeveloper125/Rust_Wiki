@@ -1035,13 +1035,40 @@ asks public items to favor.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A type suffix pins a literal's width at compile time exactly the same
+way under <code>#![no_std]</code>, but <em>which</em> width you reach for matters more in
+embedded code than it typically does on a desktop host. In hosted code,
+<code>i32</code>/<code>usize</code> are usually fine defaults for a value with no strong width
+requirement of its own; in embedded code, a value very often represents
+a specific hardware field — an 8-bit GPIO data register, a 12-bit ADC
+result held in a <code>u16</code>, a 32-bit memory-mapped register — whose width is
+fixed by the chip, not a matter of taste. Suffixing a constant to that
+exact width turns a too-large value into a compile error at its
+definition site, instead of a silent truncation discovered later through
+an <code>as</code> cast at the point the constant is finally used. (Separately,
+<code>usize</code>/<code>isize</code> are still pointer-sized on embedded targets, but that
+width is often much narrower than on a desktop host — commonly 32-bit,
+sometimes 16-bit on very small parts — so it's worth not assuming
+<code>usize</code> means "at least 64 bits" in embedded code.)</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Pinning a constant to the exact width of a peripheral register</h3>
+            <pre><code class="rust">const ADC_MAX: u16 = 4095u16; // &lt;- `u16` suffix: matches the ADC's 12-bit result register width exactly
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Catching an out-of-range register value at compile time</h3>
+            <pre><code class="rust">const GPIO_PIN_MASK: u8 = 0b1111_1111u8; // &lt;- `u8` suffix: this MCU's GPIO data register is only 8 bits wide
+// const BAD_MASK: u8 = 300u8; // would be a compile error: 300 doesn't fit in a u8
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

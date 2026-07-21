@@ -1008,13 +1008,36 @@ rules a raw string opts out of.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A raw string is unaffected by <code>#![no_std]</code> in exactly the same way an
+ordinary string literal is — it's still <code>&amp;'static str</code> rodata, resolved
+entirely at compile time, no allocator involved. There isn't much
+genuinely new to say for embedded specifically: the backslash-heavy
+content a raw string is built for — regex patterns, Windows-style paths
+— shows up on the host-tooling side of embedded work (build scripts,
+flashing utilities, config parsers) more often than in on-target
+firmware code, which tends to deal in byte buffers rather than
+backslash-laden text. Where it does help on-target is the same
+readability win as on desktop: a fixed pattern or path string with
+several backslashes is easier to write and review without doubling each
+one.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">A path constant for a host-side firmware-flashing tool</h3>
+            <pre><code class="rust">// AVOID: every backslash must be doubled, easy to miscount
+let firmware_dir = "C:\\Users\\dev\\firmware\\builds";
+
+// PREFER: raw string, backslashes are literal, no escaping needed
+let firmware_dir = r"C:\Users\dev\firmware\builds"; // &lt;- raw string literal: backslashes taken literally
+
+assert_eq!(firmware_dir.len(), 27);
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

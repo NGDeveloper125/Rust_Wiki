@@ -1031,13 +1031,49 @@ recommends for any type with an obvious default.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A decimal literal is core lexical grammar, identical under <code>#![no_std]</code>
+— honestly, this is the least embedded-specific of the integer literal
+forms. Addresses and bitmasks gravitate to hex or binary (see
+<a href="integer-hexadecimal.md">integer-hexadecimal</a> and
+<a href="integer-binary.md">integer-binary</a>) precisely because those bases show
+byte/bit structure that decimal hides, so decimal's role in firmware is
+the same plain one it has anywhere else: everyday counts, loop bounds,
+buffer sizes, delays, and retry limits, with nothing about the base
+itself changing under <code>no_std</code>. (See <a href="integer-suffixes.md">integer suffixes</a>
+for where embedded code <em>does</em> diverge from typical host code —
+explicit-width type suffixes, not the choice of decimal versus another
+base.)</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Sizing a heapless buffer with a plain decimal constant</h3>
+            <pre><code class="rust">use heapless::Vec;
+
+const SAMPLE_COUNT: usize = 32; // &lt;- decimal literal: a buffer capacity, nothing embedded-specific about the base
+let mut samples: Vec&lt;u16, SAMPLE_COUNT&gt; = Vec::new();
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Retrying a sensor read a fixed number of times</h3>
+            <pre><code class="rust">fn read_with_retries&lt;E&gt;(mut read: impl FnMut() -&gt; Result&lt;u16, E&gt;) -&gt; Result&lt;u16, E&gt; {
+    let max_attempts = 3; // &lt;- decimal literal: a plain retry count, same as it would be in hosted code
+    let mut last_err = None;
+    for _ in 0..max_attempts {
+        match read() {
+            Ok(v) =&gt; return Ok(v),
+            Err(e) =&gt; last_err = Some(e),
+        }
+    }
+    Err(last_err.unwrap())
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

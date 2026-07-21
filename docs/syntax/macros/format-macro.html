@@ -1060,13 +1060,58 @@ is still in scope is how that context gets captured before it's lost.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>format!</code> itself needs <code>alloc</code>, for the same reason as <code>vec!</code> and
+<code>String</code>: it returns an owned, heap-allocated <code>String</code>, and a
+<code>#![no_std]</code> target has no heap unless one is explicitly configured. On a
+target that does configure <code>extern crate alloc</code> plus a
+<code>#[global_allocator]</code>, <code>format!</code> works exactly as documented above — the
+<code>{}</code>/<code>{:?}</code> grammar, specifiers, and compile-time argument checking are
+unaffected by the target having no OS.</p>
+<p>Where there's no allocator at all — the common case on the most
+constrained MCUs — the caveat is specifically the return type, not the
+formatting machinery: <code>core::fmt</code> itself (<code>Display</code>, <code>Debug</code>, the
+<code>format_args!</code> engine every one of these macros expands into) is pure
+<code>core</code> and costs nothing extra. The idiomatic no-heap substitute is to
+<code>write!</code> the same format string into something that owns fixed, non-heap
+storage instead of asking for a fresh <code>String</code> — a <code>heapless::String&lt;N&gt;</code>
+(it implements <code>core::fmt::Write</code>, so <code>write!(my_string, "...")</code> works
+unchanged) or a stack buffer paired with a small <code>core::fmt::Write</code>
+wrapper. For code-size-constrained targets specifically, the <code>ufmt</code> crate
+goes further and replaces <code>core::fmt</code> with its own leaner <code>uWrite</code>/
+<code>uwrite!</code> machinery, trading some flexibility (no default
+floating-point formatting, no dynamic precision) for a meaningfully
+smaller compiled footprint.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Formatting into a heapless::String instead of allocating</h3>
+            <pre><code class="rust">use core::fmt::Write;
+use heapless::String;
+
+let order_id = 42;
+let amount = 19.9;
+
+let mut receipt: String&lt;64&gt; = String::new(); // &lt;- fixed 64-byte capacity, no heap
+write!(receipt, "Order #{order_id}: ${amount:.2}").unwrap(); // &lt;- same {}/:.2 grammar as format!, no allocation
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Formatting with ufmt on a heavily size-constrained MCU</h3>
+            <pre><code class="rust">use ufmt::uwrite;
+use heapless::String; // heapless's "ufmt" feature implements uWrite for String&lt;N&gt;
+
+let voltage_mv: u16 = 3300;
+
+let mut line: String&lt;32&gt; = String::new();
+uwrite!(&amp;mut line, "vbus = {} mV", voltage_mv).unwrap(); // &lt;- ufmt's leaner engine, no core::fmt involved
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

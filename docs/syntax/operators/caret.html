@@ -1000,13 +1000,48 @@ cancel" is the goal, as with simple checksums or toggle masks.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>^</code> carries over unchanged, and its self-cancelling property
+(<code>x ^ y ^ y == x</code>) is exploited in two distinct embedded contexts. The
+first is computing a value with some bits flipped relative to an
+existing one <em>without</em> mutating anything — useful when a new register
+value is being assembled ahead of a later write, as opposed to
+toggling a register in place (that in-place case is <code>^=</code>, its own
+page). The second is lightweight framing: many embedded serial
+protocols use a single XOR byte as a cheap integrity check, since a
+receiver can XOR every byte of an incoming frame together and compare
+the result to a trailing checksum byte — catching single-bit
+corruption on a wire without the code size or cycle cost of a CRC
+table.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Computing a toggled register value without mutating the original</h3>
+            <pre><code class="rust">const LED_PIN: u32 = 1 &lt;&lt; 5;
+
+fn toggled_odr(current_odr: u32) -&gt; u32 {
+    current_odr ^ LED_PIN // &lt;- `^` produces a new value with only the LED bit flipped
+}
+
+let odr = 0b0010_0000;
+assert_eq!(toggled_odr(odr), 0);
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Checksumming a UART frame</h3>
+            <pre><code class="rust">fn frame_checksum(payload: &amp;[u8]) -&gt; u8 {
+    payload.iter().fold(0u8, |acc, &amp;b| acc ^ b) // &lt;- `^` folds the frame into a single check byte
+}
+
+let frame = [0x02, 0xA4, 0x00, 0x7F]; // start byte, address, command, data
+let checksum = frame_checksum(&amp;frame);
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

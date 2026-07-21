@@ -1011,13 +1011,35 @@ this.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The digit separator is exactly as purely cosmetic under <code>#![no_std]</code> as
+anywhere else — it's stripped by the lexer before the value even exists,
+so it has no effect on the compiled register write, mask, or comparison
+it appears in. Where it's genuinely more valuable in embedded code than
+in typical application code is grouping the hex and binary literals used
+for register addresses and bitmasks: <code>0x4001_0800</code> is far faster to
+proofread against a reference manual than <code>0x40010800</code>, and a mask like
+<code>0b1010_0000</code> shows its set bits far more clearly than <code>0b10100000</code>.
+Since embedded code writes far more of these long hex/binary constants
+than the average hosted program does, the separator pulls more of its
+weight there.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Grouping a peripheral base address into bytes</h3>
+            <pre><code class="rust">const GPIOA_BASE: u32 = 0x4001_0800; // &lt;- digit separator groups the address into byte-pairs, matching the reference manual's notation
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Grouping a multi-bit register mask into nibbles</h3>
+            <pre><code class="rust">const UART_BAUD_MASK: u16 = 0b0000_1111_0000_0000; // &lt;- digit separator groups the mask into nibbles, matching the register's bitfield layout
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

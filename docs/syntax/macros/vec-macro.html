@@ -1039,13 +1039,66 @@ for how the resulting <code>Vec</code> behaves once built.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>vec!</code> is defined purely in terms of <code>alloc::vec::Vec</code> — under
+<code>#![no_std]</code> it's available exactly when the <code>alloc</code> crate is pulled in
+and a <code>#[global_allocator]</code> is configured to back it, at which point
+<code>vec![1, 2, 3]</code> and <code>vec![0u8; 8]</code> behave identically to a hosted build:
+same list/repeat forms, same <code>Clone</code>-not-<code>Copy</code> requirement for the
+repeat form. On a target with no heap at all — no allocator configured,
+no <code>alloc</code> — <code>vec!</code> simply isn't available, and there is no
+macro-level equivalent to reach for instead:
+<a href="../../concepts/collections-strings/vec.md"><code>heapless::Vec&lt;T, N&gt;</code></a> (a
+fixed-capacity, statically allocated vector) is the idiomatic substitute,
+but it's built imperatively — <code>heapless::Vec::new()</code> followed by
+<code>.push()</code> per element, or <code>.resize()</code> to fill it to a starting value —
+rather than through a <code>vec!</code>-style literal, since a fixed-capacity
+collection has no single expression that means "however many elements,
+however big the source list turns out to be."</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Building a Vec once alloc is configured</h3>
+            <pre><code class="rust">extern crate alloc;
+use alloc::vec::Vec;
+
+fn make_thresholds() -&gt; Vec&lt;u16&gt; {
+    vec![100, 200, 300] // &lt;- list form, identical to hosted Rust once `alloc` + a #[global_allocator] are set up
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Building a fixed-capacity buffer with heapless (no allocator)</h3>
+            <pre><code class="rust">use heapless::Vec;
+
+fn make_readings() -&gt; Vec&lt;f32, 8&gt; { // &lt;- capacity 8, fixed at compile time, no heap involved
+    let mut readings = Vec::new(); // &lt;- heapless::Vec has no vec!-style literal
+    readings.push(21.4).unwrap(); // &lt;- push() returns a Result, since the buffer can be full
+    readings.push(19.8).unwrap();
+    readings
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Pre-filling a heapless buffer to a starting value</h3>
+            <p>Where classic code reaches for <code>vec![0u8; 8]</code>'s repeat form, the
+<code>heapless</code> equivalent is a <code>.resize()</code> call on an already-constructed
+fixed-capacity <code>Vec</code>.</p>
+<pre><code class="rust">use heapless::Vec;
+
+fn zeroed_frame() -&gt; Vec&lt;u8, 8&gt; {
+    let mut frame = Vec::new();
+    frame.resize(8, 0u8).unwrap(); // &lt;- fills to 8 elements of 0u8, the resize() this page's vec![elem; n] maps onto
+    frame
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

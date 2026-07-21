@@ -1001,13 +1001,36 @@ compound-assignment operator family.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>^=</code> is the standard way to flip a hardware output bit without needing
+to know its current state first: many microcontroller GPIO ports have
+no dedicated "toggle" register (only the plain output-data register),
+so firmware reads the port's current value, XORs in the pin's bit, and
+writes the result back. Because XOR-ing the same bit twice restores the
+original value, <code>reg ^= mask</code> is self-inverse — calling the same toggle
+function twice in a row leaves the pin exactly where it started, which
+is exactly the behavior wanted for something like blinking an LED once
+per timer tick.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Toggling an LED pin via a read-modify-write</h3>
+            <pre><code class="rust">const GPIOA_ODR: *mut u32 = 0x4001_080C as *mut u32; // GPIOA output data register
+const LED_PIN: u32 = 1 &lt;&lt; 5;
+
+fn toggle_led() {
+    unsafe {
+        let mut odr = core::ptr::read_volatile(GPIOA_ODR);
+        odr ^= LED_PIN; // &lt;- flips only the LED bit, in place
+        core::ptr::write_volatile(GPIOA_ODR, odr);
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

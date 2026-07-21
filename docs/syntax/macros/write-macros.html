@@ -1060,13 +1060,67 @@ code, unlike the <code>fmt::Write</code>-into-a-<code>String</code> case above w
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p><code>write!</code>/<code>writeln!</code> split cleanly along the same two-trait line the
+classic Explanation lays out, and that split is exactly what decides
+embedded support. A <code>core::fmt::Write</code> destination — <code>heapless::String</code>,
+a hand-rolled fixed <code>[u8; N]</code> buffer wrapper, or a UART/USART peripheral
+that implements the trait directly — needs no allocator at all, because
+<code>core::fmt::Write</code> (unlike <code>std::io::Write</code>) is defined in <code>core</code>, with
+no OS or heap assumption baked in. That makes writing into one of these
+the standard, idiomatic replacement for <code>println!</code>/<code>format!</code> in
+<code>#![no_std]</code> code generally: <code>format!</code> needs <code>alloc</code> plus a configured
+<code>#[global_allocator]</code> just to produce its returned <code>String</code>, while
+<code>write!</code>ing the same formatted text into a <code>heapless::String</code> or
+straight out over UART needs neither — the formatting machinery itself
+(the <code>{}</code>/<code>{:?}</code>/<code>{:.2}</code> grammar) is identical in both cases, only the
+destination differs. A <code>std::io::Write</code> destination (a file, a socket)
+has no support under <code>#![no_std]</code> at all, for the same reason <code>println!</code>
+doesn't: <code>std::io</code> itself assumes a hosted OS. The two destinations look
+like the same macro call at the source level; which trait the
+destination type implements is what decides which of these applies.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Writing formatted text into a heapless::String (no heap)</h3>
+            <pre><code class="rust">use core::fmt::Write as _;
+use heapless::String;
+
+fn build_status_line(errors: u8, uptime_s: u32) -&gt; String&lt;64&gt; { // &lt;- fixed 64-byte capacity, no allocator
+    let mut line: String&lt;64&gt; = String::new();
+    write!(line, "errors={errors} uptime={uptime_s}s").unwrap(); // &lt;- core::fmt::Write target: fails only if capacity is exceeded
+    line
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Writing formatted text directly to a UART peripheral</h3>
+            <p>A UART/USART HAL type implementing <code>core::fmt::Write</code> lets <code>write!</code> send
+formatted diagnostic text straight over the wire, with no intermediate
+<code>String</code> — and no heap — involved at all.</p>
+<pre><code class="rust">use core::fmt::Write as _;
+
+struct Uart; // stand-in for a HAL's concrete UART type
+
+impl core::fmt::Write for Uart {
+    fn write_str(&amp;mut self, s: &amp;str) -&gt; core::fmt::Result {
+        for byte in s.bytes() {
+            // ... block until the transmit register is free, then write `byte`
+        }
+        Ok(())
+    }
+}
+
+fn report_reading(uart: &amp;mut Uart, sensor_id: u32, value: f32) {
+    writeln!(uart, "sensor {sensor_id}: {value:.2}").unwrap(); // &lt;- formatted text goes straight out over the wire, no String built at all
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

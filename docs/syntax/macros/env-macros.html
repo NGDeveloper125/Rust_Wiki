@@ -1044,13 +1044,49 @@ that has a sensible fallback.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Both macros are pure compile-time constructs with no dependency on <code>std</code>
+or an OS, so they work identically in embedded builds. <code>CARGO_PKG_*</code>
+variables in particular are just as common in firmware as in hosted
+code, arguably more valuable there: without an OS-level package manager
+or <code>--version</code> flag, baking <code>env!("CARGO_PKG_VERSION")</code> into the binary —
+often reported back over a debug UART or RTT channel at boot — is
+frequently the only way to identify which firmware image is actually
+running on a device out in the field.</p>
+<p>What's genuinely common in firmware specifically is using <code>env!</code> for
+build-time paths that a <code>build.rs</code> script computed and exported, most
+often <code>env!("OUT_DIR")</code> pointing at a file the build script generated —
+a chip-specific memory layout, or (see
+<a href="include-macros.md"><code>include! / include_str! / include_bytes!</code></a>) a whole
+block of generated register-definition source that gets spliced in with
+<code>include!</code> rather than checked into the repository by hand.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Reporting firmware version and build provenance at boot</h3>
+            <pre><code class="rust">const FW_VERSION: &amp;str = env!("CARGO_PKG_VERSION");      // &lt;- baked in at compile time from Cargo.toml
+const GIT_HASH: Option&lt;&amp;str&gt; = option_env!("GIT_HASH");  // &lt;- None unless the build pipeline set this env var
+
+fn report_boot_info() {
+    match GIT_HASH {
+        Some(hash) =&gt; defmt::info!("firmware {} ({})", FW_VERSION, hash),
+        None =&gt; defmt::info!("firmware {} (dev build)", FW_VERSION),
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Locating a build-script-generated file by path</h3>
+            <pre><code class="rust">// A build.rs script writes a generated register-address table under OUT_DIR;
+// the crate locates it at compile time via env!, then splices it in with include!.
+include!(concat!(env!("OUT_DIR"), "/generated_registers.rs")); // &lt;- env! resolved at compile time, not at flash time
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

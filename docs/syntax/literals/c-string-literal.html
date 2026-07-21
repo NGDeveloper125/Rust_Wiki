@@ -1011,13 +1011,37 @@ Note <code>c"..."</code> literals require Rust 1.77+ and edition 2021 or later.<
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>c"..."</code> is unaffected by <code>#![no_std]</code> — <code>CStr</code> lives in <code>core::ffi</code>
+(re-exported as <code>std::ffi::CStr</code> on hosted targets), so the exact same
+literal and the exact same type are available on a bare-metal target.
+This is precisely where a <code>c"..."</code> literal earns its keep in embedded
+work: wrapping a vendor's C HAL or SDK — an ST HAL, an ESP-IDF header, a
+vendor RTOS's C API — means calling functions that expect a
+<code>*const c_char</code>, and a compile-time <code>CStr</code> constant avoids ever needing
+an allocator (<code>CString::new(...)</code>) just to hand a fixed name or
+identifier string across that FFI boundary.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Naming a peripheral for a vendor C HAL call</h3>
+            <pre><code class="rust">use core::ffi::{c_char, CStr};
+
+extern "C" {
+    fn hal_register_peripheral(name: *const c_char) -&gt; i32;
+}
+
+const PERIPHERAL_NAME: &amp;CStr = c"uart0"; // &lt;- c-string literal: nul-terminated, ready for the C HAL's `*const c_char` parameter
+
+fn register_uart() -&gt; i32 {
+    unsafe { hal_register_peripheral(PERIPHERAL_NAME.as_ptr()) }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

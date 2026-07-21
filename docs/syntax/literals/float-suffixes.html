@@ -1001,13 +1001,44 @@ overrides.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The <code>f32</code>/<code>f64</code> suffix pins a literal's type identically under
+<code>#![no_std]</code> — a lexical, compile-time rule with no dependency on <code>std</code>.
+It matters more in embedded code than the choice usually does on a
+desktop, though, because of the FPU asymmetry described on
+<a href="float-literal.md">Floating-point literal</a>: most Cortex-M parts that have
+a hardware FPU at all only accelerate <code>f32</code>, not <code>f64</code>. Since <code>f64</code> is
+the default whenever nothing else pins the type, an unsuffixed literal
+in generic numeric code can silently end up on the slow, software-emulated
+<code>f64</code> path even on hardware that could have handled <code>f32</code> natively —
+explicitly suffixing the literal is what actually secures the hardware
+acceleration, rather than leaving it to inference.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Pinning ADC scaling math to f32 for hardware FPU acceleration</h3>
+            <pre><code class="rust">fn to_millivolts(raw: u16, vref: f32) -&gt; f32 {
+    (raw as f32 / 4095.0f32) * vref // &lt;- `f32` suffix keeps this on the Cortex-M4F's hardware FPU path, not software f64
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Pinning a generic filter's type parameter to f32</h3>
+            <pre><code class="rust">fn low_pass&lt;T&gt;(prev: T, sample: T, alpha: T) -&gt; T
+where
+    T: core::ops::Add&lt;Output = T&gt; + core::ops::Sub&lt;Output = T&gt; + core::ops::Mul&lt;Output = T&gt; + Copy,
+{
+    prev + (sample - prev) * alpha
+}
+
+let filtered = low_pass(0.0f32, 3.3f32, 0.1f32); // &lt;- `f32` suffixes: keep T = f32 instead of defaulting the generic to f64
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

@@ -1005,13 +1005,35 @@ rest of the family.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>&amp;=</code> is the read-modify-write idiom for clearing one or more bits in a
+register while leaving every other bit alone: AND the current value
+against the bitwise complement of the bits to clear. This is one of
+the most routine operations in embedded firmware — disabling a single
+interrupt source in an enable register, or clearing one configuration
+bit in a peripheral's control register — anywhere the hardware doesn't
+offer a dedicated "clear" register and software has to preserve the
+bits it isn't touching by hand.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Disabling one interrupt source in an interrupt-enable register</h3>
+            <pre><code class="rust">const TIMER_IER: *mut u32 = 0x4000_0C00 as *mut u32; // timer interrupt-enable register
+const UPDATE_IE: u32 = 1 &lt;&lt; 0; // update-event interrupt enable bit
+
+fn disable_update_interrupt() {
+    unsafe {
+        let mut ier = core::ptr::read_volatile(TIMER_IER);
+        ier &amp;= !UPDATE_IE; // &lt;- clears only the update-interrupt bit, leaves the rest as they were
+        core::ptr::write_volatile(TIMER_IER, ier);
+    }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

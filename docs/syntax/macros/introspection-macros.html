@@ -1061,13 +1061,46 @@ ecosystem build their own logging macros on top of, per the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>All six remain pure compile-time constructs under <code>#![no_std]</code>, with no
+dependency on <code>std</code> or an OS — nothing here changes on a
+microcontroller. What does change is how the information they produce
+typically gets used: a hosted panic can rely on the OS/runtime to print
+a backtrace, but bare-metal firmware has no backtrace machinery at all,
+so <code>file!()</code>/<code>line!()</code> (and often <code>module_path!()</code>) become the <em>only</em>
+way a fault report names where in the source it happened. This is
+exactly the role they play wired into <code>defmt</code>'s logging macros or a
+custom diagnostic macro, reported over RTT to an attached debugger
+instead of printed to a terminal.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Reporting a fault's source location with no backtrace available</h3>
+            <pre><code class="rust">macro_rules! trace_fault {
+    ($msg:expr) =&gt; {
+        defmt::error!("[{}:{}] {}", file!(), line!(), $msg); // &lt;- file!()/line!() name the call site, no OS backtrace involved
+    };
+}
+
+fn check_watchdog(expired: bool) {
+    if expired {
+        trace_fault!("watchdog expired");
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Tagging log output with module_path!</h3>
+            <pre><code class="rust">fn log_sensor_event(message: &amp;str) {
+    defmt::info!("[{}] {}", module_path!(), message); // &lt;- e.g. "drivers::temperature_sensor", resolved at compile time
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

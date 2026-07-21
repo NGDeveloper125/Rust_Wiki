@@ -1023,13 +1023,45 @@ rest of the parser working only with data it has already vetted.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A byte string literal is exactly as fully supported under <code>#![no_std]</code> as
+under <code>std</code> — <code>b"..."</code> still produces a <code>'static &amp;[u8; N]</code> baked into the
+binary's rodata section at compile time, with no allocator involved at
+any point. That makes it the natural way to write a fixed protocol frame
+or firmware header in embedded code: a UART command frame, a sensor's
+request/acknowledge byte sequence, or a bootloader's magic-number header
+check are all naturally byte data rather than valid UTF-8 text, and
+<code>b"..."</code> lets that data be written as readable ASCII-with-escapes instead
+of a bare <code>[u8; N]</code> array of numeric literals. The same ASCII-plus-<code>\xHH</code>-
+escape rule from the classic explanation carries over unchanged — a
+non-ASCII framing byte like <code>0xAA</code> is written <code>\xAA</code> exactly as it would
+be on a hosted target.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Framing a UART command</h3>
+            <pre><code class="rust">const REQUEST_TEMPERATURE: &amp;[u8; 4] = b"\x02T?\x03"; // &lt;- byte string literal: STX, command, ETX framing bytes
+
+fn send_command(uart: &amp;mut impl embedded_hal::serial::Write&lt;u8&gt;, cmd: &amp;[u8]) {
+    for &amp;byte in cmd {
+        nb::block!(uart.write(byte)).ok();
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Validating a firmware image header before boot</h3>
+            <pre><code class="rust">fn is_valid_firmware(image: &amp;[u8]) -&gt; bool {
+    const FIRMWARE_MAGIC: &amp;[u8; 4] = b"FWv2"; // &lt;- byte string literal: bootloader magic-number header
+    image.starts_with(FIRMWARE_MAGIC)
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

@@ -59,7 +59,30 @@ during review than in one unbroken run — the
 permits `_` anywhere inside a numeric literal specifically to support
 this.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Purely cosmetic at compile time — no `std` dependency,
-no runtime effect whatsoever.
+The digit separator is exactly as purely cosmetic under `#![no_std]` as
+anywhere else — it's stripped by the lexer before the value even exists,
+so it has no effect on the compiled register write, mask, or comparison
+it appears in. Where it's genuinely more valuable in embedded code than
+in typical application code is grouping the hex and binary literals used
+for register addresses and bitmasks: `0x4001_0800` is far faster to
+proofread against a reference manual than `0x40010800`, and a mask like
+`0b1010_0000` shows its set bits far more clearly than `0b10100000`.
+Since embedded code writes far more of these long hex/binary constants
+than the average hosted program does, the separator pulls more of its
+weight there.
+
+## Usage examples (Embedded)
+
+### Grouping a peripheral base address into bytes
+
+```
+const GPIOA_BASE: u32 = 0x4001_0800; // <- digit separator groups the address into byte-pairs, matching the reference manual's notation
+```
+
+### Grouping a multi-bit register mask into nibbles
+
+```
+const UART_BAUD_MASK: u16 = 0b0000_1111_0000_0000; // <- digit separator groups the mask into nibbles, matching the register's bitfield layout
+```

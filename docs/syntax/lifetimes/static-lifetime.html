@@ -1088,13 +1088,99 @@ annotation to write.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>'static</code> means exactly what it means on a hosted target — a lifetime
+built into the language, valid for the whole remainder of the running
+program, in both of its positions (reference type and bound). What's
+different in embedded code isn't the meaning; it's how central and
+unavoidable it becomes. On a hosted target, most <code>'static</code> bounds trace
+back to one thing: handing data to something that outlives the current
+call stack, most visibly <code>thread::spawn</code>. Embedded code runs into that
+same problem far more often, and in a sharper form, because interrupts
+don't have anything resembling a caller's stack frame to bound them: an
+ISR can fire at essentially any point after the interrupt table is
+installed, completely independent of whatever function happens to be
+running in <code>main</code> at that instant. Any data an interrupt handler needs
+to touch — a shared counter, a ring buffer, a peripheral handle —
+therefore can't be a <code>main</code>-local variable borrowed by reference; it has
+to be <code>'static</code>, almost always as a <code>static</code>/<code>static mut</code> item guarded
+by a <code>Mutex&lt;Cell&lt;_&gt;&gt;</code>/<code>RefCell&lt;_&gt;</code> and a critical section, so both
+<code>main</code> and the handler can reach the same data without either side
+outliving the other in a way the compiler can verify.</p>
+<p>The same shape recurs in a handful of other embedded-specific places: a
+<code>#[global_allocator]</code> is declared as a <code>static</code>, because the allocator
+has to be reachable for the entire life of the program, not scoped to
+whichever function first touches the heap; <code>heapless</code>/RTIC-style shared
+resources are frequently split from a <code>static mut</code> queue or buffer
+specifically because the producer/consumer halves need to be usable
+from both an interrupt context and <code>main</code> without either one's stack
+frame bounding how long the split halves are allowed to live; and DMA
+transfers, which keep writing into a buffer autonomously after the
+function that started them has already returned, need that buffer to
+outlive the call that set it up — which a <code>'static</code> buffer guarantees
+and a stack-local one can't. None of this changes what <code>'static</code>
+<em>means</em> — it's the same "no non-<code>'static</code> borrows inside," same "valid
+for the rest of the program" as on a hosted target — embedded code just
+runs into the <em>reason</em> for that bound far more routinely than most
+hosted code does.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Sharing a counter between `main` and an interrupt handler</h3>
+            <pre><code class="rust">use core::cell::Cell;
+use critical_section::Mutex;
+use stm32f4xx_hal::pac::interrupt;
+
+static TICKS: Mutex&lt;Cell&lt;u32&gt;&gt; = Mutex::new(Cell::new(0));
+// &lt;- `'static` storage: TIM2 can fire at any point after main starts, so this can't live on main's stack
+
+#[interrupt]
+fn TIM2() {
+    critical_section::with(|cs| {
+        let cell = TICKS.borrow(cs);
+        cell.set(cell.get() + 1);
+    });
+}
+
+fn ticks() -&gt; u32 {
+    critical_section::with(|cs| TICKS.borrow(cs).get())
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Declaring a global allocator</h3>
+            <pre><code class="rust">use embedded_alloc::Heap;
+
+#[global_allocator]
+static HEAP: Heap = Heap::empty(); // &lt;- must be `'static`: the allocator has to be reachable for the program's whole life
+
+fn init_heap() {
+    use core::mem::MaybeUninit;
+    const HEAP_SIZE: usize = 1024;
+    static mut HEAP_MEM: [MaybeUninit&lt;u8&gt;; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
+    unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Splitting a heapless queue into interrupt-safe producer/consumer halves</h3>
+            <pre><code class="rust">use heapless::spsc::{Consumer, Producer, Queue};
+
+static mut READINGS: Queue&lt;u16, 8&gt; = Queue::new();
+
+fn split_queue() -&gt; (Producer&lt;'static, u16, 8&gt;, Consumer&lt;'static, u16, 8&gt;) {
+    // &lt;- `split` requires `&amp;'static mut self`: the producer/consumer halves must outlive
+    //    any interrupt that later uses them, not just this function's own call
+    unsafe { READINGS.split() }
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

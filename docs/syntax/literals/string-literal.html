@@ -1051,13 +1051,49 @@ treats as basic error-message hygiene.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A <code>"..."</code> literal needs nothing from <code>alloc</code>, only from <code>core</code> — it's
+<code>'static</code> text already sitting in the binary's rodata section at boot,
+not data that gets constructed or copied anywhere at runtime. That's
+worth stating plainly because it cuts against a common misconception:
+<code>#![no_std]</code> does not mean "no strings," it means no <code>String</code>/heap
+allocation without opting in. A <code>&amp;str</code> literal used for a log message,
+an error string, or a fixed label works exactly the same way, with the
+exact same zero-cost <code>'static</code> guarantee, on a target with no heap
+configured at all. Where an <em>owned</em>, growable string is genuinely
+needed, <code>alloc::string::String</code> (behind the <code>alloc</code> crate) or a
+fixed-capacity <code>heapless::String</code> are the embedded substitutes — but the
+literal itself never requires either.</p>
+
       </section>
 
       <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
-        
+        <div class="card">
+            <h3 class="scenario-title">Logging a startup message with defmt, no heap involved</h3>
+            <pre><code class="rust">#![no_std]
+
+use defmt::info;
+
+fn log_startup() {
+    info!("firmware started"); // &lt;- string literal: `&amp;'static str` baked into rodata, no heap involved
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Formatting a status line into a heapless::String</h3>
+            <pre><code class="rust">use core::fmt::Write;
+use heapless::String;
+
+fn status_message(reading: f32) -&gt; String&lt;32&gt; {
+    let mut s: String&lt;32&gt; = String::new();
+    let _ = write!(s, "temp: {reading:.1}C"); // &lt;- string literal: the format template itself, still needs no heap
+    s
+}
+</code></pre>
+
+          </div>
         </div>
       </section>
       </div>

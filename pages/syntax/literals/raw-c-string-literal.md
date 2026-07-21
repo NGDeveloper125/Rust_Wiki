@@ -51,7 +51,33 @@ terminator — see [C string literal](c-string-literal.md) for the
 nul-termination behavior this form inherits unchanged. Like `c"..."`,
 `cr"..."` requires Rust 1.77+ and edition 2021 or later.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — same `core::ffi::CStr` basis as
-[C string literal](c-string-literal.md), no `std` dependency.
+`cr"..."` inherits both halves unchanged under `#![no_std]`: the
+`core::ffi::CStr` result from a C-string literal, and the raw,
+no-escape-processing text from a raw string. That combination is
+genuinely useful in embedded FFI work whenever the fixed, nul-terminated
+string handed to a vendor C HAL or SDK function itself contains
+backslashes — a Windows-style path baked into a host-side
+firmware-flashing tool that calls into a vendor's C flashing library, or
+a fixed pattern string passed to a C library's matching function —
+without needing to double every backslash on top of remembering the nul
+terminator.
+
+## Usage examples (Embedded)
+
+### Passing a firmware image path to a vendor C flashing SDK
+
+```
+use core::ffi::{c_char, CStr};
+
+extern "C" {
+    fn vendor_flash_load_image(path: *const c_char) -> i32;
+}
+
+const IMAGE_PATH: &CStr = cr"C:\firmware\images\app.bin"; // <- `cr"..."`: raw (no escapes) + nul-terminated, ready for FFI
+
+fn flash_image() -> i32 {
+    unsafe { vendor_flash_load_image(IMAGE_PATH.as_ptr()) }
+}
+```
