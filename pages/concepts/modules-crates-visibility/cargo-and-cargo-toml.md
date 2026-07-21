@@ -89,12 +89,90 @@ the API Guidelines' checklist for
 a crate's `Cargo.toml` is as much of its public documentation as its
 doc comments.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Cargo builds identically regardless of target — there
-is no separate "embedded Cargo." The only embedded-specific detail is
-specifying a target explicitly, e.g. `cargo build --target
-thumbv7em-none-eabihf`, often paired with a `.cargo/config.toml` setting
-a default target and runner; a `#![no_std]` crate's `Cargo.toml` looks
-like any other, typically with `default-features = false` on
-dependencies to opt out of their `std`-dependent code paths.
+Cargo's own job — reading a manifest, resolving dependencies, invoking
+`rustc` — doesn't change for an embedded target; there is no separate
+"embedded Cargo." What's genuinely different is the layer of tooling and
+configuration embedded projects add around that same Cargo. A
+`.cargo/config.toml` typically pins a default `--target` (a target
+triple like `thumbv7em-none-eabihf` for a Cortex-M chip) so `cargo
+build`/`cargo run` cross-compile without repeating `--target` on every
+invocation, and it can also set a `runner` — a command Cargo hands the
+built binary to, such as `probe-rs run` to flash and run it on a physical
+debug probe, or `qemu-system-arm` to run it in emulation — so `cargo run`
+does something meaningful even though the host machine can't execute
+Cortex-M machine code directly. `Cargo.toml` itself also carries more
+weight on an embedded target: `[profile.release]` settings that are
+merely nice-to-have on a desktop binary — `panic = "abort"` to drop
+unwinding machinery entirely, `lto = true` for cross-crate inlining,
+`opt-level = "s"` to optimize for code size instead of speed — routinely
+decide whether a firmware image fits in the target's flash at all.
+
+## Basic usage example (Embedded)
+
+```
+# .cargo/config.toml
+[build]
+target = "thumbv7em-none-eabihf"   # <- default cross-compilation target triple
+
+[target.thumbv7em-none-eabihf]
+runner = "probe-rs run --chip STM32F411CEUx"   # <- flashes and runs the built binary on real hardware
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Targeting a microcontroller from Cargo.toml
+
+A firmware crate needs every `cargo build`/`cargo run` to cross-compile
+for its Cortex-M target and, on `cargo run`, actually get onto the
+board, without every teammate typing `--target` and a flashing command
+by hand.
+
+```
+# .cargo/config.toml
+[build]
+target = "thumbv7em-none-eabihf"        # <- fixes the target triple for this crate
+
+[target.thumbv7em-none-eabihf]
+runner = "probe-rs run --chip STM32F411CEUx"  # <- `cargo run` flashes + runs via a debug probe
+
+# Cargo.toml
+[package]
+name = "blinky"
+edition = "2024"
+
+[dependencies]
+cortex-m-rt = "0.7"
+panic-halt = "0.2"
+```
+
+**Why this way:** committing the target and runner to
+`.cargo/config.toml` (checked into the repo) rather than each
+developer's shell profile means `cargo run` reproduces the same
+flash-and-run behavior on every machine, the setup the
+[probe-rs documentation](https://probe.rs/docs/tools/cargo-embed/)
+itself recommends for a firmware crate.
+
+### Scenario: Shrinking a release build for constrained flash
+
+A Cortex-M0's flash is measured in tens of kilobytes, so a
+debug-profile-sized binary — with unwinding tables and speed-optimized
+code — routinely doesn't fit; the release profile has to be tuned for
+size, not just turned on.
+
+```
+# Cargo.toml
+[profile.release]
+panic = "abort"     # <- drops unwinding machinery entirely; panics just halt
+lto = true           # <- cross-crate inlining shrinks the final image
+opt-level = "s"      # <- optimize for size rather than speed
+codegen-units = 1    # <- trades build time for better size optimization
+```
+
+**Why this way:** `panic = "abort"` alone commonly removes several
+kilobytes of unwinding tables that a `#![no_std]` binary has no use for,
+and the
+[Embedded Rust Book's optimization guidance](https://docs.rust-embedded.org/book/)
+treats `opt-level = "s"`/`"z"` plus LTO as the standard first move when a
+release build doesn't fit in flash.

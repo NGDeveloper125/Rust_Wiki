@@ -97,14 +97,64 @@ one crate to cover unrelated concerns, which is exactly the
 idiom argues for — a workspace is what makes that split practical without
 publishing anything or losing single-repository convenience.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A workspace is purely a Cargo/build-system construct
-with no runtime effect, so it works the same when one or more members
-target embedded hardware — for example, a workspace containing a
-`no_std` firmware crate alongside a `std`-based logic crate that both the
-firmware and a desktop simulator depend on. The one embedded-specific
-detail is that building a single member for a target still needs `-p`
-and `--target` together, e.g. `cargo build --target thumbv7em-none-eabihf
--p firmware`, since other workspace members (like a host-side simulator)
-may not build for that target at all.
+The workspace mechanism itself is unchanged; the concrete, common
+embedded pattern is splitting the PAC, the HAL, and one or more
+board-specific/application crates into workspace members so they're
+developed, versioned, and locked together in one repository — a
+`svd2rust`-generated PAC changes rarely, the HAL depends on it by path,
+and an application crate (or several, one per board variant) depends on
+the HAL, all resolved against one shared `Cargo.lock`. Beyond that one
+point — the PAC/HAL/application split itself — there isn't much else
+genuinely different about workspaces for embedded projects: `-p`
+targeting, path dependencies, and the shared-lockfile behavior all work
+exactly as described above for any workspace.
+
+## Basic usage example (Embedded)
+
+```
+# Cargo.toml (workspace root)
+[workspace]
+members = [
+    "pac",     # <- svd2rust-generated peripheral access crate
+    "hal",     # <- safe wrapper over the PAC
+    "app",     # <- firmware application crate
+]
+
+# hal/Cargo.toml
+[dependencies]
+pac = { path = "../pac" }   # <- workspace member depended on by local path
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Layering a firmware workspace
+
+A team building firmware for one microcontroller family wants the PAC,
+the HAL built on it, and the application logic developed and versioned
+together in one repository, without publishing the PAC or HAL to
+crates.io just to let the application depend on them.
+
+```
+# Cargo.toml (workspace root)
+[workspace]
+resolver = "2"
+members = [
+    "pac",      # <- register access, regenerated from the chip's SVD file when it changes
+    "hal",      # <- safe driver API built on the PAC
+    "app",      # <- application firmware
+]
+
+# app/Cargo.toml
+[dependencies]
+hal = { path = "../hal" }   # <- depends on the HAL by path, not a published version
+```
+
+**Why this way:** a shared `Cargo.lock` across `pac`, `hal`, and `app`
+guarantees the application always builds against the exact HAL and PAC
+versions it was developed against, and path dependencies mean the
+PAC/HAL don't need an independent crates.io release just to support one
+in-repo application — the same "keep it in one repository until
+publishing is actually needed" convenience the classic Explanation
+describes generally, applied here to a firmware crate stack.
