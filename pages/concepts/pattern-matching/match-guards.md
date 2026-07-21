@@ -115,10 +115,91 @@ the guard — matching the
 [Rust Book's](https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html#extra-conditionals-with-match-guards)
 description of guards as the place for logic a pattern can't express.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Match guards are core-language and allocator-free —
-the generated code is the same comparison a hand-written `if` chain
-would produce. They're a common way to classify a sensor reading or
-register value into a range-based category (idle/warning/critical) in
-one `match` rather than a separate `if`/`else if` chain layered on top.
+Match guards work identically under `#![no_std]` — same core-language
+mechanism, same generated comparison code, no allocator or runtime
+involvement. They're the natural way to classify a raw sensor or
+register reading into a range-based category, because the categories
+are numeric bands over a single scalar rather than distinct shapes a
+plain pattern could tell apart on its own: a guard like `n if n >
+THRESHOLD` states "in this band" directly, where the pattern alone only
+sees "some integer." The same caveat carries over unchanged too: guards
+sit outside exhaustiveness checking, so a set of threshold guards over a
+sensor's full reading range still needs a final catch-all arm, and it's
+on the firmware author to confirm that catch-all is actually correct
+rather than a silently-missed band of readings.
+
+## Basic usage example (Embedded)
+
+```
+fn classify(reading_mv: i32) -> &'static str {
+    match reading_mv {
+        n if n > 3000 => "over-voltage", // <- guard: same pattern shape (any i32), extra condition on its value
+        n if n < 500 => "under-voltage",
+        _ => "nominal",
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Branching on data (pattern matching)
+
+A temperature sensor's raw ADC reading needs to be classified into
+idle/warning/critical bands to decide whether to throttle a heater;
+every arm matches the same shape (an `i32`), so guards are what actually
+distinguish the bands.
+
+```
+fn thermal_state(adc_counts: i32) -> &'static str {
+    match adc_counts {
+        n if n > 3800 => "critical", // <- guard tests the band, pattern alone can't
+        n if n > 3000 => "warning",
+        _ => "nominal",
+    }
+}
+
+let state = thermal_state(3550);
+```
+
+**Why this way:** a bare `i32` pattern can't express "above this
+threshold," so a guard is the correct tool rather than inventing enum
+variants for bands that don't otherwise exist in the hardware's own
+model — the
+[Rust Reference on match guards](https://doc.rust-lang.org/reference/expressions/match-expr.html#match-guards)
+documents guards as arbitrary boolean expressions evaluated after the
+pattern matches, which is exactly what a threshold check is.
+
+### Scenario: Validating input
+
+A motor driver only allows a high-current mode request when the
+requested current exceeds a threshold and a hardware safety interlock is
+confirmed closed; the two fields together decide whether the arm
+applies, which neither field's pattern alone can express.
+
+```
+struct DriveRequest {
+    requested_ma: u16,
+    interlock_closed: bool,
+}
+
+fn mode_for(request: &DriveRequest) -> &'static str {
+    match request {
+        DriveRequest { requested_ma, interlock_closed }
+            if *requested_ma > 2000 && *interlock_closed => "high-current", // <- guard checks both fields together
+        DriveRequest { interlock_closed, .. } if !*interlock_closed => "locked-out",
+        _ => "standard",
+    }
+}
+```
+
+**Why this way:** the high-current mode is genuinely gated on both
+fields together, not on either field's shape alone, so a guard keeps
+that safety condition readable as a single condition rather than
+encoding "current above X AND interlock closed" as extra enum variants
+that would only exist to dodge the guard — matching the
+[Rust Book's](https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html#extra-conditionals-with-match-guards)
+description of guards as the place for logic a pattern can't express,
+doubly relevant when the condition is a safety interlock rather than a
+UI nicety.

@@ -137,10 +137,97 @@ here" reasoning the
 [Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
 gives for preferring `if let` over a full `match`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both forms are core-language, allocator-free, and
-compile to the same code a hand-written `match` would. `while let` is a
-natural fit for polling a peripheral's status register — `while let
-Some(byte) = uart.try_read() { ... }` — draining whatever is available
-without a separately tracked count.
+`if let` and `while let` are core-language and allocator-free, compiling
+to the same code a hand-written `match` would — nothing about the forms
+themselves changes under `#![no_std]`. What does change is how often
+they're reached for: embedded main loops spend a lot of their time
+polling and draining, and both forms exist to make exactly that
+idiomatic. `if let Some(byte) = uart.read()` checks a peripheral for one
+newly available byte and does nothing when there isn't one, without a
+`None => {}` arm repeated on every single loop tick. `while let
+Some(item) = ring_buffer.pop()` drains a fixed-capacity queue — typically
+filled from an interrupt handler — down to empty in a tight loop, with
+the pattern failing to match doubling as the loop's own exit condition
+instead of a separately tracked count.
+
+## Basic usage example (Embedded)
+
+```
+use heapless::Deque;
+
+struct Uart;
+
+impl Uart {
+    fn read(&mut self) -> Option<u8> {
+        None // no byte available yet
+    }
+}
+
+let mut uart = Uart;
+if let Some(byte) = uart.read() { // <- runs only when a byte actually arrived
+    let _ = byte;
+}
+
+let mut ring_buffer: Deque<u8, 8> = Deque::new();
+ring_buffer.push_back(0xA5).ok();
+
+while let Some(item) = ring_buffer.pop_front() { // <- drains the buffer until it reports empty
+    let _ = item;
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Branching on data (pattern matching)
+
+A main loop polls a UART peripheral once per iteration for a newly
+arrived byte; only the "a byte arrived" case has anything to do, so
+`if let` replaces a `match` that would otherwise carry an empty `None`
+arm on every single iteration.
+
+```
+struct Uart;
+
+impl Uart {
+    fn read(&mut self) -> Option<u8> {
+        None // placeholder: no byte available this tick
+    }
+}
+
+fn poll_uart(uart: &mut Uart) {
+    if let Some(byte) = uart.read() { // <- only the Some case has anything to do, every loop tick
+        let _ = byte; // hand off to the protocol parser
+    }
+}
+```
+
+**Why this way:** a bare register poll returns "nothing yet" far more
+often than "a byte arrived," so writing out a `None => {}` arm on every
+iteration would be pure noise; `if let` says directly that only one
+shape matters here, the same reasoning the
+[Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+gives for preferring it over a full `match`.
+
+### Scenario: Working with collections
+
+An interrupt handler pushes incoming samples into a fixed-capacity ring
+buffer; the main loop drains it completely each pass with `while let`,
+so the loop's own exit condition is the buffer reporting empty rather
+than a separately tracked count.
+
+```
+use heapless::Deque;
+
+fn drain(buffer: &mut Deque<u16, 32>) {
+    while let Some(sample) = buffer.pop_front() { // <- loops until pop_front() returns None
+        let _ = sample; // hand off to the processing pipeline
+    }
+}
+```
+
+**Why this way:** the buffer running dry is exactly the signal that this
+pass is done, so `while let` doubles as both extraction and the loop's
+termination condition — the same "the pattern failing is the exit"
+idiom the classic page uses for draining an `mpsc::Receiver`.
