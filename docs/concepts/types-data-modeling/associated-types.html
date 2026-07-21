@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An associated type is a type placeholder attached to a trait, filled in
 by each specific implementation rather than chosen by the caller — for
@@ -966,7 +967,7 @@ doesn't fit the intent.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">trait Container {
     type Item;                 // &lt;- associated type: each implementer fills this in
@@ -983,7 +984,7 @@ impl Container for Numbers {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1025,20 +1026,141 @@ one type convert from many different <code>T</code>s.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> A compile-time mechanism — no <code>std</code>/allocator
-dependency. The <code>embedded-hal</code> ecosystem's traits make heavy use of
-associated types (e.g. an error type associated with a given peripheral
-trait) to stay generic across many vendors' hardware.</p>
+        <p>Associated types are a pure compile-time mechanism with no <code>std</code> or
+allocator dependency, and the <code>embedded-hal</code> ecosystem leans on them
+specifically to solve a problem generics alone don't: every peripheral
+trait (<code>I2c</code>, <code>SpiBus</code>, <code>OutputPin</code>, …) declares an associated
+<code>type Error;</code> rather than fixing one concrete error type, because each
+vendor's HAL implementation has its own genuinely different error
+representation — one MCU's I2C peripheral might fail with a bus-specific
+NACK/arbitration-loss enum, another's with a different set of cases
+entirely. There is exactly one right <code>Error</code> type per concrete
+implementation, the same "one true answer per implementer" relationship
+the classic Explanation describes for <code>Iterator::Item</code> — which is why
+this is an associated type on the trait rather than a generic parameter
+a caller would otherwise have to plumb through every generic driver
+function that touches the bus.</p>
+<p>This is what lets a driver crate written generically over
+<code>BUS: embedded_hal::i2c::I2c</code> (see
+<a href="generics.md">Generics' embedded section</a> for that pattern in full)
+propagate whatever error type the concrete HAL underneath actually
+produces, via an ordinary <code>?</code>, without <code>embedded-hal</code> needing to invent
+one universal error enum that would have to somehow cover every vendor's
+hardware-specific failure modes — which isn't really possible, since
+those failure modes genuinely differ by silicon.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">trait I2cBus {
+    type Error; // &lt;- fixed per concrete bus implementation, not chosen by the driver calling it
+
+    fn write(&amp;mut self, addr: u8, bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+struct Stm32I2c;
+enum Stm32I2cError { Nack, ArbitrationLoss }
+
+impl I2cBus for Stm32I2c {
+    type Error = Stm32I2cError; // &lt;- this vendor's HAL fixes its own concrete error type, once
+    fn write(&amp;mut self, _addr: u8, _bytes: &amp;[u8]) -&gt; Result&lt;(), Stm32I2cError&gt; {
+        Ok(())
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p>A sensor driver generic over an I2C bus trait should propagate the bus's
+own associated <code>Error</code> type rather than committing to one error type that
+would have to be shared across every vendor's incompatible HAL.</p>
+<pre><code class="rust">trait I2cBus {
+    type Error;
+    fn write_read(&amp;mut self, addr: u8, out: &amp;[u8], in_: &amp;mut [u8]) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+struct TempSensor&lt;BUS: I2cBus&gt; {
+    bus: BUS,
+    address: u8,
+}
+
+impl&lt;BUS: I2cBus&gt; TempSensor&lt;BUS&gt; {
+    fn read_raw(&amp;mut self) -&gt; Result&lt;u16, BUS::Error&gt; { // &lt;- BUS::Error: whatever this specific HAL defines
+        let mut raw = [0u8; 2];
+        self.bus.write_read(self.address, &amp;[0x00], &amp;mut raw)?;
+        Ok(u16::from_be_bytes(raw))
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>BUS::Error</code> lets <code>TempSensor</code> compile against any
+HAL implementing <code>I2cBus</code>, each with its own genuinely different error
+representation, without the driver crate having to pick — or the
+<code>embedded-hal</code> ecosystem having to standardize — a single error enum
+broad enough to cover every vendor's distinct failure modes.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>A driver function several layers removed from the bus itself should be
+able to propagate a bus error with a plain <code>?</code>, letting the concrete
+error type flow all the way up to whichever caller actually knows how to
+handle that specific HAL's failures.</p>
+<pre><code class="rust">trait I2cBus {
+    type Error;
+    fn write(&amp;mut self, addr: u8, bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+struct Display&lt;BUS: I2cBus&gt; { bus: BUS, address: u8 }
+
+impl&lt;BUS: I2cBus&gt; Display&lt;BUS&gt; {
+    fn set_brightness(&amp;mut self, level: u8) -&gt; Result&lt;(), BUS::Error&gt; {
+        self.bus.write(self.address, &amp;[0x81, level])?; // &lt;- BUS::Error propagates untouched through `?`
+        Ok(())
+    }
+
+    fn clear(&amp;mut self) -&gt; Result&lt;(), BUS::Error&gt; {
+        self.bus.write(self.address, &amp;[0x01])?;
+        Ok(())
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> because <code>Self::Error</code> is fixed per bus implementation
+rather than erased or boxed away, a caller several layers up still gets
+the exact concrete error variant the underlying HAL produced — useful on
+targets where matching on a specific bus fault (NACK vs. timeout vs.
+arbitration loss) drives a different recovery action, information a
+one-size-fits-all boxed error type would have thrown away.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

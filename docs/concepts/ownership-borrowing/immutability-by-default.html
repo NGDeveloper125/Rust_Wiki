@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Every binding introduced with <code>let</code> is immutable unless explicitly marked
 <code>mut</code>. This is the opposite default from most mainstream languages (Java,
@@ -974,7 +975,7 @@ seeing an explicit <code>&amp;mut</code> for it.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let x = 5;
 // x = 6; // would fail to compile: x is immutable by default
@@ -986,7 +987,7 @@ println!("{x} {y}");
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1060,18 +1061,123 @@ value type is the simplest way to guarantee it.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No <code>std</code>/allocator dependency — the immutable-by-default
-rule is enforced identically on every target.</p>
+        <p>The immutable-by-default rule is enforced identically on every target —
+no <code>std</code>/allocator dependency, nothing changes under <code>#![no_std]</code>. Where
+it earns its keep especially in embedded code is around hardware
+configuration values: a peripheral config (baud rate, clock prescaler,
+ADC gain, GPIO mode) is typically built completely and then handed once
+to a HAL <code>init</code>/<code>new</code> call that consumes it and programs the actual
+hardware registers from it. Once that config has been "committed" to
+silicon, there's no code path where mutating the original binding would
+have any further effect — the hardware doesn't watch a config struct for
+changes, it was read once at init time. A binding that's immutable by
+default communicates that directly: if the value can never be reassigned
+after construction, nobody reading the surrounding code needs to search
+for a place it might quietly drift out of sync with the hardware it
+configured. This heads off a real, common bug class in embedded C, where
+a config struct is a mutable global that other code can innocently poke
+after init, silently desyncing software's idea of the configuration from
+what's actually latched into the peripheral's registers — Rust's default
+makes that class of accidental "config drift" a compile error the moment
+a stray assignment to a non-<code>mut</code> binding is attempted.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct UartConfig { baud_rate: u32, stop_bits: u8 }
+
+let config = UartConfig { baud_rate: 115_200, stop_bits: 1 }; // &lt;- no `mut`: never touched again
+// config.baud_rate = 9600; // would fail to compile
+
+let serial = Serial::init(config); // consumes the fully-formed config, programs the hardware once
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Creating a new object</h3>
+            <p>Build the UART config completely before handing it to <code>init</code>, rather than
+starting from a default and mutating fields into place.</p>
+<pre><code class="rust">struct UartConfig { baud_rate: u32, stop_bits: u8, parity: bool }
+
+// AVOID: default-then-mutate needs `mut` and leaves a window where `config`
+// doesn't yet match what will actually be programmed into the peripheral
+// let mut config = UartConfig { baud_rate: 9600, stop_bits: 1, parity: false };
+// config.baud_rate = 115_200;
+// config.parity = true;
+
+// PREFER: build the finished config in one immutable binding
+let config = UartConfig { baud_rate: 115_200, stop_bits: 1, parity: true }; // &lt;- no `mut` needed
+
+let serial = Serial::init(config); // &lt;- consumes the config exactly once; nothing can drift after this
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a config value that's complete the moment it's created
+has no window where its fields don't yet match what's about to be
+programmed into the peripheral — the same reasoning the
+<a href="https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html">Rust Book</a>
+gives for immutable-by-default applies with extra weight here, since the
+"half-built" state it avoids would otherwise be a config that looks valid
+in software but doesn't yet match the hardware it's about to configure.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>The clock-configuration "freeze" pattern common to Cortex-M HAL crates: a
+builder is assembled, then consumed by a call that commits it to hardware
+and hands back an immutable value with no way to mutate it afterward.</p>
+<pre><code class="rust">struct ClockConfig { sysclk_hz: u32, pclk1_hz: u32 }
+
+impl ClockConfig {
+    fn sysclk(mut self, hz: u32) -&gt; Self { self.sysclk_hz = hz; self } // &lt;- returns a new value, not &amp;mut self
+    fn freeze(self) -&gt; Clocks { // &lt;- consumes self: commits the config to the actual clock hardware
+        Clocks { sysclk_hz: self.sysclk_hz, pclk1_hz: self.pclk1_hz }
+    }
+}
+
+struct Clocks { sysclk_hz: u32, pclk1_hz: u32 } // &lt;- no setters: a frozen Clocks can't drift from the hardware it describes
+
+let clocks = ClockConfig { sysclk_hz: 8_000_000, pclk1_hz: 8_000_000 }
+    .sysclk(48_000_000)
+    .freeze(); // &lt;- committed; reconfiguring means building a new ClockConfig, not mutating this one
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> exposing <code>Clocks</code> as an immutable value with no setters
+means every later reader can trust <code>clocks.sysclk_hz</code> actually matches
+what the hardware is running at, instead of having to double-check
+whether some other code path mutated it after <code>freeze()</code> ran — the same
+"predictable, non-surprising API" reasoning the
+<a href="https://rust-lang.github.io/api-guidelines/predictability.html">API Guidelines</a>
+give for returning new values instead of exposing mutable setters, applied
+here to a value a physical clock peripheral has already been configured
+from.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

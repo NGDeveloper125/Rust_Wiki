@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>-=</code> subtracts the right operand from the left in place, overloadable via
 <code>std::ops::SubAssign</code>.</p>
@@ -960,7 +961,7 @@ non-assigning operator).</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -997,17 +998,66 @@ the whole family.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>SubAssign</code> lives in <code>core::ops</code> — no <code>std</code> dependency.</p>
+        <p><code>SubAssign</code> lives in <code>core::ops</code>, so <code>-=</code> behaves identically under
+<code>#![no_std]</code>. The relevant nuance is the same one covered on
+<a href="minus.md"><code>-</code></a>: a release build ships with overflow checks off, so a
+<code>-=</code> that underflows wraps silently rather than panicking, and a device
+already deployed can't be recompiled in debug to catch it. Where the
+right-hand side is a runtime value that isn't guaranteed to stay smaller
+than the left — decrementing a countdown, a remaining-capacity counter, or
+a fuel/charge gauge — it's worth guarding the subtraction (or using
+<code>checked_sub</code>/<code>saturating_sub</code> explicitly) rather than trusting bare <code>-=</code>
+to fail loudly the way a debug build would.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Decrementing a countdown timer without an unchecked underflow</h3>
+            <pre><code class="rust">struct Watchdog {
+    remaining: u16,
+}
+
+impl Watchdog {
+    fn tick(&amp;mut self) -&gt; bool {
+        if self.remaining == 0 {
+            return false; // guard first: `-=` on 0 here would panic (debug) or wrap (release)
+        }
+        self.remaining -= 1; // &lt;- `-=` decrements in place, now safe from underflow
+        true
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Draining a charge counter with a saturating alternative</h3>
+            <pre><code class="rust">struct Battery {
+    milliamp_hours: u32,
+}
+
+impl Battery {
+    fn drain(&amp;mut self, used: u32) {
+        self.milliamp_hours = self.milliamp_hours.saturating_sub(used); // stands in for `-=`, floors at 0 instead of wrapping
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

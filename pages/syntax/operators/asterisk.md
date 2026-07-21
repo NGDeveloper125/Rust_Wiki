@@ -85,9 +85,45 @@ rejects (an `f64` can't be assigned to a `&mut f64` place — rustc's
 E0308 suggests adding the `*`) — `*reading = ...` is what makes the
 write go through the reference to the value itself.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** for all three meanings. `Mul`/`Deref` live in `core::ops`,
-and raw-pointer dereference is exactly how embedded code reads/writes
-memory-mapped hardware registers via `unsafe { *addr }` or, more often, a
-volatile wrapper around it.
+All three meanings carry over unchanged under `#![no_std]` — `Mul` and
+`Deref`/`DerefMut` live in `core::ops`, so multiplication and reference/
+smart-pointer dereference compile identically to hosted Rust. The genuinely
+embedded-specific meaning is the raw-pointer case: dereferencing a
+`*const T`/`*mut T` is how firmware reads and writes memory-mapped
+hardware registers, and it's almost always wrapped in `unsafe`, since the
+compiler has no way to know the address is valid or what side effects
+touching it has. A plain `*addr = value` is also something the compiler is
+free to reorder or eliminate if it looks like a dead store — for register
+I/O, where the write's *side effect* is the entire point, code reaches for
+`core::ptr::read_volatile`/`write_volatile` (or a HAL's volatile wrapper)
+instead of a bare `*` for exactly that reason. Multiplication itself is
+unremarkable in comparison — scaling a raw ADC sample by a calibration
+factor is ordinary arithmetic, with the same overflow story as
+[`+`](plus.md)/[`-`](minus.md).
+
+## Usage examples (Embedded)
+
+### Dereferencing a memory-mapped register
+
+```
+const GPIOA_ODR: *mut u32 = 0x4001_0C0C as *mut u32;
+
+unsafe {
+    *GPIOA_ODR = 1 << 5; // <- `*` dereferences the raw pointer, writing the register
+}
+```
+
+A bare `*` write like this compiles, but is at the
+mercy of the optimizer treating it like any other memory write; production
+register access more often goes through `write_volatile` to guarantee the
+write actually happens, in order, exactly once.
+
+### Scaling a raw ADC reading by a calibration factor
+
+```
+fn to_millivolts(raw_sample: u16, calibration: f32) -> f32 {
+    raw_sample as f32 * calibration // <- `*` scales the raw sample, same arithmetic as hosted code
+}
+```

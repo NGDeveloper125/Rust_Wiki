@@ -947,7 +947,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>box</code> has been reserved since the 2015 edition, and — like <a href="../../syntax/keywords/priv.html"><code>priv</code></a>
 — it has a real history rather than being purely speculative: for most of
@@ -975,7 +976,7 @@ reserved keyword offers.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1007,21 +1008,74 @@ unresolved design space rather than a feature in progress today.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Keyword reservation is a lexer-level concept, identical
-in <code>#![no_std]</code> and hosted Rust alike. <code>Box</code> itself needs <code>alloc</code> (see
-<a href="../../concepts/ownership-borrowing/smart-pointers-box.html">Smart pointers (Box&lt;T&gt;)</a>'s
-own Embedded Rust Notes) — the reserved <code>box</code> keyword has no runtime
-footprint of its own either way.</p>
+        <p>The <code>box</code> keyword's reservation is identical under <code>#![no_std]</code> — a
+lexer-level fact with no dependency on what runtime the code eventually
+targets, so there's nothing target-specific to say about the reservation
+itself. The genuinely embedded-relevant part of this page is the type the
+reservation was named after: <code>Box&lt;T&gt;</code> is defined in <code>alloc</code>, not <code>core</code>,
+so it's only available once a crate pulls in <code>alloc</code> and wires up a
+<code>#[global_allocator]</code> — without that setup, <code>Box::new(...)</code> simply
+doesn't compile on a <code>#![no_std]</code> target. Where <code>heapless::Vec&lt;T, N&gt;</code>
+gives <code>Vec</code> a fixed-capacity, no-allocator substitute, there is no
+equivalent drop-in replacement for <code>Box&lt;T&gt;</code> itself — <code>heapless</code> has no
+<code>heapless::Box</code>, because a fixed-capacity, statically-sized "box" is a
+contradiction: <code>Box</code>'s whole point is holding a value whose size isn't
+known until runtime (most visibly <code>Box&lt;dyn Trait&gt;</code>), while a no-heap
+collection needs its element size fixed at compile time. The idiomatic
+no-heap alternative is therefore not a substitute type but a different
+design: own the value directly and pass it by reference instead of
+indirecting through a pointer, or replace a <code>Box&lt;dyn Trait&gt;</code> with a
+fixed-size enum over the concrete types that would otherwise have been
+boxed, dispatched with a <code>match</code> instead of a vtable.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">`Box::new` once `alloc` is configured</h3>
+            <pre><code class="rust">extern crate alloc;
+use alloc::boxed::Box;
+
+struct SensorFrame {
+    readings: [f64; 64],
+}
+
+fn make_frame() -&gt; Box&lt;SensorFrame&gt; {
+    Box::new(SensorFrame { readings: [0.0; 64] }) // &lt;- identical to hosted Rust once alloc + a #[global_allocator] exist
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Avoiding heap indirection with a fixed-size enum instead of `Box&lt;dyn Trait&gt;`</h3>
+            <pre><code class="rust">enum Command { // &lt;- fixed-size enum in place of Box&lt;dyn Trait&gt;: no allocator needed, dispatch via match
+    SetPin { pin: u8, high: bool },
+    ReadAdc { channel: u8 },
+}
+
+fn dispatch(cmd: Command) {
+    match cmd {
+        Command::SetPin { pin, high } =&gt; { let _ = (pin, high); }
+        Command::ReadAdc { channel } =&gt; { let _ = channel; }
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>async</code>/<code>.await</code> is Rust's syntax for cooperative, non-blocking
 concurrency: an <code>async fn</code> doesn't run its body when called — it returns
@@ -994,7 +995,7 @@ onto a thread rather than letting it starve the async task scheduler.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">async fn fetch_greeting() -&gt; String { // &lt;- async fn: calling it returns a Future, body doesn't run yet
     String::from("hello")
@@ -1011,7 +1012,7 @@ completion needs an <a href="../../concepts/concurrency-async/async-runtimes.htm
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1086,25 +1087,155 @@ shows <code>?</code> working unchanged inside <code>async fn</code> bodies for t
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> <code>async fn</code> and <code>.await</code> are language features that
-desugar to a state machine implementing <code>core::future::Future</code>, which
-needs neither <code>std</code> nor an allocator for the syntax itself — this works
-under <code>#![no_std]</code>. What changes on embedded targets is what drives that
-future: there's no <code>tokio</code>, so <code>#![no_std]</code> async code relies on an
-alloc-based (or allocation-free) embedded executor, most commonly
-<code>embassy</code>, which provides its own <code>#[embassy_executor::main]</code> entry point
-and async-friendly peripheral drivers built around the same <code>.await</code>
-syntax shown above.</p>
+        <p>The <code>async</code>/<code>.await</code> language mechanics don't change under <code>#![no_std]</code> —
+an <code>async fn</code> still desugars to a state machine implementing
+<code>core::future::Future</code>, and <code>.await</code> still just suspends the current task
+at that point. What's missing is the other half of the story that makes
+async worth reaching for at all: on a hosted target, <code>.await</code>ing a socket
+read or a sleep only avoids blocking a thread because <code>tokio</code> (or
+<code>async-std</code>) is underneath it, backed by an OS scheduler, OS threads, and
+an OS I/O reactor. None of that exists on a microcontroller with no
+operating system, so bare <code>async fn</code>/<code>.await</code> compiles under <code>#![no_std]</code>
+but has nothing to drive it — the caveat this page's <code>partial</code> support
+marks.</p>
+<p>The idiomatic substitute is <code>embassy</code>, an async executor built specifically
+for <code>no_std</code> embedded targets: <code>embassy_executor</code> provides the task
+scheduler and <code>#[embassy_executor::main]</code> entry point that <code>tokio</code> and
+<code>#[tokio::main]</code> provide on a hosted target, and crates like <code>embassy_time</code>
+provide <code>.await</code>-able timers in place of <code>tokio::time::sleep</code>. It's worth
+being honest about <em>why</em> async earns its keep in embedded, because it's a
+narrower case than the network-server story that motivates it on a hosted
+target: there's no thread pool to save context-switch overhead on, since
+many microcontrollers only have one core and no threads at all. The real
+win is letting one core interleave several genuinely independent
+wait-heavy jobs — waiting on a UART line, a sensor's timer-driven poll
+interval, a button debounce — without either busy-polling every peripheral
+in a single loop (wasting power and blurring each job's logic together) or
+pulling in a full RTOS just to get preemptive multitasking. Async gives
+cooperative multitasking with plain <code>.await</code> points, at the cost of the
+same discipline classic async requires: a task that never reaches an
+<code>.await</code> (a long computation, or a blocking HAL call) starves every other
+task on embassy's executor just as it would on <code>tokio</code>'s.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+#[embassy_executor::task]
+async fn blink() { // &lt;- async fn: same grammar as hosted Rust, driven by embassy's executor instead of tokio's
+    loop {
+        // ... toggle an LED pin here
+        Timer::after(Duration::from_millis(500)).await; // &lt;- suspends only this task; the executor runs others meanwhile
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    spawner.spawn(blink()).unwrap();
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Async tasks</h3>
+            <p>A device that needs to sample a sensor on a timer while also watching a
+button for a debounced press should run both as separate embassy tasks
+rather than interleaving the two jobs by hand in one loop — each task
+just <code>.await</code>s the event it cares about, and embassy's executor handles
+interleaving them.</p>
+<pre><code class="rust">use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+#[embassy_executor::task]
+async fn sample_sensor() { // &lt;- async fn: one independent job, expressed as straight-line code
+    loop {
+        // ... trigger an ADC read here
+        Timer::after(Duration::from_millis(200)).await; // &lt;- suspends this task only
+    }
+}
+
+#[embassy_executor::task]
+async fn watch_button() {
+    loop {
+        // ... await a GPIO edge future here (debounced by the HAL/driver)
+        Timer::after(Duration::from_millis(20)).await; // &lt;- suspends this task only
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    spawner.spawn(sample_sensor()).unwrap(); // &lt;- both tasks run concurrently on one core, no RTOS involved
+    spawner.spawn(watch_button()).unwrap();
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> writing the sensor-sampling and button-watching logic as
+two separate <code>async fn</code> tasks keeps each one readable as sequential code,
+while embassy's executor multiplexes them on the single core whenever one
+task is suspended at an <code>.await</code> — the alternative, hand-rolling a
+single loop that polls both jobs, quickly turns into an ad-hoc scheduler
+that async/<code>.await</code> exists to avoid writing.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Multi-threading</h3>
+            <p>A firmware image that has both a CPU-bound task (a DSP filter running
+every sample) and several I/O-wait-bound tasks (sensor polling, a UART
+command parser) shouldn't force the CPU-bound work onto the same
+cooperative executor as the waiting tasks — that's the one case embedded
+async doesn't help with, and it's still a job for a thread (or the second
+core, on a dual-core target) rather than another embassy task.</p>
+<pre><code class="rust">// AVOID: a CPU-bound loop inside an async task never reaches an `.await`,
+// so it starves every other task on embassy's single-threaded executor.
+#[embassy_executor::task]
+async fn run_filter_bad(samples: [i16; 256]) {
+    let _ = heavy_dsp_compute(&amp;samples); // &lt;- no `.await` anywhere: blocks the whole executor until done
+}
+
+// PREFER: run genuinely CPU-bound work on its own thread/core (e.g. via a
+// second core's executor, or an RTOS task) and hand results back through
+// a channel, keeping the async executor free to service waiting tasks.
+fn heavy_dsp_compute(samples: &amp;[i16; 256]) -&gt; i16 {
+    samples.iter().copied().sum::&lt;i16&gt;() / samples.len() as i16
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> embassy's default executor is cooperative and typically
+single-threaded per core, so it inherits the same rule hosted async
+lives by — never block inside an async task — except here "block" also
+includes a long computation with no <code>.await</code> in it; genuinely CPU-bound
+work belongs on a thread or a dedicated core, exactly as <code>spawn_blocking</code>
+carves it out of <code>tokio</code>'s executor on a hosted target.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

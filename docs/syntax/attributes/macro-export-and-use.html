@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[macro_export]</code>, placed directly above a <code>macro_rules!</code> definition,
 makes that macro usable outside the crate that defines it. This
@@ -986,7 +987,7 @@ older examples, but it's a legacy form now; new code should prefer
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1029,22 +1030,59 @@ attribute-based import.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Both attributes are resolved entirely at compile time
-as part of name resolution, with no runtime footprint — identical under
-<code>#![no_std]</code>. Embedded HAL and <code>heapless</code>-adjacent crates commonly use
-<code>#[macro_export]</code> to let firmware crates use their register- or
-pin-definition macros; <code>#[macro_use]</code> still turns up in older,
-edition-2015-pinned embedded example code, but current crates use <code>use</code>.</p>
+        <p>Both attributes work exactly as described above under <code>#![no_std]</code> —
+they're resolved entirely during name resolution, before any code
+generation happens, so there's no runtime or allocator dependency to
+speak of. The pattern shows up concretely in the embedded ecosystem in
+register-definition and peripheral-access crates: a low-level crate that
+defines a <code>define_register!</code>-style <code>macro_rules!</code> helper for declaring
+memory-mapped register accessors marks it <code>#[macro_export]</code> so downstream
+HAL crates — and the application firmware built on top of them — can
+pull the macro in with an ordinary <code>use</code>, the same way they'd import any
+other item, rather than needing the macro's logic duplicated in every
+consuming crate. <code>#[macro_use]</code> still turns up in older peripheral-access
+crates generated before the 2018 edition's path-based macro scoping, but
+current <code>svd2rust</code> output and hand-written HALs use <code>use</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Exporting a register-definition macro for HAL crates to consume</h3>
+            <pre><code class="rust">// crate "chip-pac", src/lib.rs
+#[macro_export] // &lt;- required: without it, define_register! stays private to chip-pac
+macro_rules! define_register {
+    ($name:ident, $addr:expr) =&gt; {
+        pub struct $name;
+        impl $name {
+            pub unsafe fn read() -&gt; u32 {
+                core::ptr::read_volatile($addr as *const u32)
+            }
+        }
+    };
+}
+
+// downstream HAL crate, Cargo.toml: chip-pac = { path = "../chip-pac" }
+use chip_pac::define_register; // &lt;- imported like any ordinary item
+
+define_register!(GpioaIdr, 0x4002_0010);
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

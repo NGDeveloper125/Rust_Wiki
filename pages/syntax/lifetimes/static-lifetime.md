@@ -138,10 +138,95 @@ the compiled binary and are never deallocated, which is what lets code pass
 them around anywhere a `'static` reference is required with no lifetime
 annotation to write.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `'static` is core-language and erased before codegen —
-string literals are still `&'static str` with `#![no_std]`, and `T: 'static`
-bounds show up constantly in embedded code for globally-shared driver
-state (`static` items, interrupt-shared data) for exactly the same
-structural reason described above, not because anything runs "forever."
+`'static` means exactly what it means on a hosted target — a lifetime
+built into the language, valid for the whole remainder of the running
+program, in both of its positions (reference type and bound). What's
+different in embedded code isn't the meaning; it's how central and
+unavoidable it becomes. On a hosted target, most `'static` bounds trace
+back to one thing: handing data to something that outlives the current
+call stack, most visibly `thread::spawn`. Embedded code runs into that
+same problem far more often, and in a sharper form, because interrupts
+don't have anything resembling a caller's stack frame to bound them: an
+ISR can fire at essentially any point after the interrupt table is
+installed, completely independent of whatever function happens to be
+running in `main` at that instant. Any data an interrupt handler needs
+to touch — a shared counter, a ring buffer, a peripheral handle —
+therefore can't be a `main`-local variable borrowed by reference; it has
+to be `'static`, almost always as a `static`/`static mut` item guarded
+by a `Mutex<Cell<_>>`/`RefCell<_>` and a critical section, so both
+`main` and the handler can reach the same data without either side
+outliving the other in a way the compiler can verify.
+
+The same shape recurs in a handful of other embedded-specific places: a
+`#[global_allocator]` is declared as a `static`, because the allocator
+has to be reachable for the entire life of the program, not scoped to
+whichever function first touches the heap; `heapless`/RTIC-style shared
+resources are frequently split from a `static mut` queue or buffer
+specifically because the producer/consumer halves need to be usable
+from both an interrupt context and `main` without either one's stack
+frame bounding how long the split halves are allowed to live; and DMA
+transfers, which keep writing into a buffer autonomously after the
+function that started them has already returned, need that buffer to
+outlive the call that set it up — which a `'static` buffer guarantees
+and a stack-local one can't. None of this changes what `'static`
+*means* — it's the same "no non-`'static` borrows inside," same "valid
+for the rest of the program" as on a hosted target — embedded code just
+runs into the *reason* for that bound far more routinely than most
+hosted code does.
+
+## Usage examples (Embedded)
+
+### Sharing a counter between `main` and an interrupt handler
+
+```
+use core::cell::Cell;
+use critical_section::Mutex;
+use stm32f4xx_hal::pac::interrupt;
+
+static TICKS: Mutex<Cell<u32>> = Mutex::new(Cell::new(0));
+// <- `'static` storage: TIM2 can fire at any point after main starts, so this can't live on main's stack
+
+#[interrupt]
+fn TIM2() {
+    critical_section::with(|cs| {
+        let cell = TICKS.borrow(cs);
+        cell.set(cell.get() + 1);
+    });
+}
+
+fn ticks() -> u32 {
+    critical_section::with(|cs| TICKS.borrow(cs).get())
+}
+```
+
+### Declaring a global allocator
+
+```
+use embedded_alloc::Heap;
+
+#[global_allocator]
+static HEAP: Heap = Heap::empty(); // <- must be `'static`: the allocator has to be reachable for the program's whole life
+
+fn init_heap() {
+    use core::mem::MaybeUninit;
+    const HEAP_SIZE: usize = 1024;
+    static mut HEAP_MEM: [MaybeUninit<u8>; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
+    unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
+}
+```
+
+### Splitting a heapless queue into interrupt-safe producer/consumer halves
+
+```
+use heapless::spsc::{Consumer, Producer, Queue};
+
+static mut READINGS: Queue<u16, 8> = Queue::new();
+
+fn split_queue() -> (Producer<'static, u16, 8>, Consumer<'static, u16, 8>) {
+    // <- `split` requires `&'static mut self`: the producer/consumer halves must outlive
+    //    any interrupt that later uses them, not just this function's own call
+    unsafe { READINGS.split() }
+}
+```

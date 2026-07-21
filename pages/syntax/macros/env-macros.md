@@ -96,11 +96,45 @@ line here — a genuinely optional build-time value should use
 into a hard compile failure, which is the wrong behavior for something
 that has a sensible fallback.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both are pure compile-time constructs — reading the
-build environment and embedding a `&'static str`/`Option<&'static str>`
-has no runtime dependency on `std` or an OS, so they work identically in
-`#![no_std]`; the Cargo-provided `CARGO_PKG_*` variables in particular are
-just as commonly used to embed a firmware image's version string in
-embedded builds as in hosted ones.
+Both macros are pure compile-time constructs with no dependency on `std`
+or an OS, so they work identically in embedded builds. `CARGO_PKG_*`
+variables in particular are just as common in firmware as in hosted
+code, arguably more valuable there: without an OS-level package manager
+or `--version` flag, baking `env!("CARGO_PKG_VERSION")` into the binary —
+often reported back over a debug UART or RTT channel at boot — is
+frequently the only way to identify which firmware image is actually
+running on a device out in the field.
+
+What's genuinely common in firmware specifically is using `env!` for
+build-time paths that a `build.rs` script computed and exported, most
+often `env!("OUT_DIR")` pointing at a file the build script generated —
+a chip-specific memory layout, or (see
+[`include! / include_str! / include_bytes!`](include-macros.md)) a whole
+block of generated register-definition source that gets spliced in with
+`include!` rather than checked into the repository by hand.
+
+## Usage examples (Embedded)
+
+### Reporting firmware version and build provenance at boot
+
+```
+const FW_VERSION: &str = env!("CARGO_PKG_VERSION");      // <- baked in at compile time from Cargo.toml
+const GIT_HASH: Option<&str> = option_env!("GIT_HASH");  // <- None unless the build pipeline set this env var
+
+fn report_boot_info() {
+    match GIT_HASH {
+        Some(hash) => defmt::info!("firmware {} ({})", FW_VERSION, hash),
+        None => defmt::info!("firmware {} (dev build)", FW_VERSION),
+    }
+}
+```
+
+### Locating a build-script-generated file by path
+
+```
+// A build.rs script writes a generated register-address table under OUT_DIR;
+// the crate locates it at compile time via env!, then splices it in with include!.
+include!(concat!(env!("OUT_DIR"), "/generated_registers.rs")); // <- env! resolved at compile time, not at flash time
+```

@@ -132,10 +132,101 @@ closes off struct-literal construction, and `new` reopens exactly one
 supported path, so the type can grow new fields behind that single
 entry point without ever breaking a caller who used it.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The extra field is zero-sized and exists purely for the
-compiler's benefit — it adds no runtime footprint and behaves identically
-under `#![no_std]`. This idiom is common in embedded HAL crates for
-peripheral configuration structs, which tend to gain new optional fields
-(a new clock source, a new pin mode) across HAL versions.
+This idiom is arguably more load-bearing in embedded HAL crates than
+almost anywhere else in the ecosystem, because the "field added later"
+case isn't hypothetical — it's what happens every time a silicon vendor
+ships a new chip revision or a wider part in the same family. A HAL
+author who exposes a peripheral's register-configuration struct with
+every field `pub` has committed to that struct never growing a field for
+as long as the crate stays semver-compatible, which is a bad position to
+be in for hardware whose register layout genuinely does grow across
+revisions (a rev-B part adding a clock-source select bit a rev-A part
+never had, a wider part exposing an extra DMA channel). Keeping one field
+private — either genuine internal state or a zero-sized marker added
+purely for this purpose — alongside a public constructor keeps that door
+open, so a future HAL version can add `pub dma_channel: Option<u8>` to a
+config struct without breaking every existing struct literal across
+downstream firmware crates. The mechanism is byte-for-byte the same as
+in hosted Rust; only the frequency with which embedded APIs actually need
+it differs.
+
+## Basic usage example (Embedded)
+
+```
+pub struct UartConfig {
+    pub baud_rate: u32,
+    pub stop_bits: u8,
+    _reserved: (), // <- private: blocks struct-literal construction outside the HAL crate
+}
+
+impl UartConfig {
+    pub fn new(baud_rate: u32, stop_bits: u8) -> Self {
+        UartConfig { baud_rate, stop_bits, _reserved: () }
+    }
+}
+
+let cfg = UartConfig::new(115_200, 1);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL crate's SPI config struct is shared across two chip revisions; the
+rev-B silicon adds a hardware chip-select delay the rev-A part doesn't
+have, and the author wants room to add that field next release without
+breaking every rev-A firmware crate's struct literal.
+
+```
+pub struct SpiConfig {
+    pub clock_hz: u32,
+    pub mode: u8,
+    _future_fields: (), // <- private: reserves room for a rev-B-only field later
+}
+
+impl SpiConfig {
+    pub fn new(clock_hz: u32, mode: u8) -> Self {
+        SpiConfig { clock_hz, mode, _future_fields: () }
+    }
+}
+
+// downstream firmware crate:
+let cfg = SpiConfig::new(1_000_000, 0);
+```
+
+**Why this way:** adding `pub cs_delay_cycles: u8` for the rev-B part
+later only requires updating `new` and its callers, because no firmware
+crate could ever have built `SpiConfig` exhaustively in the first place —
+the [Rust Design Patterns](https://rust-unofficial.github.io/patterns/idioms/priv-extend.html)
+book documents this as the idiomatic extensibility guard, and it earns
+its keep especially often in HAL crates where register layouts really do
+change between silicon revisions.
+
+### Scenario: Creating a new object
+
+A GPIO pin driver's config struct should be built only through its
+constructor, since a future HAL version is expected to add a pull-up/
+pull-down setting that doesn't exist on today's simplest parts.
+
+```
+pub struct PinConfig {
+    pub open_drain: bool,
+    _guard: (), // <- private: forces every caller through PinConfig::new
+}
+
+impl PinConfig {
+    pub fn new(open_drain: bool) -> Self { // <- the sole entry point for building this type
+        PinConfig { open_drain, _guard: () }
+    }
+}
+
+let cfg = PinConfig::new(false);
+```
+
+**Why this way:** pairing the private guard field with a constructor
+closes off struct-literal construction while reopening exactly one
+supported path, so the HAL can grow `PinConfig` with new optional
+settings across versions without ever breaking a caller who went through
+`new`.

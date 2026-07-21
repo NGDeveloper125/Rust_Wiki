@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>fn</code> declares a function, giving it a name, a parameter list, and a body.</p>
 <p>Every parameter must have an explicit type; unlike closures, <code>fn</code>
@@ -974,7 +975,7 @@ cannot capture variables from its enclosing scope; only closures can).</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1053,20 +1054,53 @@ whenever a type has an obvious default construction path.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Free functions, methods, and function pointers all work
-identically in <code>#![no_std]</code>. Interrupt handlers are ordinary <code>fn</code>s marked
-with a target-specific attribute (e.g. <code>#[interrupt]</code> from a HAL crate),
-not special syntax.</p>
+        <p><code>fn</code> means exactly the same thing under <code>#![no_std]</code> as in hosted Rust —
+the same parameter/return-type rules, the same monomorphization of
+generic functions, the same function-pointer coercion for a capturing-
+nothing function item. The one place embedded code leans on <code>fn</code> in a way
+rarely seen in hosted code is an interrupt handler: a plain <code>fn</code>, usually
+with no parameters and no return value, wired into the vector table not
+through special syntax or a different calling convention but through an
+attribute a HAL/PAC crate provides (<code>#[interrupt]</code>, <code>#[exception]</code>) sitting
+directly above an ordinary function declaration.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Declaring a HAL driver method signature</h3>
+            <pre><code class="rust">fn read_temperature(i2c: &amp;mut impl embedded_hal::i2c::I2c) -&gt; Result&lt;f32, embedded_hal::i2c::ErrorKind&gt; {
+    // &lt;- `fn` declares a driver function, generic over any I2C bus implementation
+    let mut buf = [0u8; 2];
+    i2c.write_read(0x48, &amp;[0x00], &amp;mut buf)?;
+    Ok(i16::from_be_bytes(buf) as f32 / 256.0)
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">An interrupt handler as an ordinary `fn`</h3>
+            <pre><code class="rust">#[interrupt]
+fn TIM2() { // &lt;- `fn` here: no parameters, no return value, wired to the vector table by the attribute above it
+    // clear the timer's interrupt flag and handle the tick
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

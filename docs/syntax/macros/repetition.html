@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>$(...)</code> groups a sub-pattern that can repeat, in both the matcher and
 the transcriber of a <code>macro_rules!</code> arm. Immediately after the closing
@@ -983,7 +984,7 @@ inside a transcriber repetition whose depth matches how it was captured.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1022,23 +1023,82 @@ callers already expect from <code>vec!</code>.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Repetition is resolved entirely at compile time and
-produces ordinary, already-expanded Rust code, so it costs nothing at
-runtime and works identically under <code>#![no_std]</code>. It's a heavily used
-tool in embedded HAL crates specifically: generating one nearly
-identical <code>impl</code> per GPIO pin or timer instance from a single
-<code>$($pin:ident),*</code>-style macro call is far less error-prone than
-hand-writing dozens of copies.</p>
+        <p>Repetition is resolved entirely at compile time and produces ordinary,
+already-expanded Rust code, so <code>$(...)*</code>/<code>$(...)+</code>/<code>$(...)?</code> cost nothing
+at runtime and work identically under <code>#![no_std]</code> — nothing about
+matching or re-emitting a repeated sub-pattern depends on a heap, an
+allocator, or <code>std</code> being present. It's one of the most heavily used
+tools in embedded HAL crates specifically, because so much embedded
+boilerplate is genuinely repetitive: one nearly identical register
+accessor per peripheral instance, one nearly identical GPIO pin type per
+physical pin, one nearly identical timer <code>impl</code> per timer instance.
+Writing <code>$($pin:ident =&gt; $bit:expr),*</code> once and having it expand into
+dozens of hand-equivalent functions is both far less error-prone and far
+less to review than the hand-written copies it replaces — this is
+exactly the technique tools like <code>svd2rust</code> lean on to generate an entire
+chip's register API from its hardware description file.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Generating GPIO pin accessor functions</h3>
+            <pre><code class="rust">macro_rules! gpio_pins {
+    ($($name:ident =&gt; $bit:expr),* $(,)?) =&gt; { // &lt;- `*` over pin definitions, trailing comma tolerated
+        $(
+            fn $name(gpio_odr: &amp;mut u32) { // &lt;- re-emits one function per repetition
+                *gpio_odr |= 1 &lt;&lt; $bit;
+            }
+        )*
+    };
+}
+
+gpio_pins! {
+    set_pa5 =&gt; 5,
+    set_pa6 =&gt; 6,
+    set_pa7 =&gt; 7,
+}
+// &lt;- expands to three separate functions, set_pa5/set_pa6/set_pa7, one per repetition
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Generating register-accessor functions for multiple peripheral instances</h3>
+            <p>A driver needs a <code>read_status</code> function for each of several identical
+UART instances sitting at different base addresses — exactly the "one
+nearly identical accessor per instance" case repetition exists for.</p>
+<pre><code class="rust">macro_rules! uart_status_readers {
+    ($($fn_name:ident @ $base:expr),* $(,)?) =&gt; {
+        $(
+            fn $fn_name() -&gt; u32 {
+                unsafe { core::ptr::read_volatile(($base + 0x00) as *const u32) } // &lt;- status register at offset 0x00
+            }
+        )*
+    };
+}
+
+uart_status_readers! {
+    uart1_status @ 0x4001_3800,
+    uart2_status @ 0x4000_4400,
+    uart3_status @ 0x4000_4800,
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

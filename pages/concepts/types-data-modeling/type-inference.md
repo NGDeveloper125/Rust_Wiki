@@ -78,7 +78,51 @@ whenever inference can't work out the target collection on its own,
 which is common enough with `collect()` specifically that it's the
 canonical example of when an explicit type is needed.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A compile-time-only mechanism — no `std` dependency,
-identical behavior in `#![no_std]`.
+Type inference is a purely compile-time mechanism, so there is genuinely
+nothing about it that changes under `#![no_std]` — the compiler works out
+concrete types from initializers, later usage, and function signatures
+exactly as it does on a hosted target, and none of that reasoning
+survives into the compiled binary either way. The one place it's worth a
+concrete embedded example is that the same "inference has nothing to
+resolve against" situation from the classic explanation shows up with
+`heapless` collections just as it does with `Vec`: `heapless::Vec<T, N>`
+is generic over both its element type *and* its const-generic capacity
+`N`, so a `.collect()` into one still needs a turbofish or an annotated
+binding to pin down what's being built — inference can't guess a fixed
+capacity out of thin air any more than it can guess a target collection
+type.
+
+## Basic usage example (Embedded)
+
+```
+let raw_reading = read_adc_register(); // <- inferred as u16 from read_adc_register's return type
+let millivolts: u32 = raw_reading as u32 * 3300 / 4095; // <- annotation here is documentation; inference alone would still resolve u32
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Creating a new object
+
+Collecting a bounded, allocation-free `heapless::Vec` needs its capacity
+pinned down explicitly, the same way `std::Vec` needs its element type
+pinned down — inference has no default to fall back on for either.
+
+```
+use heapless::Vec;
+
+let raw = [21i16, 22, 19, 23];
+
+// AVOID: the compiler can't tell what capacity N to build without more context
+// let samples = raw.iter().copied().collect(); // <- ambiguous: Vec<i16, N> needs N
+
+// PREFER: turbofish (or an annotated binding) pins down both the element type and the capacity
+let samples = raw.iter().copied().collect::<Vec<i16, 8>>(); // <- <i16, 8>: element type AND const-generic capacity
+```
+
+**Why this way:** `heapless::Vec<T, N>`'s capacity `N` is just as much a
+type parameter as `T` is, so the same fix the standard library
+recommends for ambiguous `collect()` calls — a turbofish or an annotated
+binding — applies here for exactly the same reason: there's no default
+capacity for inference to fall back on.

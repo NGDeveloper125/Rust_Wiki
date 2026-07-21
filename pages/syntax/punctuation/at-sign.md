@@ -106,9 +106,43 @@ guarantee the pattern already established; binding with `@` makes the
 "this value, already checked" relationship explicit at the type level, not
 just by convention.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Pure pattern-matching grammar, allocator-free. A natural
-fit for classifying an ADC reading or register value into a named band
-while keeping the raw value on hand for logging or telemetry, in one
-`match` arm instead of a lookup followed by a separate range check.
+`@` means exactly the same thing under `#![no_std]` — pure pattern-matching
+grammar, resolved at compile time with no allocation and no runtime cost.
+It's a natural fit for a driver's status type: a "reading" enum often
+wraps a raw sensor or register value inside a variant, and `@` lets one
+match arm both classify that variant *and* keep the raw value on hand for
+a log line or telemetry frame, without reading the peripheral a second
+time.
+
+## Usage examples (Embedded)
+
+### Binding a field while matching a hardware status enum
+
+```
+use defmt::info;
+
+enum SensorReading {
+    Temperature(i16),
+}
+
+fn classify(reading: SensorReading) {
+    match reading {
+        SensorReading::Temperature(t @ -40..=85) => info!("temp {} C: in spec", t), // <- `@` binds `t` while checking the range
+        SensorReading::Temperature(t) => info!("temp {} C: OUT OF SPEC", t),
+    }
+}
+```
+
+### Keeping a raw ADC code while classifying it into a band
+
+```
+fn classify_adc(raw: u16) {
+    match raw {
+        v @ 0..=819 => defmt::info!("adc {}: low band", v), // <- `@` keeps the raw code for the log line
+        v @ 820..=3276 => defmt::info!("adc {}: mid band", v),
+        v => defmt::info!("adc {}: high band", v),
+    }
+}
+```

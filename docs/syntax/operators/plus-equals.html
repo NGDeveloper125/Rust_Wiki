@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>+=</code> adds the right operand to the left in place, overloadable via
 <code>std::ops::AddAssign</code>.</p>
@@ -962,7 +963,7 @@ must be a mutable place — <code>x</code> must be declared <code>let mut x</cod
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1027,17 +1028,60 @@ expresses the same intent with no mutable state at all.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>AddAssign</code> lives in <code>core::ops</code> — no <code>std</code> dependency.</p>
+        <p><code>AddAssign</code> lives in <code>core::ops</code>, so <code>+=</code> behaves identically under
+<code>#![no_std]</code>. The relevant nuance is the same one covered on
+<a href="plus.md"><code>+</code></a>: a release build ships with overflow checks off, so <code>+=</code>
+wraps silently on overflow instead of panicking, and a device already
+deployed can't be recompiled in debug to catch it after the fact. <code>+=</code> on
+a value that's provably bounded within a single function call — summing a
+handful of samples into a wider accumulator type, say — is perfectly
+safe to leave as bare <code>+=</code>. <code>+=</code> on a value that accumulates for the
+entire lifetime of the device — an uptime counter, an event tally, a
+running energy total — is exactly the spot where an explicit
+<code>wrapping_add</code>/<code>checked_add</code> assigned back is worth the extra line, since
+that's where a silent wrap would otherwise go unnoticed indefinitely.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Using `+=` for a bounded per-cycle accumulator</h3>
+            <pre><code class="rust">fn average_adc_reading(samples: &amp;[u16; 8]) -&gt; u16 {
+    let mut sum: u32 = 0;
+    for &amp;s in samples {
+        sum += s as u32; // &lt;- `+=` is fine here: 8 u16 samples can never overflow a u32 accumulator
+    }
+    (sum / samples.len() as u32) as u16
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Guarding a long-lived event counter instead of bare `+=`</h3>
+            <pre><code class="rust">struct EventCounter(u32);
+
+impl EventCounter {
+    fn record(&amp;mut self) {
+        self.0 = self.0.wrapping_add(1); // explicit wrapping stands in for a bare `+=` that would wrap unnoticed anyway
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

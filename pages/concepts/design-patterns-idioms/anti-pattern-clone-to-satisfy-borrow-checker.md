@@ -125,12 +125,96 @@ the
 calls out exactly this reflex and recommends restructuring the borrow
 over reaching for `.clone()`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The anti-pattern and its fix are both compile-time
-borrow-shaping concerns with no runtime cost either way — but the stakes
-of getting it wrong are higher on memory-constrained targets: a `.clone()`
-added to silence the borrow checker can allocate a duplicate buffer that
-a `heapless`-style fixed-capacity budget may not have room for at all,
-turning a workaround that merely wastes cycles on a hosted target into a
-hard allocation failure on embedded.
+The anti-pattern is identical, and arguably worse: everything the classic
+Explanation says about a reflexive `.clone()` masking a borrow-checker
+error applies unchanged in `#![no_std]` firmware, but the cost of getting
+it wrong is no longer just "wasted CPU cycles nobody notices." A desktop
+process cloning an unnecessary `Vec<u8>` inside a hot loop burns memory
+bandwidth and allocator time that all but disappears in a profiler; the
+same `.clone()` on an embedded target duplicates a buffer out of a flash-
+and-RAM budget measured in kilobytes, on a device with no swap and no
+graceful recovery from an out-of-memory condition beyond a hard fault or
+a reset. Even where the clone lives entirely on the stack (a
+`Copy`-derived struct copied instead of borrowed), it still burns stack
+budget that on a constrained target is a small, fixed allocation set at
+link time — a reflex that's merely inefficient on a desktop can be the
+difference between a firmware image that fits and one that doesn't, or a
+task whose stack overflows into a neighboring one.
+
+The fix is the same fix: reshape the borrow — end the read before the
+write starts, index instead of holding a live reference, split the
+borrow across fields — rather than duplicating the data. Nothing about
+embedded changes *how* to fix it; it just raises the stakes of leaving
+it unfixed.
+
+## Basic usage example (Embedded)
+
+```
+struct SensorFrame {
+    samples: [i16; 64], // <- fixed-size buffer: no heap, but still 128 bytes of RAM per copy
+}
+
+fn largest_sample(frame: &SensorFrame) -> i16 {
+    // PREFER: read through a borrow; no reason to duplicate 128 bytes of samples
+    *frame.samples.iter().max().unwrap()
+}
+
+let frame = SensorFrame { samples: [0; 64] };
+let peak = largest_sample(&frame); // <- one borrow, zero copies
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Modifying an existing object
+
+A driver holds the last full calibration table read from a sensor and
+wants to log the largest offset whenever it recalibrates — cloning the
+whole table just to end an immutable borrow early would duplicate a
+buffer the device's RAM budget can't spare twice.
+
+```
+struct CalibrationTable {
+    offsets: [i16; 32], // 64 bytes — small on a desktop, real weight on a microcontroller
+}
+
+struct SensorDriver {
+    calibration: CalibrationTable,
+    recalibration_count: u32,
+}
+
+impl SensorDriver {
+    fn record_recalibration(&mut self) {
+        self.recalibration_count += 1;
+    }
+
+    fn recalibrate(&mut self) {
+        // AVOID: cloning 64 bytes of offsets just to end the search borrow early
+        // let snapshot = self.calibration.offsets.clone();
+        // let _max = snapshot.iter().max();
+        // self.record_recalibration();
+
+        // PREFER: pull out just the owned i16, ending the borrow on `self.calibration` immediately
+        let max_offset = self.calibration.offsets.iter().copied().max();
+        let _ = max_offset;
+        self.record_recalibration(); // <- self.calibration is no longer borrowed here
+    }
+}
+
+let mut driver = SensorDriver {
+    calibration: CalibrationTable { offsets: [0; 32] },
+    recalibration_count: 0,
+};
+driver.recalibrate();
+```
+
+**Why this way:** cloning the 64-byte `offsets` array to search it and
+throw the copy away doubles a buffer that, on a target with a few
+kilobytes of RAM total, competes directly with stack space for
+interrupt handlers and other tasks — extracting an owned `i16` instead
+ends the borrow just as effectively with zero extra bytes, the same
+restructuring the
+[Rust Design Patterns' anti-patterns section](https://rust-unofficial.github.io/patterns/anti_patterns/borrow_clone.html)
+recommends, just with a resource-constrained reason to take it more
+seriously.

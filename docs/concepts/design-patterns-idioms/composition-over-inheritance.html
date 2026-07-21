@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Rust has no struct inheritance: there is no <code>class Dog extends Animal</code>,
 no base-class field layout a subtype automatically inherits, and no way
@@ -994,7 +995,7 @@ sharing <em>behavior</em>.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct Health { hp: u32 }
 impl Health {
@@ -1026,7 +1027,7 @@ println!("{} hp, {} items", player.health.hp, player.inventory.items.len());
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1132,23 +1133,124 @@ uses throughout.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Struct composition and trait default methods are
-core-language mechanisms with zero runtime cost beyond ordinary field
-layout and static or vtable dispatch, so both work identically under
-<code>#![no_std]</code>. Neither implies heap allocation on its own; allocation only
-enters if a composed component's own type happens to need it (a <code>Vec</code>
-field, for instance), which is a property of that component, not of
-composition itself.</p>
+        <p>Composition over inheritance isn't just applicable to embedded Rust — the
+entire <code>embedded-hal</code> ecosystem is built as a direct consequence of it
+having no other option. There is no chip-specific base class a driver
+could extend even if Rust had inheritance: a temperature sensor driver
+written against <code>embedded-hal</code>'s <code>I2c</code> trait doesn't know or care whether
+it's running against an STM32, an nRF52, or a Linux-hosted
+<code>linux-embedded-hal</code> implementation talking to real hardware over
+<code>/dev/i2c-1</code>. The driver is generic over the trait, composed with
+whatever concrete HAL implementation the target board provides, and
+every one of those HAL crates independently implements the same small
+set of traits (<code>embedded_hal::i2c::I2c</code>, <code>embedded_hal::spi::SpiBus</code>,
+<code>embedded_hal::digital::OutputPin</code>) without any of them needing to share
+an ancestor. A driver written once against the trait works, unmodified,
+on any chip whose HAL crate implements it — the payoff composition over
+inheritance promises in the abstract is, in embedded Rust, the literal
+reason a driver crate can be chip-agnostic at all.</p>
+<p>The anti-pattern warning from the classic page — reaching for <code>Deref</code> to
+fake inherited behavior — shows up in embedded code specifically around
+HAL wrapper types (see <a href="anti-pattern-deref-polymorphism.md">Anti-pattern: Deref
+polymorphism</a>'s embedded notes for a
+worked I2C example); the fix is the same explicit-delegation-or-shared-trait
+answer, just with an <code>embedded-hal</code> trait usually already sitting there
+as the shared behavior to compose against instead of a bespoke one.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">trait TemperatureSensor {
+    fn read_celsius(&amp;mut self) -&gt; f32;
+}
+
+struct Bme280&lt;I2C&gt; { // &lt;- generic over any I2C implementation, composed rather than inherited
+    i2c: I2C,
+}
+
+impl&lt;I2C&gt; TemperatureSensor for Bme280&lt;I2C&gt; {
+    fn read_celsius(&amp;mut self) -&gt; f32 {
+        21.5 // stands in for a real register read over `self.i2c`
+    }
+}
+
+fn log_temperature(sensor: &amp;mut dyn TemperatureSensor) {
+    println!("{:.1} C", sensor.read_celsius());
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A sensor driver crate needs to run on any board's I2C peripheral without
+depending on a specific chip's HAL — composing the driver generically
+over the <code>embedded-hal</code> <code>I2c</code> trait instead of any concrete
+implementation is what makes that possible.</p>
+<pre><code class="rust">trait I2c {
+    fn write_read(&amp;mut self, addr: u8, out: &amp;[u8], in_: &amp;mut [u8]) -&gt; Result&lt;(), ()&gt;;
+}
+
+struct Bme280&lt;I2C: I2c&gt; { // &lt;- composed of any I2C implementation, not inherited from a chip-specific base
+    i2c: I2C,
+    address: u8,
+}
+
+impl&lt;I2C: I2c&gt; Bme280&lt;I2C&gt; {
+    fn new(i2c: I2C, address: u8) -&gt; Self {
+        Self { i2c, address }
+    }
+
+    fn read_celsius(&amp;mut self) -&gt; Result&lt;f32, ()&gt; {
+        let mut raw = [0u8; 2];
+        self.i2c.write_read(self.address, &amp;[0xFA], &amp;mut raw)?;
+        Ok(i16::from_be_bytes(raw) as f32 / 100.0)
+    }
+}
+
+struct Stm32I2c1; // a board's concrete HAL type
+impl I2c for Stm32I2c1 {
+    fn write_read(&amp;mut self, _addr: u8, _out: &amp;[u8], in_: &amp;mut [u8]) -&gt; Result&lt;(), ()&gt; {
+        in_.copy_from_slice(&amp;[0x08, 0x34]); // stands in for a real bus transaction
+        Ok(())
+    }
+}
+
+let mut sensor = Bme280::new(Stm32I2c1, 0x76);
+println!("{:.2} C", sensor.read_celsius().unwrap());
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>Bme280&lt;I2C&gt;</code> never names a concrete chip anywhere in
+its own code, so the exact same driver crate compiles and runs unchanged
+against any board whose HAL implements the <code>I2c</code> trait — this is the
+<code>embedded-hal</code> ecosystem's core design point, and the
+<a href="https://github.com/rust-embedded/embedded-hal">embedded-hal project itself</a>
+documents composing driver crates against its traits as the mechanism
+that makes drivers portable across chip families with no shared base
+type anywhere in the picture.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

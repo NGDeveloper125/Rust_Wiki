@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[derive(...)]</code>, placed directly above a <code>struct</code>, <code>enum</code>, or <code>union</code>
 item, tells the compiler to generate one or more trait implementations
@@ -990,7 +991,7 @@ attribute syntax.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1055,23 +1056,64 @@ a struct or enum usable in <code>assert_eq!</code> at all.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> The built-in derives (<code>Debug</code>, <code>Clone</code>, <code>PartialEq</code>, and
-the rest of the compiler's fixed set) run entirely at compile time and
-work identically in <code>#![no_std]</code>. <code>#[derive(Debug)]</code>'s generated code
-still routes through <code>core::fmt</code>, which has no way to print anywhere on
-bare metal on its own — embedded code commonly derives against <code>defmt</code>'s
-own <code>Format</code> trait instead (<code>#[derive(defmt::Format)]</code>), a third-party
-derive built for wire-efficient, <code>no_std</code>-friendly logging.</p>
+        <p>Under <code>#![no_std]</code>, <code>#[derive(...)]</code> for anything built purely on <code>core</code>
+traits — <code>Debug</code>, <code>Clone</code>, <code>Copy</code>, <code>PartialEq</code>, <code>Eq</code>, <code>Hash</code>, <code>Default</code>,
+<code>PartialOrd</code>, <code>Ord</code> — works exactly as described above: the same
+mechanical, field-by-field generation, the same requirement that every
+field's type already implement the trait, routed through <code>core::fmt</code> /
+<code>core::cmp</code> / <code>core::clone</code> instead of their <code>std</code> re-exports. Nothing
+about the attribute itself changes.</p>
+<p>Where embedded code diverges in practice, not in mechanism, is
+<code>#[derive(Debug)]</code> specifically: a <code>Debug</code> impl's formatting code
+(matching on every variant, writing out every field name) is generated
+code that occupies flash, and on a part with a genuinely tight flash
+budget, deriving <code>Debug</code> on every type in a large HAL — especially large
+enums or deeply nested register structs — can noticeably inflate binary
+size for a capability a release firmware image may never actually
+invoke. It's common to see <code>Debug</code> derives feature-gated
+(<code>#[cfg_attr(feature = "debug-impls", derive(Debug))]</code>) or skipped
+entirely on the hottest, most repeated types in a crate for exactly this
+code-size reason, while still deriving it freely on types that are rare
+or only used during development.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Deriving core-only traits identically under no_std</h3>
+            <pre><code class="rust">#![no_std]
+
+#[derive(Debug, Clone, Copy, PartialEq)] // &lt;- routes through core::fmt/core::clone/core::cmp, not std
+pub struct SensorReading {
+    pub raw_adc: u16,
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Feature-gating Debug to keep its code out of the flash budget by default</h3>
+            <pre><code class="rust">#[cfg_attr(feature = "debug-impls", derive(Debug))] // &lt;- Debug's formatting code only ships when explicitly opted into
+#[derive(Clone, Copy)]
+pub struct RegisterSnapshot {
+    pub value: u32,
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

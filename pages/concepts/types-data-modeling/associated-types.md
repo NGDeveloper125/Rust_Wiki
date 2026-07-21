@@ -82,9 +82,117 @@ choose it at the call site, the way a
 [trait bound](../traits-polymorphism/trait-bounds.md) like `From<T>` lets
 one type convert from many different `T`s.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** A compile-time mechanism — no `std`/allocator
-dependency. The `embedded-hal` ecosystem's traits make heavy use of
-associated types (e.g. an error type associated with a given peripheral
-trait) to stay generic across many vendors' hardware.
+Associated types are a pure compile-time mechanism with no `std` or
+allocator dependency, and the `embedded-hal` ecosystem leans on them
+specifically to solve a problem generics alone don't: every peripheral
+trait (`I2c`, `SpiBus`, `OutputPin`, …) declares an associated
+`type Error;` rather than fixing one concrete error type, because each
+vendor's HAL implementation has its own genuinely different error
+representation — one MCU's I2C peripheral might fail with a bus-specific
+NACK/arbitration-loss enum, another's with a different set of cases
+entirely. There is exactly one right `Error` type per concrete
+implementation, the same "one true answer per implementer" relationship
+the classic Explanation describes for `Iterator::Item` — which is why
+this is an associated type on the trait rather than a generic parameter
+a caller would otherwise have to plumb through every generic driver
+function that touches the bus.
+
+This is what lets a driver crate written generically over
+`BUS: embedded_hal::i2c::I2c` (see
+[Generics' embedded section](generics.md) for that pattern in full)
+propagate whatever error type the concrete HAL underneath actually
+produces, via an ordinary `?`, without `embedded-hal` needing to invent
+one universal error enum that would have to somehow cover every vendor's
+hardware-specific failure modes — which isn't really possible, since
+those failure modes genuinely differ by silicon.
+
+## Basic usage example (Embedded)
+
+```
+trait I2cBus {
+    type Error; // <- fixed per concrete bus implementation, not chosen by the driver calling it
+
+    fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error>;
+}
+
+struct Stm32I2c;
+enum Stm32I2cError { Nack, ArbitrationLoss }
+
+impl I2cBus for Stm32I2c {
+    type Error = Stm32I2cError; // <- this vendor's HAL fixes its own concrete error type, once
+    fn write(&mut self, _addr: u8, _bytes: &[u8]) -> Result<(), Stm32I2cError> {
+        Ok(())
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Implementing traits
+
+A sensor driver generic over an I2C bus trait should propagate the bus's
+own associated `Error` type rather than committing to one error type that
+would have to be shared across every vendor's incompatible HAL.
+
+```
+trait I2cBus {
+    type Error;
+    fn write_read(&mut self, addr: u8, out: &[u8], in_: &mut [u8]) -> Result<(), Self::Error>;
+}
+
+struct TempSensor<BUS: I2cBus> {
+    bus: BUS,
+    address: u8,
+}
+
+impl<BUS: I2cBus> TempSensor<BUS> {
+    fn read_raw(&mut self) -> Result<u16, BUS::Error> { // <- BUS::Error: whatever this specific HAL defines
+        let mut raw = [0u8; 2];
+        self.bus.write_read(self.address, &[0x00], &mut raw)?;
+        Ok(u16::from_be_bytes(raw))
+    }
+}
+```
+
+**Why this way:** `BUS::Error` lets `TempSensor` compile against any
+HAL implementing `I2cBus`, each with its own genuinely different error
+representation, without the driver crate having to pick — or the
+`embedded-hal` ecosystem having to standardize — a single error enum
+broad enough to cover every vendor's distinct failure modes.
+
+### Scenario: Handling and propagating errors
+
+A driver function several layers removed from the bus itself should be
+able to propagate a bus error with a plain `?`, letting the concrete
+error type flow all the way up to whichever caller actually knows how to
+handle that specific HAL's failures.
+
+```
+trait I2cBus {
+    type Error;
+    fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error>;
+}
+
+struct Display<BUS: I2cBus> { bus: BUS, address: u8 }
+
+impl<BUS: I2cBus> Display<BUS> {
+    fn set_brightness(&mut self, level: u8) -> Result<(), BUS::Error> {
+        self.bus.write(self.address, &[0x81, level])?; // <- BUS::Error propagates untouched through `?`
+        Ok(())
+    }
+
+    fn clear(&mut self) -> Result<(), BUS::Error> {
+        self.bus.write(self.address, &[0x01])?;
+        Ok(())
+    }
+}
+```
+
+**Why this way:** because `Self::Error` is fixed per bus implementation
+rather than erased or boxed away, a caller several layers up still gets
+the exact concrete error variant the underlying HAL produced — useful on
+targets where matching on a specific bus fault (NACK vs. timeout vs.
+arbitration loss) drives a different recovery action, information a
+one-size-fits-all boxed error type would have thrown away.

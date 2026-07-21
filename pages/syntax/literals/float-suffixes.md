@@ -49,8 +49,39 @@ pick `f64` for `T`, which matters when the result is headed for
 [float literal](float-literal.md) for the `f64`-by-default rule this
 overrides.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency — see
-[Floating-point literal](float-literal.md) for the hardware-FPU caveat
-that applies regardless of which suffix you pick.
+The `f32`/`f64` suffix pins a literal's type identically under
+`#![no_std]` — a lexical, compile-time rule with no dependency on `std`.
+It matters more in embedded code than the choice usually does on a
+desktop, though, because of the FPU asymmetry described on
+[Floating-point literal](float-literal.md): most Cortex-M parts that have
+a hardware FPU at all only accelerate `f32`, not `f64`. Since `f64` is
+the default whenever nothing else pins the type, an unsuffixed literal
+in generic numeric code can silently end up on the slow, software-emulated
+`f64` path even on hardware that could have handled `f32` natively —
+explicitly suffixing the literal is what actually secures the hardware
+acceleration, rather than leaving it to inference.
+
+## Usage examples (Embedded)
+
+### Pinning ADC scaling math to f32 for hardware FPU acceleration
+
+```
+fn to_millivolts(raw: u16, vref: f32) -> f32 {
+    (raw as f32 / 4095.0f32) * vref // <- `f32` suffix keeps this on the Cortex-M4F's hardware FPU path, not software f64
+}
+```
+
+### Pinning a generic filter's type parameter to f32
+
+```
+fn low_pass<T>(prev: T, sample: T, alpha: T) -> T
+where
+    T: core::ops::Add<Output = T> + core::ops::Sub<Output = T> + core::ops::Mul<Output = T> + Copy,
+{
+    prev + (sample - prev) * alpha
+}
+
+let filtered = low_pass(0.0f32, 3.3f32, 0.1f32); // <- `f32` suffixes: keep T = f32 instead of defaulting the generic to f64
+```

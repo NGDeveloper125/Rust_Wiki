@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>The part after the colon in <code>$name:kind</code> is the <strong>fragment specifier</strong>:
 it tells the matcher exactly what category of syntax <code>$name</code> is allowed
@@ -988,7 +989,7 @@ rather than have them parsed away.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1036,21 +1037,68 @@ away.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Fragment matching is resolved entirely at compile
-time and has no runtime representation, so it behaves identically under
-<code>#![no_std]</code>. Embedded register- and peripheral-definition macros lean
-heavily on <code>tt</code> and <code>ident</code> specifically, since they're often generating
-code from raw identifiers and bit patterns rather than full expressions.</p>
+        <p>Fragment specifiers are resolved entirely at macro-expansion time, before
+any code generation happens — there's no runtime representation at all,
+so every specifier in the table above behaves identically whether the
+macro's expansion ends up compiled for a hosted target or <code>#![no_std]</code>
+firmware. There's no embedded-specific nuance to the matching rules
+themselves.</p>
+<p>Where this genuinely shows up is <em>what kind</em> of macro gets written this
+way in the first place: register- and peripheral-definition boilerplate
+is one of the most common reasons to hand-write a <code>macro_rules!</code> in
+embedded Rust, and those macros lean on <code>ident</code> (to name the generated
+register/field/function) and <code>tt</code>/<code>literal</code> (to carry a bit position or
+mask) far more than on <code>expr</code>, since the macro is generating code that
+<em>names hardware</em>, not evaluating a runtime value.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Generating a GPIO register accessor from raw identifiers</h3>
+            <pre><code class="rust">macro_rules! gpio_pin {
+    ($name:ident, $offset:literal) =&gt; { // &lt;- `ident` names the generated fn, `literal` carries the bit position
+        pub fn $name(odr: &amp;mut u32) {
+            *odr |= 1 &lt;&lt; $offset;
+        }
+    };
+}
+
+gpio_pin!(set_led, 5); // &lt;- expands to `pub fn set_led(odr: &amp;mut u32) { *odr |= 1 &lt;&lt; 5; }`
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Matching an interrupt source with a pat fragment</h3>
+            <pre><code class="rust">macro_rules! on_interrupt {
+    ($source:pat =&gt; $body:block) =&gt; { // &lt;- `pat` accepts the enum variant naming the interrupt source
+        match interrupt::pending() {
+            $source =&gt; $body,
+            _ =&gt; {}
+        }
+    };
+}
+
+on_interrupt!(Interrupt::Uart0 =&gt; {
+    handle_uart_rx();
+});
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

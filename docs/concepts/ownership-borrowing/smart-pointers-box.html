@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>Box&lt;T&gt;</code> is the simplest smart pointer in Rust: it places a value on the
 heap instead of the stack, while still behaving like a single, ordinary
@@ -966,7 +967,7 @@ is needed but shared ownership isn't.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let boxed: Box&lt;i32&gt; = Box::new(5); // &lt;- value is allocated on the heap; boxed is its sole owner
 println!("{boxed}");
@@ -974,7 +975,7 @@ println!("{boxed}");
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1051,24 +1052,136 @@ reaching for <code>&amp;dyn Handler</code> instead when a non-owning borrow will
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> <code>Box&lt;T&gt;</code> lives in <code>alloc</code>, not <code>core</code> — it needs
-<code>extern crate alloc;</code> and a <code>#[global_allocator]</code>. Without one configured
-(common in small, deterministic embedded projects), <code>Box</code> isn't
-available at all; <code>heapless</code> types or plain stack allocation are the
-usual allocator-free alternative. Where dynamic dispatch is still needed
-without a heap, <a href="../../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.html">on-stack dynamic dispatch</a>
-(<code>&amp;dyn Trait</code> instead of <code>Box&lt;dyn Trait&gt;</code>) is the idiomatic embedded
-substitute.</p>
+        <p><code>Box&lt;T&gt;</code> is defined in <code>alloc</code>, not <code>core</code>, so it requires <code>extern crate alloc;</code> plus a configured <code>#[global_allocator]</code> — without that setup,
+<code>Box::new(...)</code> doesn't compile under <code>#![no_std]</code> at all. The
+<a href="../../syntax/keywords/box.md"><code>box</code> keyword page</a> and the
+<a href="../../syntax/macros/vec-macro.md"><code>vec!</code> macro page</a> both cover this
+<code>alloc</code>-vs-no-heap caveat in detail, including the reason there's no
+direct <code>heapless</code> substitute for <code>Box</code> itself (a fixed-capacity collection
+needs its element size known at compile time, while <code>Box</code>'s entire
+purpose — most visibly <code>Box&lt;dyn Trait&gt;</code> — is holding something whose size
+isn't known until runtime); this page won't repeat that mechanical
+explanation.</p>
+<p>What's specific to <em>this</em> page — the concept of reaching for a smart
+pointer at all — is the design question embedded code has to ask before
+boxing anything: does this genuinely need heap indirection, or does a
+fixed-size alternative already work? A recursive type with an unbounded
+depth (a general expression tree, a linked list of arbitrary length)
+structurally needs some form of indirection, and if <code>alloc</code> is already in
+the project for other reasons, <code>Box</code> is a perfectly reasonable way to get
+it. But a lot of the shapes that reach for <code>Box</code> in hosted code — a
+handful of known message variants, a small, fixed set of driver
+implementations behind a trait — don't actually need heap allocation at
+all: a plain (non-boxed) enum over the known variants, or <code>&amp;dyn Trait</code>
+for one concrete instance at a time (see
+<a href="../design-patterns-idioms/on-stack-dynamic-dispatch.md">on-stack dynamic dispatch</a>),
+gets the same abstraction with a compile-time-known size and no allocator
+requirement. The embedded-idiomatic default is to reach for the
+no-allocation shape first and bring in <code>Box</code> only when the data
+genuinely has no fixed upper bound.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">extern crate alloc;
+use alloc::boxed::Box;
+
+let boxed: Box&lt;i32&gt; = Box::new(5); // &lt;- identical to hosted Rust, once alloc + a #[global_allocator] exist
+println!("{boxed}");
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Boxing and heap allocation</h3>
+            <p>An AST-style recursive <code>Expr</code> type has no fixed maximum depth, so it
+structurally needs indirection — once a project already depends on
+<code>alloc</code>, boxing the recursive fields is the direct embedded equivalent of
+the hosted version of this example.</p>
+<pre><code class="rust">extern crate alloc;
+use alloc::boxed::Box;
+
+enum Expr {
+    Literal(i32),
+    Add(Box&lt;Expr&gt;, Box&lt;Expr&gt;), // &lt;- same fix as hosted Rust: Box breaks the infinite size
+}
+
+fn eval(e: &amp;Expr) -&gt; i32 {
+    match e {
+        Expr::Literal(n) =&gt; *n,
+        Expr::Add(lhs, rhs) =&gt; eval(lhs) + eval(rhs),
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> an expression tree's depth depends on runtime input, so
+no compile-time-fixed representation can bound it in general — <code>Box</code> is
+the right tool exactly when the recursion is genuinely unbounded and
+<code>alloc</code> is already available; if depth <em>is</em> bounded in practice (a
+protocol that only ever nests a few levels deep), a fixed-size
+representation avoids paying for an allocator at all, which is the
+allocator-free tradeoff the
+<a href="https://doc.rust-lang.org/book/ch15-01-box.html">Rust Book</a> frames as
+<code>Box</code>'s recursive-type use case in the first place.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Runtime polymorphism</h3>
+            <p>A small, fixed set of sensor drivers behind one trait doesn't need heap
+allocation to be handled polymorphically — <code>&amp;dyn Trait</code> gives one
+concrete instance dynamic dispatch with a compile-time-known size,
+without <code>Box&lt;dyn Trait&gt;</code>'s <code>alloc</code> requirement.</p>
+<pre><code class="rust">trait Sensor {
+    fn read(&amp;self) -&gt; f32;
+}
+
+struct Thermometer;
+impl Sensor for Thermometer {
+    fn read(&amp;self) -&gt; f32 { 21.4 }
+}
+
+fn log_reading(sensor: &amp;dyn Sensor) { // &lt;- &amp;dyn Trait: no heap, no alloc, works on a bare #![no_std] target
+    println!("{}", sensor.read());
+}
+
+let thermometer = Thermometer;
+log_reading(&amp;thermometer);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>&amp;dyn Sensor</code> gets the same erased-type, dynamic-dispatch
+behavior <code>Box&lt;dyn Sensor&gt;</code> would, without allocating, as long as the
+caller can keep the concrete value alive on the stack for the borrow's
+duration — the right choice whenever one instance is used at a time rather
+than a heterogeneous collection genuinely needing owned storage; see
+<a href="../design-patterns-idioms/on-stack-dynamic-dispatch.md">on-stack dynamic dispatch</a>
+for the fuller treatment of this substitute.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

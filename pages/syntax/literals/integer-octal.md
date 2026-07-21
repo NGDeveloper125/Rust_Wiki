@@ -50,8 +50,32 @@ mapping that's lost if the same mode is written in hex or decimal; for
 masks that aren't naturally 3-bit-grouped, hex is the more common
 convention — see [integer-hexadecimal](integer-hexadecimal.md).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency; rarely used in embedded code
-specifically (hex is the near-universal convention for addresses and
-masks), but fully available.
+Octal literals mean exactly the same thing under `#![no_std]`, but
+honestly there's little embedded-specific to say beyond that: register
+addresses and bitmasks are conventionally written in hex or binary (see
+[integer-hexadecimal](integer-hexadecimal.md) and
+[integer-binary](integer-binary.md)), and bare-metal firmware has no
+Unix-style file-permission model for octal's one real everyday use case
+to attach to. Where `0o` does show up in genuine embedded Rust is on the
+"embedded Linux" side of the ecosystem — a program running on an
+SBC-class device (a Raspberry Pi controlling a production line, say)
+under embedded Linux still has a real filesystem, so file and sysfs
+device permissions look exactly like they would in any other Rust
+program built for Linux. On a genuinely bare-metal, no-filesystem
+target, octal is legal but essentially unused.
+
+## Usage examples (Embedded)
+
+### Setting sysfs GPIO export permissions on an embedded Linux board
+
+```
+use std::fs;
+use std::os::unix::fs::PermissionsExt;
+
+fn set_gpio_permissions(path: &str) -> std::io::Result<()> {
+    let perms = fs::Permissions::from_mode(0o660); // <- octal literal: same Unix permission convention as any hosted Linux program
+    fs::set_permissions(path, perms)
+}
+```

@@ -119,8 +119,59 @@ is the standard way to mutate every element of a slice in place without
 manual indexing, and the borrow checker guarantees only one `&mut`
 exists at a time, ruling out aliasing bugs at compile time.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `mut` is core grammar. It's used constantly in embedded
-code for `&mut` access to peripheral registers and driver state — no
-`std` dependency at all.
+`mut` means exactly the same thing under `#![no_std]` as it does on a
+hosted target — a binding-mutability marker, a distinct reference type
+(`&mut T`), and the standard way a method takes exclusive access to
+`self`. It shows up constantly in embedded code because so much of a
+HAL's public API is built around `&mut self` methods: setting a GPIO
+pin, writing a UART byte, or reconfiguring a timer's prescaler all take
+`&mut self` on the peripheral handle, since the operation changes
+hardware state, and the borrow checker's "only one `&mut` at a time"
+rule is exactly what stops two parts of the program from racing to
+reconfigure the same peripheral through two live handles at once.
+
+A second, historically important pattern is `static mut` — a global
+marked mutable so an interrupt handler and the main loop can both reach
+the same piece of state (a tick counter, a ring-buffer index) with no
+owning stack frame to route the borrow through. Every access to a
+`static mut` requires an `unsafe` block, because the compiler cannot
+verify that the interrupt and the main loop won't touch it at the same
+instant with no synchronization — the same data race an ordinary
+`&mut`/`&` aliasing rule would rule out at compile time if the state
+weren't global. `static mut` still appears throughout older and simpler
+embedded codebases, but it's increasingly superseded by a `static`
+wrapping a `critical-section`-guarded primitive (`Mutex<Cell<_>>`), which
+gets the same interrupt-shared mutability without an `unsafe` block at
+every access site — see [`static`](static.md) for that pattern in depth.
+
+## Usage examples (Embedded)
+
+### Mutating a peripheral through `&mut self`
+
+```
+use embedded_hal::digital::OutputPin;
+
+fn blink<P: OutputPin>(led: &mut P) { // <- `&mut P`: exclusive access needed to change the pin's output level
+    led.set_high().ok();
+    led.set_low().ok();
+}
+```
+
+### `static mut` as interrupt-shared state (historical pattern)
+
+```
+static mut TICKS: u32 = 0; // <- `mut`: shared between `main` and the interrupt, so every access needs `unsafe`
+
+#[interrupt]
+fn SysTick() {
+    unsafe {
+        TICKS += 1; // <- `mut` access requires `unsafe`: the compiler can't verify no data race with `main`
+    }
+}
+
+fn uptime_ticks() -> u32 {
+    unsafe { TICKS } // <- the same `unsafe` requirement applies to reads, not just writes
+}
+```

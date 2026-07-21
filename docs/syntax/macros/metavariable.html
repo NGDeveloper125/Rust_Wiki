@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Inside a <code>macro_rules!</code> matcher, <code>$</code> followed by an identifier introduces
 a <strong>metavariable</strong> — a named placeholder that captures whatever tokens
@@ -976,7 +977,7 @@ from, which matters once a macro is exported (see
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1021,20 +1022,65 @@ being reused.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Metavariable capture and substitution happen entirely
-during compilation, before any code is generated, so there's no
-<code>#![no_std]</code>-specific behavior — the mechanism is identical whether the
-expansion targets a hosted or bare-metal build.</p>
+        <p>Metavariable capture and substitution happen entirely during
+compilation, before any code is generated, so there's no
+<code>#![no_std]</code>-specific behavior here — the mechanism is identical whether
+the expansion targets a hosted binary or a bare-metal firmware image.
+Where this shows up constantly in embedded code is register-definition
+and peripheral-boilerplate macros: HAL crates generate dozens of
+near-identical register accessors or peripheral wrappers from a handful
+of <code>$name:ident</code>/<code>$addr:expr</code>-style metavariables, rather than
+hand-writing the same shape once per register.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Capturing a register name and address</h3>
+            <pre><code class="rust">macro_rules! define_register {
+    ($name:ident, $addr:expr) =&gt; { // &lt;- captures an identifier and an expression as metavariables
+        const $name: usize = $addr; // &lt;- $name and $addr are substituted with the exact captured tokens
+    };
+}
+
+define_register!(GPIOA_ODR, 0x4800_0014); // &lt;- expands to: const GPIOA_ODR: usize = 0x4800_0014;
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Generating a peripheral accessor from captured metavariables</h3>
+            <p>A HAL-style macro captures a register's function name, address, and
+value type once, then reuses each metavariable both to name the
+generated function and to build its body — the same "capture once,
+reference the tokens repeatedly" mechanism the classic examples show,
+just applied to register boilerplate instead of arithmetic.</p>
+<pre><code class="rust">macro_rules! ro_register {
+    ($fn_name:ident, $addr:expr, $ty:ty) =&gt; {
+        fn $fn_name() -&gt; $ty { // &lt;- $fn_name names the generated accessor
+            unsafe { core::ptr::read_volatile($addr as *const $ty) } // &lt;- $addr and $ty reused in the body
+        }
+    };
+}
+
+ro_register!(read_status_reg, 0x4001_0000, u32);
+// expands to: fn read_status_reg() -&gt; u32 { unsafe { core::ptr::read_volatile(0x4001_0000 as *const u32) } }
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

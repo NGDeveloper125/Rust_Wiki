@@ -78,10 +78,44 @@ values documents the intended starting point at one place, which the
 [API Guidelines' C-COMMON-TRAITS](https://rust-lang.github.io/api-guidelines/interoperability.html#types-eagerly-implement-common-traits-c-common-traits)
 recommends for any type with an obvious default.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Integer literals are core lexical grammar — identical
-in `#![no_std]`. Embedded code leans heavily on explicit-width suffixes
-(`u8`, `u16`, `u32`) since register widths and peripheral data sizes are
-usually fixed and meaningful, unlike host code where `i32`/`usize`
-defaults are often fine.
+A decimal literal is core lexical grammar, identical under `#![no_std]`
+— honestly, this is the least embedded-specific of the integer literal
+forms. Addresses and bitmasks gravitate to hex or binary (see
+[integer-hexadecimal](integer-hexadecimal.md) and
+[integer-binary](integer-binary.md)) precisely because those bases show
+byte/bit structure that decimal hides, so decimal's role in firmware is
+the same plain one it has anywhere else: everyday counts, loop bounds,
+buffer sizes, delays, and retry limits, with nothing about the base
+itself changing under `no_std`. (See [integer suffixes](integer-suffixes.md)
+for where embedded code *does* diverge from typical host code —
+explicit-width type suffixes, not the choice of decimal versus another
+base.)
+
+## Usage examples (Embedded)
+
+### Sizing a heapless buffer with a plain decimal constant
+
+```
+use heapless::Vec;
+
+const SAMPLE_COUNT: usize = 32; // <- decimal literal: a buffer capacity, nothing embedded-specific about the base
+let mut samples: Vec<u16, SAMPLE_COUNT> = Vec::new();
+```
+
+### Retrying a sensor read a fixed number of times
+
+```
+fn read_with_retries<E>(mut read: impl FnMut() -> Result<u16, E>) -> Result<u16, E> {
+    let max_attempts = 3; // <- decimal literal: a plain retry count, same as it would be in hosted code
+    let mut last_err = None;
+    for _ in 0..max_attempts {
+        match read() {
+            Ok(v) => return Ok(v),
+            Err(e) => last_err = Some(e),
+        }
+    }
+    Err(last_err.unwrap())
+}
+```

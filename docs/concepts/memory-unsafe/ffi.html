@@ -952,7 +952,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>FFI, the foreign function interface, is the mechanism Rust uses to call
 functions written in another language — almost always C, or a language
@@ -993,7 +994,7 @@ never go wrong at this edge.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">unsafe extern "C" {
     fn abs(input: i32) -&gt; i32; // &lt;- extern: declares a foreign C function
@@ -1009,7 +1010,7 @@ fn main() {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1134,25 +1135,188 @@ this idiom shows up in real crates.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> FFI works identically without <code>std</code>, and is arguably
-<em>more</em> common in embedded Rust than in hosted Rust: instead of calling a
-general-purpose OS library, embedded FFI usually means linking against a
-vendor-supplied C HAL or SDK (an ST, Nordic, or Espressif peripheral
-library) that predates any Rust support for that chip. The same
-<code>extern "C"</code> declarations and <code>#[repr(C)]</code> structs apply; the main
-practical difference is that linking typically pulls in a vendor <code>.a</code>
-archive via a <code>build.rs</code> script rather than a system library found by the
-linker's default search path.</p>
+        <p>Linking against a vendor's C SDK is one of the most common reasons an
+embedded Rust project needs FFI at all — chip vendors have decades of C
+driver code (ST's STM32Cube HAL, Nordic's <code>nrfx</code>, TI's DriverLib, a
+vendor RTOS like FreeRTOS or ThreadX) and no Rust equivalent for a given
+peripheral or protocol stack, so the pragmatic path is binding the
+existing C library instead of reimplementing it. The mechanics are
+identical to hosted FFI — an <code>unsafe extern "C"</code> block declares the
+vendor functions' signatures, <code>#[repr(C)]</code> on every struct that crosses
+the boundary keeps its layout byte-for-byte compatible with the vendor's
+C header, and each call is <code>unsafe</code> because the compiler has no way to
+check what the vendor's compiled object file actually does — but the
+<em>shape</em> of what gets bound differs from a typical hosted library. A
+vendor HAL init function commonly takes a pointer to a configuration
+struct with a dozen fields (clock source, GPIO mode, alternate function
+number, pull-up/down, speed) that must match the C header's <code>struct</code>
+field-for-field, which is exactly why that struct needs <code>#[repr(C)]</code> on
+the Rust side — see <a href="memory-layout-and-repr.md">Memory layout &amp; repr</a>
+for why <code>repr(Rust)</code>'s default reordering would silently break this.
+Linking itself typically means pulling in a prebuilt vendor <code>.a</code> archive
+through a <code>build.rs</code> script (<code>cc</code>/<code>bindgen</code>-generated bindings, or
+hand-written <code>extern</code> declarations for a small enough surface) rather
+than finding a system library on the default linker search path, since
+there is no OS package manager providing the vendor SDK.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#[repr(C)] // &lt;- must match the vendor header's GPIO_InitTypeDef layout exactly
+pub struct GpioInitTypeDef {
+    pin: u32,
+    mode: u32,
+    pull: u32,
+    speed: u32,
+}
+
+unsafe extern "C" {
+    fn HAL_GPIO_Init(gpiox: *mut core::ffi::c_void, init: *mut GpioInitTypeDef); // &lt;- vendor HAL function
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Crossing an FFI boundary</h3>
+            <p>Initializing a GPIO pin through ST's HAL means building a config struct
+whose layout the vendor's C library will read directly, then handing it
+a raw pointer.</p>
+<pre><code class="rust">#[repr(C)] // &lt;- layout must match STM32Cube's GPIO_InitTypeDef byte-for-byte
+pub struct GpioInitTypeDef {
+    pin: u32,
+    mode: u32,
+    pull: u32,
+    speed: u32,
+}
+
+unsafe extern "C" {
+    fn HAL_GPIO_Init(gpiox: *mut core::ffi::c_void, init: *mut GpioInitTypeDef);
+}
+
+pub fn init_led_pin(gpio_port: *mut core::ffi::c_void) {
+    let mut config = GpioInitTypeDef { pin: 1 &lt;&lt; 5, mode: 0x01, pull: 0, speed: 0x02 };
+    unsafe {
+        // SAFETY: `gpio_port` is a valid GPIOx base address (checked by
+        // the caller), and `config` outlives this call as a stack local.
+        HAL_GPIO_Init(gpio_port, &amp;mut config); // &lt;- crossing into the vendor's prebuilt C HAL
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> without <code>#[repr(C)]</code>, the compiler could reorder
+<code>pin</code>/<code>mode</code>/<code>pull</code>/<code>speed</code> in memory while <code>HAL_GPIO_Init</code> keeps reading
+them at the C header's fixed offsets, silently feeding the wrong value
+into each field — the <a href="https://doc.rust-lang.org/nomicon/ffi.html">Rustonomicon's FFI
+chapter</a> treats
+layout-matching as a precondition for any struct crossing an
+<code>extern "C"</code> boundary, embedded or not.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>Vendor HALs report failure the C way — an integer status code, not a
+<code>Result</code> — so an idiomatic wrapper translates the vendor's convention at
+the boundary instead of leaking <code>HAL_OK</code>/<code>HAL_ERROR</code> integers into
+application code.</p>
+<pre><code class="rust">unsafe extern "C" {
+    fn HAL_UART_Transmit(huart: *mut core::ffi::c_void, data: *const u8, len: u16, timeout: u32) -&gt; i32; // 0 = HAL_OK
+}
+
+#[derive(Debug)]
+pub struct UartError(i32);
+
+pub fn send(uart_handle: *mut core::ffi::c_void, bytes: &amp;[u8]) -&gt; Result&lt;(), UartError&gt; {
+    let status = unsafe {
+        // SAFETY: `uart_handle` was initialized by the vendor SDK before
+        // this call, and `bytes` is a valid slice for its full length.
+        HAL_UART_Transmit(uart_handle, bytes.as_ptr(), bytes.len() as u16, 100)
+    };
+    if status == 0 { Ok(()) } else { Err(UartError(status)) } // &lt;- vendor's int code becomes an idiomatic Result
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> absorbing the vendor's <code>HAL_StatusTypeDef</code>-style
+integer codes right at the call site means every caller further up the
+firmware gets ordinary <code>?</code>-based error handling instead of having to
+remember which vendor constant means what — the same
+boundary-absorption idiom the
+<a href="https://doc.rust-lang.org/nomicon/ffi.html">Rustonomicon</a> recommends
+for any foreign error convention.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A crate wrapping a vendor SDK should expose only safe, typed Rust
+methods; every <code>unsafe extern "C"</code> declaration and <code>#[repr(C)]</code> struct
+stays inside a private <code>sys</code> module.</p>
+<pre><code class="rust">mod sys {
+    #[repr(C)]
+    pub struct GpioInitTypeDef {
+        pub pin: u32,
+        pub mode: u32,
+    }
+
+    unsafe extern "C" {
+        pub fn HAL_GPIO_Init(gpiox: *mut core::ffi::c_void, init: *mut GpioInitTypeDef); // &lt;- raw vendor FFI surface, not exported
+    }
+}
+
+pub struct Led {
+    port: *mut core::ffi::c_void,
+}
+
+impl Led {
+    pub fn new(port: *mut core::ffi::c_void, pin: u32) -&gt; Self {
+        let mut config = sys::GpioInitTypeDef { pin, mode: 0x01 };
+        unsafe {
+            // SAFETY: `port` is a valid GPIOx base address, validated by
+            // this constructor's caller per its documented contract.
+            sys::HAL_GPIO_Init(port, &amp;mut config); // &lt;- unsafe FFI call contained inside a safe constructor
+        }
+        Self { port }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> keeping <code>sys</code> private means the rest of the crate — and
+every downstream user of <code>Led</code> — never writes <code>unsafe</code> or sees the
+vendor's raw C types, which is the same "contain unsafety in small
+modules" idiom the
+<a href="https://doc.rust-lang.org/nomicon/working-with-unsafe.html">Rustonomicon</a>
+recommends, applied to a vendor HAL instead of a hand-rolled data
+structure.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

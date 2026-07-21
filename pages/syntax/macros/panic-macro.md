@@ -114,14 +114,65 @@ specifically so pinning down the `panic!` message's wording, not merely
 that a panic occurs, catches a regression where the check still fires but
 for a different, wrong reason.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `panic!` is `core::panic!` — invoking it has no `std`
-dependency. What changes under `#![no_std]` is what happens afterward:
-there's no default unwind-and-print-a-backtrace behavior, so every
-`#![no_std]` binary must supply exactly one function marked
-[`#[panic_handler]`](../attributes/panic-handler-attribute.md), and most
-embedded targets build with `panic = "abort"` rather than unwinding at
-all — see
+`panic!` is `core::panic!` under the hood, and calling it has no
+dependency on `std` — the macro's calling convention (no arguments, a
+string literal, or a format string with arguments) is identical on a
+bare-metal target. What's genuinely different is everything that happens
+*after* it fires. On a hosted target, the default runtime prints the
+message and a backtrace to stderr, then either unwinds the stack —
+running `Drop` impls on the way out — or, under `panic = "abort"`,
+terminates the process immediately; either way, there's an operating
+system underneath to catch the unwind or receive the process's exit
+code.
+
+On bare metal there is no OS process to unwind into and nothing to
+receive an abort — the language handles this by requiring every
+`#![no_std]` binary to supply exactly one function marked
+[`#[panic_handler]`](../attributes/panic-handler-attribute.md), and
+*that* function is what actually runs when `panic!` fires; without one,
+the binary fails to link. Because there's no unwind runtime on most
+bare-metal targets either, embedded crates almost universally build with
+`panic = "abort"` in the profile, and the panic handler itself typically
+never returns — it does something to report the message, then parks the
+core in an infinite loop or resets the chip. Common choices, pulled in as
+a dependency purely for the `#[panic_handler]` they provide: `panic-halt`
+(disables interrupts and loops forever — no logging, smallest footprint),
+`panic-itm` (writes the formatted message out over ITM/SWO before
+halting), and `panic-probe` (pairs with `defmt` to format and transmit
+the panic message over RTT to a debug probe before halting) — see
 [Panic & unwinding](../../concepts/error-handling/panic-and-unwinding.md)
-for that distinction.
+for the unwind-vs-abort distinction itself.
+
+## Usage examples (Embedded)
+
+### Panicking on an out-of-range peripheral configuration
+
+```
+fn set_pwm_duty(percent: u8) {
+    if percent > 100 {
+        panic!("PWM duty {percent}% exceeds 100%"); // <- same formatted-message grammar as hosted Rust
+    }
+    // ... write the duty cycle to the timer's compare register
+}
+```
+
+### Selecting a panic handler for a bare-metal binary
+
+```
+#![no_std]
+#![no_main]
+
+use panic_halt as _; // <- pulled in only for the #[panic_handler] it registers; this is what runs when panic! fires
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -> ! {
+    let sensor_ok = false;
+    if !sensor_ok {
+        panic!("sensor init failed"); // <- with no OS to unwind into, this hands control straight to panic-halt's handler
+    }
+    loop {}
+}
+```

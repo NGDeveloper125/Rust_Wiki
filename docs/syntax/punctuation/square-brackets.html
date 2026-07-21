@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>[ ]</code> covers array/slice construction, array/slice types, and indexing:</p>
 <ul>
@@ -975,7 +976,7 @@ see the <a href="../../concepts/types-data-modeling/arrays-vs-vec.html">Arrays v
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1033,19 +1034,49 @@ where a "slice" implies a copy.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Array and slice syntax is core grammar (<code>[T; N]</code> and
-<code>[T]</code> both live in <code>core</code>) — no <code>std</code> dependency, and fixed-size arrays
-are the single most-used data structure in allocator-free embedded code.</p>
+        <p><code>[ ]</code> means exactly the same thing under <code>#![no_std]</code> — array/slice
+types, literals, and indexing all live in <code>core</code>, with no <code>std</code>
+dependency. Fixed-size arrays are, if anything, more central in embedded
+code than in hosted code: without a heap, <code>[T; N]</code> (or a
+<code>heapless::Vec&lt;T, N&gt;</code> built on top of one) is usually the <em>only</em> buffer
+type available, standing in for the <code>Vec&lt;T&gt;</code> a hosted program would reach
+for by default.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A fixed-size buffer standing in for `Vec`</h3>
+            <pre><code class="rust">#![no_std]
+
+use heapless::Vec;
+
+let mut samples: Vec&lt;u16, 16&gt; = Vec::new(); // &lt;- backed by a `[u16; 16]`, not a heap allocation
+samples.push(512).ok();
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Slicing a DMA receive buffer</h3>
+            <pre><code class="rust">let rx_buf: [u8; 64] = [0; 64];
+let header = &amp;rx_buf[..4]; // &lt;- `[..4]` slices the first 4 bytes without copying
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

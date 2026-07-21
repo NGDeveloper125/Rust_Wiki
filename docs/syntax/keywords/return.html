@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>return</code> exits a function immediately with a given value.</p>
 <p>Because Rust is expression-oriented, <code>return</code> is rarely required for the
@@ -967,7 +968,7 @@ expression position, e.g. <code>let x = if cond { return; } else { 5 };</code>.<
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1025,19 +1026,53 @@ favor this guard-clause shape over deep nesting.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No <code>std</code> dependency. Note that a <code>#![no_std]</code> binary's
-<code>fn main() -&gt; !</code> never returns at all — <code>return</code> is used for early exits
-from ordinary functions, same as on a hosted target.</p>
+        <p><code>return</code> behaves identically under <code>#![no_std]</code> — no <code>std</code> dependency.
+The one thing worth noting is the surrounding context: a <code>#![no_std]</code>
+binary's <code>fn main() -&gt; !</code> never returns at all (see <a href="loop.md"><code>loop</code></a>),
+but ordinary functions below <code>main</code> — especially driver code — use
+<code>return</code> for early exits exactly as on a hosted target. It composes
+naturally with <code>?</code>: embedded drivers commonly return <code>Result&lt;(), E&gt;</code> from
+functions that talk to a peripheral over I2C/SPI/UART, and <code>?</code> is just
+sugar for an early <code>return Err(...)</code> on failure.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Exiting a driver function early on invalid input</h3>
+            <pre><code class="rust">fn set_prescaler(timer: &amp;mut Timer, value: u16) -&gt; Result&lt;(), &amp;'static str&gt; {
+    if value == 0 {
+        return Err("prescaler must be nonzero"); // &lt;- exits the function immediately with the error
+    }
+    timer.psc().write(|w| w.psc().bits(value));
+    Ok(())
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Composing with `?` in a Result-returning driver function</h3>
+            <pre><code class="rust">fn init_sensor(i2c: &amp;mut I2c) -&gt; Result&lt;(), Error&gt; {
+    i2c.write(SENSOR_ADDR, &amp;[REG_CONFIG, CONFIG_DEFAULT])?; // &lt;- `?` returns early on failure, same as an explicit `return`
+    Ok(())
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

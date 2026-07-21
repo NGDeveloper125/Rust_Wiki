@@ -51,6 +51,34 @@ rather than a bare number whose meaning has to be inferred — see
 [`<`](less-than.md) for the fuller treatment of ordering comparisons in
 general.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `PartialOrd` lives in `core::cmp` — no `std` dependency.
+`>=` means the same thing under `#![no_std]` — same `core::cmp`
+`PartialOrd` as `>`, `<`, and `<=`. The inclusive-lower-bound reading is
+genuinely common in firmware: a battery voltage that has reached (not
+just exceeded) a "sufficiently charged" threshold, or a fixed-size
+buffer's write index that has reached exactly its capacity — in both
+cases the boundary value itself is meant to count, which is what makes
+`>=` the right comparison instead of `>`.
+
+## Usage examples (Embedded)
+
+### Checking a battery voltage has reached the operating threshold
+
+```
+const MIN_OPERATING_MILLIVOLTS: u16 = 3300;
+
+fn battery_ok(voltage_millivolts: u16) -> bool {
+    voltage_millivolts >= MIN_OPERATING_MILLIVOLTS // <- `>=` treats the threshold itself as still acceptable
+}
+```
+
+### Reporting a fixed-size buffer as full
+
+```
+const BUFFER_CAPACITY: usize = 64;
+
+fn buffer_is_full(write_index: usize) -> bool {
+    write_index >= BUFFER_CAPACITY // <- `>=` catches "exactly full" as well as "somehow past capacity"
+}
+```

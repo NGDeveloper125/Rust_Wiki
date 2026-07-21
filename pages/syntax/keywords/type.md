@@ -110,10 +110,29 @@ choose — see
 [Associated types](../../concepts/types-data-modeling/associated-types.md)
 for when this is preferable to a generic parameter instead.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both forms are purely compile-time — no `std` or
-allocator dependency. The `embedded-hal` ecosystem's traits rely heavily
-on associated types (an error type tied to a specific peripheral trait,
-for instance) to stay generic across vendors' hardware without a
-proliferation of generic parameters.
+Both forms of `type` mean exactly the same thing under `#![no_std]`, with
+no allocator or `std` dependency either way. The alias form earns its
+keep especially often in embedded code, where a fully-generic HAL driver
+type's real signature can get long — parameterized over a specific SPI
+peripheral, a specific GPIO pin type, and a specific display controller
+all at once — so a crate commonly aliases the one concrete instantiation
+it actually uses to a short, chip-specific name instead of spelling that
+signature out at every use site.
+
+## Usage examples (Embedded)
+
+### Aliasing a verbose HAL-generic driver type
+
+```
+type Display = Ssd1306<SpiInterface<Spi1, Pa5<Output>>, DisplaySize128x64, BufferedGraphicsMode>;
+// <- `type` alias: one short name standing in for the fully-parameterized driver type
+```
+
+### Aliasing a chip-specific peripheral type
+
+```
+type Led = stm32f4xx_hal::gpio::Pin<'B', 7, stm32f4xx_hal::gpio::Output>;
+// <- `type` alias: names this board's specific LED pin without repeating the full generic path everywhere
+```

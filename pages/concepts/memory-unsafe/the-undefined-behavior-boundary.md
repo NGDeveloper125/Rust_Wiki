@@ -149,15 +149,123 @@ chapter](https://doc.rust-lang.org/nomicon/meet-safe-and-unsafe.html)
 both treat a documented contract as the difference between an audited
 unsafe function and a landmine.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The undefined-behavior rules are core-language and
-identical whether or not `std` is available — arguably the stakes are
-higher in embedded code, since there is often no OS memory protection to
-turn a bad dereference into a clean segfault instead of silently
-corrupting adjacent hardware state or another task's memory. Volatile
-access to memory-mapped registers (`core::ptr::read_volatile`/
-`write_volatile` instead of a plain dereference) is one embedded-specific
-UB pitfall with no hosted-Rust equivalent: an ordinary read/write can be
-reordered or elided by the optimizer in ways that are invisible to normal
-memory but silently drop a required hardware side effect.
+Register access sits right on this boundary in a way that has no
+equivalent in hosted code: a raw pointer read or write to a real
+peripheral address is "well-defined" from the abstract machine's point
+of view as long as the pointer is non-null, aligned, and points to a
+valid `u32` — but that's a claim about *Rust's* memory model, and it
+says nothing about what reading or writing that address actually does to
+the physical device on the other end. A UART's data register is the
+sharpest example: reading it doesn't just observe a value, it *consumes*
+a byte from the receive FIFO as a side effect, and a status register's
+"data ready" bit can be cleared by the read that checks it. From the
+compiler's perspective, an ordinary `*ptr` read has no side effects to
+preserve — nothing stops it from being reordered past another memory
+access, deleted entirely if the result looks unused, or duplicated if the
+optimizer decides re-reading is cheaper than keeping the first value
+around. Every one of those transformations is sound for ordinary memory
+and catastrophic for a register with a hardware side effect: an elided
+write never reaches the peripheral at all, a duplicated read consumes
+two bytes from a FIFO expecting one, and a reordered read/write pair can
+observe or trigger register state in the wrong order relative to another
+access.
+
+`core::ptr::read_volatile`/`write_volatile` (or their pointer-method
+equivalents) are how the boundary stays where it's supposed to be: they
+are the language's promise that this exact access happens, exactly once,
+at exactly this point in program order, with no reordering relative to
+other volatile accesses — which is precisely the guarantee a
+side-effecting register read or write needs and a plain dereference does
+not provide. Using a plain `*ptr`/`*ptr = v` on a memory-mapped register
+is not automatically UB the way a null dereference is, but it silently
+forfeits the one guarantee that keeps the optimizer from doing something
+that is well-defined for RAM and simply wrong for hardware — which in
+practice is indistinguishable from UB in the symptoms it produces (a
+dropped write, a busy-loop that never sees a flag change, a byte that
+vanishes from a receive buffer).
+
+## Basic usage example (Embedded)
+
+```
+const UART_DR: *const u32 = 0x4001_1804 as *const u32; // <- data register: reading it consumes one received byte
+
+fn read_byte() -> u8 {
+    unsafe {
+        // SAFETY: UART_DR is a valid, always-mapped register; a single
+        // volatile read is UART_DR's documented way to consume one byte.
+        core::ptr::read_volatile(UART_DR) as u8 // <- volatile: this read's side effect must never be duplicated or elided
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Bit manipulation and flags
+
+Polling a status register's "data ready" bit in a loop is only correct
+if every iteration genuinely re-reads the hardware — a plain dereference
+gives the optimizer permission to hoist the read out of the loop
+entirely, turning a poll into an infinite loop.
+
+```
+const UART_SR: *const u32 = 0x4001_1800 as *const u32;
+const UART_DR: *const u32 = 0x4001_1804 as *const u32;
+
+fn wait_for_byte() -> u8 {
+    // AVOID: a plain dereference has no ordering/reordering guarantee —
+    // the optimizer can legally read UART_SR once and loop forever on a
+    // cached value that never reflects the hardware's real state.
+    // while unsafe { *UART_SR } & 0x1 == 0 {}
+
+    // PREFER: read_volatile forces a genuine re-read of the register on
+    // every iteration.
+    unsafe {
+        while core::ptr::read_volatile(UART_SR) & 0x1 == 0 {} // <- must observe real hardware state each pass
+        core::ptr::read_volatile(UART_DR) as u8
+    }
+}
+```
+
+**Why this way:** the [Rust embedded
+book](https://docs.rust-embedded.org/book/start/registers.html)
+documents exactly this busy-wait pattern as the canonical case for
+`read_volatile` — without it, a sufficiently aggressive optimizer is not
+just permitted but likely to prove the loop body "doesn't change"
+`UART_SR` and either hoist the read or assume the branch is never taken.
+
+### Scenario: Designing a public API
+
+A UART driver's `read_byte` method is the one place in the crate that
+touches `UART_DR` directly; its safety documentation states the
+side-effect explicitly, because a caller who calls it twice for "the
+same" byte would silently lose data instead of getting a compile error.
+
+```
+pub struct Uart;
+
+impl Uart {
+    /// Reads and returns the next received byte.
+    ///
+    /// # Note
+    /// Each call consumes one byte from the hardware receive FIFO — the
+    /// read is not idempotent, unlike an ordinary field access.
+    pub fn read_byte(&self) -> u8 {
+        const UART_DR: *const u32 = 0x4001_1804 as *const u32;
+        unsafe {
+            // SAFETY: UART_DR is always mapped; read_volatile guarantees
+            // this call performs exactly one consuming read, never zero
+            // (elided) or two (duplicated).
+            core::ptr::read_volatile(UART_DR) as u8
+        }
+    }
+}
+```
+
+**Why this way:** documenting the side effect on the safe method is what
+lets callers reason about it correctly without re-deriving hardware
+behavior themselves — [the
+Rustonomicon](https://doc.rust-lang.org/nomicon/working-with-unsafe.html)'s
+"contain unsafety, document the contract" idiom applies here to a
+*behavioral* contract (consumes a byte), not just a memory-safety one.

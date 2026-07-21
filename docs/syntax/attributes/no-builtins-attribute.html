@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#![no_builtins]</code> is an inner attribute placed at the top of a crate root
 that disables the compiler's freedom to silently substitute certain code
@@ -979,7 +980,7 @@ needs to reach for <code>#![no_builtins]</code> itself.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1025,22 +1026,92 @@ alongside <code>#![no_std]</code>.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong>, but this attribute is genuinely rare even within
-embedded Rust — it matters to kernel-level and truly freestanding crates
-that provide their own memory-copy primitives, not to ordinary
-application-level <code>#![no_std]</code> firmware, which typically links against a
-<code>compiler_builtins</code>-provided implementation of these routines without
-ever needing <code>#![no_builtins]</code> itself.</p>
+        <p>Ordinary application-level <code>#![no_std]</code> firmware almost never reaches for
+<code>#![no_builtins]</code>, and it's worth being direct about why: <code>rustc</code>
+automatically links a crate called <code>compiler_builtins</code> into every
+<code>#![no_std]</code> binary, which supplies <code>memcpy</code>/<code>memset</code>/<code>memmove</code> and, on
+targets without hardware floating-point (many Cortex-M0 parts), the
+software floating-point routines the compiler otherwise assumes libgcc
+would provide. A typical HAL-based application — reading sensors, driving
+a display, talking over a UART — depends on that implementation
+transparently and has no reason to disable it.</p>
+<p><code>#![no_builtins]</code> earns its keep in a narrower layer beneath ordinary
+application firmware: bootloaders and safety-critical/certified cores.
+A first-stage bootloader that runs before the flash controller is fully
+configured, or that copies its own next stage out of raw flash, sometimes
+needs full control over exactly which <code>memcpy</code> implementation runs and
+when, rather than trusting whichever one <code>compiler_builtins</code> happens to
+lower a copy into — <code>#![no_builtins]</code> is the guarantee that no code path
+introduces a call to <code>compiler_builtins</code>'s version behind the scenes. In
+safety-qualified environments (DO-178C avionics code, ISO 26262
+automotive code), a project may also need to substitute a <em>certified</em>
+implementation of these routines for the standard, uncertified one that
+ships with the compiler, which similarly requires disabling the implicit
+substitution first.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A bootloader supplying its own memcpy instead of relying on compiler_builtins</h3>
+            <pre><code class="rust">#![no_std]
+#![no_builtins] // &lt;- this bootloader controls its own memory routines; nothing may assume the compiler's
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, n: usize) -&gt; *mut u8 {
+    let mut i = 0;
+    while i &lt; n {
+        unsafe {
+            // SAFETY: caller guarantees `dest`/`src` are valid for `n` bytes and don't overlap.
+            *dest.add(i) = *src.add(i);
+        }
+        i += 1;
+    }
+    dest
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Ordinary firmware needs none of this</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+// No #![no_builtins] here: this application-level firmware relies on
+// compiler_builtins' memcpy/memset (linked in automatically) exactly
+// like the overwhelming majority of #![no_std] HAL-based projects do.
+
+use panic_halt as _;
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -&gt; ! {
+    let buffer = [0u8; 64];
+    let mut copy = [0u8; 64];
+    copy.copy_from_slice(&amp;buffer); // compiles to a memcpy call, satisfied by compiler_builtins
+
+    loop {}
+}
+</code></pre>
+<p>The second example is the realistic default for nearly all embedded
+Rust; <code>#![no_builtins]</code> belongs to the small slice of bootloader- and
+certification-level code that must control this, not to application
+firmware sitting on a HAL.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

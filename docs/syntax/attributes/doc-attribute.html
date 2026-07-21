@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[doc = "..."]</code> is the attribute form every doc comment desugars into —
 an outer <a href="../../syntax/comments/outer-line-doc-comment.html"><code>///</code></a> comment becomes an
@@ -988,7 +989,7 @@ follow.</li>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1062,21 +1063,65 @@ navigated to directly.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>#[doc(...)]</code> generation is a <code>cargo doc</code>/rustdoc-time
-concern with no dependency on <code>std</code> or an allocator, so it works
-identically for <code>#![no_std]</code> crates — a HAL crate's macro-generated
-register-access internals are exactly the kind of thing <code>#[doc(hidden)]</code>
-is reached for in embedded codebases specifically.</p>
+        <p><code>#[doc(...)]</code> generation itself is a <code>cargo doc</code>/rustdoc-time concern,
+entirely on the host, with no dependency on <code>std</code>, an allocator, or the
+target having anything at all — <code>#[doc(hidden)]</code>, <code>#[doc(alias = "...")]</code>,
+and <code>#[doc(inline)]</code> all behave identically whether the crate is
+<code>#![no_std]</code> or not. The host-vs-target distinction that matters for
+embedded documentation belongs to the fenced-code-block doc tests inside
+<code>///</code>/<code>//!</code> comments, not to these attribute forms — see the
+<a href="../comments/outer-line-doc-comment.md"><code>///</code></a> page's Embedded Rust Notes
+for that point, since none of <code>hidden</code>/<code>alias</code>/<code>inline</code> carry an
+executable example of their own to run anywhere.</p>
+<p>If anything is genuinely more common in embedded crates, it's
+<code>#[doc(hidden)]</code>: peripheral-access crates generated from an SVD file (via
+svd2rust) or macro-heavy register-definition helpers routinely need to
+make internal types <code>pub</code> purely so generated code compiles, without
+wanting those internals to show up as real API surface in the crate's
+docs.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Hiding a macro-generated register type from a HAL crate's docs</h3>
+            <pre><code class="rust">// Generated (conceptually) by a register-definition macro:
+#[doc(hidden)] // &lt;- must stay pub for the generated field-accessor code to reference it, not real API surface
+pub struct Usart1RegisterBlock {
+    pub cr1: u32,
+    pub cr2: u32,
+    pub dr: u32,
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Inlining a re-exported peripheral type's docs at the HAL crate root</h3>
+            <pre><code class="rust">mod gpio_internal {
+    pub struct Pin {
+        pub number: u8,
+    }
+}
+
+#[doc(inline)] // &lt;- shows Pin's full docs at the crate root, not just a link to gpio_internal
+pub use gpio_internal::Pin;
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

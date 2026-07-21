@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Visibility controls which code outside a given module can name or use an
 item — a function, struct, field, enum variant, or module. By default,
@@ -990,7 +991,7 @@ it to apply to.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">mod account {
     pub struct Account {
@@ -1014,7 +1015,7 @@ fn main() {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1130,23 +1131,119 @@ documentation's table of contents, per the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Visibility is enforced entirely at compile time and has
-no runtime representation, so it costs nothing and behaves identically
-under <code>#![no_std]</code>. Embedded HAL crates lean on it heavily: a driver
-typically keeps raw register access private and exposes only a small set
-of <code>pub</code> methods that uphold the hardware's actual safety invariants,
-the same "private fields, validated public entry points" pattern shown
-above applied to a peripheral instead of an <code>Account</code>.</p>
+        <p>Visibility is enforced entirely at compile time and has no runtime
+representation, so the mechanism is unchanged under <code>#![no_std]</code>. What's
+genuinely important here is a convention, not a new rule: an embedded
+HAL driver keeps every raw register read/write private and exposes only
+a small set of <code>pub</code> methods that encode the hardware's actual safety
+invariants (for example, "don't enable the peripheral before its clock
+is enabled") — so <code>unsafe</code> register manipulation is contained to a
+small, audited surface instead of scattered through application code.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">pub struct Gpio {
+    port: *mut u32,   // private: raw register pointer, never exposed
+}
+
+impl Gpio {
+    pub fn set_high(&amp;mut self, pin: u8) {
+        unsafe { self.port.write_volatile(self.port.read_volatile() | (1 &lt;&lt; pin)) } // &lt;- unsafe write, contained here
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A GPIO driver's whole safety argument rests on nobody outside the module
+ever getting a raw pointer to the peripheral's registers — the <code>pub</code>
+surface only offers already-validated operations.</p>
+<pre><code class="rust">pub struct Gpio {
+    port: *mut u32,        // &lt;- private: the raw register address never leaves this module
+}
+
+impl Gpio {
+    /// # Safety
+    /// `port` must be a valid pointer to this peripheral's GPIO register block.
+    pub unsafe fn new(port: *mut u32) -&gt; Self {  // &lt;- the one place the invariant is asserted, once
+        Gpio { port }
+    }
+
+    pub fn set_high(&amp;mut self, pin: u8) {         // &lt;- safe: callers can no longer misuse the address
+        unsafe {
+            self.port.write_volatile(self.port.read_volatile() | (1 &lt;&lt; pin));
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> funneling every register access through a handful of
+<code>pub</code> methods, instead of exposing the raw pointer, means the <code>unsafe</code>
+contract only has to be checked once — at construction — rather than at
+every call site, the "contain unsafety behind a safe API" practice the
+<a href="https://doc.rust-lang.org/nomicon/working-with-unsafe.html">Rustonomicon</a>
+describes for wrapping raw-pointer/FFI-style access generally, applied
+here to memory-mapped registers.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Documenting an API</h3>
+            <p>A HAL crate's generated docs should read like a peripheral's user
+manual, not its register map — so the register-level constants and raw
+pointer types stay private and never appear in the published API.</p>
+<pre><code class="rust">mod registers {                 // &lt;- private module: register offsets and bit positions
+    pub(super) const ENABLE_BIT: u32 = 1 &lt;&lt; 0;
+}
+
+pub struct Spi {
+    // ...
+}
+
+impl Spi {
+    /// Enables the SPI peripheral.
+    pub fn enable(&amp;mut self) {  // &lt;- pub: this is what shows up in rustdoc
+        // uses registers::ENABLE_BIT internally
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> keeping register offsets and bit masks in a
+<code>pub(super)</code>-or-private <code>registers</code> module means rustdoc's generated
+page for the crate shows only the peripheral-level operations users
+actually call, per the
+<a href="https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html">rustdoc book</a>'s
+"docs mirror the public API" behavior — applied here to keep a HAL's
+documentation focused on hardware behavior, not register trivia.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

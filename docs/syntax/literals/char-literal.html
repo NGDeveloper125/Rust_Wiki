@@ -948,7 +948,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A single-quoted character literal produces a <code>char</code> — a full Unicode
 scalar value, always 4 bytes, not a single byte — so <code>'🦀'</code> is just as
@@ -963,7 +964,7 @@ equivalent (<code>b'H'</code>).</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1028,20 +1029,48 @@ note (use <code>.get()</code> or char-based iteration instead).</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>char</code> is a <code>core</code> primitive — no <code>std</code> dependency,
-though its 4-byte size is worth remembering on very memory-constrained
-targets where a raw <a href="../../syntax/literals/byte-literal.html">byte literal</a> (<code>u8</code>) is often the
-more appropriate choice for protocol/text work that's ASCII-only anyway.</p>
+        <p><code>char</code> behaves identically under <code>#![no_std]</code> — it's a <code>core</code> primitive
+(<code>core::char</code>, re-exported as <code>std::char</code> on hosted targets), so nothing
+about a <code>char</code> literal changes on a bare-metal target: no allocator
+involvement, no feature gate, the full Unicode-scalar-value semantics
+exactly as on desktop. There isn't a genuinely new embedded-specific
+angle to this literal form beyond what the classic explanation already
+covers — the one practical note worth repeating in an embedded context
+is the same one already given for hosted code: a <code>char</code> is always 4
+bytes, so on a byte-oriented, ASCII-only interface (UART, AT commands, a
+text sensor protocol) a raw <code>u8</code>/<a href="byte-literal.md">byte literal</a> is
+usually the more natural fit than decoding to <code>char</code> at all.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Matching a single command byte from a UART receive buffer</h3>
+            <pre><code class="rust">fn handle_command(byte: u8) -&gt; &amp;'static str {
+    match byte as char {
+        'r' =&gt; "reset requested",       // &lt;- char literal: matched after casting an incoming UART byte to `char`
+        's' =&gt; "status requested",
+        '\r' | '\n' =&gt; "end of line",
+        _ =&gt; "unknown command",
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

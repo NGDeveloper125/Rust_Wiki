@@ -954,7 +954,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>mod</code> declares a module in one of two forms.</p>
 <p>Written with a body — <code>mod name { ... }</code> — the module's contents sit
@@ -978,7 +979,7 @@ writing <code>mod</code> itself.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1069,19 +1070,58 @@ uses throughout.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>mod</code> is a purely compile-time organizational construct
-with no runtime representation, so both forms work identically in a
-<code>#![no_std]</code> crate — there's no allocator or OS dependency either way.</p>
+        <p><code>mod</code> is a purely compile-time organizational construct with no runtime
+representation, so both the inline and file-loaded forms work
+identically in a <code>#![no_std]</code> crate — there's no allocator or OS
+dependency either way, same as the classic Explanation above. The shape
+it takes in a HAL crate mirrors the chip it targets: a typical layout
+splits <code>mod gpio;</code>, <code>mod uart;</code>, <code>mod timer;</code>, and so on, one file per
+peripheral family, with a generated (often <code>svd2rust</code>-produced) <code>pac</code>
+module holding the raw register definitions underneath, so a driver
+module's own code refers to <code>crate::pac::GPIOA</code> rather than duplicating
+the register layout itself.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A HAL crate's peripheral module layout</h3>
+            <pre><code class="rust">// src/lib.rs
+#![no_std]
+
+pub mod gpio;   // &lt;- `mod` loads gpio.rs, one file per peripheral family
+pub mod uart;
+mod pac;        // &lt;- `mod`: the generated register-definition module, not part of the public API
+
+// src/gpio.rs
+use crate::pac;
+
+pub struct Pin {
+    pin_number: u8,
+}
+
+impl Pin {
+    pub fn set_high(&amp;mut self) {
+        unsafe { pac::GPIOA.odr.modify(|_, w| w.bits(1 &lt;&lt; self.pin_number)) }
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

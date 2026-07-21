@@ -133,11 +133,94 @@ an early `return` — the
 [`std::result` module docs](https://doc.rust-lang.org/std/result/#collecting-into-result)
 describe this pattern directly.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** The `FromIterator` trait itself is defined in
-`core`, but the concrete collect targets shown here need more: `Vec` and
-`String` require `alloc`, and `HashMap` additionally requires `std` (for
-its default hasher). On a `#![no_std]` target without `alloc`, collect
-into a fixed-capacity `heapless::Vec` instead, or fold the iterator
-manually into a stack-allocated buffer.
+`FromIterator` itself is defined in `core`, so the trait and its
+`from_iter` method exist unchanged on a `#![no_std]` target — the caveat
+is entirely about *which types implement it*. `Vec<T>` and `String`'s
+`FromIterator` implementations live in `alloc`, so `.collect::<Vec<_>>()`
+or `.collect::<String>()` needs the `alloc` crate and a
+`#[global_allocator]` configured, and `HashMap`'s implementation
+additionally needs `std` for its default hasher — none of that is
+available on a bare-metal target without opting in. Two honest
+alternatives exist for a heap-free target: `heapless::Vec<T, N>`
+implements `FromIterator<T>`, so `.collect::<heapless::Vec<u16, 8>>()`
+works directly, though it's worth checking the exact `heapless` version
+in use and knowing it panics if more than `N` items are produced, since a
+fixed-capacity type has no way to grow past its bound. When that
+guarantee isn't good enough, or the crate/version in use doesn't provide
+the impl, a manual fold or loop that accumulates into a stack-allocated
+fixed-size buffer and tracks how many slots were actually filled is
+always the fallback — less convenient than `.collect()`, but it needs
+nothing beyond `core`.
+
+## Basic usage example (Embedded)
+
+```
+// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+let raw_samples = [512u16, 498, 610];
+
+let samples: Vec<u16, 8> = raw_samples.into_iter().collect(); // <- collect() targets heapless::Vec via its FromIterator impl
+assert_eq!(samples.len(), 3);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+Collecting a batch of scaled sensor readings into a fixed-capacity buffer
+needs a `.collect()` target that never allocates — `heapless::Vec` gives
+that, as long as the caller already knows the count fits within its
+declared capacity.
+
+```
+// [dependencies] heapless = "0.8"
+use heapless::Vec;
+
+let raw_readings = [512u16, 498, 610, 523];
+
+let scaled: Vec<u32, 8> = raw_readings
+    .iter()
+    .map(|&r| r as u32 * 3) // ordinary adaptor, no allocation
+    .collect(); // <- collect() into heapless::Vec<u32, 8>: fixed capacity, no heap
+
+assert_eq!(scaled.len(), 4);
+assert_eq!(scaled[0], 1536);
+```
+
+**Why this way:** `heapless::Vec<T, N>`'s `FromIterator` implementation
+gives `.collect()` back on a `#![no_std]` target, but because it panics
+past `N` items rather than growing, it's the right choice only when the
+upper bound on item count is already known and enforced elsewhere (here,
+by the fixed-size `raw_readings` array).
+
+### Scenario: Accumulating into a fixed buffer without a heap
+
+When the exact collect target isn't available, or the count genuinely
+isn't bounded ahead of time, folding manually into a fixed buffer and
+tracking how many slots were actually filled is the always-available
+fallback, at the cost of writing the accumulation by hand.
+
+```
+let raw_readings: [u16; 5] = [512, 498, 610, 523, 700];
+let mut buffer = [0u32; 4]; // fixed capacity: room for at most 4 results
+let mut filled = 0;
+
+for reading in raw_readings.iter().filter(|&&r| r > 500) { // ordinary adaptor chain, no allocation
+    if filled == buffer.len() {
+        break; // buffer is full; stop rather than overflow it
+    }
+    buffer[filled] = *reading as u32;
+    filled += 1;
+}
+
+assert_eq!(&buffer[..filled], &[512, 610, 523, 700]);
+```
+
+**Why this way:** a manual fold into a fixed array needs nothing beyond
+`core` and makes the capacity check explicit at the point items are
+written, rather than relying on a `FromIterator` implementation's
+panic-on-overflow behavior — the safer default when the item count isn't
+already provably bounded.

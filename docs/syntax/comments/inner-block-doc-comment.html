@@ -948,7 +948,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>/*! ... */</code> is the block-comment equivalent of <code>//!</code> — it documents the
 enclosing module/crate rather than a following item, as in
@@ -959,7 +960,7 @@ compiler.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -998,18 +999,47 @@ expecting <code>//!</code>.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Same as <a href="../../syntax/comments/inner-line-doc-comment.html"><code>//!</code></a> — no <code>std</code>
-dependency.</p>
+        <p><code>/*! ... */</code> documents its enclosing module/crate identically under
+<code>#![no_std]</code> — doc generation doesn't touch <code>std</code> at all. See
+<a href="inner-line-doc-comment.md"><code>//!</code></a> for the fuller embedded-specific
+discussion (crate-root docs stating hardware assumptions, the
+host-vs-target doc test caveat); everything there applies to this block
+form unchanged. As with the hosted-Rust version, <code>//!</code> is still the
+idiomatic choice in embedded crates too — this form is rare.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Documenting a HAL crate's assumptions</h3>
+            <pre><code class="rust">/*! Peripheral access crate for the XYZ-100 microcontroller.
+
+Assumes a 16 MHz external crystal; call `clocks::init()` before touching
+any other peripheral, or reads return unspecified values. */
+// &lt;- crate-root doc states the one hardware assumption every user must know
+
+pub mod clocks;
+pub mod gpio;
+</code></pre>
+<p>Stating the crystal-frequency assumption once at the crate root, in
+whichever doc-comment form the crate already favors, saves every
+peripheral module from repeating it.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

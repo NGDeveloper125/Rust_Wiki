@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Rust guarantees memory safety — no use-after-free, no double-free, no
 dangling references, no data races on shared memory — entirely through
@@ -1011,7 +1012,7 @@ leaving nothing behind in the compiled binary.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn make_reading() -&gt; i32 { // &lt;- returns an owned value: nothing here can outlive its data
     let raw = 5;
@@ -1026,7 +1027,7 @@ leaving nothing behind in the compiled binary.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1091,28 +1092,152 @@ now garbage before it can reclaim it.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> — and one of the clearest real-world proofs of this
-principle. Embedded and firmware targets typically have no room for a
-tracing garbage collector's memory overhead or unpredictable pause times,
-which historically left C as the only realistic systems choice and its
-manual-memory bugs (buffer overflows, use-after-free on interrupt-shared
-buffers) as a recurring source of firmware vulnerabilities. Rust's
-compile-time guarantee applies identically under <code>#![no_std]</code> at zero
-runtime cost, which is precisely why it has been adopted for kernel
-modules and bare-metal firmware; <code>unsafe</code> still exists for the raw
-register and DMA-buffer access embedded code genuinely needs, and
-allocator-free alternatives like <code>heapless</code> cover the cases where even
-<code>Box</code>'s single heap allocation isn't available.</p>
+        <p>This page's guarantee isn't just convenient for embedded targets — it's
+close to the entire reason Rust is a viable language for them at all. A
+tracing garbage collector needs a runtime: something has to walk live
+objects, decide what's reachable, and reclaim the rest, which costs
+memory for bookkeeping, CPU cycles stolen from the program's own work, and
+— the part that actually disqualifies it — a pause of unpredictable
+length whenever collection runs. A microcontroller running a motor
+control loop, a UART protocol state machine, or a sensor sampled on a
+fixed timer doesn't get to say "pause for an unknown number of
+microseconds sometime soon"; missing a real-time deadline because a
+collector chose that instant to run isn't a performance regression, it's
+a correctness bug — a stepper motor loses steps, a protocol times out, a
+control loop overshoots. On top of the pause-time problem, a GC also
+typically assumes a heap and an allocator sized generously enough to
+tolerate fragmentation and collection overhead, which many microcontrollers
+simply don't have the RAM budget for in the first place. This is why,
+historically, embedded firmware had exactly one realistic option: C (or
+hand-rolled C++), with manual memory management and its entire associated
+bug class — buffer overflows, use-after-free, and, worst of all in this
+context, interrupt-shared buffers that a main loop frees while an
+interrupt handler is mid-write to them, corrupting memory in a way that
+might not surface until the device is in the field.</p>
+<p>Rust's answer is structural rather than a tuning knob: the ownership and
+borrow-checking machinery described above runs entirely at compile time
+and leaves nothing behind in the binary, so there is no pause to have in
+the first place — not "a shorter pause," genuinely none, because there's
+no collector thread and no collection pass to schedule. That's what makes
+"zero runtime cost" a hard requirement here rather than a nice-to-have:
+memory safety and deterministic, worst-case-analyzable timing are usually
+in direct tension in other languages, and this is the mechanism that lets
+Rust have both at once. It's also why embedded Rust code leans so heavily
+on stack allocation and <code>static</code> storage rather than the heap at all —
+<code>Box</code>, <code>Vec</code>, and friends need the <code>alloc</code> crate plus a
+<code>#[global_allocator]</code>, which many <code>#![no_std]</code> projects skip entirely,
+using fixed-capacity, allocation-free types like <code>heapless::Vec</code> instead.
+None of that changes the underlying guarantee: ownership tracking is a
+compile-time proof regardless of whether the value it's protecting ever
+touches a heap, so a program that never allocates at all still gets full
+memory safety, at zero runtime cost, with fully deterministic timing.
+<code>unsafe</code> remains the escape hatch for the raw register reads, MMIO writes,
+and DMA-buffer handling embedded code genuinely needs — but that's a small,
+auditable, explicitly-marked surface, not the default state of the whole
+program the way it effectively is in C.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct Reading { millivolts: u16 } // stack-allocated: no heap, no allocator, involved at all
+
+fn read_adc(raw_register_value: u16) -&gt; Reading { // &lt;- returns an owned value: nothing here can outlive its data
+    Reading { millivolts: raw_register_value }
+}
+
+// fn dangling_reading() -&gt; &amp;'static Reading {
+//     let reading = read_adc(0x2A0);
+//     &amp;reading // would fail to compile: `reading` is dropped here — same guarantee as the classic example,
+//              // proven with zero heap allocation and zero runtime bookkeeping involved
+// }
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Managing resources (RAII)</h3>
+            <p>A DMA transfer into a receive buffer must never outlive that buffer, and
+the DMA channel must be disabled the instant the transfer's owner goes
+out of scope — tying the channel's lifetime to a guard value's <code>Drop</code>
+turns "remember to disable DMA before freeing the buffer" from a
+hand-followed rule into something the compiler enforces.</p>
+<pre><code class="rust">struct DmaTransfer&lt;'buf&gt; { channel: u8, buffer: &amp;'buf mut [u8] }
+
+impl&lt;'buf&gt; Drop for DmaTransfer&lt;'buf&gt; {
+    fn drop(&amp;mut self) { // &lt;- runs synchronously the instant the owner's scope ends, no GC pause to wait for
+        disable_dma_channel(self.channel);
+    }
+}
+
+fn receive_frame(buffer: &amp;mut [u8]) {
+    let _transfer = DmaTransfer { channel: 1, buffer }; // &lt;- borrows `buffer` for exactly as long as the transfer lives
+    // ... wait for the transfer-complete interrupt ...
+} // &lt;- _transfer.drop() runs here: DMA is disabled before `buffer` could ever be reused or freed
+
+fn disable_dma_channel(_channel: u8) {}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the classic
+<a href="https://doc.rust-lang.org/book/ch15-03-drop.html">Rust Book's <code>Drop</code> chapter</a>
+covers deterministic, scope-tied cleanup as RAII's central guarantee; on
+embedded hardware the stakes are sharper than a leaked file handle — the
+class of bug this prevents is hardware continuing to write into a buffer
+after the owning code considers it free, exactly the interrupt/DMA-shared
+buffer corruption that has historically been a recurring source of
+firmware vulnerabilities in hand-written C.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Boxing and heap allocation</h3>
+            <p>A sensor-calibration buffer needs a fixed, known-at-compile-time capacity
+on a target with no heap at all — reaching for <code>Box</code>/<code>Vec</code> isn't just
+unidiomatic here, it may not compile without an <code>alloc</code> crate and a
+<code>#[global_allocator]</code> most <code>#![no_std]</code> firmware never sets up.</p>
+<pre><code class="rust">use heapless::Vec; // fixed-capacity, allocation-free substitute for std's Vec
+
+fn collect_samples(adc_read: impl Fn() -&gt; i16) -&gt; Vec&lt;i16, 16&gt; { // &lt;- capacity 16 is part of the type, no heap involved
+    let mut samples = Vec::new();
+    for _ in 0..16 {
+        // AVOID: samples.push(adc_read()) unchecked — panics/aborts if a caller ever changes the loop bound
+        let _ = samples.push(adc_read()); // PREFER: push returns Result, capacity enforced at compile-time-known size
+    }
+    samples
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <a href="https://docs.rs/heapless/"><code>heapless</code></a> gives the same
+ownership-tracked, deterministic-drop guarantee this page describes
+without requiring a heap or allocator at all, which matters on targets
+where an allocator's own bookkeeping (and its own, if smaller, source of
+timing jitter) is exactly the kind of runtime cost the "no garbage
+collector" promise is meant to avoid paying in the first place.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

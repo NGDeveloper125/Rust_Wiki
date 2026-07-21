@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>"Procedural macro" is the umbrella term for the three compiler-plugin
 macro kinds — derive, attribute-like, and function-like. Each one is an
@@ -990,7 +991,7 @@ described here — the sibling pages cover what's specific to each.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <p>A procedural macro's defining function always lives in its own
 <code>proc-macro = true</code> crate:</p>
@@ -1014,7 +1015,7 @@ fn main() {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1089,24 +1090,132 @@ the test lives in the consuming crate and checks what the macro produced.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> A procedural macro runs entirely on the host machine
-during compilation and produces ordinary Rust source — it has no
-runtime footprint and no <code>std</code> requirement of its own, so it works
-identically when the <em>generated</em> code targets <code>#![no_std]</code>. This is
-exactly the mechanism behind common embedded tooling: <code>cortex-m-rt</code>'s
-<code>#[entry]</code> is an attribute-like macro, and <code>defmt</code>'s <code>#[derive(Format)]</code>
-is a derive macro — both ordinary procedural macros whose <em>output</em> is
-what has to be <code>no_std</code>-friendly, not the macro itself.</p>
+        <p>The detail that's easy to miss about procedural macros in an embedded
+context is where, exactly, the macro's own code runs: a
+<code>proc-macro = true</code> crate is compiled for, and executed entirely on, the
+machine doing the build — the host — never the target microcontroller.
+This is true of every procedural macro on every project, embedded or
+not, but it's worth stating plainly here because it's the one thing
+that's genuinely different in <em>framing</em> (not in mechanism) from a
+desktop crate: the macro implementation itself can use full <code>std</code>, the
+filesystem, <code>syn</code>/<code>quote</code>, anything a normal host program could use,
+with zero connection to whether the crate consuming it is <code>#![no_std]</code>.
+Only the <code>TokenStream</code> the macro returns has to become code the <em>target</em>
+build can accept — the compiler splices that output into the embedded
+crate's source and compiles the result for the target triple, entirely
+separately from (and after) compiling the macro crate itself for the
+host. <code>cortex-m-rt</code>'s <code>#[entry]</code> (attribute-like) and <code>defmt</code>'s
+<code>#[derive(Format)]</code> (derive) are both ordinary host-executed functions in
+exactly this sense — nothing about writing or building either of them
+touches ARM/RISC-V code generation at all.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use proc_macro::TokenStream;
+
+#[proc_macro] // &lt;- ordinary std-using Rust: compiled for and run on the host, regardless of the target below
+pub fn double_addr(input: TokenStream) -&gt; TokenStream {
+    let addr: usize = input.to_string().trim().parse().unwrap();
+    format!("{}", addr * 2).parse().unwrap()
+}
+</code></pre>
+<p>and the consuming, <code>#![no_std]</code> firmware crate:</p>
+<pre><code class="rust">#![no_std]
+
+use regkit::double_addr;
+
+const MIRROR_OFFSET: usize = double_addr!(0x1000); // &lt;- expands before the no_std build even begins
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL crate wants a <code>#[derive(RegisterBlock)]</code>-style macro to feel like
+part of its own <code>no_std</code> API; the macro crate itself depends on ordinary
+<code>std</code> tooling (<code>syn</code>, <code>quote</code>) even though every consumer of the HAL
+builds with <code>#![no_std]</code>.</p>
+<pre><code class="rust">// hal-macros/Cargo.toml
+// [lib]
+// proc-macro = true
+// [dependencies]
+// syn = "2"
+// quote = "1"
+
+// hal/Cargo.toml
+// [dependencies]
+// hal-macros = { path = "../hal-macros", version = "0.1" }
+// # hal itself is #![no_std] — hal-macros is not, and never needs to be
+
+// hal/src/lib.rs
+#![no_std]
+pub use hal_macros::RegisterBlock; // &lt;- re-exports a host-only macro crate from a no_std crate
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a <code>proc-macro = true</code> crate never contributes code to
+the target binary directly — the
+<a href="https://doc.rust-lang.org/reference/procedural-macros.html">Rust Reference's procedural macros chapter</a>
+describes it as compiled and run by the compiler itself — so it is
+exempt from the consuming crate's <code>no_std</code> constraint entirely, and
+hiding that split behind a re-export keeps HAL users from having to
+reason about it.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A procedural macro that generates register accessors for a <code>no_std</code> HAL
+is still tested with ordinary <code>#[test]</code>s in a hosted binary, because the
+macro's expansion — and the test binary itself — both run on the host,
+never on the target.</p>
+<pre><code class="rust">// hal/tests/register_gen.rs — an ordinary hosted integration test, no #![no_std] here
+use hal::RegisterBlock;
+
+#[derive(RegisterBlock)] // &lt;- expansion happens on the host; this test never touches the target at all
+struct Gpioa {
+    base: usize,
+}
+
+#[test]
+fn generates_expected_offset() {
+    let gpioa = Gpioa { base: 0x4800_0000 };
+    assert_eq!(gpioa.odr_address(), 0x4800_0014); // exercises code the macro generated
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the target microcontroller is never involved in either
+the macro's expansion or this test's execution, so the
+<a href="https://doc.rust-lang.org/book/ch11-03-test-organization.html">Rust Book's guidance</a>
+on integration tests exercising the public API applies exactly as it
+would for a desktop crate — the <code>no_std</code>-ness of the <em>generated</em> code has
+no bearing on how the macro that produced it gets tested.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

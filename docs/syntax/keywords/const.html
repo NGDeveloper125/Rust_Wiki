@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>const</code> declares a compile-time constant, as in
 <code>const MAX_POINTS: u32 = 100_000;</code>.</p>
@@ -973,7 +974,7 @@ implicitly immutable — <code>const mut</code> does not exist.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1026,20 +1027,83 @@ every call site.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>const</code> is especially valuable in embedded code:
-register addresses, buffer sizes, and lookup tables computed entirely at
-compile time cost zero flash/RAM beyond the value itself, with no runtime
-initialization needed.</p>
+        <p><code>const</code> means exactly the same thing under <code>#![no_std]</code> as on a hosted
+target — a value computed entirely at compile time and inlined at every
+use site, with no fixed memory address of its own. This is, if
+anything, more consequential in embedded code than in hosted code,
+because so much of a firmware crate's numeric vocabulary — peripheral
+register addresses, bitmasks for individual fields inside a register,
+fixed buffer/queue capacities, timing constants derived from a clock
+frequency — is known completely at compile time and never needs the
+indirection of a runtime-computed value or the storage a <code>static</code> sets
+aside.</p>
+<p>The distinction from <a href="static.md"><code>static</code></a> matters more here than almost
+anywhere else, because the two are reached for in genuinely different
+embedded situations, not just as a style preference. A <code>const</code> has no
+address: <code>const GPIOA_BASE: u32 = 0x4001_0800;</code> is inlined as the literal
+<code>0x4001_0800</code> everywhere it's written, the same as if the number had
+been typed by hand at each call site — exactly right for a register
+address, since nothing about "the address of GPIOA" needs to be an
+addressable object in memory; the addressed object is the <em>peripheral</em>,
+not the constant naming it. A <code>static</code>, by contrast, is the right tool
+the moment something needs its own fixed storage that more than one part
+of the program points at the <em>same</em> location of — a lookup table shared
+by every caller, or state an interrupt handler and <code>main</code> both need to
+reach through one shared address. For a raw scalar like an address or a
+bitmask, <code>const</code> is the strictly correct choice: no embedded codebase
+gains anything by giving <code>0x4001_0800</code> its own RAM/flash address.</p>
+<p>One genuine embedded-specific wrinkle: a <code>const</code> whose value is an
+<em>aggregate</em> (an array, a struct) is inlined at <em>every</em> use site, not
+shared — referencing the same array-valued <code>const</code> from several
+different functions can genuinely materialize several separate copies of
+that array in the compiled binary, one per call site, unlike a <code>static</code>
+array, which is placed once. For a small address or bitmask this never
+matters; for a sizable lookup table it's exactly why the CRC-table
+example on the <a href="static.md"><code>static</code></a> page uses <code>static</code>, not <code>const</code>,
+despite the table itself being computed at compile time by a <code>const fn</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Defining register addresses and bit-field masks as compile-time constants</h3>
+            <pre><code class="rust">const GPIOA_BASE: u32 = 0x4001_0800; // &lt;- `const`: inlined at every use site, no storage of its own
+const ODR_OFFSET: u32 = 0x14;
+const PIN5_MASK: u32 = 1 &lt;&lt; 5;
+
+fn set_pa5() {
+    let odr = (GPIOA_BASE + ODR_OFFSET) as *mut u32;
+    unsafe { odr.write_volatile(odr.read_volatile() | PIN5_MASK) } // &lt;- both consts inlined directly here
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Sizing a fixed sample buffer at compile time</h3>
+            <pre><code class="rust">const SAMPLE_RATE_HZ: u32 = 8_000;
+const WINDOW_MS: u32 = 100;
+const BUFFER_LEN: usize = (SAMPLE_RATE_HZ * WINDOW_MS / 1000) as usize; // &lt;- `const`: computed entirely at compile time
+
+fn window_sum(samples: &amp;[u16; BUFFER_LEN]) -&gt; u32 {
+    samples.iter().map(|&amp;s| s as u32).sum()
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

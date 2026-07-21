@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[naked]</code> is placed on a <code>fn</code> item and removes the compiler-generated
 function prologue and epilogue entirely — the stack-frame setup, callee-
@@ -986,7 +987,7 @@ language.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1033,25 +1034,97 @@ compiles only for the ARM-family target it names.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong>, and this is essentially an embedded-only attribute —
-<code>#[naked]</code> has almost no legitimate use case in hosted <code>std</code> code, since
-hosted programs never need to write their own interrupt entry or
-context-switch trampolines. Even within embedded Rust it is reached for
-rarely: most projects get equivalent behavior for free from a hardware
-support crate's <code>#[interrupt]</code> attribute, which generates an ordinary
-(non-naked) handler function on top of a runtime crate's own naked entry
-trampoline, so application code essentially never writes <code>#[naked]</code>
-itself.</p>
+        <p><code>#[naked]</code> is one of the rare attributes that is genuinely embedded-only
+in any practical sense — hosted programs never need to hand-control
+register and stack state at a boundary the OS and calling convention
+already guarantee, but bare-metal code hits that need at exactly two
+places: the very first instructions after a hardware exception/interrupt
+fires (before any register is known to be saved), and a preemptive
+scheduler's context switch, where a routine must save one task's entire
+register file, swap the stack pointer itself, and restore a different
+task's register file — something an ordinary function's compiler-
+generated prologue is neither written for nor able to do, since it
+assumes it's the one establishing the stack frame, not tearing down and
+rebuilding someone else's.</p>
+<p>This second case — a hand-rolled real-time-OS context switch — is the
+single most iconic real use of <code>#[naked]</code> in embedded Rust. On Cortex-M,
+the switch is conventionally driven from the low-priority <code>PendSV</code>
+exception specifically so it can be deferred until no higher-priority
+interrupt needs the core, and the handler for it is written naked because
+it must control the exact sequence of register pushes/pops and the stack-
+pointer swap itself, with no compiler-inserted instruction anywhere in
+between.</p>
+<p>Most application-level embedded code never writes <code>#[naked]</code> directly.
+A hardware support crate's <code>#[interrupt]</code> attribute (from <code>cortex-m-rt</code>)
+generates an ordinary, non-naked handler function on top of a runtime
+crate's own naked entry trampoline, so <code>#[naked]</code> mostly stays inside the
+handful of low-level runtime and RTOS crates that need it, not
+application code sitting on top of them.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Writing a Cortex-M PendSV context-switch handler</h3>
+            <pre><code class="rust">#[unsafe(no_mangle)]
+#[unsafe(naked)] // &lt;- must control the exact register save/restore and stack-pointer swap itself
+pub extern "C" fn PendSV() {
+    core::arch::naked_asm!(
+        "mrs r0, psp",           // r0 = the interrupted task's stack pointer
+        "stmdb r0!, {{r4-r11}}", // manually save the callee-saved registers a prologue would have saved
+        "bl {switch}",           // pick the next task; returns its saved stack pointer in r0
+        "ldmia r0!, {{r4-r11}}", // restore the next task's callee-saved registers
+        "msr psp, r0",           // hand the CPU the next task's stack pointer
+        "bx lr",                 // exception return: resumes the next task exactly where it left off
+        switch = sym choose_next_task,
+    );
+}
+
+extern "C" fn choose_next_task(saved_sp: u32) -&gt; u32 {
+    saved_sp // stand-in for real scheduler logic picking the next task's stack pointer
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Writing a naked reset handler that sets up the stack before any Rust runs</h3>
+            <pre><code class="rust">#[unsafe(no_mangle)]
+#[unsafe(naked)] // &lt;- runs before the stack pointer or .data/.bss are guaranteed set up
+pub unsafe extern "C" fn Reset() -&gt; ! {
+    core::arch::naked_asm!(
+        "ldr sp, =_stack_start", // set the stack pointer from a linker-script symbol
+        "bl {init}",             // now safe to call ordinary Rust: a real stack exists
+        init = sym init_runtime,
+    );
+}
+
+extern "C" fn init_runtime() -&gt; ! {
+    loop {} // stand-in for zeroing .bss, copying .data, then calling the user's #[entry] fn
+}
+</code></pre>
+<p>An ordinary function's prologue assumes a stack pointer and calling
+convention are already valid, which is precisely what hasn't happened yet
+at the exact instruction the reset vector jumps to — <code>#[naked]</code> is what
+lets that hand-off be written explicitly before anything resembling
+normal Rust runs. In practice, both examples above are exactly the kind
+of code <code>cortex-m-rt</code> already provides, so most firmware never writes
+either by hand.</p>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

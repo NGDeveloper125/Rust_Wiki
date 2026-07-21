@@ -54,7 +54,47 @@ bare numeric constant like `126` — byte literals are valid patterns, as
 the [Reference's patterns chapter](https://doc.rust-lang.org/reference/patterns.html)
 describes for literal patterns generally.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No `std` dependency — commonly used for protocol magic
-bytes and framing constants in embedded communication code.
+A byte literal means exactly the same thing under `#![no_std]` — it's
+parsed and typed at compile time, producing a plain `u8` value or pattern,
+with no allocator or runtime involved. Where it earns its keep in
+embedded code is UART and protocol handling: firmware reading raw bytes
+off a serial peripheral has no `String`/`str` layer standing between it
+and the wire, so individual bytes get compared and matched directly
+against byte literals for terminators, ACK/NAK codes, and command
+characters. It's the same job a byte literal does parsing a binary
+format on a hosted system — just proportionally more central in embedded
+code, where raw byte streams are often the *only* text-shaped thing the
+firmware ever sees.
+
+## Usage examples (Embedded)
+
+### Reading a UART byte stream up to a line terminator
+
+```
+use embedded_hal::serial::Read;
+use nb::block;
+
+fn read_line<S: Read<u8>>(uart: &mut S, buf: &mut [u8; 64]) -> usize {
+    let mut n = 0;
+    while let Ok(byte) = block!(uart.read()) {
+        if byte == b'\n' { // <- byte literal: UART line terminator, compared against a raw received byte
+            break;
+        }
+        if n < buf.len() {
+            buf[n] = byte;
+            n += 1;
+        }
+    }
+    n
+}
+```
+
+### Recognizing an AT-command response
+
+```
+fn is_ack(response: &[u8]) -> bool {
+    matches!(response, [b'O', b'K', ..]) // <- byte literals: matching an "OK" modem/AT-command reply byte by byte
+}
+```

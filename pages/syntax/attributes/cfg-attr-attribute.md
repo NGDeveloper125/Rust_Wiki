@@ -108,12 +108,45 @@ two copies' field lists drifting apart over time; `cfg_attr` keeps exactly
 one field list as the single source of truth while only the layout
 attribute varies by target.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `cfg_attr` is a pure compile-time mechanism with no
-allocator or OS dependency, and is common in embedded crates that support
-several chip families from one codebase — for example applying
-`#[cfg_attr(feature = "defmt", derive(defmt::Format))]` so a type derives
-a `no_std`-friendly logging format only when the crate's `defmt` feature
-is enabled, without a second copy of the type for builds that don't use
-it.
+`cfg_attr` is the compile-time-only combinator paired with
+[`#[cfg(...)]`](cfg-attribute.md) that embedded crates lean on constantly
+for a slightly different job: not choosing which module exists, but
+choosing which *attribute* a shared item gets. The most common embedded
+case is conditionally deriving a `no_std`-friendly logging trait: a HAL's
+error type wants `#[derive(defmt::Format)]` when the crate's `defmt`
+feature is enabled (for wire-efficient logging over RTT/probe-rs), but a
+build that doesn't want that dependency at all shouldn't pull it in —
+`#[cfg_attr(feature = "defmt", derive(defmt::Format))]` on the type adds
+that derive only when the feature is on, while exactly one struct
+definition serves both builds. A second common case pairs `cfg_attr` with
+`cortex-m-rt`'s `#[interrupt]`/`#[exception]` attributes: a handler
+function sometimes needs a target- or feature-conditional
+`#[link_section = "..."]` alongside its interrupt registration, so the
+same function body gets the extra attribute only on the
+target/feature combination that needs it, instead of two near-duplicate
+copies of the handler.
+
+## Usage examples (Embedded)
+
+### Deriving a no_std logging trait only when the defmt feature is enabled
+
+```
+#[cfg_attr(feature = "defmt", derive(defmt::Format))] // <- adds defmt's Format derive only when the "defmt" feature is on
+#[derive(Debug, Clone, Copy)]
+pub enum SensorError {
+    Timeout,
+    BusFault,
+}
+```
+
+### Relocating an interrupt handler to RAM only on a feature-gated build
+
+```
+#[cortex_m_rt::interrupt]
+#[cfg_attr(feature = "ram-handlers", link_section = ".data.TIM2")] // <- relocated to RAM only when that feature is on
+fn TIM2() {
+    // handle the timer-2 interrupt
+}
+```

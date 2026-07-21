@@ -951,7 +951,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Destructuring pulls a compound value apart into its components in a
 single step, binding names directly to the pieces instead of reaching in
@@ -989,7 +990,7 @@ share this same pattern syntax rather than inventing a separate one.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct Point {
     x: f64,
@@ -1007,7 +1008,7 @@ println!("{width}x{height}");
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1120,21 +1121,133 @@ allows arbitrary nesting for exactly this reason.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Destructuring is core-language, allocator-free, and
-compiles to direct field/offset access — no runtime cost beyond what a
-manual field access would cost. It's a natural fit for pulling named
-bit-fields out of a decoded register value or protocol header in one
-step, once the raw bits are represented as a struct or tuple.</p>
+        <p>Destructuring is core-language and allocator-free: it compiles to direct
+field/offset access, identical to what a manual <code>.field</code> access would
+generate, so there's no runtime cost specific to writing the pattern
+form. It's a natural fit for a register block or a decoded protocol
+frame — once the raw bits behind a peripheral are represented as a
+struct (one field per register, or one field per header value), pulling
+several of them out in a single <code>let</code> or <code>match</code> arm reads the same way
+the datasheet's own register table does, instead of a run of separate
+<code>.field</code> accesses at the point of use.</p>
+<p>The same restriction to irrefutable patterns applies unchanged: a
+register block or a frame struct with a fixed shape destructures freely
+at a plain <code>let</code>, but a frame whose shape depends on a decoded message
+kind — an enum wrapping different payload structs per variant — needs
+its destructuring inside a <code>match</code> arm or an <code>if let</code>, exactly as on the
+host.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct GpioBlock {
+    input: u32,
+    output: u32,
+    direction: u32,
+}
+
+let regs = GpioBlock { input: 0x0000_00F0, output: 0x0000_0001, direction: 0x0000_00FF };
+let GpioBlock { input, output, direction } = regs; // &lt;- binds all three register words in one step
+
+let pin3_set = input &amp; (1 &lt;&lt; 3) != 0;
+let _ = (output, direction, pin3_set);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A UART peripheral's 8-bit status register packs several independent
+flags into one word; the register is decoded once into a named struct
+so the flags can be destructured in a single step instead of masking
+each one out separately every time they're checked.</p>
+<pre><code class="rust">struct UartStatus {
+    rx_ready: bool,
+    tx_empty: bool,
+    framing_error: bool,
+}
+
+fn decode_status(raw: u8) -&gt; UartStatus {
+    UartStatus {
+        rx_ready: raw &amp; 0b001 != 0,
+        tx_empty: raw &amp; 0b010 != 0,
+        framing_error: raw &amp; 0b100 != 0,
+    }
+}
+
+let UartStatus { rx_ready, tx_empty, framing_error } = decode_status(0b011); // &lt;- all three flags named in one step
+
+if framing_error {
+    // clear the error and resynchronize before reading further
+} else if rx_ready {
+    let _ = tx_empty; // a byte is waiting
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> decoding the raw register once into a named struct and
+then destructuring it keeps every later flag check readable by name
+instead of a repeated <code>raw &amp; MASK != 0</code> at each use site, while
+compiling to the same direct bit tests a hand-written mask chain would
+produce — pattern matching costs nothing here beyond what the
+equivalent, less readable, hand-rolled version would take.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>A CAN bus driver receives frames tagged by kind; destructuring the
+frame's payload inside the same match arm that identifies the frame
+kind pulls it out in the one step the kind is determined, mirroring how
+the classic page nests a struct pattern inside an enum pattern.</p>
+<pre><code class="rust">struct CanFrame {
+    id: u16,
+    payload: [u8; 8],
+}
+
+enum Message {
+    Telemetry(CanFrame),
+    Command(CanFrame),
+}
+
+fn first_byte(msg: &amp;Message) -&gt; u8 {
+    match msg {
+        Message::Telemetry(CanFrame { payload, .. }) =&gt; payload[0], // &lt;- destructures the CanFrame while matching Telemetry
+        Message::Command(CanFrame { payload, .. }) =&gt; payload[0],
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> nesting the <code>CanFrame</code> pattern inside the <code>Message</code>
+pattern names <code>payload</code> directly at the point the frame kind is known,
+rather than matching the kind first and then reaching into <code>.payload</code>
+separately afterward — the same one-step nesting the classic page uses
+for an order's customer and shipping data, just with bus-frame nouns.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An adaptor is a method on <a href="../../concepts/iterators/the-iterator-trait.html"><code>Iterator</code></a> that takes
 an iterator and returns a new iterator — <code>map</code>, <code>filter</code>, <code>zip</code>,
@@ -978,7 +979,7 @@ produce anything.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let prices = [1500, 4200, 800]; // cents
 
@@ -987,7 +988,7 @@ let discounted: Vec&lt;i32&gt; = prices.iter().map(|p| p - 100).collect(); // &l
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1080,21 +1081,107 @@ step.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support for building the chain.</strong> Adaptors themselves live in
-<code>core::iter</code> and allocate nothing — <code>map</code>, <code>filter</code>, <code>scan</code>, and the rest
-work identically on a <code>#![no_std]</code> target. Only the final consumer at the
-end of a chain might need <code>alloc</code> (for example, <code>collect()</code> into a <code>Vec</code>
-or <code>String</code>); the adaptors in between never do.</p>
+        <p>Adaptors (<code>map</code>, <code>filter</code>, <code>zip</code>, <code>enumerate</code>, <code>scan</code>, <code>take</code>, and the
+rest) are defined in <code>core::iter</code>, so building a chain of them costs
+nothing beyond the code itself — no allocator, no heap. This is one of
+the more concrete zero-cost-abstraction wins embedded Rust gets from the
+language: `sensor_readings.iter().filter(|&amp;&amp;r| r &gt; threshold).map(|&amp;r| r</p>
+<ul>
+<li>scale)<code>compiles to the same tight loop a hand-rolled</code>for<code>loop with an</code>if<code>inside it would, with no intermediate array or</code>Vec<code>materialized between the</code>filter<code>and the</code>map<code>. The chain is just a nested struct type; the compiler inlines and fuses it. The one part of a chain that can pull in </code>alloc<code>is a *consumer* at the end (like</code>.collect::&lt;Vec&lt;_&gt;&gt;()<code>) — the adaptors in between never do, so a chain over a fixed-size array or a </code>heapless::Vec` can be built as long or as elaborate as needed while
+staying entirely on the stack.</li>
+</ul>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">let raw_samples: [u16; 4] = [512, 498, 610, 523]; // raw ADC counts
+
+let scaled_over_threshold: u32 = raw_samples
+    .iter()
+    .filter(|&amp;&amp;s| s &gt; 500) // &lt;- filter: an adaptor, no allocation
+    .map(|&amp;s| s as u32 * 3) // &lt;- map: an adaptor, no allocation
+    .sum(); // consumer: drives the chain, still no heap involved
+
+assert_eq!(scaled_over_threshold, (512 + 610 + 523) * 3);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Reporting the average of only the in-range readings from a fixed sensor
+buffer reads as <code>filter</code> then a numeric accumulation, with no <code>Vec</code> built
+at any point.</p>
+<pre><code class="rust">let readings: [i16; 6] = [-40, 22, 25, 130, 24, 23]; // last is a spurious out-of-range spike
+
+let in_range_avg: i32 = {
+    let mut sum = 0i32;
+    let mut count = 0i32;
+    for r in readings.iter().filter(|&amp;&amp;r| (-20..100).contains(&amp;r)) { // &lt;- filter: adaptor, skips out-of-range spikes
+        sum += *r as i32;
+        count += 1;
+    }
+    sum / count
+};
+
+assert_eq!(in_range_avg, 23);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>filter</code> discards the spurious <code>130</code> reading before the
+loop ever sees it, and because adaptors allocate nothing, this pattern is
+as safe to use on a memory-constrained microcontroller as a manual bounds
+check would be — with none of the manual bookkeeping.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>Extracting which channels of a status register have their "ready" bit
+set combines a fixed array of raw register words with <code>enumerate</code> and
+<code>filter</code>, entirely without allocation.</p>
+<pre><code class="rust">let status_words: [u8; 4] = [0b0000_0001, 0b0000_0000, 0b0000_0001, 0b0000_0001];
+
+let ready_channels: [bool; 4] = {
+    let mut flags = [false; 4];
+    for (i, word) in status_words.iter().enumerate() { // &lt;- enumerate: adaptor, pairs each register word with its index
+        flags[i] = word &amp; 0b1 != 0; // READY bit is bit 0
+    }
+    flags
+};
+
+assert_eq!(ready_channels, [true, false, true, true]);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>enumerate</code> gives each register word its channel index
+without a hand-tracked counter, and writing results into a fixed <code>[bool; 4]</code> instead of collecting into a <code>Vec</code> keeps the whole scan on the stack
+— the same adaptor used on a hosted <code>Vec&lt;u8&gt;</code> in the classic example
+works unchanged here.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

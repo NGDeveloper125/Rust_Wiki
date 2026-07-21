@@ -90,12 +90,98 @@ wrong-length call into a compile error instead of a runtime bounds
 check; only widen to `&[T]`/`Vec<T>` once the length is truly
 caller-determined.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Fixed-size arrays (`[T; N]`) are full support — pure
-`core`, stack-allocated, no allocator needed, and the default choice in
-embedded code for exactly that reason. `Vec<T>` itself lives in `alloc`
-and needs a configured `#[global_allocator]`; where growable
-storage is needed without a heap, `heapless::Vec<T, N>` provides a
-fixed-*capacity* (but runtime-variable-*length*) alternative with no
-allocator dependency at all.
+An array, `[T; N]`, needs no allocator at all — its length is baked into
+the type, its storage is inline (on the stack, or in `static` memory for a
+`'static` array), and there is nothing for `alloc` or a
+`#[global_allocator]` to do. That makes `[T; N]` the default embedded
+choice whenever a collection's size is a fixed fact known at compile
+time: a 3-axis accelerometer reading, a fixed-width protocol frame, a
+lookup table sized to a peripheral's channel count.
+
+`Vec<T>` needs the opposite: it lives in `alloc`, not `core`, so it only
+compiles once a crate pulls in `alloc` and wires up a
+`#[global_allocator]` — see
+[`Vec<T>`'s embedded section](../collections-strings/vec.md) for that
+setup and for `heapless::Vec<T, N>`, the fixed-*capacity*,
+no-allocator substitute that gives back `Vec`-like ergonomics (`.push()`,
+`.pop()`, a runtime-tracked `.len()` up to a compile-time-fixed bound)
+without ever touching a heap.
+
+An array is strictly more restrictive than either — its length can never
+change, full stop, where `heapless::Vec<T, N>` at least lets the *length*
+vary at runtime up to `N` — but that restriction is also the array's
+whole appeal on constrained hardware: no capacity check on push (there is
+no push), no `Result` to handle for "buffer full," and not even
+`heapless`'s small bookkeeping overhead of a runtime length field. When
+the size truly never varies, an array is the zero-dependency option, and
+`heapless::Vec<T, N>` earns its keep specifically for the cases where the
+count is bounded but genuinely variable at runtime.
+
+## Basic usage example (Embedded)
+
+```
+let calibration: [i16; 3] = [12, -4, 7]; // <- fixed 3-axis offset, no allocator, no heapless dependency
+
+fn apply_offset(raw: [i16; 3], offset: [i16; 3]) -> [i16; 3] {
+    [raw[0] + offset[0], raw[1] + offset[1], raw[2] + offset[2]]
+}
+
+let corrected = apply_offset([100, 200, -50], calibration);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+A calibration table with a fixed, datasheet-defined number of channels
+should be an array; a log of readings collected until a buffer fills, one
+at a time, is the case `heapless::Vec` is actually for.
+
+```
+let channel_gains: [f32; 4] = [1.02, 0.98, 1.00, 1.01]; // <- always exactly 4 channels: no heap, no bookkeeping
+
+use heapless::Vec;
+let mut recent: Vec<f32, 16> = Vec::new(); // <- fixed capacity, but a runtime length that grows as readings arrive
+for reading in [21.5, 22.0, 21.8] {
+    recent.push(reading).ok(); // <- Err once the buffer is full, handled explicitly instead of reallocating
+}
+```
+
+**Why this way:** the channel count is a hardware fact that never
+changes across the program's life, so an array needs nothing beyond
+`core`; the reading log's length is decided by how many samples have
+arrived so far, which is exactly the runtime-variable-length,
+fixed-capacity case `heapless::Vec` exists for — see its
+[embedded section](../collections-strings/vec.md) for the capacity-bound
+tradeoff in more depth.
+
+### Scenario: Designing a public API
+
+A driver function that reads a protocol-fixed number of bytes should say
+so with `[u8; N]` in its signature; a function reading a variable-length
+frame up to a known maximum should take `&mut [u8]` and return how much
+of it was actually filled.
+
+```
+fn read_device_id(bytes: [u8; 2]) -> u16 { // <- protocol always sends exactly 2 bytes: no allocator needed
+    u16::from_be_bytes(bytes)
+}
+
+fn read_frame(buf: &mut [u8]) -> usize { // <- caller's buffer, any backing storage, any length up to buf.len()
+    buf[0] = 0xAA;
+    1 // number of bytes actually written
+}
+
+let id = read_device_id([0x01, 0x2C]);
+let mut frame = [0u8; 32]; // stack-allocated, no heap
+let written = read_frame(&mut frame);
+```
+
+**Why this way:** a fixed-size array in the signature turns a
+wrong-length call into a compile error, which matters more on hardware
+where there's no test suite running against every possible caller — while
+a variable-length read has no honest way to express its bound as a type,
+so it takes a slice and reports its actual length back, the same
+allocator-free contract a DMA-backed buffer already needs.

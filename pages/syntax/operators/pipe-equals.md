@@ -46,7 +46,34 @@ instead of rebuilding it from scratch, which matters once other bits are
 already meaningfully set — the same in-place-mutation reasoning as
 [`+=`](plus-equals.md), specialized to bitwise OR via `BitOrAssign`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `BitOrAssign` lives in `core::ops` — setting flag bits
-in place (`reg |= mask`) is routine embedded register manipulation.
+`|=` is the read-modify-write idiom for setting one or more bits in a
+register while leaving the rest alone, and it's arguably the single
+most common register operation in embedded Rust: enabling a
+peripheral's clock in a clock-control register, setting a
+configuration bit in a control register, or marking one flag in a
+software status word are all `reg |= BIT`. Some microcontrollers
+additionally expose a dedicated atomic "set" register (STM32's GPIO
+`BSRR`, for instance) specifically so a single bit can be set without a
+read-modify-write race against an interrupt handler touching the same
+port; where a peripheral doesn't offer that, `|=` on the plain data
+register is the fallback, and is fine as long as nothing else can
+preempt the read and the write.
+
+## Usage examples (Embedded)
+
+### Enabling a peripheral clock before configuring it
+
+```
+const RCC_APB1ENR: *mut u32 = 0x4002_1840 as *mut u32; // RCC APB1 clock-enable register
+const USART2EN: u32 = 1 << 17;
+
+fn enable_usart2_clock() {
+    unsafe {
+        let mut enr = core::ptr::read_volatile(RCC_APB1ENR);
+        enr |= USART2EN; // <- sets only the USART2 clock-enable bit
+        core::ptr::write_volatile(RCC_APB1ENR, enr);
+    }
+}
+```

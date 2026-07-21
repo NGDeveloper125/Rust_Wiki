@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&gt;</code> is the greater-than comparison, overloadable via <code>std::cmp::PartialOrd</code>.</p>
 <p>Like <code>&lt;</code>, <code>&gt;</code> doubles as the <strong>closing</strong> delimiter for a generic parameter
@@ -963,7 +964,7 @@ is needed between them.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1006,18 +1007,55 @@ extreme.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Same as <a href="../../syntax/operators/less-than.html"><code>&lt;</code></a> — <code>core::cmp</code>, no <code>std</code>
-dependency.</p>
+        <p><code>&gt;</code> means the same thing under <code>#![no_std]</code> — <code>PartialOrd</code> lives in
+<code>core::cmp</code>, and its role as the closing delimiter for a generic
+parameter list is pure compile-time grammar either way. What shows up
+constantly in embedded code is a strict "has this crossed a limit"
+check — a sensor reading that has gone past a safety threshold, or an
+incoming frame that's larger than a fixed-size buffer can hold — checked
+in a polling loop far more often than in hosted code, since there's
+frequently no interrupt or event system to raise the condition instead.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Flagging an over-temperature reading</h3>
+            <pre><code class="rust">const MAX_SAFE_CELSIUS: i16 = 85;
+
+fn is_overheating(temperature_celsius: i16) -&gt; bool {
+    temperature_celsius &gt; MAX_SAFE_CELSIUS // &lt;- `&gt;` flags a reading that has crossed the safety limit
+}
+
+assert!(is_overheating(90));
+assert!(!is_overheating(40));
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Rejecting a frame too large for a fixed-size receive buffer</h3>
+            <pre><code class="rust">const RX_BUFFER_LEN: usize = 128;
+
+fn incoming_frame_too_large(frame_len: usize) -&gt; bool {
+    frame_len &gt; RX_BUFFER_LEN // &lt;- `&gt;` rejects any frame that wouldn't fit the fixed-size receive buffer
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

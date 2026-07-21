@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>?</code> has two unrelated meanings, separated entirely by where it appears:</p>
 <ol>
@@ -1007,7 +1008,7 @@ can be passed around without knowing the pointee's own size.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1095,22 +1096,72 @@ the <a href="https://doc.rust-lang.org/reference/dynamically-sized-types.html">R
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Both meanings are core-language. <code>expr?</code> desugars to a
-plain <code>match</code> plus <code>From::from</code> over <code>core::result::Result</code> /
-<code>core::option::Option</code>, so it works identically under <code>#![no_std]</code> with
-no allocator or runtime involved. <code>?Sized</code> is a purely compile-time
-relaxation of a trait bound with no runtime dependency at all — both are
-exactly as available on a microcontroller target as on a hosted one.</p>
+        <p><code>?</code> works exactly the same, unchanged, under <code>#![no_std]</code> — it desugars
+to a plain <code>match</code> plus <code>From::from</code> over <code>core::result::Result</code> /
+<code>core::option::Option</code>, both core-language types with no allocator or
+runtime involvement, so nothing about <code>#![no_std]</code> restricts it. This
+makes <code>?</code> quietly valuable for embedded driver code specifically: an I2C
+or SPI transaction is naturally a chain of several fallible steps — write
+a command byte, read back a response, write another byte — and <code>?</code> lets
+each step propagate its failure without a <code>match</code> at every line, exactly
+the pattern from the classic Explanation above. One thing worth being
+explicit about: <code>?</code>'s <code>From::from</code> conversion needs the enclosing
+function's error type to implement <code>From&lt;E&gt;</code> for whatever error <code>E</code> each
+step produces, and that has nothing to do with <code>std::error::Error</code> —
+which isn't available without <code>std</code> at all (<code>core::error::Error</code> now
+exists separately) — no more than hosted code strictly needs it either.
+Embedded driver crates typically define their own small, <code>#[derive(Debug)]</code>
+no_std error enum with a <code>From</code> impl per underlying error source (an I2C
+error, a SPI error, a timeout), and <code>?</code> chains through that enum exactly
+as it would through any hosted <code>Result</code> type.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Propagating I2C transaction errors through a custom no_std error type</h3>
+            <pre><code class="rust">use embedded_hal::i2c::{I2c, Error as I2cErrorTrait};
+
+#[derive(Debug)]
+enum SensorError {
+    Bus,
+    UnexpectedId(u8),
+}
+
+impl&lt;E: I2cErrorTrait&gt; From&lt;E&gt; for SensorError {
+    fn from(_error: E) -&gt; Self {
+        SensorError::Bus // &lt;- collapses any bus-level error into one variant
+    }
+}
+
+const WHO_AM_I_REG: u8 = 0x0F;
+const EXPECTED_ID: u8 = 0x68;
+
+fn read_who_am_i(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u8, SensorError&gt; {
+    let mut buf = [0u8; 1];
+    i2c.write_read(addr, &amp;[WHO_AM_I_REG], &amp;mut buf)?; // &lt;- `?` converts any I2C error into SensorError via the impl above
+    if buf[0] != EXPECTED_ID {
+        return Err(SensorError::UnexpectedId(buf[0]));
+    }
+    Ok(buf[0])
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -57,7 +57,51 @@ zero, prefer `checked_rem` over risking the panic this page's
 Explanation calls out, per the
 [standard library docs](https://doc.rust-lang.org/std/primitive.usize.html#method.checked_rem).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Rem` lives in `core::ops` — same software-division
-caveat as [`/`](slash.md) on dividerless targets.
+`Rem` lives in `core::ops`, so `%` means exactly the same thing under
+`#![no_std]`, including the sign-of-the-dividend behavior and the
+unconditional panic on a zero divisor. It shares [`/`](slash.md)'s
+hardware caveat: on a microcontroller with no integer divider, `%`
+lowers to the same software division routine, since remainder and
+quotient are typically computed by the same instruction/routine
+underneath. The genuinely embedded-flavored idiom that follows from this
+is sizing a firmware ring buffer or FIFO to a power of two on purpose —
+common enough that it's practically a convention — specifically so
+wrapping an index can use a bitmask (`idx & (len - 1)`) instead of `%`,
+skipping the division routine entirely. `%` itself stays the right,
+clearer choice whenever the length isn't a power of two or the saved
+cycles don't matter.
+
+## Usage examples (Embedded)
+
+### Wrapping a DMA buffer index with `%`
+
+```
+struct DmaBuffer {
+    slots: [u16; 6],
+    next: usize,
+}
+
+impl DmaBuffer {
+    fn advance(&mut self) {
+        self.next = (self.next + 1) % self.slots.len(); // <- `%` wraps the index, same as hosted code
+    }
+}
+```
+
+### Replacing `%` with a bitmask on a power-of-two buffer
+
+```
+struct RingBuffer {
+    data: [u8; 16], // length is a power of two: 16
+    idx: usize,
+}
+
+impl RingBuffer {
+    fn push(&mut self, byte: u8) {
+        self.data[self.idx] = byte;
+        self.idx = (self.idx + 1) & (self.data.len() - 1); // mask replaces `%`: no division instruction needed
+    }
+}
+```

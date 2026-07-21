@@ -73,8 +73,40 @@ check up front, instead of discovering the mismatch deep inside a
 partially-completed parse — rejecting bad input at the boundary keeps the
 rest of the parser working only with data it has already vetted.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Like a string literal, a byte string lives in the
-binary's read-only data with no allocation — ideal for protocol frame
-templates and lookup tables in embedded code.
+A byte string literal is exactly as fully supported under `#![no_std]` as
+under `std` — `b"..."` still produces a `'static &[u8; N]` baked into the
+binary's rodata section at compile time, with no allocator involved at
+any point. That makes it the natural way to write a fixed protocol frame
+or firmware header in embedded code: a UART command frame, a sensor's
+request/acknowledge byte sequence, or a bootloader's magic-number header
+check are all naturally byte data rather than valid UTF-8 text, and
+`b"..."` lets that data be written as readable ASCII-with-escapes instead
+of a bare `[u8; N]` array of numeric literals. The same ASCII-plus-`\xHH`-
+escape rule from the classic explanation carries over unchanged — a
+non-ASCII framing byte like `0xAA` is written `\xAA` exactly as it would
+be on a hosted target.
+
+## Usage examples (Embedded)
+
+### Framing a UART command
+
+```
+const REQUEST_TEMPERATURE: &[u8; 4] = b"\x02T?\x03"; // <- byte string literal: STX, command, ETX framing bytes
+
+fn send_command(uart: &mut impl embedded_hal::serial::Write<u8>, cmd: &[u8]) {
+    for &byte in cmd {
+        nb::block!(uart.write(byte)).ok();
+    }
+}
+```
+
+### Validating a firmware image header before boot
+
+```
+fn is_valid_firmware(image: &[u8]) -> bool {
+    const FIRMWARE_MAGIC: &[u8; 4] = b"FWv2"; // <- byte string literal: bootloader magic-number header
+    image.starts_with(FIRMWARE_MAGIC)
+}
+```

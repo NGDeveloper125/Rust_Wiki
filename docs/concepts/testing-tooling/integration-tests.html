@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An integration test exercises a crate the same way an outside caller
 would: it lives in a top-level <code>tests/</code> directory rather than alongside
@@ -979,7 +980,7 @@ helper functions without contributing spurious test binaries.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">// src/lib.rs
 pub struct Order {
@@ -1002,7 +1003,7 @@ fn discount_reduces_total() {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1121,24 +1122,133 @@ afterthought to be discovered later from bug reports.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> Like unit tests, the <code>tests/</code> harness links against
-<code>std</code> and runs as an ordinary host binary, so it cannot exercise code that
-only runs correctly on the target hardware. Embedded crates that expose a
-hardware-independent public API (a protocol encoder, a configuration
-parser) can and do use <code>tests/</code> normally, compiled for the host; anything
-that needs the real peripherals is instead covered by an on-target,
-hardware-in-the-loop test framework such as <code>defmt-test</code>, run on real
-silicon rather than through <code>cargo test</code>.</p>
+        <p>The same host-vs-target split that governs <a href="unit-tests.md">unit tests</a>
+applies here, with one extra wrinkle specific to integration tests: the
+classic <code>tests/</code> directory convention assumes each file under it can be
+compiled and linked as its own <code>std</code> test binary that the harness builds
+and runs directly. That assumption holds fine for the slice of an
+embedded crate's public API that's hardware-independent — a protocol
+encoder, a configuration parser — which can sit in <code>tests/</code> and run on
+the host exactly like any other crate's integration tests. It stops
+holding the moment an integration test needs to exercise the crate's
+public API <em>against real hardware</em>: <code>tests/</code> has no mechanism to flash a
+binary onto a microcontroller and run it there, so on-target integration
+testing isn't done through the ordinary <code>tests/</code> directory at all — it
+goes through <code>defmt-test</code>'s or <code>embedded-test</code>'s own harness instead,
+which builds a firmware image, flashes it via a debug probe, and reports
+each test's pass/fail back over RTT.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">// src/lib.rs
+#![no_std]
+
+pub struct Frame { pub id: u8, pub payload: u8 }
+
+pub fn encode_frame(frame: &amp;Frame) -&gt; [u8; 2] { // &lt;- part of the crate's public API, no hardware touched
+    [frame.id, frame.payload]
+}
+
+// tests/encode.rs — an ordinary host-run integration test; no target hardware needed
+use protocol::{Frame, encode_frame};
+
+#[test]
+fn encodes_id_and_payload_in_order() {
+    let frame = Frame { id: 7, payload: 42 };
+    assert_eq!(encode_frame(&amp;frame), [7, 42]);
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A crate's public frame-encoding API is pure logic, so its integration
+test lives in the ordinary <code>tests/</code> directory and runs on the host —
+exactly the workflow <a href="../../syntax/attributes/test-attribute.md"><code>#[test]</code></a>'s
+Embedded Rust Notes describe for hardware-independent code in general.</p>
+<pre><code class="rust">// src/lib.rs
+#![no_std]
+
+pub struct Reading { pub channel: u8, pub millivolts: u16 }
+
+pub fn to_wire_bytes(reading: &amp;Reading) -&gt; [u8; 3] {
+    let mv = reading.millivolts.to_be_bytes();
+    [reading.channel, mv[0], mv[1]]
+}
+
+// tests/wire_format.rs
+use sensor_proto::{Reading, to_wire_bytes};
+
+#[test] // &lt;- ordinary host-run integration test: `tests/` still applies for hardware-independent APIs
+fn encodes_channel_and_millivolts() {
+    let reading = Reading { channel: 2, millivolts: 3300 };
+    assert_eq!(to_wire_bytes(&amp;reading), [2, 0x0C, 0xE4]);
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> nothing about <code>to_wire_bytes</code> depends on real silicon,
+so testing it through the ordinary <code>tests/</code> mechanism keeps the fast,
+no-hardware-needed feedback loop that host-run tests give any other
+crate.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>Writing the first test against a driver's public <code>init</code>/<code>read</code> sequence
+is often the first time anyone calls it the way a real firmware would —
+but for a driver that only behaves correctly against actual silicon, that
+first call has to happen on real hardware, through <code>embedded-test</code>'s
+harness rather than <code>tests/</code>.</p>
+<pre><code class="rust">#![no_std]
+#![no_main]
+
+#[embedded_test::tests] // &lt;- on-target integration test: flashed and run via a debug probe, not `tests/`
+mod tests {
+    use my_hal::TemperatureSensor;
+
+    #[test]
+    fn sensor_reports_a_plausible_reading() {
+        let mut sensor = TemperatureSensor::init().expect("sensor init failed"); // &lt;- exercises the public API end to end, on real hardware
+        let celsius = sensor.read().expect("read failed");
+        assert!((-40.0..125.0).contains(&amp;celsius));
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>TemperatureSensor::init</code>/<code>read</code> only behave correctly
+wired to a real sensor over a real bus, so a host-run <code>tests/</code> file could
+only fake the response, not prove the driver actually works — exercising
+the same public sequence through <code>embedded-test</code> on the target is what
+plays the "first real client" role an integration test is meant to.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -950,7 +950,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Turning a value into text in Rust runs through the <code>core::fmt</code> machinery
 that backs <code>println!</code>, <code>format!</code>, and every other formatting macro.
@@ -985,7 +986,7 @@ available (see Embedded Rust Notes below).</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">use std::fmt;
 
@@ -1008,7 +1009,7 @@ look like.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1114,25 +1115,101 @@ panic output without having to write a formatter themselves.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support (split by macro).</strong> <code>core::fmt</code> itself — the <code>Display</code>
-and <code>Debug</code> traits, <code>write!</code>, and manually implementing <code>fmt::Write</code> to
-render into a fixed-size <code>[u8; N]</code> buffer — works in <code>#![no_std]</code> with
-no allocator at all, since it only writes through a <code>Formatter</code>/<code>Write</code>
-sink the caller supplies. <code>format!</code> and <code>.to_string()</code>, though, both
-build and return an owned <code>String</code>, which needs the <code>alloc</code> crate and a
-configured <code>#[global_allocator]</code> — on allocator-free targets, <code>write!</code>
-into a stack-allocated buffer (or a <code>heapless::String</code>) is the usual
-substitute for <code>format!</code>.</p>
+        <p>The split this page draws between the <code>core::fmt</code> machinery and the
+allocating macros built on top of it is exactly the line embedded support
+falls on. <code>Display</code>, <code>Debug</code>, and <code>write!</code> all work in <code>#![no_std]</code> with
+no allocator at all, because they only ever write through a
+<code>Formatter</code>/<code>core::fmt::Write</code> sink the caller already owns — a custom
+<code>Display</code> impl written the way this page's Basic usage example shows
+compiles unchanged under <code>#![no_std]</code>. <code>format!</code> and <code>.to_string()</code>,
+though, both <em>return</em> a freshly allocated <code>String</code>, so they need <code>alloc</code>
+plus a configured <code>#[global_allocator]</code> the same way <code>Vec</code>/<code>String</code>
+themselves do (see <a href="string-vs-str.md">String vs &amp;str</a>).</p>
+<p>The realistic no-heap substitute isn't a different macro so much as a
+different destination: instead of <code>format!("...")</code> producing an owned
+<code>String</code>, <code>write!</code>/<code>writeln!</code> the same format string into a
+<code>heapless::String&lt;N&gt;</code> or directly into a peripheral (a UART) that
+implements <code>core::fmt::Write</code> — see
+<a href="../../syntax/macros/write-macros.md"><code>write!</code> / <code>writeln!</code></a> for how that
+destination-trait split works. This page's angle is which macro a caller
+reaches for, not the mechanics of the trait: reach for <code>write!</code> into an
+owned, bounded buffer or a peripheral wherever hosted code would reach
+for <code>format!</code>.</p>
+<p>For targets tight enough on flash that even <code>core::fmt</code>'s format-string
+parsing and <code>Arguments</code> machinery are too much code size, the <code>ufmt</code>
+crate is a real, narrower alternative: it defines its own leaner
+<code>uDisplay</code>/<code>uDebug</code> traits and a <code>uwrite!</code>/<code>uwriteln!</code> macro pair with a
+smaller compiled footprint than <code>core::fmt</code>, at the cost of supporting
+fewer format specifiers. It's a deliberate trade of <code>core::fmt</code>'s
+flexibility for less code, not a drop-in replacement for it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use core::fmt::Write as _;
+use heapless::String;
+
+struct Order { id: u64 }
+
+impl core::fmt::Display for Order {
+    fn fmt(&amp;self, f: &amp;mut core::fmt::Formatter) -&gt; core::fmt::Result {
+        write!(f, "Order #{}", self.id) // &lt;- same Display impl shape as hosted Rust, no heap involved
+    }
+}
+
+let order = Order { id: 42 };
+let mut summary: String&lt;32&gt; = String::new();
+write!(summary, "{order}").unwrap(); // &lt;- writes into a fixed-capacity buffer instead of format!'s owned String
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with text</h3>
+            <p>Rendering a sensor reading into a log line needs <code>format!</code>'s shape —
+literal text interleaved with interpolated values — but not an
+allocation; <code>write!</code> into a <code>heapless::String</code> is the substitute that
+keeps the same <code>{}</code>/<code>{:.1}</code> grammar.</p>
+<pre><code class="rust">use core::fmt::Write as _;
+use heapless::String;
+
+fn render_reading(id: u32, celsius: f32) -&gt; String&lt;32&gt; {
+    // AVOID: format!("sensor {id}: {celsius:.1}C") -- needs alloc + a configured #[global_allocator]
+    let mut line: String&lt;32&gt; = String::new();
+    write!(line, "sensor {id}: {celsius:.1}C").unwrap(); // PREFER: writes into a fixed 32-byte buffer, no heap
+    line
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>write!</code> and <code>format!</code> share identical formatting
+syntax, so switching destinations costs nothing in readability — only
+the buffer changes from an owned, unbounded <code>String</code> to a bounded
+<code>heapless::String&lt;N&gt;</code>, per the same <code>core::fmt::Write</code> mechanics
+<a href="../../syntax/macros/write-macros.md"><code>write!</code> / <code>writeln!</code></a> documents in
+full.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>%</code> is the remainder operator, overloadable via <code>std::ops::Rem</code>.</p>
 <p>It's the <em>remainder</em>, not strictly modulo — for negative operands, the
@@ -960,7 +961,7 @@ differs from the mathematical modulo used by some other languages. Like
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1000,18 +1001,68 @@ Explanation calls out, per the
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Rem</code> lives in <code>core::ops</code> — same software-division
-caveat as <a href="../../syntax/operators/slash.html"><code>/</code></a> on dividerless targets.</p>
+        <p><code>Rem</code> lives in <code>core::ops</code>, so <code>%</code> means exactly the same thing under
+<code>#![no_std]</code>, including the sign-of-the-dividend behavior and the
+unconditional panic on a zero divisor. It shares <a href="slash.md"><code>/</code></a>'s
+hardware caveat: on a microcontroller with no integer divider, <code>%</code>
+lowers to the same software division routine, since remainder and
+quotient are typically computed by the same instruction/routine
+underneath. The genuinely embedded-flavored idiom that follows from this
+is sizing a firmware ring buffer or FIFO to a power of two on purpose —
+common enough that it's practically a convention — specifically so
+wrapping an index can use a bitmask (<code>idx &amp; (len - 1)</code>) instead of <code>%</code>,
+skipping the division routine entirely. <code>%</code> itself stays the right,
+clearer choice whenever the length isn't a power of two or the saved
+cycles don't matter.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Wrapping a DMA buffer index with `%`</h3>
+            <pre><code class="rust">struct DmaBuffer {
+    slots: [u16; 6],
+    next: usize,
+}
+
+impl DmaBuffer {
+    fn advance(&amp;mut self) {
+        self.next = (self.next + 1) % self.slots.len(); // &lt;- `%` wraps the index, same as hosted code
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Replacing `%` with a bitmask on a power-of-two buffer</h3>
+            <pre><code class="rust">struct RingBuffer {
+    data: [u8; 16], // length is a power of two: 16
+    idx: usize,
+}
+
+impl RingBuffer {
+    fn push(&amp;mut self, byte: u8) {
+        self.data[self.idx] = byte;
+        self.idx = (self.idx + 1) &amp; (self.data.len() - 1); // mask replaces `%`: no division instruction needed
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

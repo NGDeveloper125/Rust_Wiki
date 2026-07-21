@@ -220,13 +220,153 @@ println!("{errors:?}");
 entire queued batch, matching the propagate-don't-panic guidance in the
 [Rust Book's error handling chapter](https://doc.rust-lang.org/book/ch09-00-error-handling.html).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** The `Command` trait itself, and calling `execute`
-through a reference, cost nothing and need no allocator. The common
-shape shown here — a `Vec<Box<dyn Command>>` queue or undo stack — needs
-the `alloc` crate, since both the `Vec` and each `Box` allocate. Where no
-allocator is available at all, the same decoupling works with static
-dispatch instead: a fixed `enum Command { TurnOnLight, TurnOffLight }`
-matched in one `execute` function, giving up runtime extensibility in
-exchange for zero allocation.
+**Partial support — the caveat is specifically about ownership and heap
+allocation, not about the pattern's decoupling idea.** The classic shape
+shown above — `Vec<Box<dyn Command>>` as a queue or undo stack — needs
+the `alloc` crate for two independent reasons: the `Vec` itself grows on
+the heap, and each `Box<dyn Command>` stores its command behind a heap
+allocation so the queue can hold different concrete command types side
+by side (the same `Box<dyn Trait>` mechanism the
+[`box` keyword page](../../syntax/keywords/box.md) covers — see that page
+for why there's no fixed-capacity substitute for `Box<T>` itself, unlike
+`heapless::Vec<T, N>` for `Vec`). Neither requirement disappears just
+because the target is embedded, but there are two genuinely idiomatic
+no-heap alternatives, chosen by whether the command set is closed and
+whether the invoker needs to *own* the command:
+
+If the set of commands a firmware image will ever issue is fixed and
+known at compile time — set a GPIO pin, start an ADC conversion, toggle
+a PWM channel — the idiomatic no-heap shape is a fixed-size `enum
+Command { ... }` dispatched with one `match`, stored in an ordinary
+array or a `heapless::spsc::Queue<Command, N>` instead of a `Vec`. This
+gives up the ability for downstream/plugin crates to add new command
+types (the enum has to be extended in this crate), which is exactly the
+tradeoff the [visitor](the-visitor-pattern.md) and
+[strategy](the-strategy-pattern.md) pages make the same way — but it's
+usually the right one for firmware, where the full command set really is
+closed at build time anyway.
+
+If the command set genuinely needs to stay open (a plugin-style
+architecture is unusual but not impossible in embedded, e.g. a scripting
+layer registering handlers), and the invoker only needs to *call* the
+command rather than *own and store* it for later, `&dyn Command`/`&mut
+dyn FnMut()` gets runtime polymorphism with no allocation at all — the
+same [on-stack dynamic dispatch](on-stack-dynamic-dispatch.md) trick
+applied to actions instead of data. This only works when something else
+already owns the command for the reference's whole lifetime; an undo
+stack that needs to *keep* commands around after the call that created
+them still needs either `alloc` or a fixed-capacity array of a single
+concrete command enum, since a reference alone can't outlive its
+referent.
+
+## Basic usage example (Embedded)
+
+```
+enum Command { // <- fixed-size enum in place of Box<dyn Command>: no allocator needed
+    SetPin { pin: u8, high: bool },
+    StartAdcConversion { channel: u8 },
+}
+
+fn execute(cmd: Command) {
+    match cmd { // <- static dispatch via match, standing in for Command::execute
+        Command::SetPin { pin, high } => { let _ = (pin, high); }
+        Command::StartAdcConversion { channel } => { let _ = channel; }
+    }
+}
+
+execute(Command::SetPin { pin: 13, high: true });
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Branching on data (pattern matching)
+
+A motor-control firmware image issues only a handful of command kinds,
+all known at build time, queued from an interrupt handler and drained in
+the main loop — a closed set that never needs a new command type without
+a firmware rebuild anyway.
+
+```
+enum MotorCommand {
+    SetSpeed { rpm: u16 },
+    Stop,
+    ReverseDirection,
+}
+
+const QUEUE_LEN: usize = 8;
+
+struct CommandQueue {
+    items: [Option<MotorCommand>; QUEUE_LEN], // <- fixed-capacity queue: no Vec, no allocator
+    len: usize,
+}
+
+impl CommandQueue {
+    fn push(&mut self, cmd: MotorCommand) {
+        if self.len < QUEUE_LEN {
+            self.items[self.len] = Some(cmd);
+            self.len += 1;
+        }
+    }
+
+    fn drain(&mut self) {
+        for slot in self.items.iter_mut().take(self.len) {
+            if let Some(cmd) = slot.take() {
+                match cmd { // <- match plays Command::execute's role, dispatched statically
+                    MotorCommand::SetSpeed { rpm } => { let _ = rpm; }
+                    MotorCommand::Stop => {}
+                    MotorCommand::ReverseDirection => {}
+                }
+            }
+        }
+        self.len = 0;
+    }
+}
+```
+
+**Why this way:** every command kind this firmware will ever issue is
+known at compile time, so a fixed-size enum matched exhaustively gives
+the same "decouple what happens from when it happens" benefit as
+`Box<dyn Command>` with zero heap allocation and zero vtable indirection
+— per the [`box` keyword's embedded notes](../../syntax/keywords/box.md),
+there is no fixed-capacity substitute for `Box<dyn Trait>` itself, so a
+closed command set is precisely the case where reaching for an enum
+instead is the right call, not a workaround.
+
+### Scenario: Runtime polymorphism
+
+A firmware image supports a small scripting layer where a handler can be
+registered for the duration of a single command dispatch pass; the
+handler set isn't a fixed enum the core crate can enumerate, but nothing
+needs to *own* the handler past the call that runs it, so a reference
+avoids allocating entirely.
+
+```
+trait Command {
+    fn execute(&self);
+}
+
+struct SetPinCommand { pin: u8 }
+impl Command for SetPinCommand {
+    fn execute(&self) {
+        let _ = self.pin; // stand-in for a real register write
+    }
+}
+
+fn dispatch(cmd: &dyn Command) { // <- reference, not Box: no heap allocation required
+    cmd.execute();
+}
+
+let set_pin = SetPinCommand { pin: 5 }; // <- an ordinary stack value, not boxed
+dispatch(&set_pin);
+```
+
+**Why this way:** `&dyn Command` gets the same "invoker doesn't know the
+concrete type" decoupling as `Box<dyn Command>` without needing `alloc`,
+as long as something else keeps the command alive for the call — the
+[on-stack dynamic dispatch](on-stack-dynamic-dispatch.md) idiom is this
+exact technique applied to commands specifically; once a command needs
+to *outlive* the call that dispatches it (a real undo stack), a
+reference alone is no longer enough and either `alloc` or a closed enum
+is the honest choice instead.

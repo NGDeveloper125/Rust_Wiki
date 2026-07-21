@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#[test]</code> is placed directly above a function to mark it as a test case,
 discovered and run by <code>cargo test</code>. Under an ordinary <code>cargo build</code> or
@@ -987,7 +988,7 @@ passing.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1040,27 +1041,97 @@ return types for a <code>#[test]</code> function.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> The <code>#[test]</code> harness depends on <code>std</code> — catching
-unwinding panics per-test and printing a pass/fail report both assume an
-OS underneath. This doesn't stop most embedded logic from being unit
-tested in the ordinary way: hardware-independent code (parsing, math,
-protocol encoding) is typically tested with <code>cargo test</code> running on the
-<strong>host</strong> development machine, compiled without the target's <code>#![no_std]</code>
-restriction, exactly as described in <a href="../../concepts/testing-tooling/unit-tests.html">Unit tests</a>'s
-Embedded Rust Notes. Code that genuinely depends on real hardware needs a
-different tool — an on-target framework like <code>defmt-test</code> runs
-<code>#[test]</code>-like functions on the microcontroller itself and reports
-results over a debug probe.</p>
+        <p><code>#[test]</code> itself is ordinary attribute syntax, but the harness <code>cargo test</code> builds around it is squarely a <code>std</code> feature: each discovered test
+is run on its own OS thread (<code>std::thread</code>), and the harness catches
+per-test unwinding panics and prints a pass/fail summary from a hosted
+process — none of which exists on a bare <code>#![no_std]</code> target, which has no
+thread scheduler, no unwinding-catching runtime, and typically no
+attached terminal to print a report to. This is why on-target unit
+testing normally isn't done by compiling the ordinary <code>#[test]</code> harness
+for the microcontroller itself.</p>
+<p>Two complementary answers cover the resulting gap, and most real embedded
+crates lean on both:</p>
+<p><strong>Host-testing split.</strong> The majority of a typical embedded crate's
+genuinely <em>testable</em> logic — protocol/frame parsing, checksum/CRC
+computation, state-machine transitions, unit conversions — doesn't
+actually touch hardware, and is written so it also compiles for the host:
+kept dependent only on <code>core</code>/<code>alloc</code> rather than a specific chip's
+peripherals, or placed behind a <code>#[cfg(test)]</code> module that pulls in <code>std</code>
+only for the test build. That code is then tested with a completely
+ordinary <code>cargo test</code>, run on the development machine's own architecture,
+with the full <code>#[test]</code>/<code>#[ignore]</code>/<code>#[should_panic]</code> machinery available
+exactly as on any other crate — nothing about the code eventually running
+on an ARM Cortex-M or RISC-V target changes how it's tested.</p>
+<p><strong><code>defmt-test</code> (or <code>embedded-test</code>) for genuinely on-target tests.</strong> For
+code that <em>can't</em> be meaningfully tested without real hardware — a
+driver's actual register writes, timing against a real peripheral, an
+interrupt handler — <code>defmt-test</code> provides a <code>#[test]</code>-shaped attribute
+macro of its own: functions marked with it run for real on the target
+microcontroller, flashed and executed via a debug probe (<code>probe-rs</code>), with
+pass/fail results and any logged output sent back to the host over RTT
+(or semihosting) rather than printed by a hosted process. It deliberately
+mirrors <code>cargo test</code>'s shape — a <code>#[tests]</code> module, <code>#[test]</code> functions
+inside it, an optional <code>#[init]</code> fixture — so the authoring experience is
+close to ordinary unit testing, but every test genuinely executes on the
+chip rather than the host CPU. <code>embedded-test</code> fills the same niche with
+a similar model. Both need a debug probe physically attached to real
+hardware to run at all, which is a meaningfully different CI/development
+story than <code>cargo test</code>'s "just run it, no hardware needed."</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Host-testing hardware-independent logic with plain #[test]</h3>
+            <pre><code class="rust">// This function only manipulates bytes — no peripheral access — so it's tested on the host.
+pub fn parse_frame_length(header: [u8; 2]) -&gt; u16 {
+    u16::from_be_bytes(header)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // &lt;- runs with an ordinary `cargo test` on the host, not on the target
+    fn parses_a_two_byte_length_header() {
+        assert_eq!(parse_frame_length([0x01, 0x2C]), 0x012C);
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Running a test on real hardware with defmt-test</h3>
+            <pre><code class="rust">#![no_std]
+#![no_main]
+
+#[defmt_test::tests] // &lt;- marks this module's functions as on-target tests, run via a debug probe
+mod tests {
+    use defmt::assert_eq;
+
+    #[test] // &lt;- executes for real on the microcontroller; pass/fail reported back over RTT
+    fn adc_reads_within_expected_range() {
+        let sample = read_adc_channel(0);
+        assert_eq!(sample &lt;= 4095, true, "12-bit ADC sample out of range");
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -49,7 +49,36 @@ than `!(channel == 0)`, and the compiler treats them identically since
 [`==`](equal-equal.md) for the fuller treatment of the underlying trait
 and its derive/impl tradeoffs.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Same trait as [`==`](equal-equal.md), no `std`
-dependency.
+`!=` means exactly the same thing under `#![no_std]` — still
+`PartialEq::ne` via `core::cmp`, no different from `==`'s embedded story.
+The concrete case that comes up constantly in firmware is polling a
+status register's busy bit until it clears, or flagging a hardware ID
+read-back that doesn't match what a driver expects — both are `!=`
+comparisons against a bit pattern the datasheet defines, checked in a
+tight loop rather than once at startup.
+
+## Usage examples (Embedded)
+
+### Detecting an unexpected device on the bus
+
+```
+const EXPECTED_CHIP_ID: u8 = 0xD4;
+
+fn is_unexpected_chip(chip_id_reg: u8) -> bool {
+    chip_id_reg != EXPECTED_CHIP_ID // <- `!=` flags any chip ID that doesn't match what this driver expects
+}
+```
+
+### Polling a busy bit until it clears
+
+```
+const BUSY_BIT: u8 = 0x80;
+
+fn wait_until_ready(read_status: impl Fn() -> u8) {
+    while read_status() & BUSY_BIT != 0 { // <- `!=` keeps polling until the busy bit clears
+        // spin until the peripheral reports it's no longer busy
+    }
+}
+```

@@ -107,10 +107,41 @@ import block scanning as one unit rather than one line per type — the
 form `rustfmt` itself normalizes multi-item imports from the same module
 into.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `use` is pure compile-time name resolution with no
-runtime representation, so it works identically in a `#![no_std]` crate —
-importing from `core`/`alloc` instead of `std` is the only difference,
-and it's a difference in *which* paths exist, not in how `use` itself
-behaves.
+`use` is pure compile-time name resolution with no runtime
+representation, so it behaves identically in a `#![no_std]` crate — the
+only difference is *which* paths exist to import from: `core`/`alloc`
+take the place of `std` for anything that isn't peripheral- or
+HAL-specific, and HAL/PAC crates supply the rest. Pulling in a trait
+like `embedded_hal::digital::OutputPin` with `use` is what lets driver
+code call `.set_high()`/`.set_low()` on any pin type across different
+vendors' HALs, since the trait — not a concrete peripheral type — is
+what the method call actually resolves against.
+
+## Usage examples (Embedded)
+
+### Importing a HAL trait to call its methods on a concrete pin type
+
+```
+#![no_std]
+
+use embedded_hal::digital::OutputPin; // <- brings the trait's methods into scope for any type implementing it
+
+fn blink<P: OutputPin>(led: &mut P) {
+    led.set_high().ok(); // <- resolves via the `use`-imported `OutputPin` trait
+    led.set_low().ok();
+}
+```
+
+### Grouping peripheral-module imports from a HAL crate
+
+```
+use stm32f4xx_hal::{pac, prelude::*}; // <- one `use` line, grouped import mirroring the classic `{self, Read, Write}` form
+
+fn init() {
+    let device = pac::Peripherals::take().unwrap();
+    let gpioa = device.GPIOA.split();
+    let _led = gpioa.pa5.into_push_pull_output();
+}
+```

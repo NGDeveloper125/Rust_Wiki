@@ -81,7 +81,35 @@ every arm — braced block or bare expression — must produce that same
 type. That's what lets `match` be assigned directly to a binding, rather
 than requiring a separate mutable variable set inside each arm.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Block and struct-literal delimiters are core grammar —
-no `std` dependency.
+`{ }` means exactly the same thing under `#![no_std]` — block-expression
+and struct-literal delimiter, resolved purely by the compiler with no
+`std` dependency. The one place it appears in a distinctly embedded
+position is an interrupt handler: `#[interrupt]`/`#[exception]`
+(cortex-m-rt) and RTIC task functions are ordinary Rust functions, so
+their body is delimited by the same `{ }` as any other `fn` — the
+attribute controls *when and how the runtime calls it*, not the grammar
+of what's inside.
+
+## Usage examples (Embedded)
+
+### An interrupt handler's body
+
+```
+#![no_std]
+#![no_main]
+
+use cortex_m_rt::interrupt;
+
+#[interrupt]
+fn TIM2() { // <- `{` opens the handler body; ordinary block-expression grammar
+    // acknowledge the timer interrupt, service the peripheral
+} // <- `}` closes it
+```
+
+### Constructing a peripheral config struct literal
+
+```
+let config = SerialConfig { baud_rate: 115_200, parity: Parity::None }; // <- `{ }` builds the config value in one expression
+```

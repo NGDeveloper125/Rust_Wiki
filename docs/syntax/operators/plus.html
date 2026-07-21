@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>+</code> is arithmetic addition between two values of the same numeric type,
 as in <code>let sum = 1 + 2;</code>. It's overloadable via <code>std::ops::Add</code> — any
@@ -967,7 +968,7 @@ confuse the two uses.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1026,19 +1027,62 @@ under-constraining and hitting compile errors deep in the function body.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Add</code> lives in <code>core::ops</code> (re-exported as <code>std::ops</code>),
-so both the arithmetic and trait-bound-combinator meanings work
-identically in <code>#![no_std]</code>.</p>
+        <p><code>Add</code> lives in <code>core::ops</code>, so both meanings of <code>+</code> — arithmetic addition
+and the trait-bound combinator — work identically under <code>#![no_std]</code>. The
+trait-bound meaning is pure compile-time grammar and has nothing further
+to say about embedded targets. The arithmetic meaning has one nuance
+worth being deliberate about: a release build — the profile that actually
+gets flashed to a device — has overflow checks off by default, so <code>a + b</code>
+wraps silently past a type's maximum instead of panicking. A desktop
+program usually catches an overflow during development, in a debug
+build; a device already in the field can't be recompiled in debug to
+catch the same bug later. That's why <code>checked_add</code>/<code>wrapping_add</code>/
+<code>saturating_add</code> carry more real weight in firmware than they do in
+typical hosted code — especially for anything that accumulates for as
+long as the device runs, like a tick counter incremented every interrupt
+or a running total built from sensor samples.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Incrementing a tick counter across an interrupt boundary</h3>
+            <pre><code class="rust">struct Ticks(u32);
+
+impl Ticks {
+    fn on_interrupt(&amp;mut self) {
+        self.0 = self.0.wrapping_add(1); // &lt;- `+` via wrapping_add: rolls over on purpose instead of panicking
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Accumulating a sensor total without an unnoticed release-mode wrap</h3>
+            <pre><code class="rust">fn total_pulses(counts: &amp;[u16]) -&gt; Option&lt;u32&gt; {
+    let mut total: u32 = 0;
+    for &amp;count in counts {
+        total = total.checked_add(count as u32)?; // &lt;- None flags an overflow a shipped device can't catch by recompiling in debug
+    }
+    Some(total)
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

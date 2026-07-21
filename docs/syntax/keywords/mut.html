@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>mut</code> marks a binding, reference, or raw pointer as mutable — the one
 thing in Rust that is <em>not</em> mutable by default. It appears in a few
@@ -977,7 +978,7 @@ reference sense (<code>&amp;mut T</code> and <code>&amp;T</code> are different t
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1062,19 +1063,75 @@ exists at a time, ruling out aliasing bugs at compile time.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>mut</code> is core grammar. It's used constantly in embedded
-code for <code>&amp;mut</code> access to peripheral registers and driver state — no
-<code>std</code> dependency at all.</p>
+        <p><code>mut</code> means exactly the same thing under <code>#![no_std]</code> as it does on a
+hosted target — a binding-mutability marker, a distinct reference type
+(<code>&amp;mut T</code>), and the standard way a method takes exclusive access to
+<code>self</code>. It shows up constantly in embedded code because so much of a
+HAL's public API is built around <code>&amp;mut self</code> methods: setting a GPIO
+pin, writing a UART byte, or reconfiguring a timer's prescaler all take
+<code>&amp;mut self</code> on the peripheral handle, since the operation changes
+hardware state, and the borrow checker's "only one <code>&amp;mut</code> at a time"
+rule is exactly what stops two parts of the program from racing to
+reconfigure the same peripheral through two live handles at once.</p>
+<p>A second, historically important pattern is <code>static mut</code> — a global
+marked mutable so an interrupt handler and the main loop can both reach
+the same piece of state (a tick counter, a ring-buffer index) with no
+owning stack frame to route the borrow through. Every access to a
+<code>static mut</code> requires an <code>unsafe</code> block, because the compiler cannot
+verify that the interrupt and the main loop won't touch it at the same
+instant with no synchronization — the same data race an ordinary
+<code>&amp;mut</code>/<code>&amp;</code> aliasing rule would rule out at compile time if the state
+weren't global. <code>static mut</code> still appears throughout older and simpler
+embedded codebases, but it's increasingly superseded by a <code>static</code>
+wrapping a <code>critical-section</code>-guarded primitive (<code>Mutex&lt;Cell&lt;_&gt;&gt;</code>), which
+gets the same interrupt-shared mutability without an <code>unsafe</code> block at
+every access site — see <a href="static.md"><code>static</code></a> for that pattern in depth.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Mutating a peripheral through `&amp;mut self`</h3>
+            <pre><code class="rust">use embedded_hal::digital::OutputPin;
+
+fn blink&lt;P: OutputPin&gt;(led: &amp;mut P) { // &lt;- `&amp;mut P`: exclusive access needed to change the pin's output level
+    led.set_high().ok();
+    led.set_low().ok();
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">`static mut` as interrupt-shared state (historical pattern)</h3>
+            <pre><code class="rust">static mut TICKS: u32 = 0; // &lt;- `mut`: shared between `main` and the interrupt, so every access needs `unsafe`
+
+#[interrupt]
+fn SysTick() {
+    unsafe {
+        TICKS += 1; // &lt;- `mut` access requires `unsafe`: the compiler can't verify no data race with `main`
+    }
+}
+
+fn uptime_ticks() -&gt; u32 {
+    unsafe { TICKS } // &lt;- the same `unsafe` requirement applies to reads, not just writes
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

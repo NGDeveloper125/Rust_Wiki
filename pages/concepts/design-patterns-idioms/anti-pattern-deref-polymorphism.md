@@ -125,10 +125,99 @@ silently defeating the entire point of wrapping it; the
 documents "Deref polymorphism" as exactly this misuse, and recommends
 explicit delegation or a shared trait instead.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both the anti-pattern and its fix are pure trait-impl /
-method-resolution concerns handled entirely at compile time, with no
-runtime cost either way under `#![no_std]` — the guidance to prefer
-explicit delegation over faked inheritance applies identically regardless
-of target.
+The anti-pattern is identical to the classic case, and the fix is too:
+`Deref` still means "acts like a reference to," never "is-a," regardless
+of target. The embedded flavor worth calling out is where the temptation
+shows up most: wrapping an `embedded-hal` peripheral handle — an `I2c`, a
+`Spi`, a GPIO `OutputPin` — to add behavior the raw HAL type doesn't have
+(retrying a flaky I2C transaction, logging every register write,
+debouncing a pin read). Implementing `Deref` on that wrapper so the
+underlying HAL type's methods stay callable through it is exactly as
+tempting here as with a database connection, and exactly as wrong: it
+lets application code silently reach straight through the wrapper and
+call the raw HAL method directly, skipping the retry/logging/debounce
+logic the wrapper exists to add — on hardware, that's not just a
+surprising API, it can mean a transaction that's supposed to be retried
+on a noisy bus silently isn't, because half the codebase called the
+un-wrapped method by accident via autoderef.
+
+## Basic usage example (Embedded)
+
+```
+struct RetryingI2c<I> {
+    inner: I,
+    max_attempts: u8,
+}
+
+impl<I> RetryingI2c<I> {
+    fn attempts(&self) -> u8 { // <- PREFER: an explicit method, not an inherited I2c method via Deref
+        self.max_attempts
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL wrapper around an I2C bus wants every read to retry on a bus
+error; callers must go through the wrapper's own method, never straight
+through to the raw HAL implementation underneath it.
+
+```
+trait I2cRead {
+    fn read(&mut self, addr: u8, buf: &mut [u8]) -> Result<(), ()>;
+}
+
+struct RawI2c;
+impl I2cRead for RawI2c {
+    fn read(&mut self, _addr: u8, _buf: &mut [u8]) -> Result<(), ()> {
+        Err(()) // stands in for a flaky bus transaction
+    }
+}
+
+// AVOID: Deref makes the raw, non-retrying `read` reachable straight through the wrapper
+// struct RetryingI2c<I> {
+//     inner: I,
+// }
+//
+// impl<I> std::ops::Deref for RetryingI2c<I> {
+//     type Target = I;
+//     fn deref(&self) -> &I {
+//         &self.inner // now `wrapper.read(..)` silently skips the retry loop entirely
+//     }
+// }
+
+// PREFER: explicit delegation — the only `read` callers can reach is the retrying one
+struct RetryingI2c<I> {
+    inner: I,
+    max_attempts: u8,
+}
+
+impl<I: I2cRead> RetryingI2c<I> {
+    fn read(&mut self, addr: u8, buf: &mut [u8]) -> Result<(), ()> {
+        for _ in 0..self.max_attempts {
+            if self.inner.read(addr, buf).is_ok() {
+                return Ok(());
+            }
+        }
+        Err(())
+    }
+}
+
+let mut sensor_bus = RetryingI2c { inner: RawI2c, max_attempts: 3 };
+let mut buf = [0u8; 2];
+let _ = sensor_bus.read(0x48, &mut buf); // <- always goes through the retry loop
+```
+
+**Why this way:** implementing `Deref` on `RetryingI2c` would make the
+raw, non-retrying `read` reachable through autoderef alongside the
+wrapper's own method, so a single unretried call at the wrong moment on
+a noisy I2C bus can silently corrupt a sensor read that the wrapper was
+specifically built to make reliable; the
+[Rust Design Patterns' anti-patterns section](https://rust-unofficial.github.io/patterns/anti_patterns/deref.html)
+documents this "Deref polymorphism" misuse and recommends explicit
+delegation instead — doubly so where the delegated behavior (a retry
+loop) is the entire reason the wrapper exists.

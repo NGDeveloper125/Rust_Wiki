@@ -134,14 +134,131 @@ fallible function — the
 [Rust Book's async chapter](https://doc.rust-lang.org/book/ch17-01-futures-and-syntax.html)
 shows `?` working unchanged inside `async fn` bodies for this reason.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** `async fn` and `.await` are language features that
-desugar to a state machine implementing `core::future::Future`, which
-needs neither `std` nor an allocator for the syntax itself — this works
-under `#![no_std]`. What changes on embedded targets is what drives that
-future: there's no `tokio`, so `#![no_std]` async code relies on an
-alloc-based (or allocation-free) embedded executor, most commonly
-`embassy`, which provides its own `#[embassy_executor::main]` entry point
-and async-friendly peripheral drivers built around the same `.await`
-syntax shown above.
+The `async`/`.await` language mechanics don't change under `#![no_std]` —
+an `async fn` still desugars to a state machine implementing
+`core::future::Future`, and `.await` still just suspends the current task
+at that point. What's missing is the other half of the story that makes
+async worth reaching for at all: on a hosted target, `.await`ing a socket
+read or a sleep only avoids blocking a thread because `tokio` (or
+`async-std`) is underneath it, backed by an OS scheduler, OS threads, and
+an OS I/O reactor. None of that exists on a microcontroller with no
+operating system, so bare `async fn`/`.await` compiles under `#![no_std]`
+but has nothing to drive it — the caveat this page's `partial` support
+marks.
+
+The idiomatic substitute is `embassy`, an async executor built specifically
+for `no_std` embedded targets: `embassy_executor` provides the task
+scheduler and `#[embassy_executor::main]` entry point that `tokio` and
+`#[tokio::main]` provide on a hosted target, and crates like `embassy_time`
+provide `.await`-able timers in place of `tokio::time::sleep`. It's worth
+being honest about *why* async earns its keep in embedded, because it's a
+narrower case than the network-server story that motivates it on a hosted
+target: there's no thread pool to save context-switch overhead on, since
+many microcontrollers only have one core and no threads at all. The real
+win is letting one core interleave several genuinely independent
+wait-heavy jobs — waiting on a UART line, a sensor's timer-driven poll
+interval, a button debounce — without either busy-polling every peripheral
+in a single loop (wasting power and blurring each job's logic together) or
+pulling in a full RTOS just to get preemptive multitasking. Async gives
+cooperative multitasking with plain `.await` points, at the cost of the
+same discipline classic async requires: a task that never reaches an
+`.await` (a long computation, or a blocking HAL call) starves every other
+task on embassy's executor just as it would on `tokio`'s.
+
+## Basic usage example (Embedded)
+
+```
+use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+#[embassy_executor::task]
+async fn blink() { // <- async fn: same grammar as hosted Rust, driven by embassy's executor instead of tokio's
+    loop {
+        // ... toggle an LED pin here
+        Timer::after(Duration::from_millis(500)).await; // <- suspends only this task; the executor runs others meanwhile
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    spawner.spawn(blink()).unwrap();
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Async tasks
+
+A device that needs to sample a sensor on a timer while also watching a
+button for a debounced press should run both as separate embassy tasks
+rather than interleaving the two jobs by hand in one loop — each task
+just `.await`s the event it cares about, and embassy's executor handles
+interleaving them.
+
+```
+use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
+
+#[embassy_executor::task]
+async fn sample_sensor() { // <- async fn: one independent job, expressed as straight-line code
+    loop {
+        // ... trigger an ADC read here
+        Timer::after(Duration::from_millis(200)).await; // <- suspends this task only
+    }
+}
+
+#[embassy_executor::task]
+async fn watch_button() {
+    loop {
+        // ... await a GPIO edge future here (debounced by the HAL/driver)
+        Timer::after(Duration::from_millis(20)).await; // <- suspends this task only
+    }
+}
+
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    spawner.spawn(sample_sensor()).unwrap(); // <- both tasks run concurrently on one core, no RTOS involved
+    spawner.spawn(watch_button()).unwrap();
+}
+```
+
+**Why this way:** writing the sensor-sampling and button-watching logic as
+two separate `async fn` tasks keeps each one readable as sequential code,
+while embassy's executor multiplexes them on the single core whenever one
+task is suspended at an `.await` — the alternative, hand-rolling a
+single loop that polls both jobs, quickly turns into an ad-hoc scheduler
+that async/`.await` exists to avoid writing.
+
+### Scenario: Multi-threading
+
+A firmware image that has both a CPU-bound task (a DSP filter running
+every sample) and several I/O-wait-bound tasks (sensor polling, a UART
+command parser) shouldn't force the CPU-bound work onto the same
+cooperative executor as the waiting tasks — that's the one case embedded
+async doesn't help with, and it's still a job for a thread (or the second
+core, on a dual-core target) rather than another embassy task.
+
+```
+// AVOID: a CPU-bound loop inside an async task never reaches an `.await`,
+// so it starves every other task on embassy's single-threaded executor.
+#[embassy_executor::task]
+async fn run_filter_bad(samples: [i16; 256]) {
+    let _ = heavy_dsp_compute(&samples); // <- no `.await` anywhere: blocks the whole executor until done
+}
+
+// PREFER: run genuinely CPU-bound work on its own thread/core (e.g. via a
+// second core's executor, or an RTOS task) and hand results back through
+// a channel, keeping the async executor free to service waiting tasks.
+fn heavy_dsp_compute(samples: &[i16; 256]) -> i16 {
+    samples.iter().copied().sum::<i16>() / samples.len() as i16
+}
+```
+
+**Why this way:** embassy's default executor is cooperative and typically
+single-threaded per core, so it inherits the same rule hosted async
+lives by — never block inside an async task — except here "block" also
+includes a long computation with no `.await` in it; genuinely CPU-bound
+work belongs on a thread or a dedicated core, exactly as `spawn_blocking`
+carves it out of `tokio`'s executor on a hosted target.

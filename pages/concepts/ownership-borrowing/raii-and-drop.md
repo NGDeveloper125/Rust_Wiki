@@ -120,11 +120,95 @@ committed — sqlx models `Transaction` exactly this way, per the
 RAII does the safety work a hand-written try/rollback block would
 otherwise need to get right manually.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — and arguably more central to embedded Rust than to
-hosted code. RAII is the idiomatic way embedded HAL crates model
-peripheral ownership: a driver struct's `Drop` impl can disable a
-peripheral, release a pin back to a default state, or turn off a clock
-the instant it goes out of scope, with no OS process teardown to lean on
-as a safety net the way a hosted program implicitly has.
+`Drop` is core-language and needs no allocator or `std`, so it runs on a
+microcontroller exactly as described above: deterministically, the moment
+a value's owner's scope ends, with the compiler inserting the call at
+every exit path including early returns. What's genuinely different in
+embedded code is *why* that guarantee matters more, not less, than on a
+hosted target. A hosted program has an OS underneath it that will reclaim
+file descriptors, memory, and locks even if a process is killed outright
+— `Drop` is a convenience there, not the last line of defense. Bare-metal
+firmware has no such backstop: if a peripheral is left enabled, a GPIO pin
+is left driving high, or a critical section is left entered, nothing else
+in the system will ever notice or clean it up. `Drop` running
+deterministically, with no OS involved, is exactly the guarantee that
+makes RAII a safety mechanism on bare metal rather than just tidiness.
+
+This is why HAL crates model peripheral access as guard types so
+routinely: a type returned by "enter a critical section" or "start using
+this pin as an output" carries the responsibility for undoing that state,
+and its `Drop` impl is what runs that undo — on a normal return, an early
+return, or unwinding from a panic — without the caller having to remember
+a matching "release" call at every possible exit.
+
+## Basic usage example (Embedded)
+
+```
+struct CriticalSection;
+
+impl CriticalSection {
+    fn enter() -> Self { // <- disables interrupts on construction
+        // ... disable interrupts
+        CriticalSection
+    }
+}
+
+impl Drop for CriticalSection {
+    fn drop(&mut self) {
+        // ... re-enable interrupts, unconditionally
+    }
+}
+
+fn read_shared_counter() -> u32 {
+    let _guard = CriticalSection::enter();
+    42 // placeholder for a real read of interrupt-shared state
+} // <- _guard drops here: interrupts are re-enabled even on an early return above it
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Managing resources (RAII)
+
+A GPIO pin borrowed as an output for one operation should return to a
+known-safe default (input, high-impedance) the instant it's done being
+used, even if the function driving it returns early or panics partway
+through.
+
+```
+struct OutputPin { number: u8 } // stand-in for a HAL output-pin type
+
+struct DriveHigh<'a> { pin: &'a mut OutputPin }
+
+impl<'a> DriveHigh<'a> {
+    fn new(pin: &'a mut OutputPin) -> Self {
+        // ... set the pin high
+        DriveHigh { pin }
+    }
+}
+
+impl<'a> Drop for DriveHigh<'a> {
+    fn drop(&mut self) {
+        // ... set the pin back to input/high-impedance, regardless of how the guard's scope ended
+        let _ = self.pin.number;
+    }
+}
+
+fn pulse(pin: &mut OutputPin, should_abort: bool) {
+    let _guard = DriveHigh::new(pin);
+    if should_abort {
+        return; // <- _guard still drops here: the pin is returned to a safe state either way
+    }
+    // ... hold the pin high for the pulse duration
+}
+```
+
+**Why this way:** tying "pin driven high" to a guard's scope means every
+exit path — success, an early `return`, or a panic — leaves the pin in a
+known-safe state without the function needing a matching cleanup call at
+each one; this is the same "cleanup runs no matter how the scope ends"
+guarantee the
+[Rust Book](https://doc.rust-lang.org/book/ch15-03-drop.html) describes
+for `Drop` generally, applied here with no OS process teardown available
+to fall back on if the guard were forgotten.

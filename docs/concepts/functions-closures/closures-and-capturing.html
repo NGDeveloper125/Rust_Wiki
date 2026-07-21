@@ -951,7 +951,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A closure is an anonymous, inline function-like value, written
 <code>|params| body</code>, that can additionally <em>capture</em> variables from the scope
@@ -986,7 +987,7 @@ all needs no environment, and so it coerces automatically to a plain
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let tax_rate = 0.08;
 let with_tax = |price: f64| price * (1.0 + tax_rate); // &lt;- closure borrows `tax_rate` from its environment
@@ -996,7 +997,7 @@ println!("{}", with_tax(19.99));
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1092,21 +1093,143 @@ builds its channel examples around.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Closures are a core-language, compile-time construct —
-a non-boxed closure passed generically or via <code>impl Fn</code>/<code>impl FnMut</code>
-requires no heap allocation and works identically in <code>#![no_std]</code>. Only
-<em>boxing</em> a closure (<code>Box&lt;dyn Fn()&gt;</code>) needs the <code>alloc</code> crate plus a
-<code>#[global_allocator]</code>; capturing itself never does.</p>
+        <p>Closures are a compile-time, core-language construct, so everything about
+how a closure is compiled — the anonymous per-closure struct, capture-by-
+reference/mutable-reference/value — works exactly the same inside
+<code>#![no_std]</code>. A closure passed generically (<code>impl Fn</code>/<code>impl FnMut</code>) or by
+reference (<code>&amp;mut dyn FnMut</code>) needs no heap allocation at all: its captured
+environment lives on the stack (or is embedded directly in the calling
+frame), just like on a hosted target.</p>
+<p>The one genuinely embedded-relevant pattern this unlocks is registering a
+closure as a callback into a HAL driver or interrupt handler while it
+still holds <code>&amp;mut</code> access to a peripheral — for example, a GPIO driver's
+"on interrupt, call this" slot taking <code>impl FnMut()</code>, where the closure
+captures <code>&amp;mut</code> a shared counter or a second peripheral it needs to touch
+each time the interrupt fires. Because the closure is generic (or passed
+by reference), this costs nothing beyond the call itself: no vtable, no
+heap.</p>
+<p>The one caveat worth being explicit about: that's only true for a
+non-owning/non-boxed closure. A closure captured by <code>move</code> and then boxed
+into a <code>Box&lt;dyn FnMut()&gt;</code> — the shape you'd reach for to store a
+heterogeneous collection of callbacks, or to return a closure without
+naming its concrete type — needs the <code>alloc</code> crate plus a
+<code>#[global_allocator]</code>, exactly as on a hosted target. If a callback only
+ever needs to be called through a generic bound or a plain reference,
+skip boxing it: <code>impl FnMut()</code> or <code>&amp;mut dyn FnMut()</code> never touches the
+heap.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct Gpio {
+    state: bool,
+}
+
+impl Gpio {
+    fn toggle(&amp;mut self) {
+        self.state = !self.state;
+    }
+}
+
+fn on_interrupt(mut handler: impl FnMut()) { // &lt;- generic bound: no heap allocation, no vtable
+    handler();
+}
+
+fn demo(led: &amp;mut Gpio) {
+    on_interrupt(|| led.toggle()); // &lt;- closure captures `led` by mutable reference
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Mutating through a reference</h3>
+            <p>A GPIO interrupt fires repeatedly for as long as the pin is armed, and the
+handler needs exclusive access to toggle the pin each time — so the
+callback slot is typed to accept a closure that captures <code>&amp;mut</code> access to
+the peripheral, not an owned copy of it.</p>
+<pre><code class="rust">struct Led {
+    on: bool,
+}
+
+impl Led {
+    fn toggle(&amp;mut self) {
+        self.on = !self.on;
+    }
+}
+
+fn register_gpio_callback&lt;F: FnMut()&gt;(mut callback: F) {
+    // &lt;- `FnMut`: the interrupt may fire many times, and the closure mutates its capture each time
+    for _ in 0..3 {
+        callback(); // simulates repeated interrupt firings
+    }
+}
+
+fn wire_up(led: &amp;mut Led) {
+    register_gpio_callback(|| led.toggle()); // &lt;- closure captures `led` by `&amp;mut`, not by value
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> capturing the peripheral by mutable reference instead
+of moving it in keeps the peripheral usable by the rest of <code>wire_up</code>
+after registration, and avoids needing <code>'static</code> or ownership transfer
+just to hand a callback to an interrupt-registration function.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A sensor driver's "new data" callback needs to run on every sample and
+often needs to mutate something it captured (a running total, a flag) —
+so the driver's API takes <code>impl FnMut(u16)</code> generically rather than a
+boxed trait object, keeping the whole call chain heap-free.</p>
+<pre><code class="rust">struct Driver;
+
+impl Driver {
+    fn on_data_ready&lt;F: FnMut(u16)&gt;(&amp;mut self, mut callback: F) {
+        // &lt;- generic `FnMut` parameter: works with a plain reference-capturing closure, no `alloc` needed
+        let sample: u16 = 512; // stand-in for a register read
+        callback(sample);
+    }
+}
+
+fn read_and_log(driver: &amp;mut Driver, total: &amp;mut u32) {
+    driver.on_data_ready(|sample| *total += u32::from(sample)); // &lt;- captures `total` by `&amp;mut`
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a generic <code>impl FnMut</code> parameter is monomorphized per
+call site and never allocates, whereas storing the same callback as
+<code>Box&lt;dyn FnMut(u16)&gt;</code> would require the <code>alloc</code> crate and a global
+allocator — reach for the boxed form only when the driver genuinely needs
+to store a heterogeneous collection of callbacks, not just call one back
+synchronously.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

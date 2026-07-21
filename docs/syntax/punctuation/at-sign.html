@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>ident @ pattern</code> binds <code>ident</code> to the entire value being matched, while
 still requiring that value to match <code>pattern</code>. It appears in any pattern
@@ -981,7 +982,7 @@ the surrounding shape, e.g. <code>Reading { value: v @ 0.0..=100.0, .. }</code>.
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1050,20 +1051,60 @@ just by convention.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Pure pattern-matching grammar, allocator-free. A natural
-fit for classifying an ADC reading or register value into a named band
-while keeping the raw value on hand for logging or telemetry, in one
-<code>match</code> arm instead of a lookup followed by a separate range check.</p>
+        <p><code>@</code> means exactly the same thing under <code>#![no_std]</code> — pure pattern-matching
+grammar, resolved at compile time with no allocation and no runtime cost.
+It's a natural fit for a driver's status type: a "reading" enum often
+wraps a raw sensor or register value inside a variant, and <code>@</code> lets one
+match arm both classify that variant <em>and</em> keep the raw value on hand for
+a log line or telemetry frame, without reading the peripheral a second
+time.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Binding a field while matching a hardware status enum</h3>
+            <pre><code class="rust">use defmt::info;
+
+enum SensorReading {
+    Temperature(i16),
+}
+
+fn classify(reading: SensorReading) {
+    match reading {
+        SensorReading::Temperature(t @ -40..=85) =&gt; info!("temp {} C: in spec", t), // &lt;- `@` binds `t` while checking the range
+        SensorReading::Temperature(t) =&gt; info!("temp {} C: OUT OF SPEC", t),
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Keeping a raw ADC code while classifying it into a band</h3>
+            <pre><code class="rust">fn classify_adc(raw: u16) {
+    match raw {
+        v @ 0..=819 =&gt; defmt::info!("adc {}: low band", v), // &lt;- `@` keeps the raw code for the log line
+        v @ 820..=3276 =&gt; defmt::info!("adc {}: mid band", v),
+        v =&gt; defmt::info!("adc {}: high band", v),
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

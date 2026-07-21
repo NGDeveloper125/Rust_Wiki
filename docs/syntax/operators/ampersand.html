@@ -955,7 +955,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&amp;</code> has two unrelated meanings, separated by position:</p>
 <ol>
@@ -981,7 +982,7 @@ the lexer still produces the single <code>&amp;&amp;</code> token there, and it'
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1074,20 +1075,68 @@ less restrictive for every caller.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support</strong> for both meanings. Borrowing is core-language and used
-constantly for peripheral/driver references; <code>BitAnd</code> lives in
-<code>core::ops</code> and register-mask manipulation (<code>status &amp; FLAG_BIT</code>) is one
-of the most common operations in register-level embedded code.</p>
+        <p>Both meanings of <code>&amp;</code> carry over unchanged in <code>#![no_std]</code> firmware, and
+both are used constantly. The borrow meaning is how driver code hands
+out access to a peripheral without giving it up — a HAL function that
+only reads a peripheral's state typically takes <code>&amp;Peripheral</code> rather
+than consuming it, exactly as in hosted code, and the borrow checker
+still enforces that no other code holds a conflicting <code>&amp;mut</code> to the
+same peripheral at the same time, which is exactly how embedded Rust
+statically prevents two pieces of code from fighting over one register
+block. The bitwise meaning is how register state is <em>tested</em>: reading
+a status register into a plain integer and combining it with <code>&amp;</code>
+against a bitmask asks "is this particular flag set?" without touching
+the register — setting or clearing bits is <code>|=</code>/<code>&amp;=</code> (their own pages),
+and plain <code>&amp;</code> never writes anything back. Because <code>&amp;</code> never mutates,
+testing a flag this way is safe to repeat freely, including from
+inside an interrupt handler that only needs to read a status bit, not
+acknowledge it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Testing a status flag before writing to a peripheral</h3>
+            <pre><code class="rust">const USART_SR: *const u32 = 0x4001_3800 as *const u32; // USART1 status register
+const TXE: u32 = 1 &lt;&lt; 7; // transmit-data-register-empty flag
+
+fn tx_ready() -&gt; bool {
+    let status = unsafe { core::ptr::read_volatile(USART_SR) };
+    status &amp; TXE != 0 // &lt;- `&amp;` tests the TXE bit; it only reads, it never writes
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Borrowing a peripheral handle in driver code</h3>
+            <pre><code class="rust">struct Gpio {
+    idr: *const u32, // input data register
+}
+
+fn read_pin(gpio: &amp;Gpio, pin: u8) -&gt; bool { // &lt;- `&amp;Gpio` borrows the handle instead of consuming it
+    let bits = unsafe { core::ptr::read_volatile(gpio.idr) };
+    bits &amp; (1 &lt;&lt; pin) != 0
+}
+
+let gpio = Gpio { idr: 0x4001_0810 as *const u32 };
+let pressed = read_pin(&amp;gpio, 5); // &lt;- a second call could borrow `&amp;gpio` again at the same time
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

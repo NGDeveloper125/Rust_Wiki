@@ -182,15 +182,116 @@ panicked somehow — the
 [Rust Book](https://doc.rust-lang.org/book/ch11-01-writing-tests.html#checking-for-panics-with-should_panic)
 recommends the `expected` argument for exactly this precision.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** The `#[test]` harness itself needs `std` — it
-depends on catching unwinding panics and printing a pass/fail report,
-neither of which exists on bare metal. In practice this rarely stops
-embedded projects from unit testing: hardware-independent logic (parsing,
-math, protocol encoding) is tested the ordinary way with `cargo test`
-running on the *host* development machine, compiled without the target's
-`#![no_std]` restriction. Only code that genuinely touches hardware needs
-a different approach — an on-target framework like `defmt-test` runs
-`#[test]`-like functions on the real microcontroller and reports results
-over the debug probe instead of through the host test harness.
+The core story for unit-testing embedded code is a split by *where the
+logic actually lives*, not a single answer. The ordinary `#[test]`
+harness needs `std` — it schedules each test on its own OS thread and
+catches an unwinding panic to report pass/fail from a hosted process —
+none of which a bare `#![no_std]` target provides, so compiling the
+harness itself for the microcontroller isn't how this is normally done.
+
+In practice, most of a crate's genuinely unit-testable logic — parsing a
+sensor frame, encoding/decoding a protocol message, a calibration
+calculation, a checksum — doesn't touch a peripheral at all. That code is
+written to also compile for the host (kept on `core`, with `std` pulled
+in only behind `#[cfg(test)]`), and is tested with a completely ordinary
+`cargo test` run on the development machine, exactly as any other crate.
+Only the logic that's genuinely hardware-dependent — a driver's real
+register writes, an interrupt handler, timing against a live peripheral
+— can't be honestly tested that way, and instead needs `defmt-test` or
+`embedded-test` to run the `#[test]`-shaped functions for real on the
+target, flashed and executed over a debug probe (`probe-rs`), with
+results reported back over RTT rather than printed by a hosted process.
+
+## Basic usage example (Embedded)
+
+```
+// This function only manipulates bytes, so it's tested on the host, not the target.
+pub fn checksum(bytes: &[u8]) -> u8 {
+    bytes.iter().fold(0u8, |acc, &b| acc.wrapping_add(b))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // <- runs under an ordinary `cargo test` on the host, no target hardware involved
+    fn checksum_of_empty_slice_is_zero() {
+        assert_eq!(checksum(&[]), 0);
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Testing
+
+A firmware crate's frame-parsing logic is pure byte manipulation with no
+peripheral access, so it belongs in the ordinary host-tested `#[cfg(test)]`
+module rather than anywhere near a debug probe.
+
+```
+#![no_std]
+
+pub fn parse_frame_length(header: [u8; 2]) -> u16 { // <- hardware-independent: safe to test on the host
+    u16::from_be_bytes(header)
+}
+
+#[cfg(test)] // <- pulls in `std` for the test build only; the crate itself stays `no_std`
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_a_two_byte_length_header() {
+        assert_eq!(parse_frame_length([0x01, 0x2C]), 0x012C);
+    }
+}
+```
+
+**Why this way:** running `cargo test` on the host is orders of magnitude
+faster and needs no hardware at all, so pushing every function that
+*can* be host-tested out of the hardware-dependent path keeps the fast
+feedback loop as large as possible; the split mirrors the same
+host-vs-target reasoning [`#[test]`](../../syntax/attributes/test-attribute.md)'s
+Embedded Rust Notes lay out for the attribute itself.
+
+### Scenario: Validating input
+
+A driver rejects an out-of-range channel selector before touching the
+ADC peripheral at all — a check that's still pure logic, so it doesn't
+need real hardware to verify even though the type it guards is only ever
+constructed right before a register write.
+
+```
+#![no_std]
+
+pub struct ChannelId(u8);
+
+impl ChannelId {
+    pub fn new(value: u8) -> Result<Self, &'static str> {
+        if value > 7 {
+            Err("ADC channel out of range (0..=7)")
+        } else {
+            Ok(ChannelId(value)) // <- validated before any register access happens
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_an_out_of_range_channel() {
+        assert!(ChannelId::new(9).is_err());
+    }
+}
+```
+
+**Why this way:** the validation itself never reads a register, so
+testing it on the host is just as trustworthy as testing it on target
+and far cheaper to run on every commit; only the eventual register write
+`ChannelId` guards needs a `defmt-test`/`embedded-test` on-target test,
+and only once real hardware behavior — not input validation — is what's
+being verified.

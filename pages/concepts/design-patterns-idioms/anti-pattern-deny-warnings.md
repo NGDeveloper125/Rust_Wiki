@@ -97,11 +97,62 @@ lints instead — the same reasoning behind Clippy's own guidance to scope
 attributes to precise lint names rather than whole groups when the goal
 is a stable, predictable build.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** This is purely a build-time lint-configuration concern
-with no runtime behavior at all, so the guidance is identical on
-`#![no_std]` targets — if anything it matters more there, since embedded
-crates are often pinned to a specific toolchain for hardware-support
-reasons, and a stray `#![deny(warnings)]` combined with a toolchain bump
-is an easy way to break a build no one intended to touch.
+There's little embedded-specific to add to the mechanism itself — honestly,
+almost nothing changes: `#![deny(warnings)]` is a lint-level attribute
+evaluated entirely at compile time, and it behaves the same whether the
+target is `x86_64-unknown-linux-gnu` or `thumbv7em-none-eabihf`. The one
+genuinely embedded-flavored consequence worth stating plainly is who
+gets hurt when it breaks: embedded projects are frequently pinned to one
+specific verified toolchain version — the exact `rustc`/target-support
+combination a hardware certification, a qualified build, or a whole
+fleet of already-flashed devices depends on. `#![deny(warnings)]` denies
+the open-ended `warnings` group, so upgrading that pinned toolchain even
+slightly (picking up one new warn-by-default lint) can turn a firmware
+image that built and shipped cleanly last release into one that won't
+compile at all — at exactly the moment a maintainer is trying to apply
+an unrelated, possibly security-relevant patch across a device fleet.
+
+## Basic usage example (Embedded)
+
+```
+#![no_std]
+#![deny(unused_must_use)] // <- PREFER: a named lint, not the whole `warnings` group
+
+fn read_register(addr: *const u32) -> u32 {
+    unsafe { core::ptr::read_volatile(addr) }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL crate is pinned to a specific verified toolchain for hardware
+support reasons; the team wants a warning-free build enforced without
+that guarantee turning into "the fleet's build breaks the day someone
+upgrades `rustc`."
+
+```
+// AVOID: a future toolchain's new lint becomes a hard build failure for every device image
+// #![deny(warnings)]
+
+// PREFER: an explicit, curated list that only grows when the team opts in
+#![no_std]
+#![deny(unused_must_use, unsafe_op_in_unsafe_fn)]
+#![warn(missing_docs)]
+
+/// Reads the sensor's status register.
+pub fn status(addr: *const u32) -> u32 {
+    unsafe { core::ptr::read_volatile(addr) } // <- unsafe_op_in_unsafe_fn keeps SAFETY reasoning explicit even inside `unsafe fn`
+}
+```
+
+**Why this way:** a curated `deny` list means a toolchain upgrade needed
+for, say, a new chip revision's HAL support never silently breaks the
+build for unrelated reasons — the same fragility the
+[Rust Design Patterns' anti-patterns section](https://rust-unofficial.github.io/patterns/anti_patterns/deny-warnings.html)
+documents, just with a verified-toolchain fleet raising the cost of a
+surprise build break from "annoying" to "blocks shipping a firmware
+patch."

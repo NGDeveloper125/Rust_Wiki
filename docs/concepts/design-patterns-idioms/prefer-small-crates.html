@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>"Prefer small crates" is <a href="../../concepts/modules-crates-visibility/crates.html">crate</a>-level
 advice, not a language feature: given a choice, split a growing codebase
@@ -975,7 +976,7 @@ a plugin API — becomes visible on its own.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <p>This example shows a crate's manifest alongside its entire <code>lib.rs</code>, to
 make the size of its public surface visible at a glance.</p>
@@ -994,7 +995,7 @@ pub fn discount_price(price_cents: u32, percent_off: u8) -&gt; u32 { // &lt;- th
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1033,23 +1034,110 @@ is what makes a split like this practical without publishing anything.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> The idiom is a build-system and project-structuring
-concern with no runtime footprint, so it applies just as much to
-<code>#![no_std]</code> firmware as to hosted applications — arguably more so:
-smaller crates make it far easier to audit and disable a dependency's
-<code>std</code>-requiring features individually (<code>default-features = false</code> per
-crate) than untangling one large crate that mixes <code>std</code>-dependent and
-<code>no_std</code>-safe code paths together.</p>
+        <p>The principle carries over unchanged — smaller, focused crates compile
+faster and version independently regardless of target — and the
+embedded-specific angle on top of that is modest but real: a small,
+single-purpose crate is far easier to audit for <code>#![no_std]</code>
+compatibility and code-size impact than a large one. A crate that only
+does one thing has a small, reviewable list of dependencies and feature
+flags to check for accidental <code>std</code> requirements (a transitive
+dependency pulling in <code>std::time</code> or a heap-backed collection can quietly
+make an otherwise-<code>no_std</code>-safe crate unusable in firmware); the same
+audit on a large, multi-purpose crate means tracing which of its many
+features actually need <code>std</code> and which don't, often without any
+per-feature <code>no_std</code> documentation to go on. Splitting also makes the
+flash-budget cost of a dependency visible per concern instead of
+bundled: pulling in a small <code>crc</code> crate for checksum logic has an
+obviously boundable code-size cost, where pulling in one large
+"utilities" crate for the same feature risks dragging in unrelated code
+paths the linker may or may not manage to dead-strip.</p>
+<p>This is genuinely the same argument as the classic page, just applied
+with an extra reason to care: on a hosted target, an oversized dependency
+mostly costs disk space and compile time; on a flash-constrained target,
+it can be the difference between an image that fits and one that
+doesn't.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust"># sensor-crc/Cargo.toml — a small, no_std-compatible crate: one focused concern, easy to audit
+[package]
+name = "sensor-crc"
+version = "0.1.0"
+
+[dependencies]
+
+# sensor-crc/src/lib.rs
+#![no_std]
+
+pub fn checksum(data: &amp;[u8]) -&gt; u8 { // &lt;- the crate's entire public surface: no std, no allocator, easy to verify
+    data.iter().fold(0u8, |acc, &amp;b| acc.wrapping_add(b))
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A sensor driver crate needs to stay <code>#![no_std]</code> so it can run on a
+microcontroller, but the application binary that logs its readings to a
+file during development needs <code>std</code>; splitting the two into separate
+crates keeps the driver's <code>no_std</code> guarantee auditable on its own,
+instead of buried inside one crate that mixes both.</p>
+<pre><code class="rust"># sensor-driver/Cargo.toml — small and no_std-only; nothing here can accidentally pull in std
+[package]
+name = "sensor-driver"
+
+[dependencies]
+
+# sensor-driver/src/lib.rs
+#![no_std]
+
+pub struct Reading {
+    pub celsius: f32,
+}
+
+pub fn read() -&gt; Reading { // &lt;- the driver's entire public surface, verifiably no_std
+    Reading { celsius: 21.5 }
+}
+
+# host-logger/Cargo.toml — a separate std-only crate for development-time logging
+[dependencies]
+sensor-driver = { path = "../sensor-driver" } # &lt;- depends on the small no_std crate; doesn't force std on it
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> keeping <code>sensor-driver</code> in its own crate makes "is this
+still <code>#![no_std]</code>-safe" a one-crate question a reviewer (or CI running
+<code>cargo build --target thumbv7em-none-eabihf</code>) can answer in isolation,
+where a single crate mixing driver logic and <code>std</code>-based logging would
+make that check depend on which feature flags happen to be enabled — the
+same
+<a href="https://rust-unofficial.github.io/patterns/idioms/prefer-small-crates.html">Rust Design Patterns' "Prefer small crates" idiom</a>
+argument, with <code>no_std</code> audit scope as the embedded-specific payoff on
+top of faster rebuilds and independent versioning.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

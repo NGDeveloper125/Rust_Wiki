@@ -103,19 +103,27 @@ Related syntax:   [links]   (on concept pages)
 See also:         [links to sibling pages]
 ```
 
-Concept pages:
+Concept pages (`embedded_support: full`/`partial`):
 ```
 ## Explanation
 ## Basic usage example
 ## Best practices & deeper information
-## Embedded Rust Notes   (short delta note, see §2.5 — not a rewritten page)
+## Explanation (Embedded)
+## Basic usage example (Embedded)
+## Best practices & deeper information (Embedded)
 ```
 
-Syntax pages:
+Syntax pages (`embedded_support: full`/`partial`):
 ```
 ## Explanation
 ## Usage examples          (### <title> per example — see §1.3)
-## Embedded Rust Notes   (short delta note, see §2.5 — not a rewritten page)
+## Explanation (Embedded)
+## Usage examples (Embedded)     (### <title> per example)
+```
+
+Any page (`embedded_support: none`) — the classic sections above, plus:
+```
+## Embedded Rust Notes   (short not-supported note, see §2.5 — no rewritten page)
 ```
 
 ### 2.2 Cross-reference rule
@@ -140,33 +148,48 @@ Syntax pages:
   it (std docs, RFCs, Rust reference, clippy lint) so the wiki stays trustworthy
   and reviewable.
 
-### 2.5 Embedded Rust toggle — DECIDED: lightweight delta notes, per-page support status
+### 2.5 Embedded Rust toggle — DECIDED (superseded 2026-07-21, see #14): full parallel page
 
 Every page carries a **Classic Rust / Embedded Rust** toggle in the UI.
-Toggling does **not** swap out the three core sections (Explanation / Basic
-usage / Best practices) — those stay written for hosted, `std`-available
-Rust, unchanged. Instead, each page gets one additional block, **Embedded
-Rust Notes**, shown when the toggle is switched to Embedded. This avoids
-duplicating explanations for the (large) majority of syntax/concepts that
-behave identically in `#![no_std]` — see the "lightweight vs full parallel
-page" tradeoff this resolves.
+Toggling now **fully swaps** the core sections — Explanation and Usage
+examples on syntax pages; Explanation, Basic usage example, and Best
+practices & deeper information on concept pages — for an embedded-Rust
+counterpart written specifically for that audience. This replaces the
+original "lightweight delta note" design (decision #11): a trailing note
+undersold how different the embedded story often is, and buried
+embedded-specific examples where readers toggled to Embedded specifically
+to find them.
 
-**Front-matter field:** `embedded_support: full | partial | none`
-- `full` — behaves identically in `#![no_std]`; toggle enabled.
+**Front-matter field:** `embedded_support: full | partial | none` (unchanged
+meaning, new consequence for page structure):
+- `full` — behaves identically in `#![no_std]`; embedded sections are
+  written for that context even where the content ends up equivalent to
+  classic (same explanation reframed around embedded relevance, same
+  examples in an embedded-flavored setting where that changes anything
+  worth showing).
 - `partial` — available with a caveat (typically: needs the `alloc` crate
   plus a `#[global_allocator]`, or an idiomatic embedded substitute like
-  `heapless`); toggle enabled.
+  `heapless`); the embedded Explanation states the caveat and the
+  substitute, and embedded Usage examples/Best practices demonstrate the
+  embedded-compatible way to do it.
 - `none` — fundamentally requires `std`/an OS (`std::thread`, `std::fs`, a
-  hosted async runtime, …); **toggle rendered disabled/grayed out** in the
-  UI. The Embedded Rust Notes block is still present even when disabled —
-  it explains *why* the toggle is off, so a disabled toggle isn't a dead
-  end for the reader.
+  hosted async runtime, …). The embedded view is **one short block**
+  stating it isn't supported and why — no rewritten Usage
+  examples/Best practices, since there is nothing embedded-specific to
+  show.
 
-**Content rule:** the Embedded Rust Notes block is short — a few sentences,
-not a rewritten page. It states the support level, the reason for any
-caveat, and the idiomatic embedded alternative if one exists
-(`heapless::Vec` instead of `alloc::vec::Vec`, a `critical-section`-based
-mutex instead of `std::sync::Mutex`, etc.).
+**Content rule:** for `full`/`partial` pages, every embedded section is
+written as its own dedicated content — not a diff against the classic
+section — covering: what this means specifically in an embedded/`no_std`
+context, embedded-appropriate usage examples (real embedded idioms: HAL
+calls, registers, interrupts, `heapless`/`defmt`-style code — not the
+classic example with a comment bolted on), and (concept pages) embedded
+best-practice scenarios. Markdown headings: append ` (Embedded)` to the
+classic heading — `## Explanation (Embedded)`, `## Usage examples
+(Embedded)`, `## Basic usage example (Embedded)`, `## Best practices &
+deeper information (Embedded)`. `none`-support pages keep the single `##
+Embedded Rust Notes` heading instead, containing only the short
+not-supported note.
 
 ---
 
@@ -324,6 +347,7 @@ check.
 | 11 | Embedded Rust toggle (§2.5) | **Lightweight delta notes** — the 3 core sections stay hosted-Rust-only; one added "Embedded Rust Notes" block per page, driven by an `embedded_support: full/partial/none` field. `none` disables the toggle in the UI but the block still explains why | 2026-07-18 |
 | 12 | Section 3 structure (§1.3) | **Scenario-based** — a fixed catalog of real-world scenarios with stable titles (`### Scenario: …`); each page gets 2–4 blocks for only the scenarios where its item is load-bearing. Catalog, crate policy, sources, and QA rules in [SECTION3_GUIDE.md](SECTION3_GUIDE.md). **Concept pages only as of decision #13.** | 2026-07-19 |
 | 13 | Drop "Best practices" from syntax pages (§1.3) | **Syntax pages** replace "Basic usage example" + scenario-based "Best practices & deeper information" with a single **"Usage examples"** section: titled, self-contained examples covering the different ways the token is used, each with a short explanation — no best-practice framing, no fixed catalog. **Concept pages are unaffected**, keeping decision #12's scenario-based Best-practices structure verbatim | 2026-07-21 |
+| 14 | Embedded Rust toggle (§2.5) — supersedes #11 | **Full parallel page**, not a delta note. The Classic/Embedded toggle now fully swaps Explanation + Usage examples (syntax) / Explanation + Basic usage + Best practices (concepts) for embedded-specific content, written per the embedded audience — real embedded idioms, not classic content with a caveat appended. `embedded_support: none` pages keep the old single "Embedded Rust Notes" block (short, states why unsupported); `full`/`partial` pages get the new ` (Embedded)`-suffixed heading set instead | 2026-07-21 |
 
 ---
 

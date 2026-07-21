@@ -97,12 +97,51 @@ real bug behind a green test; the
 recommends the `expected` argument specifically so a `#[should_panic]`
 test verifies the *intended* failure, not merely that some panic occurred.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** `#[should_panic]` is a modifier on `#[test]`, which
-needs `std` for the host-run test harness that catches the panic and
-reports pass/fail — see [`#[test]`](test-attribute.md)'s Embedded Rust
-Notes. Host-tested, hardware-independent logic from a `#![no_std]` crate
-(a packet parser rejecting a malformed frame, say) can still use
-`#[should_panic]` normally when tested on the host toolchain; it has no
-on-target equivalent in a bare-metal test harness like `defmt-test`.
+`#[should_panic]` is a modifier on `#[test]`, which needs the host-run
+test harness described in [`#[test]`](test-attribute.md)'s Embedded Rust
+Notes — catching a panic and reporting pass/fail assumes an
+unwinding-capable, hosted process, which a bare `#![no_std]` target build
+doesn't have by default (many embedded configurations use
+`panic = "abort"` and a panic handler that resets or halts the chip, not
+one that unwinds back into a test harness). Hardware-independent logic
+split out for host testing — a parser rejecting a malformed frame, say —
+can still use `#[should_panic]` completely normally when it's compiled
+and run on the host toolchain, same as any other crate. There's no
+on-target equivalent: an on-target framework like `defmt-test` reports
+each test's pass/fail over RTT but doesn't provide a
+"this function is expected to panic" mechanism of its own — asserting a
+panic on real hardware would mean recovering from an abort/reset mid
+test-run, which these harnesses aren't built around.
+
+## Usage examples (Embedded)
+
+### Asserting a panic in host-tested, hardware-independent validation logic
+
+```
+struct ChannelId(u8);
+
+impl ChannelId {
+    fn new(value: u8) -> Self {
+        assert!(value < 8, "ADC channel {value} out of range (0..=7)");
+        ChannelId(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_a_valid_channel() {
+        assert_eq!(ChannelId::new(3).0, 3);
+    }
+
+    #[test]
+    #[should_panic(expected = "out of range")] // <- runs on the host; no on-target equivalent exists
+    fn rejects_an_out_of_range_channel() {
+        ChannelId::new(9);
+    }
+}
+```

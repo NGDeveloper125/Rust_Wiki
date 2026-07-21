@@ -948,7 +948,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A byte literal, <code>b'H'</code>, produces a <code>u8</code> — the ASCII code point of the
 character between the quotes — rather than a <code>char</code>.</p>
@@ -961,7 +962,7 @@ Unicode <code>char</code> (4 bytes) instead of a <code>u8</code>.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -995,18 +996,64 @@ describes for literal patterns generally.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No <code>std</code> dependency — commonly used for protocol magic
-bytes and framing constants in embedded communication code.</p>
+        <p>A byte literal means exactly the same thing under <code>#![no_std]</code> — it's
+parsed and typed at compile time, producing a plain <code>u8</code> value or pattern,
+with no allocator or runtime involved. Where it earns its keep in
+embedded code is UART and protocol handling: firmware reading raw bytes
+off a serial peripheral has no <code>String</code>/<code>str</code> layer standing between it
+and the wire, so individual bytes get compared and matched directly
+against byte literals for terminators, ACK/NAK codes, and command
+characters. It's the same job a byte literal does parsing a binary
+format on a hosted system — just proportionally more central in embedded
+code, where raw byte streams are often the <em>only</em> text-shaped thing the
+firmware ever sees.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Reading a UART byte stream up to a line terminator</h3>
+            <pre><code class="rust">use embedded_hal::serial::Read;
+use nb::block;
+
+fn read_line&lt;S: Read&lt;u8&gt;&gt;(uart: &amp;mut S, buf: &amp;mut [u8; 64]) -&gt; usize {
+    let mut n = 0;
+    while let Ok(byte) = block!(uart.read()) {
+        if byte == b'\n' { // &lt;- byte literal: UART line terminator, compared against a raw received byte
+            break;
+        }
+        if n &lt; buf.len() {
+            buf[n] = byte;
+            n += 1;
+        }
+    }
+    n
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Recognizing an AT-command response</h3>
+            <pre><code class="rust">fn is_ack(response: &amp;[u8]) -&gt; bool {
+    matches!(response, [b'O', b'K', ..]) // &lt;- byte literals: matching an "OK" modem/AT-command reply byte by byte
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A function that takes an argument by value — consuming it, per normal
 <a href="../../concepts/ownership-borrowing/move-semantics.html">move semantics</a> — has a
@@ -976,7 +977,7 @@ failure still needs to be non-destructive.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct ConfigError(String); // the failure reason
 
@@ -995,7 +996,7 @@ match set_hostname(String::new()) {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1088,22 +1089,132 @@ concrete precedent the return-consumed-argument idiom is modeled on.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Returning the consumed argument inside an error is
-ordinary <code>enum</code>/tuple/<code>struct</code> construction with no allocator dependency
-— it works identically under <code>#![no_std]</code>. It's a particularly good fit
-on embedded targets, where re-acquiring a dropped value (re-reading a
-sensor, reallocating a fixed buffer) may be expensive or simply
-unavailable once the original call has returned.</p>
+        <p>The non-destructive-failure argument applies with extra force on
+embedded targets, where the value a fallible call consumes is often a
+buffer that was genuinely expensive to fill — samples pulled from an
+ADC, a frame assembled for DMA — and where there may be no cheap way to
+"just get another one" once it's gone. A peripheral-transaction API, like
+an SPI or I2C driver's <code>write</code>/<code>transfer</code>, takes its outgoing buffer by
+value so it can hold it for the duration of the transaction (and, on some
+HALs, hand it straight to a DMA engine); a failed transaction — a NACK
+from the target device, a bus timeout, lost arbitration — shouldn't also
+cost the caller its data. Shaping the error as <code>Err((Error, Buf))</code>, the
+same shape <code>std::sync::mpsc::SendError&lt;T&gt;</code> uses, lets the caller retry
+the exact bytes, log them, or fall back to a bit-banged implementation
+without re-populating the buffer from scratch.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct I2cError; // NACK, bus timeout, arbitration loss, ...
+
+fn i2c_write(addr: u8, buf: [u8; 4]) -&gt; Result&lt;(), (I2cError, [u8; 4])&gt; {
+    if addr == 0 {
+        return Err((I2cError, buf)); // &lt;- caller gets the un-sent buffer back, not just a failure
+    }
+    Ok(())
+}
+
+match i2c_write(0, [1, 2, 3, 4]) {
+    Ok(()) =&gt; {}
+    Err((_err, buf)) =&gt; {
+        let _ = buf; // still owned: can retry, log, or fall back without rebuilding it
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>An SPI driver's <code>write</code> takes ownership of a fixed-size frame built up
+from ADC samples so it can be handed straight to a DMA transfer; if the
+bus reports a timeout, the caller shouldn't have to re-sample the ADC
+just to retry the same frame.</p>
+<pre><code class="rust">struct SpiError; // bus timeout, mode fault, ...
+
+struct SpiBus;
+
+impl SpiBus {
+    fn write(&amp;mut self, frame: [u8; 8]) -&gt; Result&lt;(), (SpiError, [u8; 8])&gt; {
+        let bus_busy = true; // stand-in for a real bus-status register check
+        if bus_busy {
+            return Err((SpiError, frame)); // &lt;- `frame` comes back, not lost with the failed transaction
+        }
+        Ok(())
+    }
+}
+
+let mut spi = SpiBus;
+match spi.write([0xAA; 8]) {
+    Ok(()) =&gt; {}
+    Err((_err, frame)) =&gt; {
+        let _ = spi.write(frame); // &lt;- retries the same frame instead of re-reading the ADC
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> re-acquiring the data behind a failed peripheral
+transaction can mean re-sampling a sensor or re-running a DMA setup —
+real cost on hardware, not just inconvenience — so handing the buffer
+back inside the error, the shape the
+<a href="https://rust-unofficial.github.io/patterns/idioms/return-consumed-arg-on-error.html">Rust Design Patterns</a>
+book documents for <code>Sender::send</code>, is what makes retrying cheap.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL author modeling a <code>write</code> method's error type after the same
+convention <code>std::sync::mpsc</code> uses shapes it as a struct carrying the
+original bytes back, so firmware crates get a retry pattern they already
+recognize from channel APIs.</p>
+<pre><code class="rust">pub struct WriteError&lt;B&gt;(pub B); // &lt;- mirrors std::sync::mpsc::SendError&lt;T&gt;'s shape, for a HAL transaction
+
+pub struct Uart;
+
+impl Uart {
+    pub fn write(&amp;mut self, bytes: [u8; 16]) -&gt; Result&lt;(), WriteError&lt;[u8; 16]&gt;&gt; {
+        let tx_fifo_full = false; // stand-in for a real hardware status flag
+        if tx_fifo_full {
+            return Err(WriteError(bytes)); // &lt;- caller gets the bytes back, not just an error signal
+        }
+        Ok(())
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> giving a HAL's fallible transaction methods the same
+<code>SendError&lt;T&gt;</code>-style shape the standard library already uses keeps error
+handling non-destructive even though the underlying transport is a raw
+register interface, not a channel, and lets firmware authors recognize
+the retry pattern immediately.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

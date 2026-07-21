@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Generics let a type or function be written once and used with many
 different concrete types, without duplicating the code for each one — a
@@ -974,7 +975,7 @@ concrete type ends up substituted in.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn largest&lt;T: PartialOrd&gt;(items: &amp;[T]) -&gt; &amp;T {
 //        ^^^^^^^^^^^^^^ T is a generic type, constrained to types that support `&gt;`
@@ -991,7 +992,7 @@ largest(&amp;[1.5, 0.2]);      // T = f64 here, same function definition
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1064,19 +1065,133 @@ runs exactly as fast as a hand-written version would.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Generics and monomorphization are purely a compile-time
-mechanism — no <code>std</code> or allocator dependency, and no extra binary size
-beyond what monomorphization already costs on any target.</p>
+        <p>Generic, trait-bounded code is arguably the single most load-bearing
+pattern in the embedded Rust ecosystem: it's how a driver crate — an
+accelerometer, a display, a flash chip — gets written <em>once</em> and works
+across every microcontroller vendor's HAL, instead of one copy per chip
+family. The <code>embedded-hal</code> crate defines a set of small, vendor-neutral
+traits (<code>i2c::I2c</code>, <code>spi::SpiBus</code>, <code>digital::OutputPin</code>, …); a driver
+writes its logic generic over <code>BUS: embedded_hal::i2c::I2c</code> rather than
+over any concrete vendor's I2C peripheral type, and each vendor's HAL
+crate (<code>stm32f4xx-hal</code>, <code>nrf52840-hal</code>, <code>rp2040-hal</code>, …) provides its own
+concrete type implementing that same trait. The driver never mentions a
+specific chip; the HAL crate never mentions the driver. Generics are what
+let those two crates, written by different people for different hardware,
+meet in the middle.</p>
+<p>Because generics resolve entirely at compile time, this hardware-agnostic
+abstraction costs nothing at runtime the way a <code>dyn Trait</code>/vtable
+approach would: no indirect call, no vtable lookup, and the compiler can
+inline across the trait boundary the same way it would for a
+non-generic function, which matters for tightly-timed code (bit-banged
+protocols, cycle-counted delays) where an indirect call's timing isn't
+just slower but <em>less predictable</em>. The cost moves elsewhere instead:
+monomorphization means the compiler emits one full specialized copy of
+the generic driver code per concrete type it's instantiated with, so a
+firmware image linking against several different concrete bus types
+through the same generic driver pays in flash size for each copy — a
+real and sometimes decisive constraint on a target with, say, 64 KB of
+flash total. Choosing between a generic, monomorphized driver and a
+<code>dyn Trait</code>-based one is frequently a code-size-vs-call-overhead
+tradeoff made explicitly for that reason, not a default either way.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use embedded_hal::digital::OutputPin;
+
+fn blink&lt;PIN: OutputPin&gt;(pin: &amp;mut PIN) { // &lt;- generic over any HAL's concrete GPIO output pin type
+    pin.set_high().ok();
+    pin.set_low().ok();
+}
+
+// Called identically whether `pin` is an stm32f4xx-hal, nrf52840-hal, or rp2040-hal pin type --
+// `blink` never names a specific vendor, and monomorphizes to one specialized copy per type used.
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A sensor driver's core logic — issuing the right register reads and
+writes — has nothing to do with which vendor's I2C peripheral it runs on;
+writing it generic over <code>embedded_hal::i2c::I2c</code> lets the same driver
+crate compile against any HAL that implements the trait.</p>
+<pre><code class="rust">use embedded_hal::i2c::I2c;
+
+struct TempSensor&lt;BUS&gt; { // &lt;- generic over the bus type, not any one vendor's concrete I2C peripheral
+    bus: BUS,
+    address: u8,
+}
+
+impl&lt;BUS: I2c&gt; TempSensor&lt;BUS&gt; {
+    fn read_celsius(&amp;mut self) -&gt; Result&lt;f32, BUS::Error&gt; {
+        let mut raw = [0u8; 2];
+        self.bus.write_read(self.address, &amp;[0x00], &amp;mut raw)?;
+        Ok(i16::from_be_bytes(raw) as f32 / 256.0)
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> bounding <code>BUS</code> to exactly <code>embedded_hal::i2c::I2c</code> — no
+more — means <code>TempSensor</code> compiles against any board's HAL crate that
+implements that trait, without the driver crate depending on any single
+vendor's hardware-access library; this is the standard shape of
+essentially every driver crate published for <code>embedded-hal</code>.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A driver crate's public API should be generic over the trait it actually
+needs, not over a specific board's HAL type, and should weigh
+monomorphized flash cost against <code>dyn Trait</code>'s runtime indirection
+deliberately rather than defaulting to generics out of habit.</p>
+<pre><code class="rust">use embedded_hal::spi::SpiBus;
+
+// PREFER (most drivers): generic + monomorphized -- zero call overhead, cost paid in flash per instantiation
+pub struct FlashChip&lt;BUS: SpiBus&gt; {
+    bus: BUS,
+}
+
+// AVOID unless flash budget forces it: dyn Trait -- one shared code path, but every call is now indirect
+pub struct FlashChipDyn&lt;'a&gt; {
+    bus: &amp;'a mut dyn SpiBus&lt;Error = core::convert::Infallible&gt;,
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> most embedded driver crates default to the generic
+form because timing-sensitive bus transactions benefit from inlining and
+predictable, non-indirect calls; a <code>dyn Trait</code> form is the right
+trade only when a project links many different concrete bus
+implementations through the same driver and flash size, not call
+overhead, is the binding constraint — a decision worth making
+explicitly rather than by default.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

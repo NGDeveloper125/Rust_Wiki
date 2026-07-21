@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>This idiom is about <em>where the boundary of trust lives</em> around unsafe
 code, not about <code>unsafe</code> itself — see <a href="../../concepts/memory-unsafe/unsafe-rust.html">Unsafe Rust</a>
@@ -991,7 +992,7 @@ writes <code>unsafe</code> at all.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">mod counter {
     use std::cell::UnsafeCell;
@@ -1026,7 +1027,7 @@ println!("{}", counter.get());
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1118,24 +1119,198 @@ assumes when it discusses trusting a foreign function's behavior.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> This is a source-organization idiom, not a runtime
-feature, so it costs nothing and applies identically under <code>#![no_std]</code>.
-It is, if anything, used more heavily there: hardware abstraction layer
-crates concentrate all of a driver's raw register access — inherently
-<code>unsafe</code> — inside one small internal module, exposing a safe, typed API
-(often built on <code>embedded-hal</code> traits) so application code above the
-driver never needs to write <code>unsafe</code> itself, the same shape as
-<a href="../../concepts/memory-unsafe/unsafe-rust.html">Unsafe Rust</a>'s embedded notes describe.</p>
+        <p>This idiom isn't just applicable to embedded Rust — it's arguably the
+organizing principle the whole embedded Rust ecosystem is layered around.
+<a href="../memory-unsafe/unsafe-rust.md">Unsafe Rust</a>'s and <a href="../memory-unsafe/raw-pointers.md">Raw
+pointers</a>'s embedded notes cover the
+<em>mechanics</em> a contained module has to get right — volatile access,
+interrupt-safety, the exact register semantics a datasheet specifies —
+so this page won't repeat that ground. What's worth going deeper on here
+is the <em>module-boundary design</em> itself: how embedded crates draw the
+line, and a guarantee the boundary provides on top of hardware that a
+purely software small-module boundary (a bump allocator, an FFI wrapper)
+doesn't get for free.</p>
+<p>The ecosystem's standard layering is three tiers, each one a small-module
+boundary around the tier below it. A <strong>peripheral access crate</strong> (a
+"PAC," usually generated from the chip vendor's SVD file by <code>svd2rust</code>)
+is the innermost layer: it exposes one struct per peripheral, one method
+per register, and every method is <code>unsafe</code> — it's a thin, mechanical
+wrapper around raw addresses with essentially no judgment applied. A
+<strong>HAL crate</strong> (<code>stm32f4xx-hal</code>, <code>nrf52840-hal</code>, and similar) wraps the
+PAC: it is the module boundary this idiom is actually about — it takes
+ownership of the PAC's raw register structs and exposes safe, typed
+methods (<code>led.set_high()</code>, <code>i2c.write(addr, &amp;bytes)</code>) built on the shared
+<code>embedded-hal</code> traits, with the unsafe register pokes contained entirely
+inside the HAL crate's own implementation. Everything above that —
+driver crates, application firmware — depends only on the HAL's safe
+trait methods and, ideally, never writes <code>unsafe</code> at all. The discipline
+this page describes at the scale of one hand-written module is, in
+embedded Rust, applied automatically by a whole layer of generated and
+hand-written crates most firmware never needs to look inside.</p>
+<p>The guarantee worth calling out that a software-only small module doesn't
+automatically get: embedded aliasing is a <em>hardware</em> correctness
+property, not just a Rust data-race property. Two independent <code>&amp;mut</code>
+handles to the same register block are just as unsound as two aliased
+raw pointers in any other unsafe module, but the failure mode is a
+control system with two independent writers to the same physical device
+— a motor driver configured one way by task A and reconfigured
+mid-operation by task B, neither aware the other exists. HAL crates
+enforce the boundary at the <em>type</em> level, not just by convention:
+<code>Peripherals::take()</code> returns <code>Option&lt;Peripherals&gt;</code> and can only ever
+return <code>Some</code> once per program (a second call gets <code>None</code>, backed by a
+hidden flag), so ownership itself — not just the module's privacy and the
+author's discipline — statically prevents two independent driver
+instances from ever both claiming the same register block. That's a
+stronger boundary than "the unsafe fields are private and a reviewer
+checked the invariant"; it's "the compiler refuses to hand out a second
+handle at all."</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">mod led {
+    const GPIOA_ODR: *mut u32 = 0x4001_0814 as *mut u32; // &lt;- stays private to this module
+
+    pub struct Led; // &lt;- the only public item; every raw register detail stays inside `led`
+
+    impl Led {
+        pub fn set_high(&amp;self) {
+            unsafe {
+                // SAFETY: see Raw pointers (Embedded) for the volatile-access rationale this
+                // module relies on; contained here, this is the crate's only touch of GPIOA_ODR.
+                let current = core::ptr::read_volatile(GPIOA_ODR);
+                core::ptr::write_volatile(GPIOA_ODR, current | (1 &lt;&lt; 5));
+            }
+        }
+    }
+}
+
+let status_led = led::Led;
+status_led.set_high(); // &lt;- application code never sees a raw pointer or an address
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A board's LED and its user button both live on the same GPIO port, and
+the module boundary needs to guarantee no two parts of the firmware can
+ever independently claim the same underlying register block — not just
+by convention, but so the compiler refuses a second claim outright.</p>
+<pre><code class="rust">struct GpioaRegisters; // stands in for a PAC-generated raw register struct
+
+static mut TAKEN: bool = false;
+
+pub struct Peripherals {
+    pub gpioa: GpioaRegisters,
+}
+
+impl Peripherals {
+    /// Returns the peripherals exactly once per program; a second call gets `None`.
+    pub fn take() -&gt; Option&lt;Self&gt; {
+        unsafe {
+            // SAFETY: firmware is single-threaded at startup, before interrupts are enabled,
+            // so this check-and-set has no concurrent caller to race against.
+            if TAKEN {
+                return None;
+            }
+            TAKEN = true;
+        }
+        Some(Peripherals { gpioa: GpioaRegisters })
+    }
+}
+
+let peripherals = Peripherals::take().expect("peripherals not yet taken");
+let second_attempt = Peripherals::take();
+assert!(second_attempt.is_none()); // &lt;- the type system, not a reviewer, prevents a second owner of GPIOA
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> privacy alone would stop <em>other modules'</em> code from
+constructing a <code>GpioaRegisters</code> out of thin air, but it wouldn't stop the
+same module from handing out the register block twice; the <code>take()</code>
+pattern used throughout the <code>cortex-m</code>/chip-HAL ecosystem (see the <a href="https://docs.rust-embedded.org/book/peripherals/singletons.html">Rust
+Embedded Book's peripherals
+chapter</a>)
+closes that gap by making "at most one owner" a runtime-enforced,
+type-level fact, which is a strictly stronger containment guarantee than
+a small module gets on a purely software invariant.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Crossing an FFI boundary</h3>
+            <p>A vendor ships a proprietary radio SDK as a C library with dozens of
+functions; rather than letting <code>unsafe extern "C"</code> calls spread across
+the firmware wherever radio functionality is needed, one module owns
+every call into the SDK and translates its error codes into a typed Rust
+<code>Result</code>.</p>
+<pre><code class="rust">mod radio_sdk {
+    unsafe extern "C" {
+        fn radio_init() -&gt; i32;
+        fn radio_send(data: *const u8, len: u32) -&gt; i32;
+    }
+
+    pub struct RadioError(pub i32);
+
+    pub struct Radio; // &lt;- the module's only public item
+
+    impl Radio {
+        pub fn init() -&gt; Result&lt;Self, RadioError&gt; {
+            let code = unsafe {
+                // SAFETY: `radio_init` has no preconditions per the vendor SDK's header comment.
+                radio_init() // &lt;- the only place in the crate this call is allowed to happen
+            };
+            if code == 0 { Ok(Radio) } else { Err(RadioError(code)) }
+        }
+
+        pub fn send(&amp;self, data: &amp;[u8]) -&gt; Result&lt;(), RadioError&gt; {
+            let code = unsafe {
+                // SAFETY: `data` is a valid Rust slice for its full length, which satisfies
+                // `radio_send`'s documented pointer+length contract.
+                radio_send(data.as_ptr(), data.len() as u32)
+            };
+            if code == 0 { Ok(()) } else { Err(RadioError(code)) }
+        }
+    }
+}
+
+let radio = radio_sdk::Radio::init().expect("radio init failed");
+radio.send(b"ping").expect("send failed");
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> every one of the vendor SDK's undocumented assumptions
+about calling context lives behind this one module's two methods instead
+of being re-litigated at every call site across the firmware that wants
+to send a radio packet — the same "thin unsafe core, safe API" shape
+<a href="../memory-unsafe/unsafe-rust.md">Unsafe Rust (Embedded)</a>'s FFI scenario
+describes, scaled up here to a whole vendor SDK with typed error
+translation instead of one function.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

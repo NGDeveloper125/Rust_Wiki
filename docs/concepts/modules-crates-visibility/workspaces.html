@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A workspace is a set of crates that are built and locked together as one
 project, declared by a top-level <code>Cargo.toml</code> containing a <code>[workspace]</code>
@@ -974,7 +975,7 @@ built and locked together, not what a crate is.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <p>The workspace root's <code>Cargo.toml</code> has no <code>[package]</code> section of its own —
 just the member list — and each member still has its own ordinary
@@ -994,7 +995,7 @@ weather-api = { path = "../weather-api" } # &lt;- workspace member depended on b
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1037,24 +1038,86 @@ publishing anything or losing single-repository convenience.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> A workspace is purely a Cargo/build-system construct
-with no runtime effect, so it works the same when one or more members
-target embedded hardware — for example, a workspace containing a
-<code>no_std</code> firmware crate alongside a <code>std</code>-based logic crate that both the
-firmware and a desktop simulator depend on. The one embedded-specific
-detail is that building a single member for a target still needs <code>-p</code>
-and <code>--target</code> together, e.g. <code>cargo build --target thumbv7em-none-eabihf -p firmware</code>, since other workspace members (like a host-side simulator)
-may not build for that target at all.</p>
+        <p>The workspace mechanism itself is unchanged; the concrete, common
+embedded pattern is splitting the PAC, the HAL, and one or more
+board-specific/application crates into workspace members so they're
+developed, versioned, and locked together in one repository — a
+<code>svd2rust</code>-generated PAC changes rarely, the HAL depends on it by path,
+and an application crate (or several, one per board variant) depends on
+the HAL, all resolved against one shared <code>Cargo.lock</code>. Beyond that one
+point — the PAC/HAL/application split itself — there isn't much else
+genuinely different about workspaces for embedded projects: <code>-p</code>
+targeting, path dependencies, and the shared-lockfile behavior all work
+exactly as described above for any workspace.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust"># Cargo.toml (workspace root)
+[workspace]
+members = [
+    "pac",     # &lt;- svd2rust-generated peripheral access crate
+    "hal",     # &lt;- safe wrapper over the PAC
+    "app",     # &lt;- firmware application crate
+]
+
+# hal/Cargo.toml
+[dependencies]
+pac = { path = "../pac" }   # &lt;- workspace member depended on by local path
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Layering a firmware workspace</h3>
+            <p>A team building firmware for one microcontroller family wants the PAC,
+the HAL built on it, and the application logic developed and versioned
+together in one repository, without publishing the PAC or HAL to
+crates.io just to let the application depend on them.</p>
+<pre><code class="rust"># Cargo.toml (workspace root)
+[workspace]
+resolver = "2"
+members = [
+    "pac",      # &lt;- register access, regenerated from the chip's SVD file when it changes
+    "hal",      # &lt;- safe driver API built on the PAC
+    "app",      # &lt;- application firmware
+]
+
+# app/Cargo.toml
+[dependencies]
+hal = { path = "../hal" }   # &lt;- depends on the HAL by path, not a published version
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a shared <code>Cargo.lock</code> across <code>pac</code>, <code>hal</code>, and <code>app</code>
+guarantees the application always builds against the exact HAL and PAC
+versions it was developed against, and path dependencies mean the
+PAC/HAL don't need an independent crates.io release just to support one
+in-repo application — the same "keep it in one repository until
+publishing is actually needed" convenience the classic Explanation
+describes generally, applied here to a firmware crate stack.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

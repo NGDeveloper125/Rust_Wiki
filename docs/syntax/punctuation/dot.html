@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>.</code> has three related but distinct uses, all sharing the same "reach into
 what's on my left" shape.</p>
@@ -981,7 +982,7 @@ page rather than repeated here.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1059,20 +1060,47 @@ dot accesses.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Field access, method calls, and tuple indexing are
-core-language grammar with no <code>std</code> dependency — used identically to
-address peripheral register fields and driver state on an embedded
-target.</p>
+        <p><code>.</code> means exactly the same thing under <code>#![no_std]</code> — field access,
+method calls, and tuple indexing are core grammar with no <code>std</code>
+dependency, and auto-deref works identically. The idiom this token
+enables that's distinctly embedded is the svd2rust "write closure"
+pattern used by most peripheral-access crates: a register write takes a
+closure, and the closure body chains several <code>.</code> method calls — one per
+bit-field — before the register is actually written in one go.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Chaining register field writes through a PAC closure</h3>
+            <pre><code class="rust">gpioa.odr.write(|w| w.odr5().set_bit()); // &lt;- `.` chains field-accessor calls on the register writer `w`
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Reading a driver's field through auto-deref</h3>
+            <pre><code class="rust">struct Sensor { calibration: u16 }
+
+fn offset(sensor: &amp;Sensor) -&gt; u16 {
+    sensor.calibration // &lt;- `.` auto-derefs through the `&amp;` to reach the field
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

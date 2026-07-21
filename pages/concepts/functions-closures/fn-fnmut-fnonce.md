@@ -151,10 +151,102 @@ actually needs admits the widest range of caller closures, since every
 [Effective Rust](https://effective-rust.com/) makes when discussing how to
 choose between the three closure traits in a public signature.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Fn`, `FnMut`, and `FnOnce` live in `core::ops`, not
-`std`, so bounding a generic parameter or using `impl Fn`/`impl FnMut` by
-value works identically in `#![no_std]` with no runtime cost. Only
-storing one as a trait object (`Box<dyn FnMut()>`) needs the `alloc`
-crate; the traits themselves never do.
+The `Fn`/`FnMut`/`FnOnce` hierarchy lives in `core::ops`, not `std`, so it
+is available, unchanged, in `#![no_std]`: bounding a generic parameter by
+one of the three, or writing `impl Fn(...)`/`impl FnMut(...)`, compiles to
+the same monomorphized, allocation-free code on a microcontroller as on a
+hosted target. The same rule for choosing the loosest sufficient bound
+applies too, just against embedded-shaped callbacks instead of
+application ones: a driver that calls its callback once at setup only
+needs `FnOnce`; one that calls it repeatedly from a polling loop or an
+interrupt needs `FnMut` if it mutates its captures, or `Fn` if it only
+reads them.
+
+The only place the hierarchy interacts with `alloc` at all is if a
+callback is stored as a trait object (`Box<dyn FnMut(...)>`) rather than
+accepted through a generic bound — the traits themselves, and
+generic/reference-based use of them, never allocate.
+
+## Basic usage example (Embedded)
+
+```
+struct Sensor;
+
+impl Sensor {
+    fn on_data_ready<F: FnMut(u16)>(&mut self, mut callback: F) {
+        // <- `FnMut`: the driver may call `callback` again on every new sample
+        callback(0x01A3);
+    }
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A humidity sensor driver invokes its "new sample" callback every time a
+reading arrives over I2C, and callers commonly want to accumulate or
+mutate state on each call — so the callback parameter is bounded by
+`FnMut`, not the stricter `Fn` or the single-call `FnOnce`.
+
+```
+struct HumiditySensor;
+
+impl HumiditySensor {
+    fn on_data_ready<F: FnMut(u16)>(&mut self, mut callback: F) {
+        // <- `FnMut`: called once per sample, for as long as the sensor keeps producing readings
+        for sample in [412u16, 418, 405] { // stand-in for successive register reads
+            callback(sample);
+        }
+    }
+}
+
+fn run(sensor: &mut HumiditySensor) {
+    let mut total: u32 = 0;
+    sensor.on_data_ready(|sample| total += u32::from(sample)); // <- mutates a captured accumulator each call
+}
+```
+
+**Why this way:** requiring `FnMut` rather than `Fn` admits callbacks that
+need to accumulate or update state across samples, while still ruling
+out callbacks that would need to consume something on their one-and-only
+call — matching the bound to what a repeatedly-invoked hardware callback
+actually needs, the same principle the
+[Book's closures chapter](https://doc.rust-lang.org/book/ch13-01-closures.html)
+applies to choosing between the three traits.
+
+### Scenario: Writing generic code
+
+Polling a peripheral's status register until a "ready" flag is set is a
+loop that calls its closure repeatedly and needs it to mutate a captured
+attempt counter, so the polling helper is generic over `FnMut`, exactly
+like a hosted retry loop would be.
+
+```
+fn poll_until_ready<F: FnMut() -> bool>(mut attempt: F, max_polls: u32) -> bool {
+    // <- `FnMut`: called on every polling iteration, and needs `&mut` access to its captures
+    for _ in 0..max_polls {
+        if attempt() {
+            return true;
+        }
+    }
+    false
+}
+
+let mut polls_used = 0;
+let ready = poll_until_ready(
+    || {
+        polls_used += 1; // <- mutates a captured counter, so this closure only satisfies `FnMut`
+        polls_used >= 3 // stand-in for reading a status register's ready bit
+    },
+    10,
+);
+```
+
+**Why this way:** a bare-metal polling loop is one of the most common
+places embedded code calls a closure repeatedly while it mutates
+captured state (a counter, a timeout budget), so `FnMut` is the natural
+bound — identical in spirit to a hosted retry helper, just reading a
+register instead of a network response.

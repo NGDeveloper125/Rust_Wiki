@@ -950,14 +950,15 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&gt;&gt;=</code> right-shifts the left operand by the right operand's amount, in
 place, overloadable via <code>std::ops::ShrAssign</code>.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -990,17 +991,46 @@ it every time — the same in-place rationale as
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>ShrAssign</code> lives in <code>core::ops</code> — no <code>std</code> dependency.</p>
+        <p><code>&gt;&gt;=</code> is the mirror image of <code>&lt;&lt;=</code> for a bit-banged serial
+<em>transmitter</em>: rather than assembling an incoming byte one sampled bit
+at a time, the code starts with a complete byte and shifts it right
+once per clock, reading off the current low bit (with <code>&amp;</code>) to drive an
+output pin before discarding it and bringing the next bit into
+position.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Bit-banging a byte out over a software serial line, LSB first</h3>
+            <pre><code class="rust">fn set_output_pin(_high: bool) {
+    // in real firmware this drives a GPIO pin high or low
+}
+
+fn bitbang_send_byte(mut data: u8) {
+    for _ in 0..8 {
+        set_output_pin(data &amp; 1 != 0); // send the current low bit
+        data &gt;&gt;= 1; // &lt;- `&gt;&gt;=` discards the bit just sent, brings the next one into position
+        // toggle_clock_pin();
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

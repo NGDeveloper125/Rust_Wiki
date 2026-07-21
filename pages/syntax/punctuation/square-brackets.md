@@ -90,8 +90,32 @@ an allocation, splitting data into overlapping or adjacent read-only
 views via `[ ]` is effectively free — no cloning needed, unlike languages
 where a "slice" implies a copy.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Array and slice syntax is core grammar (`[T; N]` and
-`[T]` both live in `core`) — no `std` dependency, and fixed-size arrays
-are the single most-used data structure in allocator-free embedded code.
+`[ ]` means exactly the same thing under `#![no_std]` — array/slice
+types, literals, and indexing all live in `core`, with no `std`
+dependency. Fixed-size arrays are, if anything, more central in embedded
+code than in hosted code: without a heap, `[T; N]` (or a
+`heapless::Vec<T, N>` built on top of one) is usually the *only* buffer
+type available, standing in for the `Vec<T>` a hosted program would reach
+for by default.
+
+## Usage examples (Embedded)
+
+### A fixed-size buffer standing in for `Vec`
+
+```
+#![no_std]
+
+use heapless::Vec;
+
+let mut samples: Vec<u16, 16> = Vec::new(); // <- backed by a `[u16; 16]`, not a heap allocation
+samples.push(512).ok();
+```
+
+### Slicing a DMA receive buffer
+
+```
+let rx_buf: [u8; 64] = [0; 64];
+let header = &rx_buf[..4]; // <- `[..4]` slices the first 4 bytes without copying
+```

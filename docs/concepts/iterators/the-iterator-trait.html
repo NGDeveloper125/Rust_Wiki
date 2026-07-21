@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>Iterator</code> is the trait behind every sequential walk over data in Rust —
 a <code>Vec</code>'s elements, a <code>HashMap</code>'s entries, a range of numbers, the lines
@@ -988,7 +989,7 @@ another small struct implementing <code>Iterator</code> around an inner iterator
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let mut numbers = [10, 20, 30].iter();
 
@@ -998,7 +999,7 @@ assert_eq!(numbers.next(), Some(&amp;20));
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1091,21 +1092,112 @@ recommends generic bounds for.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>Iterator</code> lives in <code>core::iter</code>, not <code>std</code> — it has no
-dependency on an allocator or an operating system. Iterating a fixed-size
-array, a memory-mapped register range, or a <code>heapless</code> collection on a
-microcontroller uses exactly the same trait and the same <code>next()</code> method
-as hosted Rust.</p>
+        <p><code>Iterator</code> is defined in <code>core::iter</code>, not <code>std::iter</code> — the trait, its
+associated <code>Item</code> type, and the required <code>next</code> method have no dependency
+on an allocator, a heap, or an operating system. On a <code>#![no_std]</code>
+embedded target, iterating a fixed-size array of sensor readings, a
+memory-mapped register range, or a <code>heapless::Vec</code> uses exactly the same
+<code>next(&amp;mut self) -&gt; Option&lt;Self::Item&gt;</code> contract as hosted Rust — nothing
+about the trait itself changes. This matters more in embedded than it
+first sounds: because the whole adaptor/consumer machinery built on top
+of <code>next</code> is zero-cost, an iterator chain over a fixed array compiles
+down to the same tight loop a hand-written index-based loop would, with
+no runtime overhead and no hidden allocation — a genuine embedded selling
+point, not just a portability footnote. The one thing to keep separate
+from the trait itself is what a <em>consumer</em> does with the items it pulls
+out; <code>sum</code>, <code>count</code>, and <code>fold</code> need nothing beyond <code>core</code>, while
+<code>collect</code> into an allocating type is a separate concern (see
+<a href="fromiterator-and-collect-targets.md">FromIterator &amp; collect targets</a>).</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">let readings: [u16; 4] = [512, 498, 610, 523]; // raw ADC samples
+
+let mut samples = readings.iter();
+assert_eq!(samples.next(), Some(&amp;512)); // &lt;- next() is the same required method as hosted Rust
+assert_eq!(samples.next(), Some(&amp;498));
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>Scanning a fixed-size buffer of ADC samples for a value past a threshold
+only needs <code>next()</code> — no heap, no <code>Vec</code>, since the buffer is a plain
+array living on the stack (or in <code>.bss</code>).</p>
+<pre><code class="rust">let samples: [u16; 8] = [512, 498, 610, 523, 700, 480, 505, 690];
+let mut iter = samples.iter(); // &lt;- iterating a plain array; no allocation involved
+
+let mut over_threshold = 0;
+while let Some(&amp;sample) = iter.next() { // &lt;- next() drives iteration one sample at a time
+    if sample &gt; 600 {
+        over_threshold += 1;
+    }
+}
+assert_eq!(over_threshold, 2);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a fixed <code>[u16; N]</code> array's <code>.iter()</code> returns a type
+implementing <code>Iterator</code> exactly like a <code>Vec</code>'s would, so the same
+one-required-method contract applies whether the readings live on the
+stack of a microcontroller or in a heap-backed collection on a hosted
+target.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A helper that finds the highest reading from a bank of registers
+shouldn't care whether the values came from a fixed array, a
+<code>heapless::Vec</code>, or a peripheral read — bounding it on <code>Iterator</code> keeps it
+reusable across all three, with no allocation pulled in by the bound
+itself.</p>
+<pre><code class="rust">fn max_reading&lt;I&gt;(readings: I) -&gt; Option&lt;u16&gt;
+where
+    I: Iterator&lt;Item = u16&gt;, // &lt;- bound directly on core::iter's Iterator, no alloc required
+{
+    readings.fold(None, |max, r| match max {
+        Some(m) if m &gt;= r =&gt; Some(m),
+        _ =&gt; Some(r),
+    })
+}
+
+let register_bank: [u16; 3] = [512, 498, 610];
+let highest = max_reading(register_bank.into_iter());
+assert_eq!(highest, Some(610));
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> bounding on <code>Iterator&lt;Item = u16&gt;</code> instead of <code>&amp;[u16]</code>
+or a concrete <code>heapless::Vec&lt;u16, N&gt;</code> lets the same function accept a
+fixed array, a <code>heapless</code> collection, or a filtered chain over either,
+without pulling <code>alloc</code> into a function that never needed it.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

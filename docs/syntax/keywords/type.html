@@ -952,7 +952,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>type</code> has two distinct declaration forms, depending on where it appears.</p>
 <p>At module scope, inside a <code>fn</code> body, or inside an <code>impl</code> block, <code>type Name = ExistingType;</code> declares a <strong>type alias</strong>: a new name for an
@@ -984,7 +985,7 @@ concept pages; this page covers only the two declaration grammars.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1048,21 +1049,46 @@ for when this is preferable to a generic parameter instead.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Both forms are purely compile-time — no <code>std</code> or
-allocator dependency. The <code>embedded-hal</code> ecosystem's traits rely heavily
-on associated types (an error type tied to a specific peripheral trait,
-for instance) to stay generic across vendors' hardware without a
-proliferation of generic parameters.</p>
+        <p>Both forms of <code>type</code> mean exactly the same thing under <code>#![no_std]</code>, with
+no allocator or <code>std</code> dependency either way. The alias form earns its
+keep especially often in embedded code, where a fully-generic HAL driver
+type's real signature can get long — parameterized over a specific SPI
+peripheral, a specific GPIO pin type, and a specific display controller
+all at once — so a crate commonly aliases the one concrete instantiation
+it actually uses to a short, chip-specific name instead of spelling that
+signature out at every use site.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Aliasing a verbose HAL-generic driver type</h3>
+            <pre><code class="rust">type Display = Ssd1306&lt;SpiInterface&lt;Spi1, Pa5&lt;Output&gt;&gt;, DisplaySize128x64, BufferedGraphicsMode&gt;;
+// &lt;- `type` alias: one short name standing in for the fully-parameterized driver type
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Aliasing a chip-specific peripheral type</h3>
+            <pre><code class="rust">type Led = stm32f4xx_hal::gpio::Pin&lt;'B', 7, stm32f4xx_hal::gpio::Output&gt;;
+// &lt;- `type` alias: names this board's specific LED pin without repeating the full generic path everywhere
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

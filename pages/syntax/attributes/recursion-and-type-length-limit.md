@@ -90,11 +90,40 @@ documents as the intended way to respond — raising the crate-wide limit is
 appropriate once a specific macro's legitimate recursion depth is known
 to exceed the default, rather than guessing at a number in advance.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Both attributes are pure compile-time limits with zero
-runtime footprint, so they apply identically whether or not the crate
-links `std`. Embedded crates that lean heavily on recursive
-`macro_rules!` macros for generating repetitive peripheral/register
-bindings across a whole chip family are, in practice, one of the more
-common places `#![recursion_limit]` actually needs raising.
+Both attributes are pure compile-time ceilings with no runtime footprint,
+so they apply identically under `#![no_std]`. If anything,
+`#![recursion_limit]` shows up *more* often in embedded code than in a
+typical hosted crate: peripheral-access crates generated from an SVD file
+(svd2rust output) or hand-written register-definition macros often expand
+a `macro_rules!` recursively once per register, or once per bit-field,
+across an entire chip family with hundreds of peripherals — and it's
+common for that recursion depth to exceed the default limit purely from
+the sheer number of registers being generated, not from anything
+algorithmically unusual. `#![type_length_limit]` isn't noticeably more or
+less relevant in embedded code than elsewhere; it stays a largely
+historical concern on modern compilers regardless of target.
+
+## Usage examples (Embedded)
+
+### Raising the recursion limit for a chip-family register-definition macro
+
+```
+#![recursion_limit = "512"] // <- raised after generating bindings for a chip with many peripherals hit the default
+
+macro_rules! define_registers {
+    () => {};
+    ($name:ident: $addr:expr, $($rest:tt)*) => {
+        pub const $name: u32 = $addr;
+        define_registers!($($rest)*); // one recursive expansion per register in the list
+    };
+}
+
+define_registers!(
+    GPIOA_BASE: 0x4001_0800,
+    GPIOB_BASE: 0x4001_0C00,
+    GPIOC_BASE: 0x4001_1000,
+    // ...continues for every peripheral on the chip
+);
+```

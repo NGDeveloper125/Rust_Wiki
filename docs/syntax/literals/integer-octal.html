@@ -951,7 +951,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A base-8 integer literal, prefixed with <code>0o</code>, as in <code>0o755</code>.</p>
 <p>Note the letter <code>o</code>, not a digit <code>0</code> — unlike C's ambiguous leading-zero
@@ -961,7 +962,7 @@ misinterpreted as octal.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -994,19 +995,49 @@ convention — see <a href="../../syntax/literals/integer-hexadecimal.html">inte
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> No <code>std</code> dependency; rarely used in embedded code
-specifically (hex is the near-universal convention for addresses and
-masks), but fully available.</p>
+        <p>Octal literals mean exactly the same thing under <code>#![no_std]</code>, but
+honestly there's little embedded-specific to say beyond that: register
+addresses and bitmasks are conventionally written in hex or binary (see
+<a href="integer-hexadecimal.md">integer-hexadecimal</a> and
+<a href="integer-binary.md">integer-binary</a>), and bare-metal firmware has no
+Unix-style file-permission model for octal's one real everyday use case
+to attach to. Where <code>0o</code> does show up in genuine embedded Rust is on the
+"embedded Linux" side of the ecosystem — a program running on an
+SBC-class device (a Raspberry Pi controlling a production line, say)
+under embedded Linux still has a real filesystem, so file and sysfs
+device permissions look exactly like they would in any other Rust
+program built for Linux. On a genuinely bare-metal, no-filesystem
+target, octal is legal but essentially unused.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Setting sysfs GPIO export permissions on an embedded Linux board</h3>
+            <pre><code class="rust">use std::fs;
+use std::os::unix::fs::PermissionsExt;
+
+fn set_gpio_permissions(path: &amp;str) -&gt; std::io::Result&lt;()&gt; {
+    let perms = fs::Permissions::from_mode(0o660); // &lt;- octal literal: same Unix permission convention as any hosted Linux program
+    fs::set_permissions(path, perms)
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

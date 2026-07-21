@@ -949,7 +949,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>The borrow checker is the part of the compiler that statically verifies
 every ownership and borrowing rule holds for every possible execution
@@ -977,7 +978,7 @@ and (in the rare, unavoidable case) <code>unsafe</code> exist.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">let mut v = vec![1, 2, 3];
 let first = &amp;v[0];       // &lt;- shared borrow of v starts here
@@ -990,7 +991,7 @@ longer overlaps with the mutable use.</p>
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1062,20 +1063,137 @@ keep the checker satisfied without restructuring the data itself.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> The borrow checker runs at compile time on the host
-toolchain regardless of what target you're compiling for — it applies
-identically whether the output binary targets a desktop or a
-Cortex-M microcontroller.</p>
+        <p>The borrow checker's proof happens entirely at compile time and leaves no
+trace in the compiled output, which is exactly the property that makes it
+uniquely valuable in code shared between <code>fn main</code>'s loop and one or more
+<code>#[interrupt]</code> handlers. An interrupt can preempt <code>main</code> at essentially any
+instruction boundary, completely independent of program logic — from the
+compiler's point of view, an interrupt handler is a second concurrent
+context that can run "at the same time" as <code>main</code>, with none of the
+sequencing guarantees an ordinary function call provides. In C, sharing a
+global between a handler and the main loop is just sharing a global:
+nothing stops the same multi-byte struct from being half-written by the
+handler and half-read by main, and the resulting corruption is a runtime
+heisenbug that only reproduces under the right timing — found, if you're
+lucky, in testing, and if not, months later in the field. Rust's borrow
+checker turns that entire bug class into a compile error: safe Rust has no
+way to alias a <code>&amp;mut</code> across the main-loop/interrupt boundary without
+going through something the checker can verify, so a <code>static</code> item touched
+from both contexts must be wrapped in a synchronization primitive
+(typically <code>critical_section::Mutex&lt;Cell&lt;T&gt;&gt;</code>/<code>Mutex&lt;RefCell&lt;T&gt;&gt;</code>, see
+<a href="interior-mutability.md">Interior mutability</a>) before either side can
+safely reach it — and the compiler simply refuses to build anything that
+tries to skip that step. None of this costs a single cycle at runtime: the
+check runs once, on the host machine, during compilation, and the firmware
+that ships contains no borrow-tracking code whatsoever. It's the identical
+static analysis described above, just applied to a domain — interrupt-
+driven, no-OS firmware — where the class of bug it prevents is unusually
+common and unusually expensive to debug once it's running on real
+hardware.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct SensorConfig { gain: u8 }
+
+let mut config = SensorConfig { gain: 4 };
+let cfg_ref = &amp;config;     // &lt;- shared borrow of config starts here
+config.gain = 8;            // borrow checker error: can't mutate while borrowed
+println!("{}", cfg_ref.gain);
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing state across threads</h3>
+            <p>A timer interrupt updates the latest sample while the main loop reads it;
+the borrow checker won't let either side reach the shared value except
+through a synchronization wrapper it can verify.</p>
+<pre><code class="rust">use core::cell::Cell;
+use critical_section::Mutex;
+
+// AVOID: a bare mutable static — nothing stops `main` and the interrupt
+// handler from touching it at the same instant, and the aliasing bug is
+// only caught (if ever) as a corrupted reading discovered on hardware
+// static mut LATEST_SAMPLE: u16 = 0;
+
+// PREFER: the borrow checker enforces exclusive access at compile time
+static LATEST_SAMPLE: Mutex&lt;Cell&lt;u16&gt;&gt; = Mutex::new(Cell::new(0));
+
+#[interrupt]
+fn ADC1() {
+    critical_section::with(|cs| {
+        LATEST_SAMPLE.borrow(cs).set(read_adc_register()); // &lt;- only reachable inside a checked critical section
+    });
+}
+
+fn main_loop() -&gt; ! {
+    loop {
+        let sample = critical_section::with(|cs| LATEST_SAMPLE.borrow(cs).get());
+        process(sample);
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> wrapping the shared sample in <code>critical-section</code>'s
+<code>Mutex&lt;Cell&lt;_&gt;&gt;</code> is what lets the borrow checker prove <code>main</code> and the
+interrupt handler never alias a <code>&amp;mut</code> to the same value — removing the
+wrapper doesn't just risk a bug, it fails to compile, since Rust's 2024
+edition denies-by-default creating a reference to a mutable <code>static</code> via
+<a href="https://doc.rust-lang.org/edition-guide/rust-2024/static-mut-references.html"><code>static_mut_refs</code></a>
+specifically because that pattern can't be checked; C's shared-global
+idiom offers no equivalent compile-time backstop.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Mutating through a reference</h3>
+            <p>A HAL's <code>split()</code> call turns one peripheral register block into disjoint,
+individually-owned fields specifically so the borrow checker can reason
+about each pin's borrows independently of the others.</p>
+<pre><code class="rust">let gpiob = dp.GPIOB.split(); // &lt;- returns disjoint per-pin fields, not one shared handle
+
+let led = &amp;mut gpiob.pb0;   // &lt;- exclusive borrow of ONE pin
+let button = &amp;gpiob.pb1;    // &lt;- simultaneous shared borrow of a DIFFERENT pin
+led.set_high();
+if button.is_high() {
+    // ...
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the borrow checker tracks field-level (disjoint) borrows
+within a function body, so <code>embedded-hal</code>-style crates deliberately split
+a peripheral into one field per pin/function — the same field-splitting
+mechanism the
+<a href="https://doc.rust-lang.org/nomicon/borrow-splitting.html">Rustonomicon</a>
+documents for ordinary structs, applied here to real driver design so
+unrelated pins never contend over one shared handle.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

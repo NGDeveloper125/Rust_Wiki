@@ -136,10 +136,95 @@ recommend exactly this: static, inherent methods named for what they
 build from, with `new` reserved for the no-argument-or-obvious-argument
 case.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `new()` is an ordinary associated function with no
-special compiler support — it works identically under `#![no_std]`,
-including on targets with no allocator, as long as the constructor itself
-doesn't require one (a `RetryPolicy` or `ConnectionPool`-style value made
-of plain fields costs nothing beyond the fields themselves).
+The convention is identical — `new` as a plain associated function
+returning `Self`, expected to be infallible — and it shows up in
+embedded driver code in one particularly common shape: a constructor
+that takes ownership of the underlying HAL handle it will exclusively
+control. `Sensor::new(i2c: I2c) -> Self` doesn't just store a reference
+to the I2C peripheral, it *consumes* it — the caller no longer has the
+`I2c` value once `Sensor::new` returns, only the `Sensor` that now owns
+it. This isn't a stylistic preference; it's the mechanism embedded Rust
+uses to enforce, at compile time, that no two drivers can independently
+try to drive the same physical bus. If `new` only borrowed the handle,
+two sensor drivers could each hold a `&I2c` to the same peripheral and
+issue conflicting transactions with no compiler complaint; taking
+ownership means only one driver can exist per handle, ever, because the
+type system tracks the handle as moved.
+
+Where construction can genuinely fail — the sensor doesn't answer at the
+expected I2C address, a self-test byte doesn't match — the same
+fallible-constructor convention from the classic page applies: `try_new`
+(or `Sensor::new` returning `Result<Self, SensorError>`) rather than a
+`new` that silently returns a driver wired to a device that isn't
+actually there.
+
+## Basic usage example (Embedded)
+
+```
+struct I2c; // stands in for a HAL I2c peripheral handle
+
+struct Sensor {
+    i2c: I2c,
+}
+
+impl Sensor {
+    fn new(i2c: I2c) -> Self { // <- takes ownership of the HAL handle: only one Sensor can exist per bus
+        Sensor { i2c }
+    }
+}
+
+let bus = I2c;
+let sensor = Sensor::new(bus); // <- `bus` is moved; nothing else can construct a driver on it now
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Creating a new object
+
+A sensor may not actually be present on the bus at the address the
+driver expects, so its constructor probes for it and reports failure
+instead of silently returning a `Sensor` that will fail on its first real
+read.
+
+```
+struct I2c;
+impl I2c {
+    fn probe(&self, address: u8) -> bool {
+        address == 0x76 // stands in for a real device-ID register check
+    }
+}
+
+struct SensorError;
+
+struct Sensor {
+    i2c: I2c,
+    address: u8,
+}
+
+impl Sensor {
+    fn try_new(i2c: I2c, address: u8) -> Result<Self, SensorError> { // <- fallible construction: named accordingly, not called `new`
+        if !i2c.probe(address) {
+            return Err(SensorError);
+        }
+        Ok(Sensor { i2c, address })
+    }
+}
+
+let bus = I2c;
+match Sensor::try_new(bus, 0x76) {
+    Ok(sensor) => println!("sensor ready at 0x{:02x}", sensor.address),
+    Err(_) => println!("no sensor responded"),
+}
+```
+
+**Why this way:** naming the fallible path `try_new` instead of `new`
+keeps the promise "a function called `new` always succeeds" intact,
+which matters more in firmware than in a desktop app — a `Sensor::new`
+that silently constructs a driver bound to a device that never answers
+would only surface the mistake later, likely at the first real read, far
+from the constructor that caused it; the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/idioms/ctor.html)
+convention of a differently-named fallible constructor applies here
+unchanged.

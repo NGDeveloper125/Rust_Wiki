@@ -941,7 +941,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>try</code> was reserved specifically in the <strong>2018 edition</strong> — not 2015 like
 most of this section's keywords. Before 2018, <code>try</code> was a perfectly
@@ -972,7 +973,7 @@ edition, the same escape hatch every reserved keyword offers.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1011,18 +1012,42 @@ documents the experimental syntax this reservation is held for.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Keyword reservation is a lexer-level concept, identical
-in <code>#![no_std]</code> and hosted Rust alike.</p>
+        <p><strong>Full support.</strong> <code>try</code> is reserved at the lexer level, the same in a
+<code>#![no_std]</code> binary as in a hosted one — that's checked before any code
+generation, so it doesn't matter what target or runtime the binary is
+ultimately built for. The unstable <code>try { }</code> block design this
+reservation is held for is no different either: were it to stabilize,
+scoping <code>?</code>-based error propagation to a block instead of a whole
+function would be exactly as useful — and exactly as absent today — in
+embedded error-handling code as anywhere else. <code>Result</code>-returning HAL
+calls chained with <code>?</code> are common in embedded Rust, and a stable
+<code>try { }</code> would apply to them the same way it would to any other Rust
+code.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">The `try` reservation, unaffected by target</h3>
+            <pre><code class="rust">let try = 5;     // error (2018 edition+): expected identifier, found reserved keyword `try`, on every target
+let r#try = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

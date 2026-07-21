@@ -118,9 +118,68 @@ passed to `on_token` are created fresh inside `run`, with a shorter
 lifetime than `'p` could ever be; `for<'a>` is the only bound shape that
 accepts a closure usable across all of those independently-scoped calls.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** HRTBs are resolved entirely at compile time with no
-runtime representation — no `std`/allocator dependency. They appear in
-`no_std` code any time a generic function takes a closure over borrowed
-data with a per-call lifetime, exactly as on a hosted target.
+Mechanically, a higher-ranked trait bound means exactly the same thing
+under `#![no_std]` — it's resolved entirely at compile time, with zero
+runtime representation either way, so there's no such thing as a
+`no_std`-specific rule for `for<'a>`. What differs is how often it comes
+up: HRTBs are genuinely rarer in day-to-day embedded code than in, say,
+generic hosted libraries that hand callers a closure taking `&str`. Most
+`embedded-hal` traits are written around concrete, already-named types
+(`&mut self`, a fixed `Word` associated type) rather than generic
+closures parameterized over a borrow the trait itself doesn't own, so
+the shape that makes `for<'a>` necessary — a callback invoked later with
+a reference whose lifetime the callback's own signature can't name in
+advance — doesn't arise as often.
+
+The one place it does show up regularly is critical-section helpers.
+`critical_section::with` hands the closure a `CriticalSection<'cs>`
+token whose lifetime `'cs` is chosen internally, fresh, by `with`
+itself — not by the caller, and not fixed at the point the bound is
+written. That's the same shape as the classic page's
+`Fn(&'a str) -> bool` example: the compiler infers the higher-ranked
+bound automatically from `FnOnce(CriticalSection<'_>) -> R`, but writing
+it out by hand as `for<'cs> FnOnce(CriticalSection<'cs>) -> R` becomes
+necessary the moment a generic wrapper function needs to name that
+bound explicitly in its own signature, as in the second example below.
+
+## Usage examples (Embedded)
+
+### Reading a shared value from inside a critical section
+
+```
+use core::cell::Cell;
+use critical_section::Mutex;
+
+static TICKS: Mutex<Cell<u32>> = Mutex::new(Cell::new(0));
+
+fn ticks() -> u32 {
+    critical_section::with(|cs| {
+        // <- the closure's parameter type is `CriticalSection<'cs>` for whichever `'cs` `with` supplies;
+        //    the implicit bound on `with`'s closure argument is `for<'cs> FnOnce(CriticalSection<'cs>) -> R`
+        TICKS.borrow(cs).get()
+    })
+}
+```
+
+### Naming the bound explicitly in a generic wrapper
+
+```
+use core::cell::Cell;
+use critical_section::Mutex;
+
+static TICKS: Mutex<Cell<u32>> = Mutex::new(Cell::new(0));
+
+fn read_shared<F, R>(f: F) -> R
+where
+    F: for<'cs> FnOnce(critical_section::CriticalSection<'cs>) -> R,
+    // <- `for<'cs>`: `f` must accept whatever lifetime `critical_section::with` supplies when it calls it
+{
+    critical_section::with(f)
+}
+
+fn ticks() -> u32 {
+    read_shared(|cs| TICKS.borrow(cs).get())
+}
+```

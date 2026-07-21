@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>|=</code> assigns the bitwise OR of the left and right operands in place,
 overloadable via <code>std::ops::BitOrAssign</code>. Commonly used to set flag bits
@@ -958,7 +959,7 @@ in a bitmask.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -991,18 +992,51 @@ already meaningfully set — the same in-place-mutation reasoning as
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>BitOrAssign</code> lives in <code>core::ops</code> — setting flag bits
-in place (<code>reg |= mask</code>) is routine embedded register manipulation.</p>
+        <p><code>|=</code> is the read-modify-write idiom for setting one or more bits in a
+register while leaving the rest alone, and it's arguably the single
+most common register operation in embedded Rust: enabling a
+peripheral's clock in a clock-control register, setting a
+configuration bit in a control register, or marking one flag in a
+software status word are all <code>reg |= BIT</code>. Some microcontrollers
+additionally expose a dedicated atomic "set" register (STM32's GPIO
+<code>BSRR</code>, for instance) specifically so a single bit can be set without a
+read-modify-write race against an interrupt handler touching the same
+port; where a peripheral doesn't offer that, <code>|=</code> on the plain data
+register is the fallback, and is fine as long as nothing else can
+preempt the read and the write.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Enabling a peripheral clock before configuring it</h3>
+            <pre><code class="rust">const RCC_APB1ENR: *mut u32 = 0x4002_1840 as *mut u32; // RCC APB1 clock-enable register
+const USART2EN: u32 = 1 &lt;&lt; 17;
+
+fn enable_usart2_clock() {
+    unsafe {
+        let mut enr = core::ptr::read_volatile(RCC_APB1ENR);
+        enr |= USART2EN; // &lt;- sets only the USART2 clock-enable bit
+        core::ptr::write_volatile(RCC_APB1ENR, enr);
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

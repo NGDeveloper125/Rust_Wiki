@@ -57,9 +57,32 @@ allocating `CString::new(...).unwrap()` path at runtime — it hands back a
 [std docs for `CStr`](https://doc.rust-lang.org/std/ffi/struct.CStr.html)).
 Note `c"..."` literals require Rust 1.77+ and edition 2021 or later.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** — `CStr` lives in `core::ffi`, not `std::ffi`, which
-matters a great deal for embedded: calling into a vendor C HAL or RTOS
-API is one of the most common reasons to reach for a nul-terminated
-string in embedded Rust at all.
+`c"..."` is unaffected by `#![no_std]` — `CStr` lives in `core::ffi`
+(re-exported as `std::ffi::CStr` on hosted targets), so the exact same
+literal and the exact same type are available on a bare-metal target.
+This is precisely where a `c"..."` literal earns its keep in embedded
+work: wrapping a vendor's C HAL or SDK — an ST HAL, an ESP-IDF header, a
+vendor RTOS's C API — means calling functions that expect a
+`*const c_char`, and a compile-time `CStr` constant avoids ever needing
+an allocator (`CString::new(...)`) just to hand a fixed name or
+identifier string across that FFI boundary.
+
+## Usage examples (Embedded)
+
+### Naming a peripheral for a vendor C HAL call
+
+```
+use core::ffi::{c_char, CStr};
+
+extern "C" {
+    fn hal_register_peripheral(name: *const c_char) -> i32;
+}
+
+const PERIPHERAL_NAME: &CStr = c"uart0"; // <- c-string literal: nul-terminated, ready for the C HAL's `*const c_char` parameter
+
+fn register_uart() -> i32 {
+    unsafe { hal_register_peripheral(PERIPHERAL_NAME.as_ptr()) }
+}
+```

@@ -154,9 +154,33 @@ missing key is an ordinary value to match on rather than a panic — `if
 let`/`else` gives both outcomes (found, not found) a place to go without
 the extra `None => ...` arm a full `match` would need here.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Core-language pattern matching, allocator-free, compiling
-to the same code a hand-written `match` would. Commonly used to check the
-`Option` a peripheral read function returns without the ceremony of a full
-`match` when only the `Some` case needs a reaction.
+`if let` behaves identically under `#![no_std]` — core-language pattern
+matching, allocator-free, compiling to the same code a hand-written
+`match` would. It's a particularly good fit for embedded driver code: a
+non-blocking peripheral read commonly returns `Option<T>` ("a byte is
+available" vs. "nothing yet"), and `if let Some(...)` handles the one
+case that matters without a wildcard arm that does nothing.
+
+## Usage examples (Embedded)
+
+### Reading a byte only when one is available
+
+```
+if let Some(byte) = uart.read() {
+    // <- `if let` handles only the case where a byte is actually available
+    buffer.push(byte);
+}
+```
+
+### Reacting only to a sensor fault
+
+```
+fn handle_reading(result: Result<f32, SensorError>) {
+    if let Err(_fault) = result {
+        // <- only the failure case needs a reaction; a good reading falls through silently
+        set_fault_led(true);
+    }
+}
+```

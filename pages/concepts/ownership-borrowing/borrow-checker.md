@@ -110,9 +110,112 @@ conflicts; the
 covers splitting borrows across separate fields as the standard way to
 keep the checker satisfied without restructuring the data itself.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The borrow checker runs at compile time on the host
-toolchain regardless of what target you're compiling for — it applies
-identically whether the output binary targets a desktop or a
-Cortex-M microcontroller.
+The borrow checker's proof happens entirely at compile time and leaves no
+trace in the compiled output, which is exactly the property that makes it
+uniquely valuable in code shared between `fn main`'s loop and one or more
+`#[interrupt]` handlers. An interrupt can preempt `main` at essentially any
+instruction boundary, completely independent of program logic — from the
+compiler's point of view, an interrupt handler is a second concurrent
+context that can run "at the same time" as `main`, with none of the
+sequencing guarantees an ordinary function call provides. In C, sharing a
+global between a handler and the main loop is just sharing a global:
+nothing stops the same multi-byte struct from being half-written by the
+handler and half-read by main, and the resulting corruption is a runtime
+heisenbug that only reproduces under the right timing — found, if you're
+lucky, in testing, and if not, months later in the field. Rust's borrow
+checker turns that entire bug class into a compile error: safe Rust has no
+way to alias a `&mut` across the main-loop/interrupt boundary without
+going through something the checker can verify, so a `static` item touched
+from both contexts must be wrapped in a synchronization primitive
+(typically `critical_section::Mutex<Cell<T>>`/`Mutex<RefCell<T>>`, see
+[Interior mutability](interior-mutability.md)) before either side can
+safely reach it — and the compiler simply refuses to build anything that
+tries to skip that step. None of this costs a single cycle at runtime: the
+check runs once, on the host machine, during compilation, and the firmware
+that ships contains no borrow-tracking code whatsoever. It's the identical
+static analysis described above, just applied to a domain — interrupt-
+driven, no-OS firmware — where the class of bug it prevents is unusually
+common and unusually expensive to debug once it's running on real
+hardware.
+
+## Basic usage example (Embedded)
+
+```
+struct SensorConfig { gain: u8 }
+
+let mut config = SensorConfig { gain: 4 };
+let cfg_ref = &config;     // <- shared borrow of config starts here
+config.gain = 8;            // borrow checker error: can't mutate while borrowed
+println!("{}", cfg_ref.gain);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Sharing state across threads
+
+A timer interrupt updates the latest sample while the main loop reads it;
+the borrow checker won't let either side reach the shared value except
+through a synchronization wrapper it can verify.
+
+```
+use core::cell::Cell;
+use critical_section::Mutex;
+
+// AVOID: a bare mutable static — nothing stops `main` and the interrupt
+// handler from touching it at the same instant, and the aliasing bug is
+// only caught (if ever) as a corrupted reading discovered on hardware
+// static mut LATEST_SAMPLE: u16 = 0;
+
+// PREFER: the borrow checker enforces exclusive access at compile time
+static LATEST_SAMPLE: Mutex<Cell<u16>> = Mutex::new(Cell::new(0));
+
+#[interrupt]
+fn ADC1() {
+    critical_section::with(|cs| {
+        LATEST_SAMPLE.borrow(cs).set(read_adc_register()); // <- only reachable inside a checked critical section
+    });
+}
+
+fn main_loop() -> ! {
+    loop {
+        let sample = critical_section::with(|cs| LATEST_SAMPLE.borrow(cs).get());
+        process(sample);
+    }
+}
+```
+
+**Why this way:** wrapping the shared sample in `critical-section`'s
+`Mutex<Cell<_>>` is what lets the borrow checker prove `main` and the
+interrupt handler never alias a `&mut` to the same value — removing the
+wrapper doesn't just risk a bug, it fails to compile, since Rust's 2024
+edition denies-by-default creating a reference to a mutable `static` via
+[`static_mut_refs`](https://doc.rust-lang.org/edition-guide/rust-2024/static-mut-references.html)
+specifically because that pattern can't be checked; C's shared-global
+idiom offers no equivalent compile-time backstop.
+
+### Scenario: Mutating through a reference
+
+A HAL's `split()` call turns one peripheral register block into disjoint,
+individually-owned fields specifically so the borrow checker can reason
+about each pin's borrows independently of the others.
+
+```
+let gpiob = dp.GPIOB.split(); // <- returns disjoint per-pin fields, not one shared handle
+
+let led = &mut gpiob.pb0;   // <- exclusive borrow of ONE pin
+let button = &gpiob.pb1;    // <- simultaneous shared borrow of a DIFFERENT pin
+led.set_high();
+if button.is_high() {
+    // ...
+}
+```
+
+**Why this way:** the borrow checker tracks field-level (disjoint) borrows
+within a function body, so `embedded-hal`-style crates deliberately split
+a peripheral into one field per pin/function — the same field-splitting
+mechanism the
+[Rustonomicon](https://doc.rust-lang.org/nomicon/borrow-splitting.html)
+documents for ordinary structs, applied here to real driver design so
+unrelated pins never contend over one shared handle.

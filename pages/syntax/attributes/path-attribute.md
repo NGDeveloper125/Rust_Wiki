@@ -85,9 +85,46 @@ different file per target, rather than `#[cfg]`-gating code inline inside
 a single shared file — the exact override behavior is documented in the
 [Rust Reference's module path attribute section](https://doc.rust-lang.org/reference/items/modules.html#the-path-attribute).
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[path]` is a purely compile-time source-file
-resolution attribute, so it works identically in a `#![no_std]` crate —
-firmware crates commonly use the same `#[cfg]` + `#[path]` pairing shown
-above to pick a different low-level implementation file per target chip.
+There isn't a mechanically different story here — `#[path]` is a purely
+compile-time source-file resolution attribute, and it does exactly the
+same thing in a `#![no_std]` crate that it does anywhere else. What's
+worth saying is simply where embedded Rust ends up using the same
+`#[cfg]` + `#[path]` pairing already shown in the classic section: chip-
+family HAL crates that support many closely related microcontroller
+variants (an `stm32f4xx-hal` supporting the STM32F401, F405, F411, and
+dozens of other part numbers, or `embassy`'s per-chip support) commonly
+select one Cargo feature per variant, then use `#[path]` to route a
+shared module name — a peripheral memory map, a pin-to-alternate-function
+table generated from that specific chip's SVD file — to whichever file
+matches the feature that's actually enabled, without needing a separate
+module tree, or a separate crate, per supported chip.
+
+## Usage examples (Embedded)
+
+### Selecting a chip-specific peripheral map by Cargo feature
+
+```
+// src/lib.rs
+#[cfg(feature = "stm32f405")]
+#[path = "chip/stm32f405.rs"] // <- routes the shared `chip` module to this variant's register map
+mod chip;
+
+#[cfg(feature = "stm32f411")]
+#[path = "chip/stm32f411.rs"] // <- same module name, a different generated file for this variant
+mod chip;
+
+pub use chip::GPIOA_BASE; // one stable path regardless of which chip feature is enabled
+
+// src/chip/stm32f405.rs
+pub const GPIOA_BASE: u32 = 0x4002_0000;
+
+// src/chip/stm32f411.rs
+pub const GPIOA_BASE: u32 = 0x4002_0000; // may legitimately differ per part in a real HAL
+```
+
+This is the same override behavior as the classic Windows/Unix example,
+just keyed on a chip-variant Cargo feature instead of a target OS —
+`#[path]` itself carries no embedded-specific behavior; only the axis
+being switched on changes.

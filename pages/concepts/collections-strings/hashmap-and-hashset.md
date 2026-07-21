@@ -140,15 +140,67 @@ require key types to implement `Eq` and `Hash` consistently — deriving
 both together on a struct of already-`Hash`+`Eq` fields is the
 straightforward way to satisfy that without hand-writing either impl.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Partial support.** Unlike `Vec`/`BTreeMap`, `HashMap`/`HashSet` are not
-part of the `alloc` crate at all: `alloc::collections` only ships the
-ordered, hasher-free trees, because a hash table needs a hasher, and
-`std`'s default `RandomState` hasher seeds itself from OS randomness to
-resist hash-flooding attacks — something `#![no_std]` has no access to.
-`no_std` code typically reaches for the `hashbrown` crate directly (the
-same hash-table implementation `std::collections::HashMap` is built on
-internally, usable with `alloc` and a fixed, non-random hasher), or for
-a fixed-capacity alternative like `heapless::FnvIndexMap` when no
-allocator is available either.
+`HashMap`/`HashSet` don't just need `alloc` the way `Vec`/`String` do —
+they aren't part of `alloc::collections` at all, because a hash table
+needs a hasher, and `std`'s default `RandomState` hasher seeds itself
+from OS-provided randomness specifically to resist hash-flooding attacks
+(an adversary crafting keys that all collide into the same bucket). A
+`#![no_std]` target generally has no OS source of randomness to seed
+that hasher from, so `no_std` code reaches for `hashbrown` directly (the
+same hash-table implementation `std::collections::HashMap` is built on,
+usable with `alloc` plus a fixed, non-random hasher) once an allocator is
+present.
+
+That DOS-resistance is also, honestly, overhead most embedded code
+doesn't need: `SipHash`'s cost buys protection against attacker-chosen
+keys, which matters for a server keyed by untrusted HTTP headers but not
+for a map keyed by sensor IDs or register addresses the firmware itself
+chose. Where no heap is available either, `heapless` provides
+fixed-capacity maps — `FnvIndexMap` is the one most commonly reached
+for — using a cheaper, non-cryptographic hash instead of `SipHash`,
+paired with the same const-generic fixed-capacity design
+`heapless::Vec<T, N>` uses. The exact API surface is narrower than
+`std::collections::HashMap`'s; treat it as "a fixed-capacity map with a
+cheap hash," not a drop-in.
+
+## Basic usage example (Embedded)
+
+```
+use heapless::FnvIndexMap;
+
+let mut inventory: FnvIndexMap<&str, u32, 8> = FnvIndexMap::new(); // <- capacity fixed at 8, cheaper FNV-style hash, no allocator
+inventory.insert("widget", 42).unwrap(); // <- insert returns Result: Err if the map is already full
+inventory.insert("gadget", 17).unwrap();
+
+assert_eq!(inventory.get("widget"), Some(&42));
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+A calibration table keyed by sensor ID is a fixed, known-at-startup set
+of keys chosen by the firmware itself, never by an attacker — exactly
+the case where `heapless`'s cheaper hash costs nothing in safety while
+avoiding both `SipHash`'s overhead and `HashMap`'s need for a heap.
+
+```
+use heapless::FnvIndexMap;
+
+const SENSOR_COUNT: usize = 8;
+
+fn build_calibration_table(offsets: [(u8, f32); 4]) -> FnvIndexMap<u8, f32, SENSOR_COUNT> {
+    let mut table: FnvIndexMap<u8, f32, SENSOR_COUNT> = FnvIndexMap::new(); // <- fixed capacity, no allocator
+    for (sensor_id, offset) in offsets {
+        table.insert(sensor_id, offset).unwrap(); // <- Err if more than SENSOR_COUNT entries are ever inserted
+    }
+    table
+}
+```
+
+**Why this way:** `SipHash`'s DOS-resistance defends against a threat
+model — attacker-chosen keys — that doesn't apply to firmware-internal
+identifiers, so paying for it here is pure overhead; a cheaper hash plus
+a compile-time capacity bound matches what the data actually needs.

@@ -955,7 +955,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>use</code> brings a path into scope so it can be written shorter afterward. It
 doesn't move, copy, or create anything — it's purely a shorthand for the
@@ -990,7 +991,7 @@ for what <code>pub</code> controls generally.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1050,21 +1051,58 @@ into.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>use</code> is pure compile-time name resolution with no
-runtime representation, so it works identically in a <code>#![no_std]</code> crate —
-importing from <code>core</code>/<code>alloc</code> instead of <code>std</code> is the only difference,
-and it's a difference in <em>which</em> paths exist, not in how <code>use</code> itself
-behaves.</p>
+        <p><code>use</code> is pure compile-time name resolution with no runtime
+representation, so it behaves identically in a <code>#![no_std]</code> crate — the
+only difference is <em>which</em> paths exist to import from: <code>core</code>/<code>alloc</code>
+take the place of <code>std</code> for anything that isn't peripheral- or
+HAL-specific, and HAL/PAC crates supply the rest. Pulling in a trait
+like <code>embedded_hal::digital::OutputPin</code> with <code>use</code> is what lets driver
+code call <code>.set_high()</code>/<code>.set_low()</code> on any pin type across different
+vendors' HALs, since the trait — not a concrete peripheral type — is
+what the method call actually resolves against.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Importing a HAL trait to call its methods on a concrete pin type</h3>
+            <pre><code class="rust">#![no_std]
+
+use embedded_hal::digital::OutputPin; // &lt;- brings the trait's methods into scope for any type implementing it
+
+fn blink&lt;P: OutputPin&gt;(led: &amp;mut P) {
+    led.set_high().ok(); // &lt;- resolves via the `use`-imported `OutputPin` trait
+    led.set_low().ok();
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Grouping peripheral-module imports from a HAL crate</h3>
+            <pre><code class="rust">use stm32f4xx_hal::{pac, prelude::*}; // &lt;- one `use` line, grouped import mirroring the classic `{self, Read, Write}` form
+
+fn init() {
+    let device = pac::Peripherals::take().unwrap();
+    let gpioa = device.GPIOA.split();
+    let _led = gpioa.pa5.into_push_pull_output();
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

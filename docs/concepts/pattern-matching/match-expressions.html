@@ -951,7 +951,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A <code>match</code> expression compares a value against a series of patterns and
 runs the code for whichever pattern fits, and — unlike a chain of <code>if</code>
@@ -988,7 +989,7 @@ shape being matched.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">enum TrafficLight {
     Red,
@@ -1009,7 +1010,7 @@ println!("{instruction}");
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1119,22 +1120,125 @@ state-machine-via-enum idiom described in
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>match</code> is core-language, allocator-free, and compiles
-down to a jump table or a chain of comparisons with no runtime cost
-beyond that. It is the standard way to dispatch on a peripheral's status
-register or decode a protocol byte into one of several message kinds,
-with exhaustiveness checking guaranteeing every bit pattern the code
-expects is actually handled.</p>
+        <p><code>match</code> in embedded code is unchanged core-language: it compiles to the
+same jump table or comparison chain the compiler would emit for hosted
+code, with no heap and no runtime cost beyond that generated branch. It
+is the natural tool for decoding a peripheral's discrete state — a
+status register whose bits collapse into a fixed set of power modes, or
+a byte read off a bus that identifies one of several message kinds —
+since matching on the decoded value, rather than a chain of
+bit-masking <code>if</code>s, keeps the mapping from raw bits to meaning in one
+place, next to the states it distinguishes.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">enum PowerMode {
+    Run,
+    Sleep,
+    Standby,
+    Off,
+}
+
+fn decode_power_mode(bits: u8) -&gt; PowerMode {
+    match bits &amp; 0b11 { // &lt;- the whole match evaluates to a PowerMode value
+        0b00 =&gt; PowerMode::Run,
+        0b01 =&gt; PowerMode::Sleep,
+        0b10 =&gt; PowerMode::Standby,
+        _ =&gt; PowerMode::Off,
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Branching on data (pattern matching)</h3>
+            <p>An IMU's fault register decodes into one of a handful of known fault
+codes, and a <code>match</code> on the decoded value both identifies which fault
+occurred and picks the log message for it in one step, so the mapping
+from fault byte to meaning lives in exactly one place.</p>
+<pre><code class="rust">enum ImuFault {
+    None,
+    SelfTestFailed,
+    CommunicationTimeout,
+    FifoOverflow,
+}
+
+fn log_fault(fault: &amp;ImuFault) -&gt; &amp;'static str {
+    match fault { // &lt;- exhaustive: every ImuFault variant must appear below
+        ImuFault::None =&gt; "imu ok",
+        ImuFault::SelfTestFailed =&gt; "imu self-test failed",
+        ImuFault::CommunicationTimeout =&gt; "imu bus timeout",
+        ImuFault::FifoOverflow =&gt; "imu fifo overflow",
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> matching directly on the fault enum keeps the fault
+code and its message next to each other instead of scattering the
+mapping across separate <code>if</code>/<code>else</code> checks — the same reason the
+<a href="https://doc.rust-lang.org/book/ch06-02-match.html">Rust Book</a> gives for
+<code>match</code> being the idiomatic way to branch on which variant a value
+holds, and it generates the same jump-table code regardless of target.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A radio module hands the firmware a raw header byte for each received
+frame; matching on the byte's upper bits dispatches to the right
+frame-kind handler in one step, with the match itself doubling as the
+protocol's decode table.</p>
+<pre><code class="rust">enum FrameKind {
+    Beacon,
+    Data,
+    Ack,
+    Unknown,
+}
+
+fn frame_kind(header: u8) -&gt; FrameKind {
+    match header &gt;&gt; 6 { // &lt;- matches the top two bits of the header byte
+        0b00 =&gt; FrameKind::Beacon,
+        0b01 =&gt; FrameKind::Data,
+        0b10 =&gt; FrameKind::Ack,
+        _ =&gt; FrameKind::Unknown,
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> matching on the shifted-out bits reads as "which of
+these four kinds is it," matching the mental model of a protocol spec's
+own header table, whereas an equivalent <code>if</code>/<code>else if</code> chain of masks
+would need re-deriving that mapping instead of stating it directly — the
+same "branch on structure, not booleans" case the classic page makes for
+a session-state enum.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

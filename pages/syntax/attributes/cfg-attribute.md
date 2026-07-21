@@ -134,12 +134,75 @@ exists purely to help debugging — every place the field is named
 (declaration and every constructor) needs the matching `#[cfg(...)]`, or
 the mismatched builds fail to compile.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `#[cfg(...)]` is the primary mechanism embedded crates
-use to support many different microcontroller targets from one codebase —
-`target_arch = "arm"`, a chip-family Cargo feature (`feature = "stm32f4"`),
-or a vendor HAL's own `cfg`-gated pin/peripheral modules all rely on it to
-keep unsupported targets' code from ever being compiled, since much of
-that code (raw register addresses, chip-specific intrinsics) wouldn't
-even type-check against a different target's memory map.
+`#[cfg(...)]` is arguably the single most load-bearing attribute in the
+embedded ecosystem, because it's the mechanism that lets one HAL crate's
+source tree serve dozens or hundreds of physically different
+microcontrollers. A chip-family HAL like `stm32f4xx-hal` or `nrf-hal`
+ships with one non-exclusive Cargo feature per supported part number
+(`stm32f401`, `stm32f411`, `stm32f429`, ...), and nearly every
+register-access module, interrupt vector entry, and peripheral count in
+the crate is wrapped in `#[cfg(feature = "stm32f411")]` or an `any(...)`
+combinator naming the handful of parts that share a given peripheral
+layout. Only the module matching whichever single feature the
+application actually enabled ever reaches the compiler — the rest are
+discarded before type-checking, exactly as they'd need to be, since a
+`GPIOF` peripheral module compiled for a chip that doesn't physically
+have a GPIOF port wouldn't even type-check against that chip's memory
+map.
+
+A second common condition, `target_os = "none"`, is how firmware code
+distinguishes a bare-metal build from a hosted one — embedded targets
+(`thumbv7em-none-eabihf` and similar) report `target_os` as `"none"`
+rather than `"linux"`/`"windows"`/`"macos"`, which is what lets a
+`#![no_std]` crate that also wants to run part of its test suite on the
+host gate its bare-metal-only code (a panic handler, a
+`#[global_allocator]`, direct register access) behind
+`#[cfg(target_os = "none")]`, while sharing everything else between both
+builds.
+
+Combinators matter just as much here as anywhere: a peripheral shared
+across most of a chip family but absent from one variant is commonly
+gated `#[cfg(any(feature = "stm32f401", feature = "stm32f411", feature = "stm32f429"))]`,
+and mutually exclusive chip-selection features are enforced with a
+`compile_error!` inside `#[cfg(not(any(...)))]` so selecting zero (or
+more than one) chip feature fails loudly at compile time rather than
+silently picking a default.
+
+## Usage examples (Embedded)
+
+### Selecting one HAL module per target chip feature
+
+```
+#[cfg(feature = "stm32f411")] // <- compiled only when the stm32f411 Cargo feature is enabled
+mod stm32f411 {
+    pub const GPIOA_BASE: u32 = 0x4002_0000;
+}
+
+#[cfg(feature = "stm32f429")] // <- compiled only when the stm32f429 Cargo feature is enabled
+mod stm32f429 {
+    pub const GPIOA_BASE: u32 = 0x4002_0000;
+    pub const GPIOF_BASE: u32 = 0x4002_1400; // <- stm32f429 has a GPIOF port; stm32f411 doesn't
+}
+
+#[cfg(feature = "stm32f411")]
+use stm32f411::GPIOA_BASE;
+
+#[cfg(feature = "stm32f429")]
+use stm32f429::GPIOA_BASE;
+```
+
+### Detecting a bare-metal build to install a panic handler
+
+```
+#[cfg(target_os = "none")] // <- true only on a bare-metal target, never when running `cargo test` on the host
+mod bare_metal {
+    use core::panic::PanicInfo;
+
+    #[panic_handler]
+    fn panic(_info: &PanicInfo) -> ! {
+        loop {}
+    }
+}
+```

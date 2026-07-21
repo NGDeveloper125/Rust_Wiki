@@ -942,7 +942,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>#![deny(warnings)]</code> at a crate root turns every lint warning the
 compiler (and, if run together, Clippy) currently knows how to emit into
@@ -983,7 +984,7 @@ compiles with.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">// A curated, explicit deny list instead of the open-ended `warnings` group:
 #![deny(unused_must_use)] // &lt;- PREFER: names exactly the lint(s) this crate wants to be a hard error
@@ -999,7 +1000,7 @@ fn main() {
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1039,22 +1040,84 @@ is a stable, predictable build.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> This is purely a build-time lint-configuration concern
-with no runtime behavior at all, so the guidance is identical on
-<code>#![no_std]</code> targets — if anything it matters more there, since embedded
-crates are often pinned to a specific toolchain for hardware-support
-reasons, and a stray <code>#![deny(warnings)]</code> combined with a toolchain bump
-is an easy way to break a build no one intended to touch.</p>
+        <p>There's little embedded-specific to add to the mechanism itself — honestly,
+almost nothing changes: <code>#![deny(warnings)]</code> is a lint-level attribute
+evaluated entirely at compile time, and it behaves the same whether the
+target is <code>x86_64-unknown-linux-gnu</code> or <code>thumbv7em-none-eabihf</code>. The one
+genuinely embedded-flavored consequence worth stating plainly is who
+gets hurt when it breaks: embedded projects are frequently pinned to one
+specific verified toolchain version — the exact <code>rustc</code>/target-support
+combination a hardware certification, a qualified build, or a whole
+fleet of already-flashed devices depends on. <code>#![deny(warnings)]</code> denies
+the open-ended <code>warnings</code> group, so upgrading that pinned toolchain even
+slightly (picking up one new warn-by-default lint) can turn a firmware
+image that built and shipped cleanly last release into one that won't
+compile at all — at exactly the moment a maintainer is trying to apply
+an unrelated, possibly security-relevant patch across a device fleet.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#![no_std]
+#![deny(unused_must_use)] // &lt;- PREFER: a named lint, not the whole `warnings` group
+
+fn read_register(addr: *const u32) -&gt; u32 {
+    unsafe { core::ptr::read_volatile(addr) }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL crate is pinned to a specific verified toolchain for hardware
+support reasons; the team wants a warning-free build enforced without
+that guarantee turning into "the fleet's build breaks the day someone
+upgrades <code>rustc</code>."</p>
+<pre><code class="rust">// AVOID: a future toolchain's new lint becomes a hard build failure for every device image
+// #![deny(warnings)]
+
+// PREFER: an explicit, curated list that only grows when the team opts in
+#![no_std]
+#![deny(unused_must_use, unsafe_op_in_unsafe_fn)]
+#![warn(missing_docs)]
+
+/// Reads the sensor's status register.
+pub fn status(addr: *const u32) -&gt; u32 {
+    unsafe { core::ptr::read_volatile(addr) } // &lt;- unsafe_op_in_unsafe_fn keeps SAFETY reasoning explicit even inside `unsafe fn`
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a curated <code>deny</code> list means a toolchain upgrade needed
+for, say, a new chip revision's HAL support never silently breaks the
+build for unrelated reasons — the same fragility the
+<a href="https://rust-unofficial.github.io/patterns/anti_patterns/deny-warnings.html">Rust Design Patterns' anti-patterns section</a>
+documents, just with a verified-toolchain fleet raising the cost of a
+surprise build break from "annoying" to "blocks shipping a firmware
+patch."</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

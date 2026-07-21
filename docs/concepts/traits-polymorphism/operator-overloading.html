@@ -951,7 +951,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>Operators like <code>+</code>, <code>[]</code>, and <code>*</code> aren't special-cased into the
 language for user-defined types — they're ordinary trait methods. Most
@@ -972,7 +973,7 @@ possible but has to be deliberate).</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">use std::ops::Add;
 
@@ -990,7 +991,7 @@ let p = Point { x: 1, y: 2 } + Point { x: 3, y: 4 }; // &lt;- calls Point::add
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1062,18 +1063,141 @@ that operator means arithmetically, and a named method used otherwise.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> The <code>std::ops</code> traits (and <code>std::cmp</code>'s comparison
-traits) live in <code>core::ops</code>/<code>core::cmp</code> — no <code>std</code> dependency.</p>
+        <p><code>core::ops</code> and <code>core::cmp</code> provide the exact same traits as their <code>std</code>
+re-exports, so operator overloading works fully under <code>#![no_std]</code> with
+no substitute and no caveat. The scenario worth grounding this in is a
+register-flags newtype: a driver that models a peripheral's control
+register as a plain <code>u8</code>/<code>u16</code>/<code>u32</code> gets no protection against, say,
+adding two register values together as if they were numbers instead of
+combining their bits. Wrapping the raw integer in a newtype and
+implementing <code>BitOr</code>/<code>BitAnd</code>/<code>BitOrAssign</code> (and friends) on the newtype
+gives it the operators that actually make sense for a flag set (<code>|</code> to
+combine flags, <code>&amp;</code> to test them) while withholding the ones that don't
+(no <code>Add</code> impl at all, since summing two register values isn't a
+meaningful operation). <a href="../../syntax/operators/pipe.md"><code>|</code>'s embedded
+notes</a> and <a href="../../syntax/operators/ampersand.md"><code>&amp;</code>'s embedded
+notes</a> already cover assembling and
+testing register bits held in a plain integer; the angle here is
+different and complementary — not how <code>|</code>/<code>&amp;</code> are <em>used</em> on register
+bits, but how a driver author <em>implements</em> the trait so the newtype gets
+that same bitwise vocabulary as first-class, named operators instead of
+raw integer arithmetic.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">use core::ops::BitOr;
+
+#[derive(Clone, Copy)]
+struct ControlFlags(u8);
+
+impl BitOr for ControlFlags { // &lt;- gives `|` its meaning: combining two register flag sets
+    type Output = ControlFlags;
+    fn bitor(self, other: ControlFlags) -&gt; ControlFlags {
+        ControlFlags(self.0 | other.0)
+    }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>A control-register newtype implementing <code>BitOr</code>/<code>BitAnd</code> lets a driver
+combine and test flags with <code>|</code>/<code>&amp;</code> directly on the domain type, instead
+of unwrapping to a raw integer at every call site.</p>
+<pre><code class="rust">use core::ops::{BitAnd, BitOr};
+
+#[derive(Clone, Copy, PartialEq)]
+struct ControlFlags(u8);
+
+const ENABLE: ControlFlags = ControlFlags(1 &lt;&lt; 0);
+const RX_INTERRUPT: ControlFlags = ControlFlags(1 &lt;&lt; 3);
+
+impl BitOr for ControlFlags { // &lt;- combining two flag sets into one
+    type Output = ControlFlags;
+    fn bitor(self, other: ControlFlags) -&gt; ControlFlags {
+        ControlFlags(self.0 | other.0)
+    }
+}
+
+impl BitAnd for ControlFlags { // &lt;- testing whether a flag is present
+    type Output = ControlFlags;
+    fn bitand(self, other: ControlFlags) -&gt; ControlFlags {
+        ControlFlags(self.0 &amp; other.0)
+    }
+}
+
+let cr1 = ENABLE | RX_INTERRUPT; // &lt;- reads as flag combination, not raw integer OR
+let rx_enabled = (cr1 &amp; RX_INTERRUPT) == RX_INTERRUPT;
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> implementing <code>BitOr</code>/<code>BitAnd</code> directly on the newtype
+means every call site combines and tests flags through the same named
+operators a raw <code>u8</code> would use, while the newtype still blocks
+nonsensical operations (no <code>Add</code> impl exists, so <code>cr1 + RX_INTERRUPT</code>
+is a compile error) — <a href="https://doc.rust-lang.org/std/ops/trait.BitOr.html"><code>std::ops::BitOr</code></a>
+exists precisely so bit-combination reads as <code>|</code> rather than a
+differently-named method, and a newtype is what lets a driver keep that
+readability while still being a distinct type from a bare integer.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>Operator overloading on a register-flags type should stop at the
+operators whose bitwise meaning genuinely applies — implementing
+<code>BitOr</code>/<code>BitAnd</code>/<code>BitOrAssign</code> is idiomatic, but reaching for <code>Add</code> or
+<code>Mul</code> on the same newtype just because the underlying storage is
+numeric invites callers to write nonsensical register arithmetic.</p>
+<pre><code class="rust">#[derive(Clone, Copy)]
+struct ControlFlags(u8);
+
+// AVOID: Add doesn't mean anything for a flag set — two control registers
+// were never meant to be summed like integers.
+// impl std::ops::Add for ControlFlags { ... }
+
+// PREFER: only the operators whose bitwise meaning genuinely applies
+impl core::ops::BitOrAssign for ControlFlags {
+    fn bitor_assign(&amp;mut self, other: ControlFlags) { // &lt;- `|=` sets additional flags in place
+        self.0 |= other.0;
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the <a href="https://rust-lang.github.io/api-guidelines/predictability.html">API Guidelines'
+C-OVERLOAD</a>
+principle — only overload an operator when its usual meaning genuinely
+applies — is just as real for a register-flags newtype as for any other
+type; implementing <code>Add</code> on a flags type would compile without error but
+mislead every caller who reads <code>flags_a + flags_b</code> and expects arithmetic
+rather than a nonsensical bit-pattern sum.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

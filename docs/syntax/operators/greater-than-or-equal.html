@@ -952,14 +952,15 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>&gt;=</code> is the greater-than-or-equal comparison, part of the same
 <code>std::cmp::PartialOrd</code> trait as <code>&lt;</code>, <code>&lt;=</code>, and <code>&gt;</code>.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -997,17 +998,51 @@ general.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> <code>PartialOrd</code> lives in <code>core::cmp</code> — no <code>std</code> dependency.</p>
+        <p><code>&gt;=</code> means the same thing under <code>#![no_std]</code> — same <code>core::cmp</code>
+<code>PartialOrd</code> as <code>&gt;</code>, <code>&lt;</code>, and <code>&lt;=</code>. The inclusive-lower-bound reading is
+genuinely common in firmware: a battery voltage that has reached (not
+just exceeded) a "sufficiently charged" threshold, or a fixed-size
+buffer's write index that has reached exactly its capacity — in both
+cases the boundary value itself is meant to count, which is what makes
+<code>&gt;=</code> the right comparison instead of <code>&gt;</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Checking a battery voltage has reached the operating threshold</h3>
+            <pre><code class="rust">const MIN_OPERATING_MILLIVOLTS: u16 = 3300;
+
+fn battery_ok(voltage_millivolts: u16) -&gt; bool {
+    voltage_millivolts &gt;= MIN_OPERATING_MILLIVOLTS // &lt;- `&gt;=` treats the threshold itself as still acceptable
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Reporting a fixed-size buffer as full</h3>
+            <pre><code class="rust">const BUFFER_CAPACITY: usize = 64;
+
+fn buffer_is_full(write_index: usize) -&gt; bool {
+    write_index &gt;= BUFFER_CAPACITY // &lt;- `&gt;=` catches "exactly full" as well as "somehow past capacity"
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

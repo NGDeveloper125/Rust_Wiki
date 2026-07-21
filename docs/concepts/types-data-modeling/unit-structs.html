@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>A unit struct has no fields at all — <code>struct Marker;</code> is a complete
 definition on its own.</p>
@@ -963,7 +964,7 @@ enforced by the compiler, with no runtime representation to go with it.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">struct Marker; // &lt;- no fields: exists only to be a distinct type
 
@@ -975,7 +976,7 @@ let _m = Marker; // zero bytes at runtime
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1013,19 +1014,135 @@ why that cost really is zero.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Zero-sized and allocator-free — embedded HAL crates use
-unit structs constantly as typestate markers (e.g. a GPIO pin's mode
-encoded as a zero-cost marker type).</p>
+        <p>Unit structs are the standard building block for the typestate pattern
+that runs throughout the <code>embedded-hal</code> ecosystem: a zero-field marker
+type like <code>struct Configured;</code> or <code>struct Unconfigured;</code> exists purely so
+the type system can tell "this peripheral has been set up" apart from
+"this peripheral hasn't," with the marker itself contributing nothing to
+a struct's runtime size. Paired with a generic parameter (see
+<a href="zero-sized-types-phantomdata.md">Zero-sized types &amp; PhantomData</a> for how
+a marker like this attaches to a generic type at zero cost), a unit
+struct lets a driver expose methods that only exist for the
+correctly-configured state — calling <code>read()</code> on an unconfigured
+peripheral becomes a compile error rather than a runtime failure
+discovered mid-flight. This matters more on embedded targets than almost
+anywhere else: a runtime "peripheral not configured" check costs cycles
+and flash on every call, and on hardware there's often no good recovery
+path once the mistake is made — so moving the check to compile time, for
+free, is a genuine win rather than a stylistic preference.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">struct Configured;   // &lt;- no fields: exists only to be a distinct, zero-sized type
+struct Unconfigured;
+
+struct Adc&lt;State&gt; {
+    channel: u8,
+    _state: core::marker::PhantomData&lt;State&gt;,
+}
+
+impl Adc&lt;Unconfigured&gt; {
+    fn configure(self) -&gt; Adc&lt;Configured&gt; { // &lt;- consumes the unconfigured value, returns a configured one
+        Adc { channel: self.channel, _state: core::marker::PhantomData }
+    }
+}
+
+impl Adc&lt;Configured&gt; {
+    fn read(&amp;self) -&gt; u16 { 0 /* real code would read the ADC register here */ }
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p>A GPIO pin's mode is a natural fit for unit-struct markers: <code>Input</code> and
+<code>Output</code> each need to exist only long enough to implement a marker trait
+the pin's generic type is bounded by.</p>
+<pre><code class="rust">struct Input;   // &lt;- marker types: no fields, exist only to be distinct types
+struct Output;
+
+trait PinMode {}
+impl PinMode for Input {}
+impl PinMode for Output {} // &lt;- each marker just needs to exist to satisfy the trait bound
+
+fn configure&lt;M: PinMode&gt;(_mode: M) {
+    // generic over which mode marker was supplied
+}
+
+configure(Output); // &lt;- constructing the marker is free: zero bytes at runtime
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> encoding a pin's mode as a marker type — rather than an
+enum field checked at runtime — moves "is this pin in the right mode for
+this operation" from a runtime branch (which costs cycles on every call)
+to a compile-time fact the type system already guarantees, at zero
+additional runtime representation.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A driver generic over a marker parameter can offer methods that only
+exist for one state, which is exactly how <code>embedded-hal</code>-style pin types
+make misusing a peripheral a compile error instead of a runtime one.</p>
+<pre><code class="rust">struct Locked;
+struct Unlocked;
+
+struct FlashRegion&lt;State&gt; {
+    base_addr: u32,
+    _state: core::marker::PhantomData&lt;State&gt;,
+}
+
+impl FlashRegion&lt;Locked&gt; {
+    fn unlock(self, key: u32) -&gt; FlashRegion&lt;Unlocked&gt; { // &lt;- consumes Locked, returns Unlocked
+        let _ = key;
+        FlashRegion { base_addr: self.base_addr, _state: core::marker::PhantomData }
+    }
+}
+
+impl FlashRegion&lt;Unlocked&gt; {
+    fn erase_page(&amp;mut self, page: u32) { /* ... */ }
+    // erase_page() simply doesn't exist on FlashRegion&lt;Locked&gt; -- calling it on
+    // a locked region is a compile error, not a runtime hazard
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> flash-erase operations on real hardware are genuinely
+destructive and often need an explicit unlock sequence first — encoding
+that sequence in the type via zero-sized markers (see
+<a href="zero-sized-types-phantomdata.md">Zero-sized types &amp; PhantomData</a> for why
+the marker parameter is free) means the compiler, not a runtime guard,
+rejects the erase-before-unlock mistake. See also
+<a href="../design-patterns-idioms/the-typestate-pattern.md">The typestate pattern</a>
+for the general pattern this technique belongs to.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

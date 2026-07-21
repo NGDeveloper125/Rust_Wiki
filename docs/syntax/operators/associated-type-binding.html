@@ -954,7 +954,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An associated-type binding, <code>Trait&lt;AssocName = ConcreteType&gt;</code>, constrains
 <em>which</em> concrete type a trait's associated type resolves to at a
@@ -986,7 +987,7 @@ trait already has one.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1047,21 +1048,66 @@ grammar, not an optional add-on to it.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Associated-type bindings are a purely compile-time
-constraint with no <code>std</code>/allocator dependency on their own; the boxed
-<code>dyn Trait&lt;Assoc = T&gt;</code> form specifically needs <code>alloc</code> (or a <code>heapless</code>
-equivalent) for the allocation <code>Box::new</code> performs, the same caveat as
-any other <code>Box&lt;dyn Trait&gt;</code> usage.</p>
+        <p>Associated-type bindings are pure compile-time constraint syntax with no
+runtime component, so the mechanism is unchanged under <code>#![no_std]</code>.
+Where this shows up constantly in embedded code is the <code>embedded-hal</code>
+ecosystem: traits like <code>OutputPin</code>, <code>InputPin</code>, and <code>SpiBus</code> all declare
+an associated <code>Error</code> type rather than hard-coding one, since the
+concrete error a GPIO pin or SPI peripheral can report is entirely
+HAL/chip-specific. A generic driver written against <code>embedded-hal</code> almost
+always needs to bind that associated type to something concrete enough
+to use — most simply, <code>Error = Infallible</code> when the driver only intends
+to support pins whose operations genuinely cannot fail (common for plain
+push-pull GPIO on many chips), which keeps the driver's own error
+handling simple instead of wrapping an arbitrary, unconstrained <code>E</code>.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Constraining a generic driver to an infallible GPIO pin</h3>
+            <pre><code class="rust">use core::convert::Infallible;
+use embedded_hal::digital::OutputPin;
+
+fn blink&lt;P: OutputPin&lt;Error = Infallible&gt;&gt;(led: &amp;mut P) {
+    // &lt;- `Error = Infallible`: this driver only supports pins whose operations can't fail
+    led.set_high().unwrap(); // safe to unwrap: Infallible can never actually be constructed
+    led.set_low().unwrap();
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Constraining a driver to a board's own concrete error type</h3>
+            <pre><code class="rust">use embedded_hal::digital::OutputPin;
+
+#[derive(Debug)]
+enum GpioError {
+    BusFault,
+}
+
+fn drive_relay&lt;P: OutputPin&lt;Error = GpioError&gt;&gt;(relay_pin: &amp;mut P) -&gt; Result&lt;(), GpioError&gt; {
+    // &lt;- `Error = GpioError`: only pins reporting this concrete error type are accepted
+    relay_pin.set_high()?;
+    Ok(())
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

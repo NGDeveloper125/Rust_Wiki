@@ -950,7 +950,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p>An attribute attaches metadata to a piece of Rust code, consumed by the
 compiler, a lint pass, or a macro — never by the program's own runtime
@@ -1006,7 +1007,7 @@ is already general enough to carry it.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1080,21 +1081,53 @@ picture of how <code>cargo test</code> uses this pairing.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Attribute syntax itself is core-language grammar,
-processed entirely at compile time with zero runtime footprint — it works
-identically whether or not the crate links <code>std</code>. <code>#![no_std]</code> is itself
-just an ordinary inner attribute applied to a crate root; see
-<a href="../../syntax/attributes/no-std-attribute.html"><code>#![no_std]</code></a> for what that specific attribute does.</p>
+        <p>Attribute syntax is core-language grammar, resolved entirely at compile
+time before code generation, so it's identical whether or not the crate
+links <code>std</code> — the outer/inner distinction, the three argument forms, and
+meta-item nesting all work exactly the same under <code>#![no_std]</code>. The one
+thing that's genuinely emblematic of embedded code is <em>which</em> inner
+attributes tend to appear stacked at the very top of the crate root:
+<code>#![no_std]</code> (opting out of the standard library) and <code>#![no_main]</code>
+(opting out of the normal <code>fn main</code> entry-point convention, since a
+firmware crate's entry point is instead wired up by a runtime crate like
+<code>cortex-m-rt</code> via its own attribute) are both ordinary inner attributes on
+the crate root, applying to the whole crate exactly the way
+<code>#![allow(...)]</code> or <code>#![recursion_limit = "..."]</code> would.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">The attribute stack at the top of a firmware crate</h3>
+            <pre><code class="rust">#![no_std] // &lt;- inner attribute: this whole crate has no std library available
+#![no_main] // &lt;- inner attribute: this crate supplies its own entry point, not a normal fn main
+
+use cortex_m_rt::entry;
+use panic_halt as _;
+
+#[entry] // &lt;- outer attribute: marks this function as the runtime's entry point
+fn main() -&gt; ! {
+    loop {
+        // ... firmware body
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

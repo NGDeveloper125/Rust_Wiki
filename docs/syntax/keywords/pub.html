@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>pub</code> widens an item's default visibility, which is otherwise private —
 reachable only from the module that defines it and that module's
@@ -988,7 +989,7 @@ covers the grammar of <code>pub</code> and its scoped forms.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1067,22 +1068,75 @@ item recommends private fields for.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Visibility is enforced entirely at compile time with no
-runtime cost, so every form of <code>pub</code> behaves identically under
-<code>#![no_std]</code>. Embedded HAL crates rely on the scoped forms just as much as
-hosted code — commonly <code>pub(crate)</code> for register-access helpers shared
-between a driver's own submodules but never exposed to firmware code
-using the driver.</p>
+        <p><code>pub</code> and its scoped forms mean exactly the same thing under
+<code>#![no_std]</code> — a compile-time-only visibility marker with no runtime
+cost either way. It's put to essentially the same use in an embedded HAL
+crate as in any other library: a driver exposes a small, curated <code>pub</code>
+surface (the methods a firmware author actually calls — <code>set_high</code>,
+<code>read</code>, <code>configure</code>) while the register-level bit-twiddling that
+implements those methods stays unmarked (private) or <code>pub(crate)</code>,
+reachable only from the driver's own submodules. This split matters more
+than usual in embedded code specifically because register manipulation
+is <code>unsafe</code> and easy to get subtly wrong (wrong bit, wrong offset, a
+read-modify-write race with an interrupt) — keeping it out of the
+crate's public API is what lets the HAL guarantee its public methods
+uphold the peripheral's actual invariants, rather than letting a caller
+reach around them and write raw bits directly.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">A HAL driver's public API over private register internals</h3>
+            <pre><code class="rust">pub struct Gpio {
+    base: u32,
+}
+
+impl Gpio {
+    pub fn set_high(&amp;mut self, pin: u8) { // &lt;- `pub`: the driver's public, safe-to-call API
+        self.write_odr(1 &lt;&lt; pin);
+    }
+
+    fn write_odr(&amp;mut self, mask: u32) {
+        // private: not `pub` — direct register access stays internal to the driver
+        let odr = (self.base + 0x14) as *mut u32;
+        unsafe { odr.write_volatile(odr.read_volatile() | mask) }
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Sharing register helpers across a driver's own submodules with `pub(crate)`</h3>
+            <pre><code class="rust">mod uart {
+    pub(crate) fn baud_divisor(clock_hz: u32, baud: u32) -&gt; u32 {
+        // &lt;- `pub(crate)`: shared between `uart`'s own submodules, never part of this crate's public API
+        clock_hz / (16 * baud)
+    }
+
+    pub mod config {
+        pub fn apply(clock_hz: u32, baud: u32) -&gt; u32 {
+            super::baud_divisor(clock_hz, baud) // reachable: same crate
+        }
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

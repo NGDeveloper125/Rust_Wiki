@@ -948,7 +948,8 @@
         <button class="tab" data-target="best">Best practices &amp; deeper information</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>panic!</code> is Rust's mechanism for unrecoverable errors — bugs, broken
 invariants, states the program has no sensible way to continue from.
@@ -989,7 +990,7 @@ at the top of a thread — see Embedded Rust Notes below.</p>
 
       </section>
 
-      <section class="doc" id="basic">
+      <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <pre><code class="rust">fn nth_element(values: &amp;[i32], index: usize) -&gt; i32 {
     values[index] // &lt;- panics with an unrecoverable error if `index` is out of bounds
@@ -1001,7 +1002,7 @@ let first = nth_element(&amp;scores, 0);
 
       </section>
 
-      <section class="doc" id="best">
+      <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
@@ -1108,26 +1109,145 @@ between <code>assert!</code> and <code>debug_assert!</code>.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-partial">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        <p><strong>Partial support.</strong> <code>panic!</code> itself is <code>core::panic!</code> and available with
-no <code>alloc</code>/<code>std</code> at all, but <em>unwinding</em> is what typically becomes
-unavailable: <code>#![no_std]</code> targets almost always build with
-<code>panic = "abort"</code> in their profile, since stack unwinding needs
-target/OS support for unwind tables that bare-metal targets don't have.
-That means <code>Drop</code> doesn't run on panic there and <code>catch_unwind</code> doesn't
-exist. Every <code>#![no_std]</code> binary must also supply exactly one
-<code>#[panic_handler]</code> function — replacing std's default
-"print a backtrace and abort" behavior — typically resetting the device,
-signaling over a diagnostic pin, or halting in a loop.</p>
+        <p><strong>Partial support</strong> — <code>panic!</code> itself fires identically, but unwinding, the
+default <em>strategy</em> described in the classic Explanation, is generally not
+available at all. Bare metal has no OS process for an unwind runtime to
+unwind into, and most bare-metal targets lack the unwind-table support a
+<code>panic = "unwind"</code> build even needs — so <code>panic = "abort"</code> is close to a
+universal default in embedded profiles, not merely one of two equally
+viable choices the way it can be on a hosted target. The practical
+consequence of that design decision: <code>Drop</code> does not run on the way out of
+a panic (no flushing a buffer, no releasing a peripheral lock through a
+guard's destructor), and <code>catch_unwind</code> isn't available as an escape hatch
+at all — a panic anywhere in the firmware takes the whole device down, not
+just a thread.</p>
+<p>Every <code>#![no_std]</code> binary must supply exactly one <code>#[panic_handler]</code>
+function, and that function decides what "taking the device down" means
+in practice — there's no shell process boundary to hand an exit code to.
+Typical implementations park the core in an infinite loop, report the
+message over a debug channel first, or trigger a watchdog/software reset so
+the device comes back up in a known state rather than staying hung. See
+<a href="../../syntax/macros/panic-macro.md"><code>panic!</code></a> for the attribute mechanics
+and the concrete handler crates (<code>panic-halt</code>, <code>panic-itm</code>, <code>panic-probe</code>)
+— this page is about the underlying <em>why</em>: on a bare-metal target a panic
+isn't a recoverable event worth designing a catch-all handler around, it's
+closer to the hardware equivalent of a fatal fault, so the classic page's
+principle — reserve panics for broken invariants, not everyday failure —
+applies with even less of a safety net beneath it.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The three core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="basic">
+        <h2 class="section-title">Basic usage example</h2>
+        <pre><code class="rust">#![no_std]
+#![no_main]
+
+use panic_halt as _; // &lt;- the #[panic_handler] this build runs; see panic! (syntax page) for handler choices
+use cortex_m_rt::entry;
+
+#[entry]
+fn main() -&gt; ! {
+    let valve_percent: u8 = 150;
+    if valve_percent &gt; 100 {
+        panic!("valve position {valve_percent}% exceeds 100%"); // &lt;- broken precondition: no OS underneath to catch an unwind
+    }
+    loop {}
+}
+</code></pre>
+
+      </section>
+
+      <section class="doc" data-tab="best">
+        <h2 class="section-title">Best practices &amp; deeper information</h2>
+        
+        <div class="scenarios">
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>A sample buffer offers both a panicking direct-index method, for a caller
+that has already checked bounds against a known frame size, and a checked
+<code>Option</code>-returning one for everything else — the same split as the
+classic page's <code>Buffer</code>, but with a higher cost attached to guessing wrong
+about which one applies.</p>
+<pre><code class="rust">struct SampleBuffer {
+    samples: [i16; 32],
+    len: usize,
+}
+
+impl SampleBuffer {
+    /// Panics if `index &gt;= self.len`; only call this after checking `len()` —
+    /// on this target `panic = "abort"`, so this halts/resets the device.
+    fn sample(&amp;self, index: usize) -&gt; i16 {
+        assert!(index &lt; self.len, "index {index} out of bounds for len {}", self.len);
+        self.samples[index] // &lt;- indexing panics on out-of-bounds, same as the classic page's Buffer example
+    }
+
+    /// Never panics: returns None for an out-of-range index instead.
+    fn get_sample(&amp;self, index: usize) -&gt; Option&lt;i16&gt; {
+        if index &lt; self.len {
+            Some(self.samples[index])
+        } else {
+            None
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> offering both forms keeps the abort-on-panic cost — a
+full device halt or reset, not a <code>catch_unwind</code>-able exception — reserved
+for genuine precondition violations, while an ordinary "might be
+out-of-range" situation uses the checked <code>Option</code> form instead, the same
+<a href="https://rust-lang.github.io/api-guidelines/documentation.html#function-docs-include-error-panic-and-safety-considerations-c-failure">C-FAILURE</a>-driven
+split as the classic page's example.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Validating input</h3>
+            <p>An internal PWM duty-cycle invariant is checked with <code>debug_assert!</code>
+rather than <code>assert!</code>, the same idiom as the classic page — but on a
+target with kilobytes of flash rather than gigabytes of disk, the cost of
+compiling the check and its formatted message into every release binary is
+a concrete, not merely theoretical, reason to reach for it.</p>
+<pre><code class="rust">struct PwmChannel {
+    duty_percent: u8,
+}
+
+impl PwmChannel {
+    fn new(duty_percent: u8) -&gt; Self {
+        debug_assert!(duty_percent &lt;= 100, "duty_percent must be 0..=100, got {duty_percent}");
+        // &lt;- compiled out of release builds: no message-formatting code bloats the release binary's flash image
+        PwmChannel { duty_percent }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>debug_assert!</code> keeps the check and its formatted message
+entirely out of the release binary, which matters more on a target
+measuring flash in kilobytes than on a hosted binary where a few extra
+bytes of panic-message string are irrelevant — the same
+<a href="https://doc.rust-lang.org/std/macro.debug_assert.html">std docs' distinction</a>
+the classic page cites, with the code-size cost made concrete.</p>
+</div>
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

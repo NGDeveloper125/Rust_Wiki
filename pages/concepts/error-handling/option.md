@@ -171,10 +171,128 @@ benefits of exhaustiveness checking the
 [Rust Book](https://doc.rust-lang.org/book/ch06-02-match.html) highlights
 for `match`.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Option<T>` is `core::option::Option`, works identically
-in `#![no_std]`, and needs no allocator — it's a plain enum. The compiler
-also applies niche optimization to common cases (`Option<&T>`,
-`Option<Box<T>>`, `Option<NonZeroU32>`, …), making it the same size as `T`
-with no wasted tag byte, which matters on memory-constrained targets.
+`Option<T>` is `core::option::Option` — the identical two-variant enum,
+with identical semantics and no allocator involved, since it's core-language
+rather than anything `std` adds on top. The compiler's niche optimization
+(`Option<&T>`, `Option<Box<T>>`, `Option<NonZeroU32>`, … costing no extra
+tag byte over `T` itself) carries over unchanged too, and matters more
+directly on a target measuring RAM in kilobytes.
+
+The design weight shifts, though: embedded code leans on `Option` constantly
+for "not available yet" state that a hosted program would rarely need to
+model explicitly — a sensor reading buffered by an interrupt handler that
+may not have fired since boot, a slot in a fixed-capacity queue, a
+calibration value only loaded once at startup. Because `Option<T>` forces
+the "is it actually there" check at compile time, it closes off a real bug
+class on bare metal specifically: reading a zeroed or garbage byte of
+uninitialized memory as if it were a valid measurement, with no OS-level
+convention (like a zeroed heap page) to make that accidentally harmless.
+
+## Basic usage example (Embedded)
+
+```
+struct SensorCache {
+    last_reading: Option<f32>, // <- None until the first interrupt-driven read arrives
+}
+
+impl SensorCache {
+    fn latest(&self) -> Option<f32> {
+        self.last_reading
+    }
+}
+
+let cache = SensorCache { last_reading: None };
+
+match cache.latest() {
+    Some(value) => { let _ = value; } // handle the cached reading
+    None => {}                        // no reading yet this cycle: skip
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Working with collections
+
+A fixed-capacity `heapless::Vec` buffers received CAN frame IDs; popping
+the most recent one returns `Option<u16>` since the queue can legitimately
+be empty between frames.
+
+```
+use heapless::Vec;
+
+fn pop_latest(queue: &mut Vec<u16, 16>) -> Option<u16> {
+    queue.pop() // <- heapless::Vec::pop mirrors std's Option<T> return, no allocator needed
+}
+
+let mut queue: Vec<u16, 16> = Vec::new();
+queue.push(0x100).ok();
+
+match pop_latest(&mut queue) {
+    Some(id) => { let _ = id; } // handle the CAN id
+    None => {}                  // queue empty this cycle
+}
+```
+
+**Why this way:** `heapless` collections mirror std's `Option`-returning
+API shape (`Vec::pop`, `Vec::get`, …) so an empty fixed-capacity queue stays
+a normal, handled case instead of needing a sentinel value, the same
+reasoning as `HashMap::get` on the classic page.
+
+### Scenario: Validating input
+
+Decoding a 2-bit sample-rate field from a configuration register rejects
+the two reserved bit patterns by returning `None`, rather than quietly
+picking a default rate for an encoding the hardware doesn't actually
+define.
+
+```
+#[derive(Debug, PartialEq)]
+enum SampleRate {
+    Hz100,
+    Hz200,
+}
+
+fn decode_sample_rate(bits: u8) -> Option<SampleRate> {
+    match bits & 0b11 {
+        0b00 => Some(SampleRate::Hz100),
+        0b01 => Some(SampleRate::Hz200),
+        _ => None, // <- reserved encodings: absence, not a made-up default rate
+    }
+}
+
+assert_eq!(decode_sample_rate(0b10), None);
+```
+
+**Why this way:** returning `None` for a reserved bit pattern keeps a
+misconfigured or corrupted register from being read as though the device
+had picked some sensible default, the same "absence over a stand-in value"
+idiom the classic page applies to a blank form field.
+
+### Scenario: Branching on data (pattern matching)
+
+A calibration offset is loaded once from nonvolatile config at boot;
+matching on the `Option` keeps a genuine zero offset from being confused
+with "not calibrated yet."
+
+```
+struct Device {
+    calibration_offset: Option<i16>, // <- None until load_calibration() runs at boot
+}
+
+impl Device {
+    fn apply(&self, raw: i16) -> i16 {
+        match self.calibration_offset {
+            Some(offset) => raw + offset, // <- exhaustive match: both states are handled
+            None => raw,                  // <- uncalibrated: pass the raw reading through unmodified
+        }
+    }
+}
+```
+
+**Why this way:** modeling "not yet calibrated" as `None` rather than a
+placeholder offset of `0` stops a real zero-offset calibration from being
+indistinguishable from "never calibrated" — exhaustive matching then
+forces every use site to handle both states, the same exhaustiveness
+argument the classic page makes for a discount field.

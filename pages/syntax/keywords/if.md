@@ -113,7 +113,37 @@ needs handling and the rest can be ignored — the
 recommends it over `match` precisely to avoid writing a wildcard `_` arm
 that does nothing.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** No dependency on `std`. Extremely common in embedded
-code for polling a hardware flag/register bit before proceeding.
+`if` behaves identically under `#![no_std]` — it's core-language control
+flow with no dependency on `std`, an allocator, or an OS scheduler. What
+changes is the shape of the conditions worth showing: embedded code most
+often reaches for `if` to poll a single status bit in a memory-mapped
+peripheral register, or to test a value a HAL read function returns,
+rather than a business-rule boolean. The guard-clause shape from the
+classic section is just as idiomatic here — rejecting an invalid
+configuration value before touching a register.
+
+## Usage examples (Embedded)
+
+### Polling a peripheral status register
+
+```
+if uart.status().read().rxne().bit_is_set() { // <- `if` polls a hardware status bit before proceeding
+    let byte = uart.data().read().bits() as u8;
+    process_byte(byte);
+}
+```
+
+### Validating a peripheral configuration value
+
+```
+fn set_prescaler(timer: &mut Timer, value: u16) -> Result<(), &'static str> {
+    if value == 0 {
+        // <- `if` as a guard clause: reject an invalid divisor before touching the register
+        return Err("prescaler must be nonzero");
+    }
+    timer.psc().write(|w| w.psc().bits(value));
+    Ok(())
+}
+```

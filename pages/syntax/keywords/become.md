@@ -77,9 +77,27 @@ instead of trusting the optimizer; `become`, if stabilized, would let the
 recursive form itself carry that guarantee instead of requiring the
 manual rewrite.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Keyword reservation is a lexer-level concept, identical
-in `#![no_std]` and hosted Rust alike — and constant-stack-space
-guarantees would matter especially on embedded targets with small, fixed
-stacks.
+**Full support.** Keyword reservation itself is a lexer-level fact,
+identical in `#![no_std]` and hosted Rust alike. The feature `become` is
+reserved for — guaranteed tail-call elimination via
+`#![feature(explicit_tail_calls)]` — is equally unstable on every target
+today, so there's nothing embedded-specific to demonstrate yet. It's
+worth naming why this reservation is worth watching more than most of
+its neighbors in this group, though: embedded targets typically run with
+a small, fixed-size stack and no virtual memory to grow into, so a
+stable, guaranteed constant-stack-space tail call would matter more there
+than on a hosted target with megabytes of stack and an OS underneath it.
+That's a reason to care if/when it stabilizes, not a difference in
+today's behavior — the reservation and the missing feature are identical
+right now regardless of target.
+
+## Usage examples (Embedded)
+
+### The `become` reservation, unaffected by target
+
+```
+let become = 5;     // error: expected identifier, found reserved keyword `become`, on every target
+let r#become = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+```

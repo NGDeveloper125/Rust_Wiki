@@ -85,6 +85,41 @@ while the iterator adapter handles bounds — see the
 [standard library docs](https://doc.rust-lang.org/std/primitive.slice.html#method.windows)
 for the general `windows` pattern over any fixed-size grouping.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Sub`/`Neg` live in `core::ops` — no `std` dependency.
+`Sub`/`Neg` live in `core::ops`, so both binary subtraction and unary
+negation work identically under `#![no_std]`. The overflow behavior this
+page's classic Explanation describes is the detail that matters more in
+firmware than in most hosted code: a release build — the profile actually
+flashed to a device — has overflow checks off by default, so `a - b`
+wraps silently instead of panicking. In a desktop program a debug build
+usually catches an underflow during development; a device already in the
+field can't be recompiled in debug to catch the same bug after shipping.
+That makes `checked_sub`/`wrapping_sub`/`saturating_sub` a more
+load-bearing idiom in embedded code than the occasional defensive check it
+is elsewhere — particularly for anything computed from a free-running
+hardware counter or an external sensor reading, where the operands aren't
+fully under the program's control.
+
+## Usage examples (Embedded)
+
+### Computing elapsed ticks from a free-running hardware counter
+
+A hardware tick counter register wraps back to `0` after its maximum
+value, so plain `-` would occasionally underflow across that wrap;
+`wrapping_sub` treats the wraparound as intentional and yields the
+correct short elapsed time regardless.
+
+```
+fn ticks_since(now: u32, last: u32) -> u32 {
+    now.wrapping_sub(last) // <- wrapping `-`: still correct even after `now` has wrapped past u32::MAX
+}
+```
+
+### Guarding a sensor delta against a silent release-mode wrap
+
+```
+fn safe_delta(current: u16, baseline: u16) -> Option<u16> {
+    current.checked_sub(baseline) // <- None instead of a silently wrapped value on a shipped device
+}
+```

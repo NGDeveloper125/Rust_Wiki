@@ -105,9 +105,55 @@ fields later — a bare `let Reading { sensor_id, celsius } = reading;`
 would stop compiling the moment a third field is added, forcing every
 destructuring site to be revisited.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Struct declarations are core-language and
-allocator-free — the primary way embedded HAL crates model peripherals,
-register blocks, and driver state, with no difference in grammar or
-behavior under `#![no_std]`.
+This is where `struct` becomes one of the defining idioms of embedded
+Rust, rather than merely "still works." Tools like svd2rust read a chip
+vendor's SVD file — an XML description of every peripheral's registers,
+their byte offsets, and bit layouts — and generate one `#[repr(C)]`
+struct per peripheral, its fields laid out in declaration order to match
+the hardware's memory map exactly. Each field is typically a thin,
+interior-mutable register-cell type sitting at that field's exact offset,
+so `peripheral.cr1.write(|w| ...)` compiles down to a single volatile
+store at the register's real address. `#[repr(C)]` matters more here than
+in ordinary FFI: Rust's default field ordering and padding are
+unspecified, and a register that lands a few bytes off its real hardware
+address is a silent wrong-memory-access bug, not a compile error. Pairing
+one `struct` per peripheral with Rust's ownership rules — only one
+`&mut` to a peripheral's register struct at a time — is also how
+embedded Rust turns "only one part of the program may be programming
+this peripheral right now" into a compile-time guarantee instead of a
+runtime convention.
+
+## Usage examples (Embedded)
+
+### A register-block struct matching a hardware memory map
+
+```
+#[repr(C)] // <- guarantees field order/offsets match the hardware layout, not compiler-chosen layout
+struct Gpio { // <- `struct` models the peripheral's registers, one field per register
+    moder: u32,   // offset 0x00: mode register
+    otyper: u32,  // offset 0x04: output type register
+    ospeedr: u32, // offset 0x08: output speed register
+    idr: u32,     // offset 0x0C: input data register
+    odr: u32,     // offset 0x10: output data register
+}
+
+fn set_pin_high(gpio: &mut Gpio, pin: u32) {
+    gpio.odr |= 1 << pin;
+}
+```
+
+### Bundling driver state alongside a peripheral handle
+
+A driver crate wraps the peripheral it owns together with any state the
+driver itself needs to track, so the whole thing moves and borrows as one
+unit.
+
+```
+struct TemperatureSensor<I2C> { // <- `struct` bundles a peripheral handle with driver-owned state
+    i2c: I2C,
+    address: u8,
+    last_reading: Option<f32>,
+}
+```

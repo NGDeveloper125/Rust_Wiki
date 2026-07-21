@@ -953,7 +953,8 @@
         <button class="tab" data-target="examples">Usage examples</button>
       </nav>
 
-      <section class="doc" id="explanation">
+      <div class="flavor flavor-classic">
+      <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
         <p><code>=&gt;</code> separates a <a href="../../syntax/keywords/match.html"><code>match</code></a> arm's pattern from the code
 that runs when it matches: <code>pattern =&gt; expression</code>. It appears only inside a
@@ -976,7 +977,7 @@ the macro syntax pages, not here.</p>
 
       </section>
 
-      <section class="doc" id="examples">
+      <section class="doc" data-tab="examples">
         <h2 class="section-title">Usage examples</h2>
         <div class="scenarios">
         <div class="card">
@@ -1046,19 +1047,58 @@ separator.</p>
           </div>
         </div>
       </section>
+      </div>
 
-      <section class="doc" id="embedded">
-        <h2 class="section-title">Embedded Rust Notes</h2>
-        <span class="support-badge">
+      <div class="flavor flavor-embedded">
+      <section class="doc" data-tab="explanation">
+        <h2 class="section-title">Explanation</h2>
+        <span class="support-badge level-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        <p><strong>Full support.</strong> Pure grammar, no <code>std</code> dependency — the separator compiles
-to nothing at all beyond whichever comparison or jump the arm's pattern
-requires, the same as in any hosted <code>match</code>.</p>
+        <p><code>=&gt;</code> means exactly the same thing under <code>#![no_std]</code> — pure match-arm
+grammar, compiling to whatever comparison or jump the pattern needs, no
+<code>std</code> dependency. It shows up constantly in interrupt-driven firmware,
+where a peripheral's status/flags value is read once and matched to
+decide which follow-up action to take — the same one-to-one "pattern
+leads to an action" shape as any hosted <code>match</code>, just with hardware
+states standing in for the enum variants.</p>
 
-        <p class="emb-hint">Embedded view active &mdash; this section is highlighted. The two core sections above stay written for hosted <code>std</code> Rust and are unchanged.</p>
       </section>
+
+      <section class="doc" data-tab="examples">
+        <h2 class="section-title">Usage examples</h2>
+        <div class="scenarios">
+        <div class="card">
+            <h3 class="scenario-title">Dispatching on a UART interrupt flag</h3>
+            <pre><code class="rust">enum UartEvent {
+    RxNotEmpty,
+    TxEmpty,
+    Overrun,
+}
+
+fn handle(event: UartEvent) {
+    match event {
+        UartEvent::RxNotEmpty =&gt; { /* read the received byte */ } // &lt;- `=&gt;` separates the flag from its handler
+        UartEvent::TxEmpty =&gt; { /* push the next byte to transmit */ }
+        UartEvent::Overrun =&gt; { /* clear the overrun flag, log the drop */ }
+    }
+}
+</code></pre>
+
+          </div>
+        <div class="card">
+            <h3 class="scenario-title">Mapping a HAL read result onto a defmt log level</h3>
+            <pre><code class="rust">match sensor.read() {
+    Ok(sample) =&gt; defmt::info!("sample: {}", sample), // &lt;- `=&gt;` leads into the success path
+    Err(_) =&gt; defmt::warn!("sensor read failed"),
+}
+</code></pre>
+
+          </div>
+        </div>
+      </section>
+      </div>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
