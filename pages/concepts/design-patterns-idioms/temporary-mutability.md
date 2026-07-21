@@ -104,10 +104,100 @@ invalidate that invariant — rebinding immutable turns "don't mutate this
 again" from a comment into something the compiler enforces for the rest
 of the scope.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Temporary mutability is a compile-time-only binding
-annotation with zero runtime representation — it costs nothing and
-behaves identically under `#![no_std]`, including on targets with no
-allocator, since it applies equally well to a stack-allocated buffer or
-fixed-size array being assembled before use.
+Register-configuration values are a natural home for this idiom in
+embedded code: building up the bitfields that eventually get written to
+a peripheral's control register — clock source, prescaler, mode bits —
+almost always takes several steps, but once the value is handed to a HAL
+init function it should never change again for the rest of the
+peripheral's lifetime. Assembling it in a temporarily-`mut` local and
+then freezing it before the call makes that boundary explicit: the
+config can't be accidentally mutated between "built" and "handed to
+hardware," a distinction worth having when the next line is a real
+register write that takes effect on physical silicon the moment it runs.
+Like in hosted Rust, this costs nothing at runtime — it's purely a
+binding annotation the compiler erases — so it applies equally well to a
+config built on the stack with no allocator in sight.
+
+## Basic usage example (Embedded)
+
+```
+struct UartConfig {
+    baud_rate: u32,
+    stop_bits: u8,
+}
+
+fn uart_init(config: UartConfig) {
+    let _ = (config.baud_rate, config.stop_bits); // stand-in for a real register write
+}
+
+let mut config = UartConfig { baud_rate: 9_600, stop_bits: 1 }; // <- mut needed only while building the value
+config.baud_rate = 115_200; // adjust before freezing
+let config = config; // <- shadows the binding as immutable; nothing below this line can mutate it
+
+uart_init(config);
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Creating a new object
+
+A GPIO peripheral's configuration is assembled from several independent
+choices (mode, pull, speed) inside a block expression, and only the
+finished, read-only value is passed to the HAL's init call.
+
+```
+struct GpioConfig {
+    output: bool,
+    pull_up: bool,
+    high_speed: bool,
+}
+
+let config = { // <- block expression scopes the mutable phase
+    let mut cfg = GpioConfig { output: false, pull_up: false, high_speed: false };
+    cfg.output = true;
+    cfg.high_speed = true;
+    cfg // last expression: becomes the outer, immutable `config`
+};
+
+// config is never `mut` from here on; the HAL init call receives a value that can't change underneath it
+gpio_init(config);
+
+fn gpio_init(config: GpioConfig) {
+    let _ = (config.output, config.pull_up, config.high_speed);
+}
+```
+
+**Why this way:** scoping the `mut` phase to the block keeps the
+mutation window visually contained right up to the point the value is
+handed to hardware — the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/idioms/temporary-mutability.html)
+book documents this block-expression shape as the idiomatic way to build
+a value that needs temporary mutation, and it reads especially clearly
+right before a call that programs physical registers.
+
+### Scenario: Bit manipulation and flags
+
+A peripheral's control-register value is built up bit by bit from
+several independent flags before being written out; once assembled, it
+should be treated as the fixed value that actually got written, not a
+live bitmask still open to change.
+
+```
+const ENABLE_BIT: u32 = 1 << 0;
+const CLOCK_SRC_BIT: u32 = 1 << 4;
+
+let mut ctrl_reg: u32 = 0;
+ctrl_reg |= ENABLE_BIT;
+ctrl_reg |= CLOCK_SRC_BIT;
+let ctrl_reg = ctrl_reg; // <- shadowed immutable: this is now the exact value being written to hardware
+
+// write_control_register(ctrl_reg); // stand-in for an actual volatile register write
+```
+
+**Why this way:** once a register value is finalized and written,
+further in-place mutation of the same binding would misleadingly suggest
+the live hardware state could still change through it — rebinding
+immutable turns "this is what's on the wire now" from a comment into
+something the compiler enforces for the rest of the scope.

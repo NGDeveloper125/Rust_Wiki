@@ -178,12 +178,182 @@ state depends on data read at runtime, matching an exhaustive
 [enum](../types-data-modeling/enums-algebraic-data-types.md) is the
 honest tool, not a workaround.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** Typestate costs nothing at runtime — the marker types
-for each state are typically zero-sized and optimize away entirely, and
-the checking happens purely at compile time. The pattern is especially
-popular in embedded HAL crates, where a GPIO pin's mode (`Input`,
-`Output`, `Analog`) is encoded as a type parameter so configuring a pin
-incorrectly for how it's used is a compile error rather than a runtime
-hardware fault.
+Typestate is one of the strongest, most genuinely idiomatic fits between
+a design pattern and the embedded domain in this entire catalog — not a
+stretch application of a hosted-Rust idea, but a pattern the
+`embedded-hal` ecosystem actively builds around. The canonical example is
+a GPIO pin: a microcontroller pin can be configured as a floating input,
+a pulled-up input, a push-pull output, an open-drain output, or an analog
+input, and writing to a pin that's currently configured as an input, or
+reading an ADC-style analog value from a pin configured as a digital
+output, isn't a logic error a test suite might happen to catch — it's a
+category of bug that shows up as a runtime hardware fault: a bus fault,
+a pin that silently never toggles, a floating input read as noise. HAL
+crates like `stm32f4xx-hal`, `rp2040-hal`, and others encode the pin's
+mode as a type parameter — `Pin<'A', 5, Input>`, `Pin<'A', 5, Output>` —
+so that the *type itself* records which mode the pin is in, and mode-
+specific methods (`set_high`/`set_low` on an output, `is_high` on an
+input) simply don't exist on the wrong type. A pin-mode-change method
+like `into_output()` takes the input-mode pin by value and returns a
+new, output-typed pin, both performing the underlying register write
+that reconfigures the mode *and* consuming the old typed handle so it
+can't be used in its former mode afterward. Because the marker types
+(`Input`, `Output`, `Analog`, and similar) are zero-sized, none of this
+costs anything at runtime beyond the register write the transition
+method actually performs — the type-level bookkeeping vanishes entirely
+after compilation, leaving only the actual hardware configuration
+instruction. The same idea extends past GPIO to peripheral
+initialization generally: a timer, ADC, or DMA channel's "configured but
+not yet started" versus "running" states are a natural typestate split,
+turning "started a peripheral twice" or "read from an unconfigured ADC"
+into compile errors instead of undefined hardware behavior.
+
+## Basic usage example (Embedded)
+
+```
+struct Input;
+struct Output;
+
+struct Pin<MODE> {
+    number: u8,
+    _mode: core::marker::PhantomData<MODE>,
+}
+
+impl Pin<Input> {
+    fn into_output(self) -> Pin<Output> { // <- consumes the input-mode pin: the only way to obtain an output-mode one
+        Pin { number: self.number, _mode: core::marker::PhantomData }
+    }
+}
+
+impl Pin<Output> {
+    fn set_high(&self) {
+        // volatile write to the pin's output-data register
+    }
+}
+
+let pin: Pin<Input> = Pin { number: 5, _mode: core::marker::PhantomData };
+let pin = pin.into_output();
+pin.set_high();
+// pin.is_high(); // would fail to compile: Pin<Output> has no `is_high` method
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Designing a public API
+
+A HAL crate's GPIO pin type should make it impossible to call
+`set_high` on a pin still configured as an input — encoding the mode as
+a type parameter means there is no `set_high` method to accidentally
+reach for on an `Input`-typed pin at all.
+
+```
+struct Input;
+struct Output;
+
+struct Pin<MODE> {
+    number: u8,
+    _mode: core::marker::PhantomData<MODE>,
+}
+
+impl Pin<Input> {
+    fn into_output(self) -> Pin<Output> { // <- reconfigures the pin's mode register and changes its type together
+        Pin { number: self.number, _mode: core::marker::PhantomData }
+    }
+}
+
+impl Pin<Output> {
+    fn set_high(&self) {
+        // volatile write to the pin's output-data register
+    }
+    fn into_input(self) -> Pin<Input> {
+        Pin { number: self.number, _mode: core::marker::PhantomData }
+    }
+}
+
+let led: Pin<Input> = Pin { number: 13, _mode: core::marker::PhantomData };
+let led = led.into_output();
+led.set_high(); // <- only reachable once into_output() has actually run
+```
+
+**Why this way:** there is no `set_high` method on `Pin<Input>` at all,
+so "write to a pin still wired as an input" isn't a bug that can even be
+written, let alone one caught only by testing on real hardware — this is
+the exact guarantee the
+[Rust Design Patterns' typestate entry](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
+describes, and it's why typestate is the default way `embedded-hal`-
+ecosystem crates model pin modes today.
+
+### Scenario: Validating input
+
+An ADC needs a one-time calibration step before any reading from it can
+be trusted; typestate expresses "calibrated" as a distinct type instead
+of a boolean flag next to the raw peripheral handle, so a reading can't
+be taken from an uncalibrated ADC by mistake.
+
+```
+struct Uncalibrated;
+struct Calibrated { offset: i16 }
+
+struct Adc<STATE> {
+    _state: STATE,
+}
+
+impl Adc<Uncalibrated> {
+    fn calibrate(self) -> Adc<Calibrated> {
+        let offset = 0; // stand-in for a real calibration routine
+        Adc { _state: Calibrated { offset } } // <- downstream code only ever sees a Calibrated Adc
+    }
+}
+
+impl Adc<Calibrated> {
+    fn read(&self) -> i16 { // <- signature alone guarantees calibration already happened
+        1024 - self._state.offset
+    }
+}
+
+let adc = Adc { _state: Uncalibrated };
+let adc = adc.calibrate();
+let _reading = adc.read();
+```
+
+**Why this way:** because `read` only exists on `Adc<Calibrated>`, every
+caller gets the calibration guarantee for free without re-checking a
+flag at every call site — the same parse-don't-validate argument
+[Effective Rust](https://effective-rust.com/) makes for pushing
+correctness checks into the type system instead of scattering `if`
+checks through firmware code that reads the ADC.
+
+### Scenario: Branching on data (pattern matching)
+
+A pin's alternate-function mux (UART TX vs. SPI MOSI vs. plain GPIO) is
+selected by a byte loaded from external configuration at boot, so the
+choice genuinely isn't known at compile time — an enum with a `match` is
+the honest tool here, not typestate.
+
+```
+enum PinFunction {
+    Gpio,
+    UartTx,
+    SpiMosi,
+}
+
+fn configure_mux(function: PinFunction) { // <- function is only known once configuration is loaded at boot
+    match function { // <- runtime branching plays typestate's role, since the type can't vary with loaded config
+        PinFunction::Gpio => { /* set mux bits for GPIO */ }
+        PinFunction::UartTx => { /* set mux bits for UART TX */ }
+        PinFunction::SpiMosi => { /* set mux bits for SPI MOSI */ }
+    }
+}
+
+configure_mux(PinFunction::UartTx);
+```
+
+**Why this way:** typestate's compile-time guarantee only helps when the
+compiler can see the transition at each call site; once the legal pin
+function depends on a byte read from configuration at boot, matching an
+exhaustive [enum](../types-data-modeling/enums-algebraic-data-types.md)
+is the honest tool — reaching for typestate here would just mean writing
+a runtime `if`/`match` to pick which typestate method to call, with no
+compile-time benefit left to show for it.

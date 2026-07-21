@@ -205,11 +205,139 @@ API design decision about how the builder will be used — the
 covers both variants and the tradeoff between chaining ergonomics and
 conditional construction.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** The builder pattern itself is ordinary structs and
-methods with zero runtime cost beyond the fields it holds, so it works
-identically under `#![no_std]`. The one caveat is indirect: builders
-commonly hold `String`/`Vec` fields for convenience, and those need the
-`alloc` crate; a builder over fixed-capacity fields (plain integers, a
-`heapless::String`) needs no allocator at all.
+The builder pattern shows up constantly in embedded-hal-adjacent APIs for
+exactly the reason it exists in hosted Rust: a peripheral config —
+a UART's baud rate, parity, and stop-bits, a timer's prescaler and
+counting mode, an SPI bus's clock polarity and phase — has several
+independent settings, most of which have a sensible default (8N1 for a
+UART, no parity) that only a minority of callers ever need to override.
+A chained builder lets firmware code say `Uart::config().baud_rate(115_200).build()`
+and get every other setting for free, instead of a constructor taking
+every parameter positionally. The pattern itself costs nothing beyond the
+fields the builder actually holds — no vtable, no allocation of its own
+— so it's exactly as at-home in `#![no_std]` firmware as anywhere else.
+The one thing worth watching is what the fields themselves are made of:
+a builder over plain integers, bools, and small enums (baud rate, parity
+mode) needs no allocator at all, while a builder that reaches for
+`String`/`Vec<T>` fields for convenience pulls in the same `alloc`
+requirement those types always carry — a `heapless::String`/`heapless::Vec<T, N>`
+with a fixed capacity sidesteps that where the field's maximum size is
+known up front.
+
+## Basic usage example (Embedded)
+
+```
+struct UartConfigBuilder {
+    baud_rate: u32,
+    parity: bool,
+    stop_bits: u8,
+}
+
+impl UartConfigBuilder {
+    fn new() -> Self {
+        Self { baud_rate: 9_600, parity: false, stop_bits: 1 } // sensible defaults: 8N1 at 9600 baud
+    }
+
+    fn baud_rate(mut self, baud_rate: u32) -> Self { // <- consuming builder: takes and returns `Self` by value
+        self.baud_rate = baud_rate;
+        self
+    }
+}
+
+let config = UartConfigBuilder::new().baud_rate(115_200); // <- overrides only the setting that matters
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Creating a new object
+
+A UART peripheral has one setting most firmware cares about (baud rate)
+and two that are almost always left at their default (parity, stop
+bits) — exactly the shape a builder is for, over a hand-written
+`Uart::new(baud_rate, parity, stop_bits, ...)` that forces every caller
+to spell out settings they don't care about.
+
+```
+struct UartConfig {
+    baud_rate: u32,
+    parity: bool,
+    stop_bits: u8,
+}
+
+struct UartConfigBuilder {
+    baud_rate: u32,
+    parity: bool,
+    stop_bits: u8,
+}
+
+impl UartConfigBuilder {
+    fn new() -> Self {
+        Self { baud_rate: 9_600, parity: false, stop_bits: 1 }
+    }
+
+    fn baud_rate(mut self, baud_rate: u32) -> Self { // <- builder pattern: override only what differs from the default
+        self.baud_rate = baud_rate;
+        self
+    }
+
+    fn build(self) -> UartConfig {
+        UartConfig { baud_rate: self.baud_rate, parity: self.parity, stop_bits: self.stop_bits }
+    }
+}
+
+let config = UartConfigBuilder::new().baud_rate(115_200).build();
+```
+
+**Why this way:** a builder lets every UART setting default sensibly
+while still letting firmware override exactly the baud rate it needs,
+which is what the
+[API Guidelines checklist](https://rust-lang.github.io/api-guidelines/checklist.html)'s
+C-BUILDER item calls out builders for — the same shape the
+[Rust Design Patterns' builder entry](https://rust-unofficial.github.io/patterns/patterns/creational/builder.html)
+documents, unchanged by targeting a `#![no_std]` HAL.
+
+### Scenario: Validating input
+
+An SPI bus config without a clock frequency isn't a usable config at
+all, so `build()` should reject it with a `Result` rather than silently
+producing a config that would misconfigure the peripheral's clock
+divider at init time.
+
+```
+struct SpiConfigBuilder {
+    clock_hz: Option<u32>,
+    mode: u8,
+}
+
+impl SpiConfigBuilder {
+    fn new() -> Self {
+        Self { clock_hz: None, mode: 0 }
+    }
+
+    fn clock_hz(mut self, clock_hz: u32) -> Self {
+        self.clock_hz = Some(clock_hz);
+        self
+    }
+
+    fn build(self) -> Result<SpiConfig, &'static str> {
+        let clock_hz = self.clock_hz.ok_or("clock_hz is required")?; // <- required field enforced once, at build time
+        Ok(SpiConfig { clock_hz, mode: self.mode })
+    }
+}
+
+struct SpiConfig {
+    clock_hz: u32,
+    mode: u8,
+}
+
+let config = SpiConfigBuilder::new().clock_hz(1_000_000).build().unwrap();
+```
+
+**Why this way:** checking a required field like the SPI clock exactly
+once, at construction, is the
+[Effective Rust](https://effective-rust.com/) case for validating at the
+earliest possible point — catching a missing clock setting here beats
+discovering it only once the peripheral is already misbehaving on the
+bus.

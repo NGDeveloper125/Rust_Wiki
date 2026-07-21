@@ -142,12 +142,198 @@ applies, the
 argues a plain `&dyn Trait` reference gets the same dispatch with none
 of the allocation cost.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support — this is the whole point of the idiom.** `&dyn
-Trait`/`&mut dyn Trait` need only a reference to existing data, so they
-work unchanged in `#![no_std]` with no allocator configured at all.
-`Box<dyn Trait>` needs the `alloc` crate plus a `#[global_allocator]`;
-on-stack dynamic dispatch is precisely the technique that gets the same
-runtime polymorphism without either requirement, which is why it shows
-up throughout embedded and other allocator-free Rust code.
+This idiom is arguably more load-bearing in embedded Rust than anywhere
+else in the language, because it resolves a tension that's mostly
+theoretical on a hosted target into a genuinely hard constraint on a
+microcontroller: static dispatch (generics, monomorphized per concrete
+type) costs flash space per instantiation, while `Box<dyn Trait>` costs
+an allocator that most `#![no_std]` targets don't have configured at
+all. `&dyn Trait` is the one technique that avoids both costs at once —
+no heap allocation (it's a fat pointer to a reference, and references can
+point at the stack, a `'static`, or anywhere else that isn't the heap),
+and no code duplication (one non-generic function processes the trait
+object regardless of how many concrete types implement the trait).
+
+The monomorphization side is the one that's easy to underrate: a generic
+driver function (`fn run<D: Driver>(driver: &mut D)`) gets compiled
+fresh, in full, for every distinct concrete `D` the firmware instantiates
+it with. That's usually fine on a desktop where flash isn't a constraint
+anyone tracks; on a target with, say, 128 KB of flash shared across an
+entire application, instantiating the same generic driver logic for five
+sensor variants, three of which are nearly identical, can measurably move
+the needle on whether an image fits at all. `&dyn Driver` collapses all
+five into one non-generic function using one vtable-dispatched call per
+method — trading a small, predictable indirection cost (one pointer
+load, one indirect call) for a single compiled copy of the logic instead
+of five.
+
+None of this makes generics wrong for embedded code — a driver that's
+only ever instantiated once, or where the compiler can inline through the
+generic anyway, gets zero benefit from `dyn` and pays the vtable
+indirection for nothing. The idiom is choosing `&dyn Trait` specifically
+at points with genuine runtime variation (which concrete logger, which
+concrete transport) where the alternative really would be code
+duplicated across several call sites, not reaching for it as a default.
+
+## Basic usage example (Embedded)
+
+```
+trait Transport {
+    fn send(&mut self, byte: u8);
+}
+
+struct Uart;
+impl Transport for Uart {
+    fn send(&mut self, byte: u8) {
+        let _ = byte; // stands in for a real UART TX register write
+    }
+}
+
+fn send_all(transport: &mut dyn Transport, data: &[u8]) { // <- &dyn: no heap, works with no allocator configured
+    for &byte in data {
+        transport.send(byte);
+    }
+}
+
+let mut uart = Uart; // <- an ordinary stack value, never boxed
+send_all(&mut uart, b"boot");
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Runtime polymorphism
+
+A board reads a hardware strap pin at boot to decide whether debug output
+should go over UART or a semihosting/RTT channel, and needs one logging
+call site that works regardless of which was selected — with no heap
+allocator configured on this target at all.
+
+```
+trait Logger {
+    fn log(&mut self, message: &str);
+}
+
+struct UartLogger;
+impl Logger for UartLogger {
+    fn log(&mut self, message: &str) {
+        let _ = message; // stands in for a real UART write
+    }
+}
+
+struct RttLogger;
+impl Logger for RttLogger {
+    fn log(&mut self, message: &str) {
+        let _ = message; // stands in for a real RTT channel write
+    }
+}
+
+fn select_logger(debug_strap_high: bool) {
+    let mut uart = UartLogger; // <- both candidates live on the stack, never boxed
+    let mut rtt = RttLogger;
+
+    let logger: &mut dyn Logger = if debug_strap_high { &mut uart } else { &mut rtt };
+    logger.log("boot complete");
+}
+
+select_logger(true);
+```
+
+**Why this way:** the strap pin's state is only known at runtime, so the
+choice between `UartLogger` and `RttLogger` can't be resolved by the
+compiler at a single call site the way a generic parameter would be —
+`&mut dyn Logger` gets that runtime decision with no allocator, exactly
+the technique the [Rust Design Patterns' on-stack dynamic dispatch
+idiom](https://rust-unofficial.github.io/patterns/idioms/on-stack-dyn-dispatch.html)
+describes, applied where `Box<dyn Logger>` would need `alloc` this
+target doesn't have configured.
+
+### Scenario: Boxing and heap allocation
+
+On a `#![no_std]` crate with no `alloc` crate linked in at all, `Box<dyn
+Trait>` isn't merely discouraged — it doesn't compile, because there is
+no global allocator for it to allocate from. On-stack dynamic dispatch is
+the direct substitute, not just an optimization over boxing.
+
+```
+#![no_std]
+
+trait Sensor {
+    fn read(&self) -> i16;
+}
+
+struct Thermistor;
+impl Sensor for Thermistor {
+    fn read(&self) -> i16 { 215 } // stands in for a real ADC read
+}
+
+// Box<dyn Sensor> would require the `alloc` crate plus a #[global_allocator] —
+// unavailable on this target, so it isn't an option here, not just a discouraged one.
+
+fn print_reading(sensor: &dyn Sensor) { // <- PREFER: &dyn Trait compiles with zero allocator configured
+    let _ = sensor.read();
+}
+
+let thermistor = Thermistor;
+print_reading(&thermistor);
+```
+
+**Why this way:** a `#![no_std]` firmware image with no
+`#[global_allocator]` has no heap to allocate `Box<dyn Sensor>` from in
+the first place, so `&dyn Sensor` isn't a style preference here — it's
+the only way to get runtime polymorphism at all; the [Rust Design
+Patterns' on-stack dynamic dispatch
+idiom](https://rust-unofficial.github.io/patterns/idioms/on-stack-dyn-dispatch.html)
+frames this as the general no-allocation-cost technique, and embedded
+`#![no_std]` code is the setting where it stops being optional.
+
+### Scenario: Writing generic code
+
+A firmware image supports several nearly-identical sensor variants
+through one shared trait; instantiating a generic driver function once
+per concrete sensor type duplicates the driver's logic in flash for each
+one, where a single `&dyn Sensor`-based function compiles once.
+
+```
+trait Sensor {
+    fn read_raw(&self) -> u16;
+}
+
+struct Bme280;
+impl Sensor for Bme280 {
+    fn read_raw(&self) -> u16 { 4200 }
+}
+
+struct Sht31;
+impl Sensor for Sht31 {
+    fn read_raw(&self) -> u16 { 3900 }
+}
+
+// AVOID: a generic function is monomorphized separately for every concrete Sensor it's called with,
+// duplicating this logic in flash once per sensor type used in the firmware image.
+fn log_reading_generic<S: Sensor>(sensor: &S) {
+    let _ = sensor.read_raw();
+}
+
+// PREFER: one non-generic function, compiled once, dispatched through a vtable
+fn log_reading(sensor: &dyn Sensor) {
+    let _ = sensor.read_raw();
+}
+
+let bme = Bme280;
+let sht = Sht31;
+log_reading(&bme); // <- both calls share the same compiled function
+log_reading(&sht);
+```
+
+**Why this way:** `log_reading_generic::<Bme280>` and
+`log_reading_generic::<Sht31>` are two separate copies of identical
+logic in the final binary, while `log_reading` compiles once regardless
+of how many `Sensor` implementors call into it — trading one indirect
+call per invocation for a single copy of the function is a straight
+flash-budget win whenever the logic behind the trait is nontrivial and
+several concrete types share it, which is exactly the tradeoff [Static
+dispatch &
+monomorphization](../traits-polymorphism/static-dispatch-monomorphization.md)
+covers from the generics side.

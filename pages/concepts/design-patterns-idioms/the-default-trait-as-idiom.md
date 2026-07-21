@@ -124,9 +124,97 @@ the
 call this generic-code usage out as a primary reason the trait exists
 alongside plain constructors.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support.** `Default` is defined in `core`, and `#[derive(Default)]`
-works identically under `#![no_std]`. It's especially convenient for
-zeroing out register-mirroring structs or protocol frames to a known-safe
-starting state without hand-writing every field.
+`Default` is defined in `core`, not `std` or `alloc`, so both the trait
+and `#[derive(Default)]` work identically under `#![no_std]` — there's no
+allocator dependency anywhere in this idiom. It earns a particularly
+natural place in embedded code because so many peripheral config structs
+have one obvious "most common configuration": a UART's most common setup
+really is 9600 baud, no parity, one stop bit; a GPIO pin's most common
+mode really is a floating input. Implementing `Default` for that struct
+lets firmware write `UartConfig { baud_rate: 115_200, ..Default::default() }`
+when it only cares about overriding the baud rate, instead of naming
+every field, and lets generic HAL-adjacent code request "a default
+config of whatever peripheral type I'm generic over" through a trait
+bound the same way hosted Rust does.
+
+## Basic usage example (Embedded)
+
+```
+#[derive(Default)] // <- generates default(): every field gets its own type's default
+struct GpioConfig {
+    output: bool,    // defaults to false: floating input, the safest reset state
+    pull_up: bool,   // defaults to false
+}
+
+let config = GpioConfig::default();
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Creating a new object
+
+A UART peripheral has one field firmware almost always cares about
+(baud rate) and several that are fine left at their most common setting
+— struct update syntax against `Default::default()` lets a caller set
+only what matters, without a full builder.
+
+```
+#[derive(Debug)]
+struct UartConfig {
+    baud_rate: u32,
+    parity: bool,
+    stop_bits: u8,
+}
+
+impl Default for UartConfig {
+    fn default() -> Self { // <- manual impl: the "sensible" defaults aren't all zero
+        UartConfig { baud_rate: 9_600, parity: false, stop_bits: 1 }
+    }
+}
+
+let config = UartConfig {
+    baud_rate: 115_200, // <- only the override this firmware actually needs
+    ..Default::default() // <- parity and stop_bits come from UartConfig::default()
+};
+```
+
+**Why this way:** struct update syntax against `Default::default()`
+scales to a peripheral config with several optional settings without a
+builder or a long constructor signature, which the
+[Rust Design Patterns](https://rust-unofficial.github.io/patterns/idioms/default.html)
+book documents as the idiomatic way to handle "mostly-optional" struct
+fields — and a UART's 8N1-at-9600 baud setup is exactly the kind of
+"obvious common case" this idiom is built for.
+
+### Scenario: Writing generic code
+
+A driver-reset routine needs to put a peripheral's in-memory state
+struct back to a known-safe starting point after detecting a fault,
+without knowing at compile time which specific peripheral's state struct
+it's holding.
+
+```
+#[derive(Default)]
+struct AdcState {
+    last_reading: u16,
+    overrun_count: u32,
+}
+
+fn reset<T: Default>(state: &mut T) {
+    *state = T::default(); // <- works for any peripheral state type that implements Default
+}
+
+let mut adc_state = AdcState { last_reading: 512, overrun_count: 3 };
+reset(&mut adc_state);
+```
+
+**Why this way:** bounding a generic fault-recovery routine on `Default`
+is the only way to say "put whatever state type `T` turns out to be back
+to its known-safe starting point," since a bare `new()` convention isn't
+a trait a generic bound can require — the
+[std docs for `Default`](https://doc.rust-lang.org/std/default/trait.Default.html)
+call out generic code as a primary reason the trait exists, and it applies
+unchanged to zeroing register-mirroring structs or protocol frames back
+to a known-safe state in `#![no_std]` firmware.
