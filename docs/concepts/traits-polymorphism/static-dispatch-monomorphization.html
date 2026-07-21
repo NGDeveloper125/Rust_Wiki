@@ -1020,19 +1020,134 @@ size becomes the binding constraint.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Static dispatch has no allocator dependency at all, and monomorphization
+is exactly this page's specific angle on a tradeoff <a href="../../syntax/keywords/dyn.md"><code>dyn</code>'s embedded
+explanation</a> already frames at a higher
+level — generics-vs-<code>dyn Trait</code> on a constrained core. The reason generic,
+<code>embedded-hal</code>-bounded functions are so strongly preferred in embedded
+code specifically (more so than the same preference shows up in hosted
+Rust) is that monomorphization doesn't just avoid a vtable's indirect
+jump — it hands the compiler a fully concrete call graph to optimize
+across. A function generic over <code>P: OutputPin</code>, once monomorphized for
+one concrete pin type, can often be inlined straight through: the
+"abstract" call to <code>pin.set_high()</code> resolves at compile time to the one
+<code>impl OutputPin for Pa0</code> that exists for that instantiation, which the
+compiler can then inline into a single volatile register write — the
+trait boundary can vanish from the compiled output entirely, leaving code
+indistinguishable from what you'd get hand-writing the register access
+with no abstraction at all. A <code>dyn OutputPin</code> call can never do this: the
+concrete implementation behind the vtable is chosen at runtime, so the
+compiler must leave an indirect call in place and cannot see through it to
+inline anything on the other side.</p>
+<p>The cost runs the other way in code size, and on embedded that cost is
+concrete rather than abstract: every distinct concrete type a generic
+function is actually instantiated with produces its own full copy of that
+function's compiled code. A driver function generic over <code>embedded-hal</code>'s
+<code>OutputPin</code> called with five different pin types across a board's
+initialization code compiles to five separate (though each individually
+optimal) copies, where the <code>dyn</code>-based equivalent would be one copy shared
+by all five call sites. On a hosted target with megabytes of program
+memory this rarely registers; on a chip with tens of kilobytes of flash,
+instantiating a generic driver across many peripheral instances is a real
+line item, and is the concrete reason some embedded codebases deliberately
+reach for <code>dyn</code> (once <code>alloc</code> is available) or a hand-written enum
+dispatch instead, trading away the inlining benefit specifically to cap
+code size.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">trait OutputPin {
+    fn set_high(&amp;mut self);
+}
+
+fn turn_on&lt;P: OutputPin&gt;(pin: &amp;mut P) { // &lt;- generic: monomorphized per concrete pin type used
+    pin.set_high();
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A driver function that only ever configures one or two concrete pin
+types in a given firmware image is a strong candidate for static
+dispatch — the compiler can often inline the call chain down to a single
+register write, with the trait boundary costing nothing at runtime.</p>
+<pre><code class="rust">trait OutputPin {
+    fn set_high(&amp;mut self);
+    fn set_low(&amp;mut self);
+}
+
+struct Pa0; // this board's only status LED pin
+impl OutputPin for Pa0 {
+    fn set_high(&amp;mut self) { /* single volatile register write */ }
+    fn set_low(&amp;mut self) { /* single volatile register write */ }
+}
+
+fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P) { // &lt;- monomorphized for Pa0 alone in this firmware image
+    pin.set_high();
+    pin.set_low();
+}
+
+blink(&amp;mut Pa0);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> with a single concrete <code>P</code> used at the only call site,
+monomorphization produces exactly one specialized copy of <code>blink</code>, which
+the compiler is free to inline straight into the two register writes —
+the same zero-cost-abstraction argument <a href="https://effective-rust.com/generics.html">Effective Rust's generics vs.
+trait objects item</a> makes
+generally, sharpened here by embedded code's tighter cycle budgets, where
+an indirect vtable call is a cost that's easy to measure rather than a
+theoretical one.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL crate offering a generic driver function should watch how many
+distinct concrete types it actually gets instantiated with across a
+firmware image, since each one is a full compiled copy — instantiating
+the same generic driver logic across a dozen peripheral instances can
+turn a small function into a real line item in the flash budget.</p>
+<pre><code class="rust">trait OutputPin {
+    fn set_high(&amp;mut self);
+}
+
+fn set_all&lt;P: OutputPin, const N: usize&gt;(pins: &amp;mut [P; N]) { // &lt;- one copy per concrete P actually used
+    for pin in pins {
+        pin.set_high();
+    }
+}
+
+// Called with five distinct pin types across board init compiles to
+// five separate copies of set_all — each individually optimal, but each
+// occupying its own flash space, unlike a single shared dyn-based version.
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the code-size side of monomorphization is the
+concrete counterpart to <a href="../../syntax/keywords/dyn.md"><code>dyn</code>'s embedded
+explanation</a> of the same tradeoff — a HAL
+author choosing generics for their inlining benefit should still budget
+for one compiled copy per concrete type actually instantiated, and switch
+a specific hot spot to <code>dyn Trait</code> (once <code>alloc</code> is available) or an enum
+dispatch if that multiplication becomes the binding constraint rather
+than execution speed.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

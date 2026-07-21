@@ -1058,19 +1058,129 @@ type out of the automatic derivation.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>Copy</code>, <code>Sized</code>, <code>Send</code>, and <code>Sync</code> are all defined in <code>core::marker</code>, so
+none of them depend on <code>std</code>, and <code>Send</code>/<code>Sync</code> remain the canonical
+marker-trait example in embedded Rust for the same reason they are on a
+hosted target: they answer whether a type is safe to move or share across
+a concurrent boundary, purely through the type system, with no runtime
+check. The concurrent boundary itself looks different on bare metal —
+usually a main loop and one or more <code>#[interrupt]</code> handlers rather than
+OS threads — which is the full story <a href="../concurrency-async/send-and-sync.md">Send &amp; Sync's embedded
+explanation</a> covers in depth and
+isn't repeated here.</p>
+<p>A second, genuinely embedded-specific use of the marker-trait idea shows
+up inside HAL crates themselves, encoding a hardware capability or pin
+mode as a type-level fact rather than a runtime flag. A HAL that models
+each GPIO pin's electrical mode as a distinct type (a "type-state" pin)
+can also define a marker trait like <code>PwmCapable</code> implemented only for the
+specific pin/timer-channel combinations whose silicon actually routes to
+a PWM channel — a function that configures PWM output can then require
+<code>P: PwmCapable</code> and reject every other pin at compile time, with zero
+runtime cost, instead of accepting any pin and returning an error (or
+worse, silently doing nothing) the moment it's asked to drive PWM on a
+pin that was never wired to a timer.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">trait PwmCapable {} // marker: no methods, just a type-level fact about this pin
+
+struct Pa0; // this pin's timer channel is routed for PWM
+impl PwmCapable for Pa0 {}
+
+struct Pa1; // this pin has no timer channel wired up — no impl
+
+fn configure_pwm&lt;P: PwmCapable&gt;(_pin: P) { /* ... */ }
+
+configure_pwm(Pa0);
+// configure_pwm(Pa1); // &lt;- fails to compile: Pa1 doesn't implement PwmCapable
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL exposing PWM configuration should reject non-PWM-capable pins at
+compile time rather than at runtime — a zero-method marker trait
+implemented only for the pins whose hardware genuinely supports it makes
+the constraint part of the function's signature.</p>
+<pre><code class="rust">trait PwmCapable {} // &lt;- marker trait: encodes "this pin's timer channel supports PWM"
+
+struct TimerChannel2Pin; // wired to a timer with PWM output
+impl PwmCapable for TimerChannel2Pin {}
+
+struct PlainGpioPin; // no timer routing — deliberately no impl
+
+struct PwmOutput&lt;P: PwmCapable&gt; { // &lt;- only accepts pins that implement the marker
+    pin: P,
+    duty: u8,
+}
+
+impl&lt;P: PwmCapable&gt; PwmOutput&lt;P&gt; {
+    fn new(pin: P) -&gt; Self {
+        PwmOutput { pin, duty: 0 }
+    }
+}
+
+let pwm = PwmOutput::new(TimerChannel2Pin); // compiles
+// let bad = PwmOutput::new(PlainGpioPin); // &lt;- fails to compile: PlainGpioPin isn't PwmCapable
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a wrong pin passed to <code>PwmOutput::new</code> becomes a
+compile error instead of a runtime misconfiguration that might only
+surface as "the LED never dims" — the marker trait costs nothing at
+runtime (it has no methods and no fields) while moving a hardware
+constraint the type system can express out of the realm of things a test
+has to catch.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Multi-threading</h3>
+            <p>A queue type read from the main loop and written from an interrupt
+handler needs its element type bounded by <code>Send</code>, the same marker trait
+<a href="../concurrency-async/send-and-sync.md">Send &amp; Sync's embedded explanation</a>
+covers for sharing state across that boundary — here the constraint
+shows up on a generic queue's type parameter rather than on a single
+<code>static</code>.</p>
+<pre><code class="rust">struct IsrQueue&lt;T: Send, const N: usize&gt; { // &lt;- Send bound: T must be safe to hand across the ISR boundary
+    items: [Option&lt;T&gt;; N],
+    len: usize,
+}
+
+impl&lt;T: Send, const N: usize&gt; IsrQueue&lt;T, N&gt; {
+    fn push(&amp;mut self, item: T) -&gt; bool {
+        if self.len == N {
+            return false;
+        }
+        self.items[self.len] = Some(item);
+        self.len += 1;
+        true
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> requiring <code>T: Send</code> on the queue itself means any
+attempt to store a type that isn't safe to hand across the main-loop/ISR
+boundary (an <code>Rc</code>, say) fails to compile at the queue's definition site,
+rather than only failing later at whichever call site happens to move a
+bad value into it — the same structural-propagation guarantee <code>Send</code>
+provides for OS threads, applied here to a queue shared with an interrupt
+handler instead of <code>std::sync::Mutex</code>.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

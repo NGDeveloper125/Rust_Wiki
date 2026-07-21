@@ -1030,19 +1030,128 @@ satisfying the bound rather than one named type.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The mechanism is identical under <code>#![no_std]</code> — a blanket impl is resolved
+entirely at compile time, so it has no dependency on <code>std</code> or an
+allocator either way. Where blanket impls earn their keep in embedded
+Rust specifically is on top of <code>embedded-hal</code>'s traits: because
+<code>embedded-hal</code> defines narrow, minimal traits like <code>OutputPin</code> (see
+<a href="../../syntax/keywords/trait.md"><code>trait</code>'s embedded explanation</a> for the
+fuller embedded-hal story), a crate can add a convenience extension trait
+— blanket-implemented for every type that already implements <code>OutputPin</code>
+— and every vendor's pin type gets the convenience method automatically,
+without the extension-trait author ever naming a single concrete chip's
+pin type. The orphan rule still applies exactly as in hosted code: only
+the crate defining the extension trait may write the blanket impl, so
+this pattern lives in a small helper crate that defines its own trait
+rather than trying to blanket-impl <code>embedded-hal</code>'s traits themselves for
+foreign types.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">trait OutputPin {
+    fn set_high(&amp;mut self);
+    fn set_low(&amp;mut self);
+}
+
+trait PulseExt {
+    fn pulse(&amp;mut self);
+}
+
+impl&lt;P: OutputPin&gt; PulseExt for P { // &lt;- one impl covers every OutputPin type at once
+    fn pulse(&amp;mut self) {
+        self.set_high();
+        self.set_low();
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A helper crate wants to give every <code>embedded-hal</code>-compatible GPIO pin a
+<code>pulse</code> convenience method without asking each vendor's HAL to implement
+a new trait one type at a time.</p>
+<pre><code class="rust">trait OutputPin {
+    fn set_high(&amp;mut self);
+    fn set_low(&amp;mut self);
+}
+
+trait PulseExt: OutputPin {
+    fn pulse_n(&amp;mut self, times: u8) { // &lt;- default body: only needs OutputPin's two primitives
+        for _ in 0..times {
+            self.set_high();
+            self.set_low();
+        }
+    }
+}
+
+impl&lt;P: OutputPin&gt; PulseExt for P {} // &lt;- blanket impl: every OutputPin implementer gets pulse_n for free
+
+struct Gpio7;
+impl OutputPin for Gpio7 {
+    fn set_high(&amp;mut self) {}
+    fn set_low(&amp;mut self) {}
+}
+
+Gpio7.pulse_n(3);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the blanket impl covers the open-ended set of pin types
+across every vendor's HAL, present and future, so <code>PulseExt</code> needs no
+knowledge of which concrete pin types exist — the same decoupling
+<a href="../../syntax/keywords/trait.md"><code>trait</code>'s embedded explanation</a> describes
+for <code>embedded-hal</code> itself, applied here to an add-on convenience method
+rather than the hardware contract.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A crate offering ergonomics on top of <code>embedded-hal</code> traits must define
+its own extension trait to blanket-impl, rather than attempting to
+blanket-impl <code>embedded-hal</code>'s own traits for foreign pin types.</p>
+<pre><code class="rust">// AVOID: blanket-impling a foreign trait for a foreign bound — the orphan
+// rule forbids this outright, so it doesn't compile:
+// impl&lt;P: SomeVendorsPinTrait&gt; embedded_hal::digital::OutputPin for P { ... }
+
+// PREFER: define a new local trait and blanket-impl that instead
+trait DebouncedRead {
+    fn read_debounced(&amp;self) -&gt; bool;
+}
+
+trait InputPin {
+    fn is_high(&amp;self) -&gt; bool;
+}
+
+impl&lt;P: InputPin&gt; DebouncedRead for P { // &lt;- local trait, blanket-implemented: orphan rule is satisfied
+    fn read_debounced(&amp;self) -&gt; bool {
+        self.is_high() // a real impl would sample more than once
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the orphan rule requires the crate writing a blanket
+impl to own either the trait or the type, so an ergonomics crate built on
+<code>embedded-hal</code> always introduces its own trait as the blanket-impl target
+— attempting to blanket-impl <code>embedded-hal</code>'s traits directly for
+"any foreign pin type" is exactly the conflict <a href="the-orphan-rule-and-coherence.md">the orphan
+rule</a> exists to prevent.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

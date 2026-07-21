@@ -1090,19 +1090,137 @@ hand-written (de)serialization for exactly this reason.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>A struct's job in embedded Rust is the same job it has everywhere else —
+giving a bundle of related data one identity — but the "related data" a
+driver needs to track is usually a mix of a peripheral handle, calibration
+or configuration values, and cached state, and a struct is what lets all
+three move and borrow as a single unit. A temperature-sensor driver, for
+instance, typically needs to hold onto the I2C peripheral it talks over, a
+calibration offset read once at startup, and the last reading it took (so
+a caller can ask "what was it last time" without re-triggering a bus
+transaction) — three pieces of state that belong together conceptually
+and, because they're fields of one struct, move together, get exclusive
+<code>&amp;mut</code> access together, and get dropped together. Without the struct, a
+function juggling a peripheral handle, a calibration value, and a cache as
+three separate parameters would have no way to express that they're one
+logical unit — and no way for the borrow checker to enforce that only one
+part of the program touches the sensor's state at a time.</p>
+<p>This is a distinct concern from the register-block layout question
+covered on the <a href="../../syntax/keywords/struct.md"><code>struct</code> syntax page</a> and
+<a href="../../syntax/attributes/repr.md"><code>#[repr(...)]</code></a>: those pages cover
+pinning a struct's field layout to match a hardware memory map so it can
+overlay memory-mapped registers byte-for-byte. This page's struct — the
+driver wrapping a peripheral — usually contains one of those register-block
+structs (or a PAC-generated handle to one) as a field, but the driver
+struct itself has no memory-mapped layout to preserve; it's an ordinary
+<code>#[repr(Rust)]</code> struct doing ordinary struct-grouping work, just with
+embedded-flavored fields.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct TemperatureSensor&lt;I2C&gt; {
+    i2c: I2C,                  // &lt;- the peripheral handle this driver owns
+    calibration_offset: i16,   // &lt;- state read once at startup
+    last_reading: Option&lt;f32&gt;, // &lt;- cache: avoids re-reading the bus unnecessarily
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Creating a new object</h3>
+            <p>A driver's constructor is where the peripheral handle and any calibration
+data are gathered up once, so the rest of the driver's methods never have
+to wonder whether calibration happened yet.</p>
+<pre><code class="rust">struct TemperatureSensor&lt;I2C&gt; {
+    i2c: I2C,
+    calibration_offset: i16,
+    last_reading: Option&lt;f32&gt;,
+}
+
+impl&lt;I2C&gt; TemperatureSensor&lt;I2C&gt; {
+    fn new(i2c: I2C, calibration_offset: i16) -&gt; Self { // &lt;- `new` gathers peripheral + calibration in one place
+        TemperatureSensor { i2c, calibration_offset, last_reading: None }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the same
+<a href="https://rust-lang.github.io/api-guidelines/predictability.html#constructors-are-static-inherent-methods-c-ctor">C-CTOR</a>
+convention that applies to hosted Rust applies here — a constructor is the
+one place calibration setup can be validated or normalized, instead of
+every call site being responsible for assembling a correctly-calibrated
+driver by hand.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>Keeping the peripheral handle and calibration data private, and exposing
+only a narrow read method, stops calling code from bypassing the driver's
+own bookkeeping (like the reading cache) by reaching into the struct
+directly.</p>
+<pre><code class="rust">pub struct TemperatureSensor&lt;I2C&gt; {
+    i2c: I2C,                  // &lt;- private: calling code can't bypass the driver's own bookkeeping
+    calibration_offset: i16,   // &lt;- private: calibration is an implementation detail
+    last_reading: Option&lt;f32&gt;,
+}
+
+impl&lt;I2C&gt; TemperatureSensor&lt;I2C&gt; {
+    pub fn last_reading(&amp;self) -&gt; Option&lt;f32&gt; { // &lt;- narrow, public accessor instead of public fields
+        self.last_reading
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> private fields plus narrow accessors keep the
+calibration offset and the cache internally consistent — a caller who
+could write <code>last_reading</code> directly could desynchronize the cache from
+what the sensor actually reported, which is exactly the class of bug
+encapsulation exists to prevent.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Managing resources (RAII)</h3>
+            <p>A driver that owns a peripheral is also the natural place to put shutdown
+behavior — implementing <code>Drop</code> on the struct guarantees the peripheral
+gets powered down or released whenever the driver goes out of scope,
+including on an early return.</p>
+<pre><code class="rust">struct TemperatureSensor&lt;I2C&gt; {
+    i2c: I2C,
+    powered_on: bool,
+}
+
+impl&lt;I2C&gt; Drop for TemperatureSensor&lt;I2C&gt; {
+    fn drop(&amp;mut self) { // &lt;- runs whenever the driver goes out of scope, including on early return
+        self.powered_on = false; // real code would issue a power-down command over `i2c` here
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> tying peripheral shutdown to the struct's <code>Drop</code> impl
+means every path out of scope — a normal return, an early <code>?</code>, a panic
+during unwinding — reliably powers the sensor down, instead of relying on
+every caller to remember an explicit <code>shutdown()</code> call.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

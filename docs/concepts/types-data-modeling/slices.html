@@ -1052,19 +1052,107 @@ slices can outlive <code>sensor_log</code> itself.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>[T]</code> lives in <code>core</code>, and a slice reference is genuinely just a
+pointer-plus-length — no allocator is involved in creating one, borrowing
+one, or passing one around, which makes <code>&amp;[T]</code>/<code>&amp;mut [T]</code> one of the most
+heavily used types in allocator-free embedded code. What makes slices
+specifically valuable on constrained hardware is that a slice doesn't
+care <em>where</em> the memory it views came from: the same <code>&amp;mut [u8]</code>
+parameter accepts a view into a stack-local array, a <code>'static</code> buffer
+placed at a fixed address for DMA, or the currently-occupied portion of a
+<code>heapless::Vec</code>'s inline backing storage. A function written to take
+<code>&amp;mut [u8]</code> is, without any extra work, already agnostic to which of
+those three the caller is using — it's the mechanism that lets embedded
+code pass "a view into a buffer" around as a single, uniform concept
+regardless of the buffer's actual storage class.</p>
+<p>This matters most concretely for peripheral APIs: a DMA-driven UART or
+SPI transfer needs a buffer at a stable address for the duration of the
+transfer, so HAL APIs commonly take <code>&amp;mut [u8]</code> — a caller supplies a
+<code>'static mut</code> buffer (or one otherwise guaranteed to outlive the
+transfer) as a slice, and the peripheral driver reads or writes into it
+without ever needing to know whether that memory happens to be a fixed
+<code>static</code> array, a stack buffer scoped correctly against the transfer, or
+backing storage borrowed out of a <code>heapless</code> collection.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">fn fill_zero(buf: &amp;mut [u8]) { // &lt;- doesn't care whether buf's storage is a stack array or 'static memory
+    for byte in buf.iter_mut() {
+        *byte = 0;
+    }
+}
+
+let mut stack_buf = [0xFFu8; 8];
+fill_zero(&amp;mut stack_buf); // &lt;- a stack array, viewed as a slice
+
+static mut DMA_BUF: [u8; 8] = [0xFF; 8];
+unsafe { fill_zero(&amp;mut DMA_BUF); } // &lt;- 'static memory at a fixed address, viewed the same way
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A UART driver's "read some bytes" function should accept <code>&amp;mut [u8]</code>
+rather than committing to any one buffer's storage class, so the same
+function serves a quick stack-allocated command buffer and a <code>'static</code>
+buffer wired up for DMA alike.</p>
+<pre><code class="rust">fn read_bytes(available: &amp;[u8], into: &amp;mut [u8]) -&gt; usize { // &lt;- neither slice commits to a storage class
+    let n = available.len().min(into.len());
+    into[..n].copy_from_slice(&amp;available[..n]);
+    n
+}
+
+let mut quick_cmd = [0u8; 4]; // stack-allocated, short-lived
+let n1 = read_bytes(&amp;[0x01, 0x02], &amp;mut quick_cmd);
+
+static mut DMA_RX: [u8; 256] = [0; 256]; // 'static, address-stable for DMA
+let n2 = unsafe { read_bytes(&amp;[0xAA; 10], &amp;mut DMA_RX) };
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> writing the function against <code>&amp;mut [u8]</code> instead of a
+concrete array size or a specific buffer type means the exact same
+function serves a throwaway stack buffer and a long-lived DMA target,
+which matters on hardware where duplicating the function per buffer
+storage class would just be more code competing for the same limited
+flash.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing data with multiple references</h3>
+            <p>Splitting one fixed buffer into non-overlapping views for a frame's
+header and payload is a common DMA-adjacent pattern, and it costs nothing
+beyond the original buffer's own storage — no copying, no second
+allocation, because both views point into the same memory.</p>
+<pre><code class="rust">let mut frame = [0u8; 32]; // one fixed 'static-or-stack buffer, however it's stored
+let (header, payload) = frame.split_at_mut(4); // &lt;- two independent &amp;mut [u8] views, no copy, same backing memory
+
+header.copy_from_slice(&amp;[0xAA, 0x01, 0x00, 0x1C]);
+payload[0] = 0x42;
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>split_at_mut</code> produces two views into the <em>same</em>
+buffer without any new storage, which is exactly what a resource-
+constrained target needs when a single fixed-size DMA buffer has to be
+addressed as distinct header/payload regions by different parts of a
+driver — allocating a second buffer just to separate the two would cost
+memory the target may not have to spare.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

@@ -1066,19 +1066,142 @@ written against <code>Into</code>, for free.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The newtype pattern is one of the most load-bearing idioms in embedded
+Rust specifically, because embedded code is saturated with values that
+are "just" an integer at the machine level — a raw ADC count, a GPIO pin
+number, a register's raw bit pattern — but mean very different things
+depending on where they came from. <code>struct Millivolts(u16)</code> and
+<code>struct AdcCount(u16)</code> are both <code>u16</code> underneath, but wrapping each in its
+own newtype means a calibrated voltage can never be passed where a raw,
+uncalibrated ADC reading was expected (or vice versa) without a compile
+error — a mistake that, on hardware, tends to surface as a silently wrong
+reading rather than a crash, making it exactly the kind of bug worth
+catching at compile time instead of in the field.</p>
+<p>Crucially, this safety costs nothing at runtime. As covered on
+<a href="../philosophy-principles/zero-cost-abstractions.md">Zero-cost abstractions</a>,
+a single-field newtype has identical layout to its inner field once
+<code>#[repr(transparent)]</code> is applied (see
+<a href="../../syntax/attributes/repr.md"><code>#[repr(...)]</code></a> for the layout guarantee
+this makes), so <code>Millivolts(u16)</code> is exactly two bytes, passes through an
+<code>extern "C"</code> HAL boundary exactly like a raw <code>u16</code> would, and the
+wrapping/unwrapping disappears entirely from the compiled code. On a
+target with a few kilobytes of RAM total, being able to add a whole
+category of type safety without spending a single byte or cycle on it is
+precisely why the pattern shows up throughout <code>embedded-hal</code>-ecosystem
+crates: raw register values, pin identifiers, and peripheral handles are
+routinely wrapped in newtypes for exactly this reason.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct Millivolts(u16); // &lt;- distinct from a raw ADC count, even though both are u16 underneath
+struct AdcCount(u16);
+
+fn to_millivolts(raw: AdcCount, vref_mv: u16) -&gt; Millivolts {
+    Millivolts((raw.0 as u32 * vref_mv as u32 / 4095) as u16)
+}
+
+let reading = to_millivolts(AdcCount(2048), 3300);
+// print_voltage(AdcCount(2048)); // &lt;- would not compile: an AdcCount is not a Millivolts
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>Two <code>u16</code> parameters back to back — a raw pin number and a debounce
+delay, say — is exactly the shape that invites an accidental swap;
+wrapping each in its own newtype turns the swap into a compile error
+instead of a hardware misconfiguration.</p>
+<pre><code class="rust">struct PinNumber(u8);  // &lt;- distinct from DebounceMs even though both wrap small integers
+struct DebounceMs(u16);
+
+fn configure_button(pin: PinNumber, debounce: DebounceMs) { // &lt;- swapping the argument order is now a compile error
+    let _ = (pin.0, debounce.0);
+}
+
+configure_button(PinNumber(4), DebounceMs(20));
+// configure_button(DebounceMs(20), PinNumber(4)); // &lt;- would not compile: types don't match
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <a href="https://effective-rust.com/">Effective Rust</a> covers
+this exact defense — two integer parameters of the same primitive type
+are indistinguishable to the compiler, but distinct newtypes are not, so
+a mixed-up call site at the hardware boundary is caught before it ever
+reaches the board.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Converting between types</h3>
+            <p>A raw ADC reading needs to become a calibrated voltage at exactly one
+place in the code; implementing <code>From</code> for that conversion keeps wrapping
+and unwrapping conventional instead of inventing a one-off method name
+per newtype.</p>
+<pre><code class="rust">struct AdcCount(u16);
+struct Millivolts(u32);
+
+impl From&lt;AdcCount&gt; for Millivolts {
+    fn from(raw: AdcCount) -&gt; Self { // &lt;- calibration math lives in one conventional place
+        Millivolts(raw.0 as u32 * 3300 / 4095)
+    }
+}
+
+let voltage: Millivolts = AdcCount(2048).into(); // &lt;- .into() reads as "convert", not a custom method name
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> using the standard <code>From</code>/<code>Into</code> traits rather than a
+custom <code>to_millivolts()</code>-style method lets the conversion interoperate
+with any generic code already written against <code>Into</code>, per the API
+Guidelines'
+<a href="https://rust-lang.github.io/api-guidelines/interoperability.html#conversions-use-the-standard-traits-from-asref-asmut-c-conv">C-CONV-TRAITS</a>.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Bit manipulation and flags</h3>
+            <p>Wrapping a peripheral's raw status register in a newtype lets
+bit-testing methods live on a type that documents what the bits mean,
+instead of scattering raw shifts and masks across the code that reads the
+register.</p>
+<pre><code class="rust">#[repr(transparent)] // &lt;- zero-cost: identical layout to the raw u32 register value
+struct StatusRegister(u32);
+
+impl StatusRegister {
+    fn is_busy(&amp;self) -&gt; bool {
+        self.0 &amp; 0b1 != 0 // &lt;- bit 0: busy flag
+    }
+    fn has_error(&amp;self) -&gt; bool {
+        self.0 &amp; 0b10 != 0 // &lt;- bit 1: error flag
+    }
+}
+
+let status = StatusRegister(0b10); // read from a memory-mapped register in real code
+assert!(status.has_error());
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> naming the bit-testing operations as methods on the
+newtype documents the register's bit layout at the call site
+(<code>status.has_error()</code> instead of a bare <code>raw &amp; 0b10 != 0</code> the reader has
+to decode), while <code>#[repr(transparent)]</code> guarantees the wrapper adds no
+size or cost over the raw <code>u32</code> it replaces.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

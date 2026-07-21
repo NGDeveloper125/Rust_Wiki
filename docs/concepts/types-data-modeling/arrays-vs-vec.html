@@ -1052,19 +1052,109 @@ caller-determined.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Partial
         </span>
-        
+        <p>An array, <code>[T; N]</code>, needs no allocator at all — its length is baked into
+the type, its storage is inline (on the stack, or in <code>static</code> memory for a
+<code>'static</code> array), and there is nothing for <code>alloc</code> or a
+<code>#[global_allocator]</code> to do. That makes <code>[T; N]</code> the default embedded
+choice whenever a collection's size is a fixed fact known at compile
+time: a 3-axis accelerometer reading, a fixed-width protocol frame, a
+lookup table sized to a peripheral's channel count.</p>
+<p><code>Vec&lt;T&gt;</code> needs the opposite: it lives in <code>alloc</code>, not <code>core</code>, so it only
+compiles once a crate pulls in <code>alloc</code> and wires up a
+<code>#[global_allocator]</code> — see
+<a href="../collections-strings/vec.md"><code>Vec&lt;T&gt;</code>'s embedded section</a> for that
+setup and for <code>heapless::Vec&lt;T, N&gt;</code>, the fixed-<em>capacity</em>,
+no-allocator substitute that gives back <code>Vec</code>-like ergonomics (<code>.push()</code>,
+<code>.pop()</code>, a runtime-tracked <code>.len()</code> up to a compile-time-fixed bound)
+without ever touching a heap.</p>
+<p>An array is strictly more restrictive than either — its length can never
+change, full stop, where <code>heapless::Vec&lt;T, N&gt;</code> at least lets the <em>length</em>
+vary at runtime up to <code>N</code> — but that restriction is also the array's
+whole appeal on constrained hardware: no capacity check on push (there is
+no push), no <code>Result</code> to handle for "buffer full," and not even
+<code>heapless</code>'s small bookkeeping overhead of a runtime length field. When
+the size truly never varies, an array is the zero-dependency option, and
+<code>heapless::Vec&lt;T, N&gt;</code> earns its keep specifically for the cases where the
+count is bounded but genuinely variable at runtime.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">let calibration: [i16; 3] = [12, -4, 7]; // &lt;- fixed 3-axis offset, no allocator, no heapless dependency
+
+fn apply_offset(raw: [i16; 3], offset: [i16; 3]) -&gt; [i16; 3] {
+    [raw[0] + offset[0], raw[1] + offset[1], raw[2] + offset[2]]
+}
+
+let corrected = apply_offset([100, 200, -50], calibration);
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Working with collections</h3>
+            <p>A calibration table with a fixed, datasheet-defined number of channels
+should be an array; a log of readings collected until a buffer fills, one
+at a time, is the case <code>heapless::Vec</code> is actually for.</p>
+<pre><code class="rust">let channel_gains: [f32; 4] = [1.02, 0.98, 1.00, 1.01]; // &lt;- always exactly 4 channels: no heap, no bookkeeping
+
+use heapless::Vec;
+let mut recent: Vec&lt;f32, 16&gt; = Vec::new(); // &lt;- fixed capacity, but a runtime length that grows as readings arrive
+for reading in [21.5, 22.0, 21.8] {
+    recent.push(reading).ok(); // &lt;- Err once the buffer is full, handled explicitly instead of reallocating
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the channel count is a hardware fact that never
+changes across the program's life, so an array needs nothing beyond
+<code>core</code>; the reading log's length is decided by how many samples have
+arrived so far, which is exactly the runtime-variable-length,
+fixed-capacity case <code>heapless::Vec</code> exists for — see its
+<a href="../collections-strings/vec.md">embedded section</a> for the capacity-bound
+tradeoff in more depth.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A driver function that reads a protocol-fixed number of bytes should say
+so with <code>[u8; N]</code> in its signature; a function reading a variable-length
+frame up to a known maximum should take <code>&amp;mut [u8]</code> and return how much
+of it was actually filled.</p>
+<pre><code class="rust">fn read_device_id(bytes: [u8; 2]) -&gt; u16 { // &lt;- protocol always sends exactly 2 bytes: no allocator needed
+    u16::from_be_bytes(bytes)
+}
+
+fn read_frame(buf: &amp;mut [u8]) -&gt; usize { // &lt;- caller's buffer, any backing storage, any length up to buf.len()
+    buf[0] = 0xAA;
+    1 // number of bytes actually written
+}
+
+let id = read_device_id([0x01, 0x2C]);
+let mut frame = [0u8; 32]; // stack-allocated, no heap
+let written = read_frame(&amp;mut frame);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a fixed-size array in the signature turns a
+wrong-length call into a compile error, which matters more on hardware
+where there's no test suite running against every possible caller — while
+a variable-length read has no honest way to express its bound as a type,
+so it takes a slice and reports its actual length back, the same
+allocator-free contract a DMA-backed buffer already needs.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

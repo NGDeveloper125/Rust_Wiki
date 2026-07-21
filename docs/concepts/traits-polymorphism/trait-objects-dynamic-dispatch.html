@@ -1089,19 +1089,151 @@ in the Rust Design Patterns book.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>For the mechanics of <code>&amp;dyn Trait</code> needing no heap, <code>Box&lt;dyn Trait&gt;</code>
+needing <code>alloc</code>, and the flash-vs-dispatch-predictability tradeoff against
+generics, see <a href="../../syntax/keywords/dyn.md"><code>dyn</code></a> — that page covers
+the mechanism in full and this page doesn't re-derive it. What's worth
+covering here is the design-level question: given that generics and
+monomorphization are the default choice in embedded Rust (predictable
+inlined calls, no vtable indirection), when does embedded code reach for
+dynamic dispatch at all?</p>
+<p>Two situations come up genuinely often. The first is a <strong>heterogeneous
+collection of different peripheral types that must live together in one
+array or list</strong> — a board-support struct holding several distinct sensor
+types that all need to be read in a loop, where a generic function can't
+help because a single monomorphized instantiation only ever handles one
+concrete type, not a mix. The second is <strong>plugin-style, configuration-driven
+registration</strong> — a board's revision or a runtime configuration decides
+<em>which</em> optional peripherals are actually present, so the code iterating
+over them can't be generic over a fixed, compile-time-known set of types.
+In both cases, <code>&amp;dyn Trait</code> (or, for owned storage, <code>Box&lt;dyn Trait&gt;</code> once
+<code>alloc</code> is configured) gives one uniform type to store and iterate,
+without requiring every element to be the same concrete type. Outside
+those two shapes, embedded code defaults to generics — the common case
+by a wide margin, since most driver code is written against one concrete
+type parameter per call site, decided once at compile time.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">trait Sensor {
+    fn read_raw(&amp;self) -&gt; u16;
+}
+
+struct Thermistor;
+impl Sensor for Thermistor { fn read_raw(&amp;self) -&gt; u16 { 512 } }
+
+struct Photodiode;
+impl Sensor for Photodiode { fn read_raw(&amp;self) -&gt; u16 { 128 } }
+
+let thermistor = Thermistor;
+let photodiode = Photodiode;
+let sensors: [&amp;dyn Sensor; 2] = [&amp;thermistor, &amp;photodiode]; // &lt;- heterogeneous, heap-free: fixed-size array of trait objects
+for s in sensors {
+    let _raw = s.read_raw();
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Runtime polymorphism</h3>
+            <p>A board's set of installed sensors varies by revision — one revision
+carries a thermistor and a photodiode, another adds a humidity sensor —
+so the firmware that polls "whatever sensors this board has" needs one
+type it can iterate over, without a fixed enum or a generic function per
+board revision.</p>
+<pre><code class="rust">trait Sensor {
+    fn read_raw(&amp;self) -&gt; u16;
+}
+
+fn poll_all(sensors: &amp;[&amp;dyn Sensor]) -&gt; u32 { // &lt;- one signature, any mix of sensor types, no heap
+    sensors.iter().map(|s| s.read_raw() as u32).sum()
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the exact sensor mix is a board-configuration fact, not
+something a single generic instantiation can express — <code>&amp;dyn Sensor</code>
+gives one type for the collection while costing nothing but the vtable
+indirection on each read, with no allocator involved at all.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A board-support crate that lets applications register an arbitrary
+number of optional peripheral drivers at startup needs a fixed-capacity,
+allocator-free registry — a plain array of trait objects, sized to the
+board's maximum, rather than a heap-growing <code>Vec</code>.</p>
+<pre><code class="rust">trait Peripheral {
+    fn init(&amp;mut self);
+}
+
+pub struct Registry&lt;'a&gt; {
+    peripherals: [Option&lt;&amp;'a mut dyn Peripheral&gt;; 4], // &lt;- fixed-capacity, no allocator: registry sized at compile time
+}
+
+impl&lt;'a&gt; Registry&lt;'a&gt; {
+    pub fn init_all(&amp;mut self) {
+        for p in self.peripherals.iter_mut().flatten() {
+            p.init();
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a bare-metal target commonly has no <code>#[global_allocator]</code>
+configured at all, so a registry API built around <code>Vec&lt;Box&lt;dyn Trait&gt;&gt;</code>
+would be unusable there; sizing the registry to a fixed maximum at
+compile time keeps the API allocator-free while still accepting any
+concrete <code>Peripheral</code> implementation.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Boxing and heap allocation</h3>
+            <p>On a target that <em>does</em> have <code>alloc</code> configured (an ESP32 running
+<code>esp-idf</code>, for instance), a one-time, build-at-startup plugin list is a
+reasonable place for <code>Box&lt;dyn Trait&gt;</code> — the allocation happens once
+during init, not on a hot path, so the flexibility is worth the one-time
+heap cost.</p>
+<pre><code class="rust">// AVOID: Box&lt;dyn Trait&gt; on a bare-metal target with no configured allocator — this won't compile
+// let drivers: Vec&lt;Box&lt;dyn Peripheral&gt;&gt; = vec![Box::new(imu), Box::new(display)];
+
+// PREFER: on a target with `alloc` configured, a startup-only Box&lt;dyn Trait&gt; list is fine
+extern crate alloc;
+use alloc::{boxed::Box, vec::Vec};
+
+fn build_drivers(imu: impl Peripheral + 'static, display: impl Peripheral + 'static) -&gt; Vec&lt;Box&lt;dyn Peripheral&gt;&gt; {
+    let mut drivers: Vec&lt;Box&lt;dyn Peripheral&gt;&gt; = Vec::new();
+    drivers.push(Box::new(imu));     // &lt;- heap allocation, but only once, at startup
+    drivers.push(Box::new(display));
+    drivers
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> whether <code>Box&lt;dyn Trait&gt;</code> is available at all is a
+per-target fact, not a matter of taste — on targets without <code>alloc</code>,
+<code>&amp;dyn Trait</code> over a fixed-size array is the only option; where <code>alloc</code> is
+configured, restricting <code>Box&lt;dyn Trait&gt;</code> use to one-time startup code
+avoids paying an allocation cost on any latency-sensitive path.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

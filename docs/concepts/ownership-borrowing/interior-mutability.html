@@ -1068,19 +1068,157 @@ covers when introducing <code>Mutex&lt;T&gt;</code>.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>Cell</code> and <code>RefCell</code> both live in <code>core::cell</code>, so the mechanism described
+above — moving the "aliasing XOR mutability" check from compile time to
+runtime — works identically under <code>#![no_std]</code>, no allocator required.
+<code>Cell&lt;T&gt;</code> is a particularly good fit for embedded code because so much
+embedded state is naturally a small <code>Copy</code> value (a latest ADC sample, a
+tick count, a status byte): <code>Cell::get</code>/<code>set</code> never hands out a reference
+at all, so there's nothing to track and no runtime check to fail, making
+it strictly cheaper than <code>RefCell</code> wherever the contained type is <code>Copy</code>.</p>
+<p>Both types share one hard limitation that matters far more on embedded
+than it typically does hosted: neither is <code>Sync</code> (see
+<a href="../concurrency-async/send-and-sync.md">Send &amp; Sync</a>), so a bare
+<code>Cell</code>/<code>RefCell</code> is not safe to reach from both <code>fn main</code>'s loop and a
+<code>#[interrupt]</code> handler at once — the runtime check <code>RefCell</code> performs
+assumes single-threaded access, and an interrupt preempting <code>main</code>
+mid-borrow is exactly the kind of concurrent access that check was never
+designed to catch. Embedded code's standard answer, since there's usually
+no OS and therefore no <code>std::sync::Mutex</code> to fall back on, is
+<code>critical_section::Mutex&lt;Cell&lt;T&gt;&gt;</code> or <code>critical_section::Mutex&lt;RefCell&lt;T&gt;&gt;</code>:
+<code>critical-section</code>'s <code>Mutex</code> wrapper (a genuinely different type from
+<code>std::sync::Mutex</code>, despite the shared name) is only <code>Sync</code> when its
+contents are <code>Send</code>, and only permits touching the inner <code>Cell</code>/<code>RefCell</code>
+from inside a critical section — typically interrupts-disabled on a
+single-core target — which is what makes it sound to hand both <code>main</code> and
+an interrupt handler a <code>'static</code> reference to the same cell. This is, in
+effect, <code>no_std</code>'s substitute for <code>std::sync::Mutex&lt;T&gt;</code> in the one place
+OS-level locking isn't available to fall back on.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::cell::Cell;
+
+let sample = Cell::new(0u16);
+sample.set(sample.get() + 1); // &lt;- mutates through a shared Cell value, no runtime check needed: u16 is Copy
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Interior mutability</h3>
+            <p>A driver caches the last-read calibration offset behind a <code>Cell</code> so its
+<code>&amp;self</code> reading method can update the cache without needing <code>&amp;mut self</code> —
+safe because the value is <code>Copy</code> and the driver never crosses an
+interrupt boundary.</p>
+<pre><code class="rust">use core::cell::Cell;
+
+struct Thermometer {
+    last_offset: Cell&lt;i16&gt;, // &lt;- Copy type: Cell is the cheapest form of interior mutability here
+}
+
+impl Thermometer {
+    fn read_celsius(&amp;self, raw: i16) -&gt; i16 { // &lt;- &amp;self, not &amp;mut self
+        let offset = self.last_offset.get();
+        let corrected = raw - offset;
+        self.last_offset.set(corrected / 10); // &lt;- mutates through &amp;self, no reference ever handed out
+        corrected
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>Cell</code> never hands out a reference to its contents, so
+there's no runtime borrow-tracking overhead at all — for a <code>Copy</code> value
+like a calibration offset, it's strictly cheaper than <code>RefCell</code> while
+giving the same "<code>&amp;self</code> can still update internal state" capability the
+classic <code>RefCell</code> cache example relies on.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing state across threads</h3>
+            <p>A tick counter incremented by a timer interrupt and read from the main
+loop — the same no-OS pattern covered on
+<a href="../concurrency-async/send-and-sync.md">Send &amp; Sync</a>, here from the
+interior-mutability angle: a bare <code>RefCell</code> isn't <code>Sync</code>, so it has to be
+wrapped before an interrupt handler can touch it too.</p>
+<pre><code class="rust">use core::cell::RefCell;
+use critical_section::Mutex;
+
+static LAST_ERROR: Mutex&lt;RefCell&lt;Option&lt;u8&gt;&gt;&gt; = Mutex::new(RefCell::new(None));
+
+#[interrupt]
+fn USART1() {
+    critical_section::with(|cs| {
+        *LAST_ERROR.borrow_ref_mut(cs) = Some(read_status_register());
+    });
+}
+
+fn main_loop() -&gt; ! {
+    loop {
+        if let Some(code) = critical_section::with(|cs| LAST_ERROR.borrow_ref_mut(cs).take()) {
+            handle_error(code);
+        }
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a bare <code>RefCell&lt;Option&lt;u8&gt;&gt;</code> isn't <code>Sync</code>, so <code>static LAST_ERROR: RefCell&lt;...&gt;</code> would fail to compile the instant the interrupt
+handler tried to touch it too — wrapping it in <code>critical-section</code>'s
+<code>Mutex</code> is what makes the type <code>Sync</code> and routes every access through a
+critical section, <code>no_std</code>'s equivalent of the <code>std::sync::Mutex</code> a hosted
+program would reach for instead.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Modifying an existing object</h3>
+            <p>A pressure sensor driver lazily computes and caches an expensive
+linearization result behind <code>&amp;self</code>, mirroring the classic single-threaded
+cache pattern but grounded in a real embedded correction routine.</p>
+<pre><code class="rust">use core::cell::RefCell;
+
+struct PressureSensor {
+    cache: RefCell&lt;Option&lt;(u16, f32)&gt;&gt;, // (last raw reading, linearized result)
+}
+
+impl PressureSensor {
+    fn read_kpa(&amp;self, raw: u16) -&gt; f32 { // &lt;- &amp;self: mutation of the cache stays an internal detail
+        if let Some((cached_raw, kpa)) = *self.cache.borrow() {
+            if cached_raw == raw {
+                return kpa;
+            }
+        }
+        let kpa = linearize(raw); // pretend this is an expensive polynomial correction
+        *self.cache.borrow_mut() = Some((raw, kpa));
+        kpa
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> exposing a read-only (<code>&amp;self</code>) public API while updating
+an internal cache is exactly the case <code>RefCell</code> exists for, single-
+threaded — the moment this same cache needs touching from an interrupt
+handler too, the fix is the <code>critical_section::Mutex&lt;RefCell&lt;_&gt;&gt;</code> pattern
+above, not a thread-unsafe <code>RefCell</code> shared unguarded.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

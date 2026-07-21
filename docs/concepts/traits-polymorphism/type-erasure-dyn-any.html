@@ -1033,19 +1033,87 @@ already imply <code>'static</code>; a struct holding a <code>&amp;'a str</code> 
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>Any</code> and <code>downcast_ref</code> live in <code>core::any</code>, so the reference-based form
+works under <code>#![no_std]</code> with no allocator at all — only <code>Box&lt;dyn Any&gt;</code>
+(an owned, heap-allocated erased value) needs <code>alloc</code>, same as any other
+trait object.</p>
+<p>Worth being honest about, though: type erasure via <code>Any</code> is genuinely
+rarer in embedded code than in hosted Rust, and rarer than the already-low
+bar set on the classic side of this page. Resource-constrained firmware
+overwhelmingly prefers a fixed enum of known message/command kinds, or a
+generic function bounded by a concrete trait, over anything that pays a
+runtime <code>TypeId</code> check — both because the set of types involved is
+usually genuinely fixed at compile time (there's no third-party plugin
+loading a bare-metal binary), and because a <code>match</code> over an enum
+compiles to a jump table the compiler can reason about, where <code>Any</code>
+downcasting is an opaque runtime comparison the compiler can't optimize
+across. Where <code>Any</code> does show up honestly is a debug/diagnostic console
+task that needs to hold a small, fixed-capacity table of heterogeneous
+handler types registered at startup — a genuinely dynamic-lookup need,
+just a narrow one. Reaching for <code>Any</code> anywhere else in embedded code is
+usually a sign an enum or a generic bound was available and simpler.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::any::Any;
+
+fn describe(value: &amp;dyn Any) {
+    if let Some(n) = value.downcast_ref::&lt;u16&gt;() { // &lt;- runtime check, no heap involved
+        let _raw_adc_reading = n;
+    }
+}
+
+describe(&amp;512u16);
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A debug console task wants to store a handful of heterogeneous command
+handlers registered at startup, looked up by type — a genuinely dynamic
+case, but a narrow one; most embedded designs reach for a fixed enum of
+known commands instead, and should, unless the handler set truly isn't
+fixed at compile time.</p>
+<pre><code class="rust">use core::any::{Any, TypeId};
+
+struct HandlerSlot {
+    type_id: TypeId,
+    handler: &amp;'static dyn Any, // &lt;- erased, but heap-free: a 'static reference, not Box&lt;dyn Any&gt;
+}
+
+struct HandlerTable {
+    slots: [Option&lt;HandlerSlot&gt;; 4], // fixed capacity, no allocator needed
+}
+
+impl HandlerTable {
+    fn get&lt;T: Any&gt;(&amp;self) -&gt; Option&lt;&amp;T&gt; {
+        self.slots.iter().flatten()
+            .find(|slot| slot.type_id == TypeId::of::&lt;T&gt;())
+            .and_then(|slot| slot.handler.downcast_ref::&lt;T&gt;()) // &lt;- runtime check recovers the concrete type
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a fixed-size array in place of a heap-allocated map
+keeps the table allocator-free, which matters more here than in hosted
+code — but the honest caveat still applies: this pattern earns its place
+only where the handler set genuinely isn't known until runtime; a
+compile-time-fixed set of commands is better served by an enum, which
+<a href="https://doc.rust-lang.org/std/any/trait.Any.html"><code>std::any::Any</code></a>'s own
+docs frame as the exception case, not the default.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

@@ -1040,19 +1040,159 @@ runtime size.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>PhantomData&lt;Mode&gt;</code> is the mechanism that makes the <code>embedded-hal</code>
+typestate pattern possible without paying for it. A generic peripheral
+type like <code>Pin&lt;MODE&gt;</code> needs to carry <code>MODE</code> as a type parameter so the
+compiler can accept or reject method calls based on which mode the pin is
+currently in — but the pin's actual runtime representation (a port and
+pin number, say) doesn't need to store anything about <code>MODE</code> at all; the
+mode only exists to be checked at compile time. Without <code>PhantomData&lt;MODE&gt;</code>
+sitting in the struct, using <code>MODE</code> purely as a type parameter with no
+field of that type would be a compile error (an unused generic
+parameter), so <code>PhantomData&lt;MODE&gt;</code> is what lets the struct legally "hold"
+a <code>MODE</code> it never actually stores — contributing exactly zero bytes to
+<code>size_of::&lt;Pin&lt;MODE&gt;&gt;()</code> regardless of how many mode types exist. This is
+what lets a HAL crate offer a <code>Pin&lt;Input&gt;</code>, a <code>Pin&lt;Output&gt;</code>, and a
+<code>Pin&lt;Analog&gt;</code> that are all the same size in memory as a pin with no mode
+tracking at all, while still making it a compile error to call an
+output-only method on a <code>Pin&lt;Input&gt;</code>. On a target where every byte of RAM
+is accounted for, "type-safety that costs zero bytes" isn't a
+nice-to-have — it's the only way the typestate pattern is viable at all.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::marker::PhantomData;
+
+struct Input;
+struct Output;
+
+struct Pin&lt;MODE&gt; {
+    pin_number: u8,
+    _mode: PhantomData&lt;MODE&gt;, // &lt;- zero bytes; MODE is tracked only by the compiler
+}
+
+let led: Pin&lt;Output&gt; = Pin { pin_number: 5, _mode: PhantomData };
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>Converting a pin from one mode to another consumes the old typed value
+and returns a new one carrying a different <code>PhantomData</code> marker — the
+conversion is real at compile time and free at runtime.</p>
+<pre><code class="rust">use core::marker::PhantomData;
+
+struct Input;
+struct Output;
+
+struct Pin&lt;MODE&gt; {
+    pin_number: u8,
+    _mode: PhantomData&lt;MODE&gt;,
+}
+
+impl Pin&lt;Input&gt; {
+    fn into_output(self) -&gt; Pin&lt;Output&gt; { // &lt;- consumes an Input pin, returns an Output pin
+        Pin { pin_number: self.pin_number, _mode: PhantomData }
+    }
+}
+
+impl Pin&lt;Output&gt; {
+    fn set_high(&amp;mut self) { /* write to the ODR register here */ }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>into_output</code> takes <code>self</code> by value, so the old
+<code>Pin&lt;Input&gt;</code> can't be used again after conversion — combined with
+<code>PhantomData</code> costing zero bytes, the whole mode-tracking mechanism adds
+compile-time-only safety with no runtime footprint, exactly the trade the
+<a href="https://doc.rust-lang.org/book/ch10-01-syntax.html">Rust Book's generics coverage</a>
+describes for monomorphized generic code in general.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>Restricting a method to only the mode where it's valid — an analog read
+that only exists on <code>Pin&lt;Analog&gt;</code> — makes calling it on the wrong mode a
+compile error instead of a runtime error code the caller has to remember
+to check.</p>
+<pre><code class="rust">use core::marker::PhantomData;
+
+struct Analog;
+struct Digital;
+
+struct Pin&lt;MODE&gt; {
+    pin_number: u8,
+    _mode: PhantomData&lt;MODE&gt;,
+}
+
+impl Pin&lt;Analog&gt; {
+    fn read_raw(&amp;self) -&gt; u16 { 0 /* real code reads the ADC register here */ }
+    // read_raw() simply doesn't exist on Pin&lt;Digital&gt; -- the method isn't
+    // callable at all, rather than returning an error code at runtime
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> an ADC read on a pin that isn't wired to the analog
+peripheral is a class of mistake worth catching before the code ever
+runs on hardware — making the method not exist for the wrong mode, via a
+zero-cost <code>PhantomData</code> marker, is strictly stronger than a runtime
+<code>Result</code> the caller could forget to check, and costs nothing to enforce.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p>An <code>embedded-hal</code> trait like <code>OutputPin</code> is typically implemented only
+for the mode where it's physically valid, so a generic function bounded
+by that trait only ever compiles against a correctly-configured pin.</p>
+<pre><code class="rust">use core::marker::PhantomData;
+
+struct Output;
+struct Input;
+
+struct Pin&lt;MODE&gt; {
+    pin_number: u8,
+    _mode: PhantomData&lt;MODE&gt;,
+}
+
+trait OutputPin {
+    fn set_high(&amp;mut self);
+}
+
+impl OutputPin for Pin&lt;Output&gt; { // &lt;- only Pin&lt;Output&gt; gets this impl; Pin&lt;Input&gt; does not
+    fn set_high(&amp;mut self) { /* write to the ODR register here */ }
+}
+
+fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P) { // &lt;- generic over any type that implements OutputPin
+    pin.set_high();
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> implementing the trait only for <code>Pin&lt;Output&gt;</code> means
+<code>blink</code> simply won't compile if called with a <code>Pin&lt;Input&gt;</code> — the
+trait-bound generic function is checked entirely at compile time, and the
+<code>PhantomData&lt;MODE&gt;</code> marker that makes <code>Output</code> and <code>Input</code> distinct types
+costs nothing in the compiled program.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

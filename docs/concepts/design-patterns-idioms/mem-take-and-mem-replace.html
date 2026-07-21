@@ -1083,19 +1083,109 @@ valid replacement behind, per the
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The mechanism is identical, and the "no allocation" property that's a
+nice-to-have on a hosted target is close to a non-negotiable one on many
+embedded ones: <code>mem::take</code> and <code>mem::replace</code> live in <code>core::mem</code>, need
+no allocator, and work exactly the same on a stack-resident struct field
+as on a heap-backed one — there's no <code>#![no_std]</code> caveat to state here at
+all, unlike patterns that need <code>alloc</code>. What's genuinely worth
+highlighting for embedded code is <em>where</em> this shows up most: driving a
+state machine forward on <code>&amp;mut self</code> without needing every state wrapped
+in <code>Option</code> first, and without a clone.</p>
+<p>A sensor driver modeled as an enum (<code>Idle</code>, <code>Sampling { started_at_ms: u32 }</code>, <code>Done { reading: i16 }</code>) needs to move the <em>old</em> state out of
+<code>&amp;mut self.state</code> in order to construct the <em>new</em> one from data the old
+state was holding — exactly the "can't leave a place empty" problem
+<code>mem::take</code>/<code>mem::replace</code> solve. Wrapping the field in <code>Option&lt;State&gt;</code>
+just to satisfy the borrow checker (<code>self.state.take()</code>, …, <code>self.state = Some(new_state)</code>) works, but it means every read of <code>self.state</code>
+elsewhere in the driver has to handle a <code>None</code> case that can never
+actually happen in practice — <code>mem::replace(&amp;mut self.state, new_state)</code> sidesteps that entirely by moving the old state out and the
+new one in in a single step, keeping the field's type as the enum
+itself: no <code>Option</code> wrapper, no clone, no allocation.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">use core::mem;
+
+enum SensorState {
+    Idle,
+    Sampling { started_at_ms: u32 },
+}
+
+struct Driver {
+    state: SensorState,
+}
+
+impl Driver {
+    fn start_sampling(&amp;mut self, now_ms: u32) {
+        // &lt;- moves the old state out, writes the new one in, no `Option` field needed
+        let _old = mem::replace(&amp;mut self.state, SensorState::Sampling { started_at_ms: now_ms });
+    }
+}
+
+let mut driver = Driver { state: SensorState::Idle };
+driver.start_sampling(1_000);
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Modifying an existing object</h3>
+            <p>A sensor driver transitions from <code>Sampling</code> to <code>Done</code> and needs to carry
+the <code>started_at_ms</code> timestamp out of the old state to compute an elapsed
+time — <code>mem::replace</code> moves the whole old variant out by value so its
+data can be used, with no clone and no <code>Option</code>-wrapped field anywhere in
+the struct.</p>
+<pre><code class="rust">use core::mem;
+
+enum SensorState {
+    Idle,
+    Sampling { started_at_ms: u32 },
+    Done { elapsed_ms: u32, reading: i16 },
+}
+
+struct Driver {
+    state: SensorState,
+}
+
+impl Driver {
+    fn finish_sampling(&amp;mut self, now_ms: u32, reading: i16) {
+        let old = mem::replace(&amp;mut self.state, SensorState::Idle); // &lt;- moves the old variant out; field never sits empty
+        self.state = match old {
+            SensorState::Sampling { started_at_ms } =&gt; SensorState::Done {
+                elapsed_ms: now_ms - started_at_ms,
+                reading,
+            },
+            other =&gt; other, // no-op transition if called from the wrong state
+        };
+    }
+}
+
+let mut driver = Driver { state: SensorState::Sampling { started_at_ms: 1_000 } };
+driver.finish_sampling(1_250, 421);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>mem::replace</code> gets ownership of <code>started_at_ms</code> out of
+the old <code>Sampling</code> variant without cloning the enum or wrapping <code>state</code>
+in <code>Option&lt;SensorState&gt;</code> just to satisfy the borrow checker — on a
+target with no allocator, this is not an optimization over cloning, it's
+the only option, since <code>SensorState</code> here holds no <code>Clone</code> impl and
+wrapping every read site in <code>Option</code> handling for a state that's always
+present would be pure boilerplate; the
+<a href="https://rust-unofficial.github.io/patterns/idioms/mem-replace.html">Rust Design Patterns</a>
+book documents this exact shape as the idiomatic way to change a value
+behind <code>&amp;mut self</code>.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

@@ -127,11 +127,136 @@ used this way, and the shape matches the
 [command pattern](https://rust-unofficial.github.io/patterns/patterns/behavioural/command.html)
 in the Rust Design Patterns book.
 
-## Embedded Rust Notes
+## Explanation (Embedded)
 
-**Full support** for `&dyn Trait`/`&mut dyn Trait` — the vtable mechanism
-itself needs no allocator, only a reference to existing data. `Box<dyn Trait>`
-specifically needs the `alloc` crate and a configured global allocator;
-where a heap isn't available, see
-[on-stack dynamic dispatch](../design-patterns-idioms/on-stack-dynamic-dispatch.md)
-for the allocator-free equivalent.
+For the mechanics of `&dyn Trait` needing no heap, `Box<dyn Trait>`
+needing `alloc`, and the flash-vs-dispatch-predictability tradeoff against
+generics, see [`dyn`](../../syntax/keywords/dyn.md) — that page covers
+the mechanism in full and this page doesn't re-derive it. What's worth
+covering here is the design-level question: given that generics and
+monomorphization are the default choice in embedded Rust (predictable
+inlined calls, no vtable indirection), when does embedded code reach for
+dynamic dispatch at all?
+
+Two situations come up genuinely often. The first is a **heterogeneous
+collection of different peripheral types that must live together in one
+array or list** — a board-support struct holding several distinct sensor
+types that all need to be read in a loop, where a generic function can't
+help because a single monomorphized instantiation only ever handles one
+concrete type, not a mix. The second is **plugin-style, configuration-driven
+registration** — a board's revision or a runtime configuration decides
+*which* optional peripherals are actually present, so the code iterating
+over them can't be generic over a fixed, compile-time-known set of types.
+In both cases, `&dyn Trait` (or, for owned storage, `Box<dyn Trait>` once
+`alloc` is configured) gives one uniform type to store and iterate,
+without requiring every element to be the same concrete type. Outside
+those two shapes, embedded code defaults to generics — the common case
+by a wide margin, since most driver code is written against one concrete
+type parameter per call site, decided once at compile time.
+
+## Basic usage example (Embedded)
+
+```
+trait Sensor {
+    fn read_raw(&self) -> u16;
+}
+
+struct Thermistor;
+impl Sensor for Thermistor { fn read_raw(&self) -> u16 { 512 } }
+
+struct Photodiode;
+impl Sensor for Photodiode { fn read_raw(&self) -> u16 { 128 } }
+
+let thermistor = Thermistor;
+let photodiode = Photodiode;
+let sensors: [&dyn Sensor; 2] = [&thermistor, &photodiode]; // <- heterogeneous, heap-free: fixed-size array of trait objects
+for s in sensors {
+    let _raw = s.read_raw();
+}
+```
+
+## Best practices & deeper information (Embedded)
+
+### Scenario: Runtime polymorphism
+
+A board's set of installed sensors varies by revision — one revision
+carries a thermistor and a photodiode, another adds a humidity sensor —
+so the firmware that polls "whatever sensors this board has" needs one
+type it can iterate over, without a fixed enum or a generic function per
+board revision.
+
+```
+trait Sensor {
+    fn read_raw(&self) -> u16;
+}
+
+fn poll_all(sensors: &[&dyn Sensor]) -> u32 { // <- one signature, any mix of sensor types, no heap
+    sensors.iter().map(|s| s.read_raw() as u32).sum()
+}
+```
+
+**Why this way:** the exact sensor mix is a board-configuration fact, not
+something a single generic instantiation can express — `&dyn Sensor`
+gives one type for the collection while costing nothing but the vtable
+indirection on each read, with no allocator involved at all.
+
+### Scenario: Designing a public API
+
+A board-support crate that lets applications register an arbitrary
+number of optional peripheral drivers at startup needs a fixed-capacity,
+allocator-free registry — a plain array of trait objects, sized to the
+board's maximum, rather than a heap-growing `Vec`.
+
+```
+trait Peripheral {
+    fn init(&mut self);
+}
+
+pub struct Registry<'a> {
+    peripherals: [Option<&'a mut dyn Peripheral>; 4], // <- fixed-capacity, no allocator: registry sized at compile time
+}
+
+impl<'a> Registry<'a> {
+    pub fn init_all(&mut self) {
+        for p in self.peripherals.iter_mut().flatten() {
+            p.init();
+        }
+    }
+}
+```
+
+**Why this way:** a bare-metal target commonly has no `#[global_allocator]`
+configured at all, so a registry API built around `Vec<Box<dyn Trait>>`
+would be unusable there; sizing the registry to a fixed maximum at
+compile time keeps the API allocator-free while still accepting any
+concrete `Peripheral` implementation.
+
+### Scenario: Boxing and heap allocation
+
+On a target that *does* have `alloc` configured (an ESP32 running
+`esp-idf`, for instance), a one-time, build-at-startup plugin list is a
+reasonable place for `Box<dyn Trait>` — the allocation happens once
+during init, not on a hot path, so the flexibility is worth the one-time
+heap cost.
+
+```
+// AVOID: Box<dyn Trait> on a bare-metal target with no configured allocator — this won't compile
+// let drivers: Vec<Box<dyn Peripheral>> = vec![Box::new(imu), Box::new(display)];
+
+// PREFER: on a target with `alloc` configured, a startup-only Box<dyn Trait> list is fine
+extern crate alloc;
+use alloc::{boxed::Box, vec::Vec};
+
+fn build_drivers(imu: impl Peripheral + 'static, display: impl Peripheral + 'static) -> Vec<Box<dyn Peripheral>> {
+    let mut drivers: Vec<Box<dyn Peripheral>> = Vec::new();
+    drivers.push(Box::new(imu));     // <- heap allocation, but only once, at startup
+    drivers.push(Box::new(display));
+    drivers
+}
+```
+
+**Why this way:** whether `Box<dyn Trait>` is available at all is a
+per-target fact, not a matter of taste — on targets without `alloc`,
+`&dyn Trait` over a fixed-size array is the only option; where `alloc` is
+configured, restricting `Box<dyn Trait>` use to one-time startup code
+avoids paying an allocation cost on any latency-sensitive path.

@@ -1084,19 +1084,110 @@ alongside plain constructors.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p><code>Default</code> is defined in <code>core</code>, not <code>std</code> or <code>alloc</code>, so both the trait
+and <code>#[derive(Default)]</code> work identically under <code>#![no_std]</code> — there's no
+allocator dependency anywhere in this idiom. It earns a particularly
+natural place in embedded code because so many peripheral config structs
+have one obvious "most common configuration": a UART's most common setup
+really is 9600 baud, no parity, one stop bit; a GPIO pin's most common
+mode really is a floating input. Implementing <code>Default</code> for that struct
+lets firmware write <code>UartConfig { baud_rate: 115_200, ..Default::default() }</code>
+when it only cares about overriding the baud rate, instead of naming
+every field, and lets generic HAL-adjacent code request "a default
+config of whatever peripheral type I'm generic over" through a trait
+bound the same way hosted Rust does.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">#[derive(Default)] // &lt;- generates default(): every field gets its own type's default
+struct GpioConfig {
+    output: bool,    // defaults to false: floating input, the safest reset state
+    pull_up: bool,   // defaults to false
+}
+
+let config = GpioConfig::default();
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Creating a new object</h3>
+            <p>A UART peripheral has one field firmware almost always cares about
+(baud rate) and several that are fine left at their most common setting
+— struct update syntax against <code>Default::default()</code> lets a caller set
+only what matters, without a full builder.</p>
+<pre><code class="rust">#[derive(Debug)]
+struct UartConfig {
+    baud_rate: u32,
+    parity: bool,
+    stop_bits: u8,
+}
+
+impl Default for UartConfig {
+    fn default() -&gt; Self { // &lt;- manual impl: the "sensible" defaults aren't all zero
+        UartConfig { baud_rate: 9_600, parity: false, stop_bits: 1 }
+    }
+}
+
+let config = UartConfig {
+    baud_rate: 115_200, // &lt;- only the override this firmware actually needs
+    ..Default::default() // &lt;- parity and stop_bits come from UartConfig::default()
+};
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> struct update syntax against <code>Default::default()</code>
+scales to a peripheral config with several optional settings without a
+builder or a long constructor signature, which the
+<a href="https://rust-unofficial.github.io/patterns/idioms/default.html">Rust Design Patterns</a>
+book documents as the idiomatic way to handle "mostly-optional" struct
+fields — and a UART's 8N1-at-9600 baud setup is exactly the kind of
+"obvious common case" this idiom is built for.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A driver-reset routine needs to put a peripheral's in-memory state
+struct back to a known-safe starting point after detecting a fault,
+without knowing at compile time which specific peripheral's state struct
+it's holding.</p>
+<pre><code class="rust">#[derive(Default)]
+struct AdcState {
+    last_reading: u16,
+    overrun_count: u32,
+}
+
+fn reset&lt;T: Default&gt;(state: &amp;mut T) {
+    *state = T::default(); // &lt;- works for any peripheral state type that implements Default
+}
+
+let mut adc_state = AdcState { last_reading: 512, overrun_count: 3 };
+reset(&amp;mut adc_state);
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> bounding a generic fault-recovery routine on <code>Default</code>
+is the only way to say "put whatever state type <code>T</code> turns out to be back
+to its known-safe starting point," since a bare <code>new()</code> convention isn't
+a trait a generic bound can require — the
+<a href="https://doc.rust-lang.org/std/default/trait.Default.html">std docs for <code>Default</code></a>
+call out generic code as a primary reason the trait exists, and it applies
+unchanged to zeroing register-mirroring structs or protocol frames back
+to a known-safe state in <code>#![no_std]</code> firmware.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

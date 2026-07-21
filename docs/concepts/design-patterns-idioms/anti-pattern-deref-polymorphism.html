@@ -1083,19 +1083,109 @@ explicit delegation or a shared trait instead.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The anti-pattern is identical to the classic case, and the fix is too:
+<code>Deref</code> still means "acts like a reference to," never "is-a," regardless
+of target. The embedded flavor worth calling out is where the temptation
+shows up most: wrapping an <code>embedded-hal</code> peripheral handle — an <code>I2c</code>, a
+<code>Spi</code>, a GPIO <code>OutputPin</code> — to add behavior the raw HAL type doesn't have
+(retrying a flaky I2C transaction, logging every register write,
+debouncing a pin read). Implementing <code>Deref</code> on that wrapper so the
+underlying HAL type's methods stay callable through it is exactly as
+tempting here as with a database connection, and exactly as wrong: it
+lets application code silently reach straight through the wrapper and
+call the raw HAL method directly, skipping the retry/logging/debounce
+logic the wrapper exists to add — on hardware, that's not just a
+surprising API, it can mean a transaction that's supposed to be retried
+on a noisy bus silently isn't, because half the codebase called the
+un-wrapped method by accident via autoderef.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct RetryingI2c&lt;I&gt; {
+    inner: I,
+    max_attempts: u8,
+}
+
+impl&lt;I&gt; RetryingI2c&lt;I&gt; {
+    fn attempts(&amp;self) -&gt; u8 { // &lt;- PREFER: an explicit method, not an inherited I2c method via Deref
+        self.max_attempts
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A HAL wrapper around an I2C bus wants every read to retry on a bus
+error; callers must go through the wrapper's own method, never straight
+through to the raw HAL implementation underneath it.</p>
+<pre><code class="rust">trait I2cRead {
+    fn read(&amp;mut self, addr: u8, buf: &amp;mut [u8]) -&gt; Result&lt;(), ()&gt;;
+}
+
+struct RawI2c;
+impl I2cRead for RawI2c {
+    fn read(&amp;mut self, _addr: u8, _buf: &amp;mut [u8]) -&gt; Result&lt;(), ()&gt; {
+        Err(()) // stands in for a flaky bus transaction
+    }
+}
+
+// AVOID: Deref makes the raw, non-retrying `read` reachable straight through the wrapper
+// struct RetryingI2c&lt;I&gt; {
+//     inner: I,
+// }
+//
+// impl&lt;I&gt; std::ops::Deref for RetryingI2c&lt;I&gt; {
+//     type Target = I;
+//     fn deref(&amp;self) -&gt; &amp;I {
+//         &amp;self.inner // now `wrapper.read(..)` silently skips the retry loop entirely
+//     }
+// }
+
+// PREFER: explicit delegation — the only `read` callers can reach is the retrying one
+struct RetryingI2c&lt;I&gt; {
+    inner: I,
+    max_attempts: u8,
+}
+
+impl&lt;I: I2cRead&gt; RetryingI2c&lt;I&gt; {
+    fn read(&amp;mut self, addr: u8, buf: &amp;mut [u8]) -&gt; Result&lt;(), ()&gt; {
+        for _ in 0..self.max_attempts {
+            if self.inner.read(addr, buf).is_ok() {
+                return Ok(());
+            }
+        }
+        Err(())
+    }
+}
+
+let mut sensor_bus = RetryingI2c { inner: RawI2c, max_attempts: 3 };
+let mut buf = [0u8; 2];
+let _ = sensor_bus.read(0x48, &amp;mut buf); // &lt;- always goes through the retry loop
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> implementing <code>Deref</code> on <code>RetryingI2c</code> would make the
+raw, non-retrying <code>read</code> reachable through autoderef alongside the
+wrapper's own method, so a single unretried call at the wrong moment on
+a noisy I2C bus can silently corrupt a sensor read that the wrapper was
+specifically built to make reliable; the
+<a href="https://rust-unofficial.github.io/patterns/anti_patterns/deref.html">Rust Design Patterns' anti-patterns section</a>
+documents this "Deref polymorphism" misuse and recommends explicit
+delegation instead — doubly so where the delegated behavior (a retry
+loop) is the entire reason the wrapper exists.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

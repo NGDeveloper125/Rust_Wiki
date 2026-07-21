@@ -1064,19 +1064,104 @@ describes.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Supertraits show up throughout <code>embedded-hal</code>'s own trait hierarchy, not
+just in illustrative examples: most of its device traits (<code>OutputPin</code>,
+<code>InputPin</code>, <code>SpiBus</code>, <code>I2c</code>, …) require an <code>ErrorType</code> supertrait that
+declares the associated <code>Error</code> type they use, so implementing, say,
+<code>OutputPin</code> for a concrete pin type is only possible once <code>ErrorType</code> is
+implemented for it too — the exact "implementer promises an extra piece
+first" role a supertrait exists to express.</p>
+<p>The same pattern appears one level up, in driver crates built <em>on</em>
+<code>embedded-hal</code>. A crate providing a higher-level IMU driver trait might
+declare <code>trait ImuDriver: SpiBus</code>, requiring any type implementing
+<code>ImuDriver</code> to also implement <code>embedded-hal</code>'s <code>SpiBus</code> — guaranteeing the
+driver trait's own default methods can call <code>self.transfer(...)</code> without
+adding a second bound everywhere the trait is used. This is a common
+shape for embedded driver crates that want to layer higher-level
+behavior (parsing sensor registers, managing a device's power state) on
+top of a raw bus capability, without re-declaring the bus methods
+themselves.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">trait SpiBus {
+    type Error;
+    fn transfer(&amp;mut self, data: &amp;mut [u8]) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+trait ImuDriver: SpiBus { // &lt;- ImuDriver requires SpiBus too
+    fn read_accel_raw(&amp;mut self) -&gt; Result&lt;[u8; 6], Self::Error&gt; {
+        let mut buf = [0u8; 6];
+        self.transfer(&amp;mut buf)?;
+        Ok(buf)
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p><code>embedded-hal</code> itself leans on supertraits: its device traits require an
+<code>ErrorType</code> supertrait declaring the associated <code>Error</code> type, so a
+vendor's HAL crate must implement <code>ErrorType</code> for a pin type before
+<code>OutputPin</code> can be implemented for it.</p>
+<pre><code class="rust">trait ErrorType { // &lt;- embedded-hal's supertrait: declares the associated error type
+    type Error;
+}
+
+trait OutputPin: ErrorType { // &lt;- OutputPin requires ErrorType too
+    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+struct GpioPin5;
+impl ErrorType for GpioPin5 { type Error = core::convert::Infallible; } // required first
+impl OutputPin for GpioPin5 { // only allowed because GpioPin5 already implements ErrorType
+    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt; { Ok(()) }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> splitting the associated error type into its own
+<code>ErrorType</code> supertrait, rather than declaring it directly on <code>OutputPin</code>,
+is what lets multiple <code>embedded-hal</code> traits (<code>OutputPin</code>, <code>InputPin</code>, …)
+share the same associated <code>Error</code> type on one pin, instead of each trait
+declaring a conflicting one of its own.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Writing generic code</h3>
+            <p>A driver function generic over an <code>ImuDriver</code> implementation can call the
+<code>SpiBus</code> methods <code>ImuDriver</code> requires without adding a second bound — the
+supertrait relationship already guarantees <code>SpiBus</code> is implemented.</p>
+<pre><code class="rust">fn read_and_log&lt;T: ImuDriver&gt;(imu: &amp;mut T) -&gt; Result&lt;(), T::Error&gt; {
+    let raw = imu.read_accel_raw()?;           // ImuDriver's own method
+    let mut passthrough = [0u8; 1];
+    imu.transfer(&amp;mut passthrough)?;           // &lt;- SpiBus's method, usable with only the ImuDriver bound
+    let _ = raw;
+    Ok(())
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> writing <code>fn read_and_log&lt;T: ImuDriver + SpiBus&gt;</code> would be
+redundant — <code>ImuDriver: SpiBus</code> already elaborates the <code>SpiBus</code> bound
+wherever <code>T: ImuDriver</code> is required, so driver code generic over the
+higher-level trait gets the bus-level trait's methods for free.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

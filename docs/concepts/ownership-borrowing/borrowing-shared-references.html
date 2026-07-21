@@ -1067,19 +1067,101 @@ directly instead of requiring the <code>'static</code> lifetime (and usually an
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Borrowing means exactly the same thing under <code>#![no_std]</code> — a shared
+reference (<code>&amp;T</code>) grants temporary read-only access without transferring
+ownership, any number of <code>&amp;T</code> can coexist as long as no <code>&amp;mut T</code> to the
+same data is alive at the same time, and none of it has any runtime
+representation. What's distinctly common in HAL-adjacent code is passing
+a <code>&amp;Peripheral</code>/<code>&amp;Config</code>-shaped value into multiple driver calls without
+ever giving up ownership of the underlying value: a configuration struct
+assembled once in <code>main</code> is typically borrowed by every driver <code>init</code> call
+that needs to read it, rather than cloned per call (a real, avoidable
+RAM/cycle cost on a constrained device — see
+<a href="copy-vs-clone.md">Copy vs Clone</a>) or moved into just one of them, which
+would leave the rest of the program with nothing to read. The same <code>&amp;T</code>/
+<code>&amp;mut T</code> exclusivity rule embedded code leans on for interrupt safety (see
+<a href="borrow-checker.md">The borrow checker</a>) is this same mechanism at
+higher stakes; ordinary shared borrowing of config values and peripheral
+handles across driver code is its everyday, lower-stakes case.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">struct SensorConfig { gain: u8, sample_rate_hz: u16 }
+
+fn init_temperature(cfg: &amp;SensorConfig) { /* ... */ }
+
+let config = SensorConfig { gain: 4, sample_rate_hz: 100 };
+init_temperature(&amp;config); // &lt;- borrows: init_temperature never takes ownership
+println!("{}", config.gain); // config is still usable afterward
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Sharing data with multiple references</h3>
+            <p>A configuration struct built once in <code>main</code> is read by two separate
+sensor driver init calls, neither of which needs to own it.</p>
+<pre><code class="rust">struct SensorConfig { gain: u8, sample_rate_hz: u16 }
+
+fn init_temperature(cfg: &amp;SensorConfig) { /* configure the temperature ADC channel */ }
+fn init_humidity(cfg: &amp;SensorConfig) { /* configure the humidity ADC channel */ }
+
+let config = SensorConfig { gain: 4, sample_rate_hz: 100 };
+init_temperature(&amp;config); // &lt;- first shared borrow
+init_humidity(&amp;config);    // &lt;- second shared borrow of the same config, both read-only
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> cloning <code>config</code> for each call would duplicate it for no
+reason (neither driver keeps a copy), and moving it into one call would
+leave the other with nothing to read — sharing the same <code>&amp;T</code> across both
+is the natural fit, and, on a device with a few KB of RAM total, also the
+cheapest one; the
+<a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">Rust Book</a>
+covers unlimited concurrent shared borrows as the direct benefit of <code>&amp;T</code>
+never granting write access.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A function that only reads a config should accept a shared reference
+rather than take ownership of it, so the caller can keep using that value
+for every other init call afterward.</p>
+<pre><code class="rust">// PREFER: accept a shared reference — the caller keeps ownership of `cfg`
+fn validate(cfg: &amp;SensorConfig) -&gt; bool {
+    cfg.sample_rate_hz &lt;= 1000
+}
+
+// AVOID: taking ownership here forces the caller to clone `cfg` or give it up
+// fn validate_owned(cfg: SensorConfig) -&gt; bool { cfg.sample_rate_hz &lt;= 1000 }
+
+let config = SensorConfig { gain: 4, sample_rate_hz: 100 };
+if validate(&amp;config) {
+    init_temperature(&amp;config); // &lt;- config is still available: validate() only ever borrowed it
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a function that only needs to read should ask for no
+more than a shared reference — taking ownership it doesn't need would
+force every caller to either clone the value or give up their own access
+to it, exactly the kind of unnecessary restriction the
+<a href="https://rust-lang.github.io/api-guidelines/flexibility.html">API Guidelines</a>
+recommend against when a borrow is all an API actually requires.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

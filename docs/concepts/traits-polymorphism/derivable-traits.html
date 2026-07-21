@@ -1057,19 +1057,112 @@ notes both <code>PartialEq</code> and <code>Debug</code> are needed for <code>as
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The mechanism is unchanged under <code>#![no_std]</code> — every built-in derive
+still generates the same mechanical, field-by-field implementation,
+routed through <code>core::fmt</code>/<code>core::cmp</code>/<code>core::clone</code> rather than their
+<code>std</code> re-exports, and still requires every field's own type to already
+implement the trait being derived. What's worth deciding deliberately on
+an embedded target is <em>which</em> traits to derive on <em>which</em> types, because
+one of them has a cost that's easy to ignore on a hosted machine and hard
+to ignore on a flash-constrained chip: <code>#[derive(Debug)]</code> generates
+formatting code — matching every variant, writing every field name — that
+occupies flash, and deriving it reflexively on every type in a large HAL
+or driver crate can measurably inflate a release binary. See
+<a href="../../syntax/attributes/derive.md"><code>#[derive(...)]</code>'s embedded
+explanation</a> for the full code-size
+argument and the <code>#[cfg_attr(feature = "debug-impls", derive(Debug))]</code>
+pattern used to keep it optional; the choice that belongs here, on the
+concept page, is <em>when</em> a type genuinely needs <code>Debug</code>/<code>Clone</code>/<code>PartialEq</code>
+at all — a hot, frequently-instantiated register-snapshot type is a poor
+candidate for a reflexive <code>Debug</code> derive, while a rarely-constructed
+configuration struct usually isn't worth worrying about either way.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">#![no_std]
+
+#[derive(Clone, Copy, PartialEq)] // &lt;- routes through core::clone/core::cmp; Debug left out deliberately
+pub struct SensorReading {
+    pub raw_adc: u16,
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p>A register-snapshot type read many times per second is exactly the kind
+of type where reflexively deriving <code>Debug</code> alongside <code>Clone</code>/<code>PartialEq</code>
+is worth reconsidering, since only the latter two are needed for the
+driver's own logic to compare and copy readings.</p>
+<pre><code class="rust">#![no_std]
+
+#[derive(Clone, Copy, PartialEq)] // &lt;- needed: the driver compares and copies readings internally
+pub struct StatusRegister {
+    pub raw: u32,
+}
+
+// Debug omitted here on purpose — this type is read on every poll loop
+// iteration, and its formatting code would occupy flash for a capability
+// the release firmware never exercises.
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> deriving exactly the traits a type's own logic needs —
+and no more — keeps flash usage proportional to actual use, rather than
+paying for <code>Debug</code>'s formatting code on a type instantiated and copied
+constantly; see <a href="../../syntax/attributes/derive.md"><code>#[derive(...)]</code>'s embedded
+explanation</a> for the full code-size
+reasoning behind treating <code>Debug</code> as opt-in on hot types.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Testing</h3>
+            <p>A small, infrequently-constructed configuration type is a good candidate
+for deriving <code>Debug</code> and <code>PartialEq</code> together, since host-run unit tests
+need both to use <code>assert_eq!</code> — and this type's derive cost is paid once,
+not on every poll loop iteration.</p>
+<pre><code class="rust">#![no_std]
+
+#[derive(Debug, PartialEq)] // &lt;- both needed for assert_eq! in host-run tests; cheap here: rarely constructed
+pub struct UartConfig {
+    pub baud_rate: u32,
+    pub parity_enabled: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn builds_expected_config() {
+        let cfg = UartConfig { baud_rate: 115_200, parity_enabled: false };
+        assert_eq!(cfg, UartConfig { baud_rate: 115_200, parity_enabled: false });
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> <code>assert_eq!</code> still requires <code>Debug</code> + <code>PartialEq</code> on a
+<code>no_std</code> target exactly as it does on a hosted one, and this type is
+constructed rarely enough (at startup, from configuration) that its
+<code>Debug</code> derive's flash cost is negligible — the code-size argument for
+withholding <code>Debug</code> applies to hot, repeatedly-instantiated types, not to
+every type in a crate uniformly.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

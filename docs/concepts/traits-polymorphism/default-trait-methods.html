@@ -1059,19 +1059,117 @@ forward-compatibility technique.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>Default methods work identically under <code>#![no_std]</code> — nothing about the
+mechanism depends on <code>std</code> or an allocator. They're genuinely common in
+<code>embedded-hal</code>-style traits specifically because a peripheral's real
+hardware contract is usually one small, irreducible primitive, with every
+higher-level operation expressible in terms of it: a serial/UART trait
+only strictly needs a way to write a single byte, so it can declare
+<code>write_byte</code> as the required method and provide <code>write_all</code> (looping over
+a byte slice) as a default built entirely on top of it. Every vendor's
+UART implementation then only has to supply the one primitive operation
+its register interface actually performs, and gets the convenience method
+for free — the same "required primitive, default convenience" shape the
+<a href="../../syntax/keywords/trait.md">trait</a> page describes for <code>embedded-hal</code>
+generally, applied here to one trait's own internal method design rather
+than to the trait-as-abstraction-boundary story.</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">trait SerialWrite {
+    fn write_byte(&amp;mut self, byte: u8); // required: the one primitive every UART must supply
+    fn write_all(&amp;mut self, bytes: &amp;[u8]) { // &lt;- default: built from write_byte alone
+        for &amp;b in bytes {
+            self.write_byte(b);
+        }
+    }
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Implementing traits</h3>
+            <p>A UART trait shared across vendors should require only the one operation
+that genuinely differs per chip — writing a single byte to a data
+register — and provide everything built on top of it as a default.</p>
+<pre><code class="rust">trait SerialWrite {
+    fn write_byte(&amp;mut self, byte: u8); // &lt;- required: the only per-chip-specific primitive
+    fn write_all(&amp;mut self, bytes: &amp;[u8]) { // &lt;- default: same for every implementer
+        for &amp;b in bytes {
+            self.write_byte(b);
+        }
+    }
+}
+
+struct Usart1;
+impl SerialWrite for Usart1 {
+    fn write_byte(&amp;mut self, byte: u8) {
+        // a real impl would poll a status register, then write a data register
+        let _ = byte;
+    }
+}
+
+Usart1.write_all(b"ready\r\n"); // &lt;- write_all comes for free once write_byte exists
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> narrowing the required method to the one operation that
+actually differs per peripheral minimizes what a vendor's HAL has to
+implement by hand, while every consumer still gets <code>write_all</code> — the same
+default-method shape the
+<a href="https://doc.rust-lang.org/book/ch10-02-traits.html">Rust Book</a> recommends
+generally, particularly valuable in embedded code where hand-implementing
+every convenience method per chip would otherwise multiply boilerplate
+across every vendor's HAL crate.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>An <code>embedded-hal</code>-style trait can grow a new convenience method with a
+default body without breaking every existing implementer already shipped
+in a vendor's HAL crate.</p>
+<pre><code class="rust">pub trait SerialWrite {
+    fn write_byte(&amp;mut self, byte: u8);
+    fn write_all(&amp;mut self, bytes: &amp;[u8]) {
+        for &amp;b in bytes {
+            self.write_byte(b);
+        }
+    }
+    fn flush(&amp;mut self) {} // &lt;- added later, with a no-op default: existing implementers keep compiling
+}
+
+struct Usart1; // written before flush() existed
+impl SerialWrite for Usart1 { // &lt;- still compiles: flush()'s default covers it
+    fn write_byte(&amp;mut self, byte: u8) {
+        let _ = byte;
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> a HAL trait implemented by many independent vendor
+crates can't ask every one of them to add a method the moment the trait
+grows — a default body keeps the addition non-breaking, the same
+forward-compatibility reasoning <a href="https://rust-lang.github.io/rfcs/1105-api-evolution.html">RFC
+1105</a> applies
+to trait evolution generally, with the stakes raised in an ecosystem where
+<code>SerialWrite</code> might have implementers in a dozen different HAL crates the
+trait's own author doesn't control.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>

@@ -1030,19 +1030,99 @@ creates a new, distinct type.</p>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           Embedded support: Full
         </span>
-        
+        <p>The mechanism doesn't change at all under <code>#![no_std]</code> — a type alias is
+purely a compile-time naming convenience with zero runtime representation
+of its own, so everything the classic explanation says (including the
+"zero type-safety benefit" caveat) applies unchanged. Where it earns an
+unusually large amount of its keep in embedded code is HAL types: a
+configured peripheral's real type is often a deeply generic signature
+spelled out by the HAL crate — a UART configured onto a specific pair of
+pins in a specific alternate-function mode might have a real type along
+the lines of
+<code>Uart&lt;USART1, (PA9&lt;AlternateFunction7&gt;, PA10&lt;AlternateFunction7&gt;)&gt;</code>.
+Writing that signature out at every function boundary that touches the
+peripheral is exactly the "long, repeated generic type" case the classic
+explanation calls out — an alias like
+<code>type Uart1 = Uart&lt;USART1, (PA9&lt;AlternateFunction7&gt;, PA10&lt;AlternateFunction7&gt;)&gt;;</code>
+lets application code pass "a <code>Uart1</code>" around without re-deriving or
+re-typing the HAL's exact generic signature at each call site. (The exact
+generic parameters here are illustrative — they vary by HAL crate and
+chip family; the pattern of aliasing a verbose configured-peripheral type
+is what's genuinely embedded-idiomatic, not this specific signature.)</p>
+
       </section>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        
+        <pre><code class="rust">// illustrative -- the real generic parameters depend on the HAL crate and chip in use
+type Uart1 = Uart&lt;USART1, (PA9&lt;AlternateFunction7&gt;, PA10&lt;AlternateFunction7&gt;)&gt;; // &lt;- one name for a long HAL type
+
+fn send_byte(uart: &amp;mut Uart1, byte: u8) { // &lt;- reads far better than the full generic signature
+    uart.write(byte);
+}
+</code></pre>
+
       </section>
 
       <section class="doc" data-tab="best">
         <h2 class="section-title">Best practices &amp; deeper information</h2>
         
         <div class="scenarios">
-        
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Designing a public API</h3>
+            <p>A driver crate built on top of a HAL often wants its public functions to
+accept "the configured UART" without forcing every downstream user to
+spell out the HAL's full generic instantiation.</p>
+<pre><code class="rust">// illustrative HAL-style generic type -- exact parameters vary by crate/chip
+type DebugUart = Uart&lt;USART2, (PA2&lt;AlternateFunction7&gt;, PA3&lt;AlternateFunction7&gt;)&gt;;
+
+pub fn log_line(uart: &amp;mut DebugUart, message: &amp;str) { // &lt;- the alias, not the full generic type, is the public API surface
+    for byte in message.bytes() {
+        uart.write(byte);
+    }
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> the alias buys pure readability, exactly as on hosted
+targets — it's worth remembering <code>DebugUart</code> is fully interchangeable
+with the HAL's real generic type, so it documents intent without adding
+any type-level guarantee of its own.</p>
+</div>
+          </div>
+        <div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">Handling and propagating errors</h3>
+            <p>A crate's own <code>Result</code> alias, fixing the error type while leaving the
+success type generic, is just as common in <code>#![no_std]</code> code as in hosted
+Rust — only the underlying <code>Result</code> comes from <code>core</code> instead of <code>std</code>.</p>
+<pre><code class="rust">#![no_std]
+
+type Result&lt;T&gt; = core::result::Result&lt;T, SensorError&gt;; // &lt;- fixes the error type; T stays generic per call site
+
+enum SensorError {
+    NotResponding,
+    OutOfRange,
+}
+
+fn read_temperature() -&gt; Result&lt;i16&gt; { // &lt;- reads as "a Result with this crate's error type", same idiom as std
+    Ok(215)
+}
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> aliasing a crate-wide <code>Result&lt;T&gt;</code> over a fixed error
+type is the same idiom <code>std</code>-based crates use for their own error types —
+it saves repeating the error type at every fallible function's
+signature, and works identically against <code>core::result::Result</code> since the
+alias mechanism itself has no <code>std</code> dependency.</p>
+</div>
+          </div>
         </div>
       </section>
       </div>
