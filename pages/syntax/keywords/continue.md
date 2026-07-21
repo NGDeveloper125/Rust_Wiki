@@ -2,7 +2,7 @@
 title: "continue"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: []
 related_syntax: [loop, while, for, break]
 see_also: [break]

@@ -2,7 +2,7 @@
 title: "in"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: ["The Iterator trait"]
 related_syntax: [for]
 see_also: [for]

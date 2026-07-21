@@ -3,7 +3,7 @@ title: "Lifetime elision"
 area: "Ownership & Borrowing"
 embedded_support: full
 groups: ["Ownership & Borrowing", "Lifetime Management"]
-related_syntax: ["'ident"]
+related_syntax: ["'a"]
 see_also: ["Lifetimes"]
 ---
 

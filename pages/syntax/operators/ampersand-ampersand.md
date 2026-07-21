@@ -2,7 +2,7 @@
 title: "&&"
 kind: operator
 embedded_support: full
-groups: [Basics]
+groups: [Logical, Basics]
 related_concepts: []
 related_syntax: ["||", "!"]
 see_also: ["||"]

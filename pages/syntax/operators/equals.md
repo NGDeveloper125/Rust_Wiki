@@ -2,7 +2,7 @@
 title: "="
 kind: operator
 embedded_support: full
-groups: [Basics]
+groups: [Assignment, Basics]
 related_concepts: [Ownership, "Move semantics"]
 related_syntax: [let, "mut"]
 see_also: [let]

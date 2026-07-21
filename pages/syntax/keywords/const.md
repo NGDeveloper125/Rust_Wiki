@@ -3,7 +3,7 @@ title: "const"
 kind: keyword
 embedded_support: full
 groups: [Basics]
-related_concepts: [Const generics, "Rust Philosophy & Design Principles"]
+related_concepts: [Const generics, "Zero-cost abstractions"]
 related_syntax: [static, let]
 see_also: [static]
 ---

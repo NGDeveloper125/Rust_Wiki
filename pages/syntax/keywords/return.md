@@ -2,7 +2,7 @@
 title: "return"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: [Functions, Expression-oriented language]
 related_syntax: [fn]
 see_also: [fn]

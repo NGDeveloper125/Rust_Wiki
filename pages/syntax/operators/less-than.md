@@ -2,7 +2,7 @@
 title: "<"
 kind: operator
 embedded_support: full
-groups: [Basics, "Types & Data Structures"]
+groups: [Comparison, Basics, "Types & Data Structures"]
 related_concepts: [Operator overloading, Generics]
 related_syntax: [">", "<=", ">="]
 see_also: [">"]

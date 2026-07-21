@@ -1,0 +1,116 @@
+---
+title: "await"
+kind: keyword
+embedded_support: partial
+groups: ["Concurrency & Async"]
+related_concepts: ["Async/await", "Futures"]
+related_syntax: ["async"]
+see_also: ["async"]
+---
+
+## Explanation
+
+`await` is a keyword, but it is not written like one: `expr.await` places
+it after a `.`, in postfix/method-call position, rather than before the
+expression it acts on the way `if`, `for`, `return`, and almost every
+other keyword in Rust are written. There is no `await expr` form. This
+unusual position exists so `.await` chains fluently the same way method
+calls do — `fetch_order(id).await?.total_cents()` reads left to right —
+and it's why `.await` is often described as a "postfix keyword-operator"
+rather than an ordinary keyword or an ordinary method. It is not sugar
+for a real method call, either: `await` is a full reserved keyword (since
+the 2018 edition), so no type can define an actual method named `await`;
+the compiler recognizes `.await` as its own grammatical form, distinct
+from `.method_name()` syntax.
+
+`expr.await` is only legal directly inside the body of an `async fn` or
+an `async` / `async move` block (see [`async`](async.md)) — writing it
+anywhere else (a plain `fn`, an `impl Iterator::next`, module-level code)
+is a compile error: "await is only allowed inside async functions and
+blocks." `expr` must be a value whose type implements `Future`, or, since
+Rust 1.64, `IntoFuture` — the standard library blanket-implements
+`IntoFuture` for every `Future`, so ordinary futures still work
+unchanged.
+
+Mechanically, `expr.await` polls the future `expr` evaluates to. If that
+poll returns `Poll::Ready(value)`, the whole `expr.await` expression
+evaluates to `value` and execution continues on the next line, exactly as
+if it were an ordinary synchronous call. If the poll returns
+`Poll::Pending`, the enclosing `async fn`/block suspends right there —
+control returns to whatever is driving it, one level up — and that driver
+is free to make progress on other work in the meantime. Crucially, this
+suspension only ever gives up the *task*, never the OS thread: the thread
+that was running the suspended task is immediately free to run other
+tasks, and the suspended one resumes from exactly this `.await` point once
+it's woken and polled again. See [Futures](../../concepts/concurrency-async/futures.md)
+for what `poll`/`Future` actually are, and
+[Async/await](../../concepts/concurrency-async/async-await.md) for when
+reaching for this suspension model is the right call in the first place.
+
+## Basic usage example
+
+```
+async fn fetch_greeting() -> String {
+    String::from("hello")
+}
+
+async fn greet() {
+    let greeting = fetch_greeting().await; // <- `.await`: postfix position, suspends `greet` here until ready
+    println!("{greeting}");
+}
+```
+
+## Best practices & deeper information
+
+### Scenario: Async tasks
+
+Fetching a product's price and its stock count from two independent
+services shouldn't be written as two back-to-back `.await`s when the
+calls don't depend on each other — each `.await` there pays its own
+latency in full, one after the other, when both requests could be in
+flight at once.
+
+```
+// [dependencies] tokio = { version = "1", features = ["full"] }
+use std::time::Duration;
+
+async fn fetch_price_cents(sku: &str) -> u32 {
+    tokio::time::sleep(Duration::from_millis(30)).await; // <- suspends this call only, thread stays free
+    let _ = sku;
+    2499
+}
+
+async fn fetch_stock_count(sku: &str) -> u32 {
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    let _ = sku;
+    42
+}
+
+#[tokio::main]
+async fn main() {
+    // AVOID: two sequential `.await`s serialize latencies that don't depend on each other
+    let price = fetch_price_cents("sku-1").await; // <- .await #1 finishes fully before #2 even starts
+    let stock = fetch_stock_count("sku-1").await; // <- .await #2
+
+    // PREFER: run both futures concurrently, awaiting them together
+    let (price2, stock2) = tokio::join!(fetch_price_cents("sku-1"), fetch_stock_count("sku-1"));
+    println!("{price} {stock} {price2} {stock2}");
+}
+```
+
+**Why this way:** each `.await` only suspends until its own future
+resolves, so writing two of them back-to-back for independent work
+serializes their latencies; `tokio::join!` polls both futures under one
+concurrent point instead, finishing in roughly the slower call's time —
+see [Futures](../../concepts/concurrency-async/futures.md) and the
+[Tokio tutorial](https://tokio.rs/tokio/tutorial/select#join) for
+`join!`'s own mechanics, which this page doesn't re-explain.
+
+## Embedded Rust Notes
+
+**Partial support.** `.await`'s grammar and suspension semantics are
+core-language, working identically under `#![no_std]` since they only
+require `core::future::Future`. What's missing on bare-metal targets is
+anything to actually drive the poll loop: there's no `tokio` executor, so
+`#![no_std]` code needs an embedded async executor such as `embassy` to
+poll the futures that `.await` points suspend on.

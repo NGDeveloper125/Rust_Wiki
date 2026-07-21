@@ -2,8 +2,8 @@
 title: "|"
 kind: operator
 embedded_support: full
-groups: [Basics, "Control Flow & Pattern Matching", "Functions & Closures"]
-related_concepts: [Operator overloading, "Closures & capturing", "Pattern matching"]
+groups: [Bitwise, Basics, "Control Flow & Pattern Matching", "Functions & Closures"]
+related_concepts: [Operator overloading, "Closures & capturing", "match expressions"]
 related_syntax: ["||", "&", "|="]
 see_also: ["||"]
 ---

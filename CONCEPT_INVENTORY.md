@@ -83,110 +83,110 @@
 - [x] Type erasure (`dyn Any` & downcasting) — recovering a concrete type from a trait object at runtime
 
 ### 1.4 Functions & Closures
-- [ ] Functions — named, reusable blocks of code
-- [ ] Expression-oriented language — almost everything evaluates to a value
-- [ ] Closures & capturing — anonymous functions that borrow their environment
-- [ ] `Fn` / `FnMut` / `FnOnce` — the three ways a closure can use its captures
-- [ ] Higher-order functions — functions taking or returning functions
-- [ ] Function pointers (`fn` types) — plain, non-capturing function values
+- [x] Functions — named, reusable blocks of code
+- [x] Expression-oriented language — almost everything evaluates to a value
+- [x] Closures & capturing — anonymous functions that borrow their environment
+- [x] `Fn` / `FnMut` / `FnOnce` — the three ways a closure can use its captures
+- [x] Higher-order functions — functions taking or returning functions
+- [x] Function pointers (`fn` types) — plain, non-capturing function values
 
 ### 1.5 Iterators
-- [ ] The `Iterator` trait — the core abstraction for sequential access
-- [ ] `IntoIterator` (`iter`/`iter_mut`/`into_iter`) — the three ways to start iterating
-- [ ] Iterator adaptors (`map`, `filter`, `zip`, `enumerate`, `chain`, `flat_map`, `rev`, `scan`, `peekable`, `take`/`skip`, …) — lazy transformations
-- [ ] Iterator consumers (`collect`, `sum`, `fold`, `reduce`, `count`, `for_each`, `any`/`all`, `min`/`max`) — driving iteration to a result
-- [ ] Lazy evaluation — adaptors do nothing until consumed
-- [ ] Custom iterators — implementing `Iterator` for your own type
-- [ ] `FromIterator` & collect targets — how `.collect()` knows what to build
+- [x] The `Iterator` trait — the core abstraction for sequential access
+- [x] `IntoIterator` (`iter`/`iter_mut`/`into_iter`) — the three ways to start iterating
+- [x] Iterator adaptors (`map`, `filter`, `zip`, `enumerate`, `chain`, `flat_map`, `rev`, `scan`, `peekable`, `take`/`skip`, …) — lazy transformations
+- [x] Iterator consumers (`collect`, `sum`, `fold`, `reduce`, `count`, `for_each`, `any`/`all`, `min`/`max`) — driving iteration to a result
+- [x] Lazy evaluation — adaptors do nothing until consumed
+- [x] Custom iterators — implementing `Iterator` for your own type
+- [x] `FromIterator` & collect targets — how `.collect()` knows what to build
 
 ### 1.6 Error Handling
-- [ ] `Option<T>` — an explicit "maybe absent" value
-- [ ] `Result<T, E>` — an explicit "maybe failed" value
-- [ ] The `?` operator (concept angle) — early-return propagation as control flow
-- [ ] Panic & unwinding — unrecoverable errors and what happens when they occur
-- [ ] Custom error types — designing your own `E` in `Result<T, E>`
-- [ ] The `Error` trait — the standard interface error types should implement
+- [x] `Option<T>` — an explicit "maybe absent" value
+- [x] `Result<T, E>` — an explicit "maybe failed" value
+- [x] The `?` operator (concept angle) — early-return propagation as control flow
+- [x] Panic & unwinding — unrecoverable errors and what happens when they occur
+- [x] Custom error types — designing your own `E` in `Result<T, E>`
+- [x] The `Error` trait — the standard interface error types should implement
 
 ### 1.7 Pattern Matching
-- [ ] `match` expressions — exhaustive branching on structure
-- [ ] `if let` / `while let` — matching a single pattern without full `match`
-- [ ] Destructuring — pulling a value apart into its components
-- [ ] Match guards — extra `if` conditions on a match arm
-- [ ] Exhaustiveness checking — the compiler proving you handled every case
+- [x] `match` expressions — exhaustive branching on structure
+- [x] `if let` / `while let` — matching a single pattern without full `match`
+- [x] Destructuring — pulling a value apart into its components
+- [x] Match guards — extra `if` conditions on a match arm
+- [x] Exhaustiveness checking — the compiler proving you handled every case
 
 ### 1.8 Modules, Crates & Visibility
-- [ ] Modules — namespacing and code organization within a crate
-- [ ] Crates — the unit of compilation and distribution
-- [ ] Workspaces — multiple crates managed together
-- [ ] Visibility & privacy (`pub` and friends) — what's exposed outside a module
-- [ ] Cargo & `Cargo.toml` *(ecosystem/tooling, not core language)*
-- [ ] Dependency management & semver *(ecosystem/tooling, not core language)*
+- [x] Modules — namespacing and code organization within a crate
+- [x] Crates — the unit of compilation and distribution
+- [x] Workspaces — multiple crates managed together
+- [x] Visibility & privacy (`pub` and friends) — what's exposed outside a module
+- [x] Cargo & `Cargo.toml` *(ecosystem/tooling, not core language)*
+- [x] Dependency management & semver *(ecosystem/tooling, not core language)*
 
 ### 1.9 Concurrency & Async
-- [ ] Threads (`std::thread`) — OS-level parallel execution
-- [ ] Message passing (channels / `mpsc`) — sharing data by sending it, not sharing it
-- [ ] Shared-state concurrency (`Mutex`, `RwLock`) — sharing data by locking it
-- [ ] `Send` & `Sync` — which types are safe to move/share across threads
-- [ ] Async/await — cooperative, non-blocking concurrency
-- [ ] Futures — values representing work not yet complete
-- [ ] Async runtimes *(ecosystem note: tokio, async-std — not part of std)*
+- [x] Threads (`std::thread`) — OS-level parallel execution
+- [x] Message passing (channels / `mpsc`) — sharing data by sending it, not sharing it
+- [x] Shared-state concurrency (`Mutex`, `RwLock`) — sharing data by locking it
+- [x] `Send` & `Sync` — which types are safe to move/share across threads
+- [x] Async/await — cooperative, non-blocking concurrency
+- [x] Futures — values representing work not yet complete
+- [x] Async runtimes *(ecosystem note: tokio, async-std — not part of std)*
 
 ### 1.10 Memory & Unsafe
-- [ ] Unsafe Rust — the subset where the compiler trusts you instead of checking
-- [ ] Raw pointers (`*const T` / `*mut T`) — pointers without borrow-checker guarantees
-- [ ] FFI (foreign function interface) — calling into/from other languages
-- [ ] Memory layout & `repr` — controlling how types are laid out in memory
-- [ ] The undefined-behavior boundary — what unsafe code must never do
+- [x] Unsafe Rust — the subset where the compiler trusts you instead of checking
+- [x] Raw pointers (`*const T` / `*mut T`) — pointers without borrow-checker guarantees
+- [x] FFI (foreign function interface) — calling into/from other languages
+- [x] Memory layout & `repr` — controlling how types are laid out in memory
+- [x] The undefined-behavior boundary — what unsafe code must never do
 
 ### 1.11 Macros & Metaprogramming
-- [ ] Declarative macros (`macro_rules!`) — pattern-matching code generation
-- [ ] Procedural macros — macros written as compiler plugins (functions over token streams)
-- [ ] Derive macros — `#[derive(...)]`-driven code generation
-- [ ] Attribute-like macros — custom `#[attribute]`s that transform an item
-- [ ] Function-like macros — proc-macros invoked like `ident!(...)`
+- [x] Declarative macros (`macro_rules!`) — pattern-matching code generation
+- [x] Procedural macros — macros written as compiler plugins (functions over token streams)
+- [x] Derive macros — `#[derive(...)]`-driven code generation
+- [x] Attribute-like macros — custom `#[attribute]`s that transform an item
+- [x] Function-like macros — proc-macros invoked like `ident!(...)`
 
 ### 1.12 Collections & Strings
-- [ ] `Vec<T>` — a growable array
-- [ ] `HashMap` & `HashSet` — unordered key-based collections
-- [ ] `BTreeMap` & `BTreeSet` — ordered key-based collections
-- [ ] `String` vs `&str` — owned, growable text vs a borrowed view of text
-- [ ] String formatting (`Display`, `Debug`, `format!`) — turning values into text
+- [x] `Vec<T>` — a growable array
+- [x] `HashMap` & `HashSet` — unordered key-based collections
+- [x] `BTreeMap` & `BTreeSet` — ordered key-based collections
+- [x] `String` vs `&str` — owned, growable text vs a borrowed view of text
+- [x] String formatting (`Display`, `Debug`, `format!`) — turning values into text
 
 ### 1.13 Testing & Tooling *(ecosystem, flagged as non-core-language)*
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] Doc tests
-- [ ] Benchmarking
-- [ ] Clippy & rustfmt
-- [ ] Serialization (the `serde` ecosystem) — turning Rust values into/from external data formats
+- [x] Unit tests
+- [x] Integration tests
+- [x] Doc tests
+- [x] Benchmarking
+- [x] Clippy & rustfmt
+- [x] Serialization (the `serde` ecosystem) — turning Rust values into/from external data formats
 
 ### 1.14 Design Patterns & Idioms *(sourced from the Rust Patterns book)*
-- [ ] The builder pattern — constructing complex values step by step
-- [ ] The visitor pattern
-- [ ] The strategy pattern
-- [ ] The command pattern
-- [ ] The typestate pattern — encoding state machines in the type system
-- [ ] Composition over inheritance
-- [ ] On-stack dynamic dispatch — using `dyn Trait` without heap allocation
-- [ ] Prefer small crates *(idiom)*
-- [ ] Compose structs *(idiom — struct-of-structs over god-structs)*
-- [ ] Contain unsafety in small modules *(idiom)*
-- [ ] Constructor functions (`new()` convention) *(idiom)*
-- [ ] The `Default` trait as idiom
-- [ ] `mem::take` / `mem::replace` *(idiom)*
-- [ ] Privacy for extensibility *(idiom)*
-- [ ] Temporary mutability *(idiom)*
-- [ ] Return consumed argument on error *(idiom)*
-- [ ] Anti-pattern: cloning to satisfy the borrow checker
-- [ ] Anti-pattern: `Deref` polymorphism (faking inheritance)
-- [ ] Anti-pattern: `#[deny(warnings)]`
+- [x] The builder pattern — constructing complex values step by step
+- [x] The visitor pattern
+- [x] The strategy pattern
+- [x] The command pattern
+- [x] The typestate pattern — encoding state machines in the type system
+- [x] Composition over inheritance
+- [x] On-stack dynamic dispatch — using `dyn Trait` without heap allocation
+- [x] Prefer small crates *(idiom)*
+- [x] Compose structs *(idiom — struct-of-structs over god-structs)*
+- [x] Contain unsafety in small modules *(idiom)*
+- [x] Constructor functions (`new()` convention) *(idiom)*
+- [x] The `Default` trait as idiom
+- [x] `mem::take` / `mem::replace` *(idiom)*
+- [x] Privacy for extensibility *(idiom)*
+- [x] Temporary mutability *(idiom)*
+- [x] Return consumed argument on error *(idiom)*
+- [x] Anti-pattern: cloning to satisfy the borrow checker
+- [x] Anti-pattern: `Deref` polymorphism (faking inheritance)
+- [x] Anti-pattern: `#[deny(warnings)]`
 
 ### 1.15 Rust Philosophy & Design Principles
-- [ ] Zero-cost abstractions
-- [ ] Fearless concurrency
-- [ ] Memory safety without a garbage collector
-- [ ] The edition system — opt-in breaking changes without fracturing the ecosystem
-- [ ] "Make invalid states unrepresentable" — type-driven design
+- [x] Zero-cost abstractions
+- [x] Fearless concurrency
+- [x] Memory safety without a garbage collector
+- [x] The edition system — opt-in breaking changes without fracturing the ecosystem
+- [x] "Make invalid states unrepresentable" — type-driven design
 
 ---
 

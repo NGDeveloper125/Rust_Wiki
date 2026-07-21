@@ -2,7 +2,7 @@
 title: "=="
 kind: operator
 embedded_support: full
-groups: [Basics]
+groups: [Comparison, Basics]
 related_concepts: [Operator overloading, "Derivable traits (Debug, Clone, PartialEq, …)"]
 related_syntax: ["!="]
 see_also: ["!="]

@@ -2,7 +2,7 @@
 title: "loop"
 kind: keyword
 embedded_support: full
-groups: [Basics]
+groups: ["Control Flow", Basics]
 related_concepts: [Expression-oriented language]
 related_syntax: [while, for, break, continue]
 see_also: [while, break]
