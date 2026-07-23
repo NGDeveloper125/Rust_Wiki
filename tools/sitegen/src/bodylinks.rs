@@ -90,10 +90,22 @@ pub fn rewrite_all(pages: &mut [Page]) {
             rewrite_links_in(&page.best_practices_intro_html, &current_dir, depth, &known);
         page.embedded_notes_html =
             rewrite_links_in(&page.embedded_notes_html, &current_dir, depth, &known);
-        for s in page.scenarios.iter_mut() {
+        for s in page
+            .scenarios
+            .iter_mut()
+            .chain(page.embedded_scenarios.iter_mut())
+        {
             s.body_html = rewrite_links_in(&s.body_html, &current_dir, depth, &known);
             if let Some(r) = s.rationale_html.take() {
                 s.rationale_html = Some(rewrite_links_in(&r, &current_dir, depth, &known));
+            }
+            for a in s.approaches.iter_mut() {
+                a.attribution_html =
+                    rewrite_links_in(&a.attribution_html, &current_dir, depth, &known);
+                a.body_html = rewrite_links_in(&a.body_html, &current_dir, depth, &known);
+                if let Some(r) = a.rationale_html.take() {
+                    a.rationale_html = Some(rewrite_links_in(&r, &current_dir, depth, &known));
+                }
             }
         }
         for ex in page.usage_examples.iter_mut() {

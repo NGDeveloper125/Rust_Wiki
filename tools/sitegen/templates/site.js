@@ -51,6 +51,88 @@
     segEmbedded.addEventListener('click', function () { setFlavor(true); });
   }
 
+  /* ---------- SCENARIO APPROACH PICKER ---------- */
+  // Scenarios with community-contributed approaches render an "Approach:"
+  // dropdown (Classic first) and one `.approach-panel` per option. Options
+  // and panels pair by explicit value/data-idx — not DOM position — so the
+  // vote code below can reorder options by like-count without breaking the
+  // pairing. Cards never nest, so closest() scoping is safe.
+  document.querySelectorAll('.approach-select').forEach(function (select) {
+    var card = select.closest('.card');
+    var panels = Array.prototype.slice.call(card.querySelectorAll('.approach-panel'));
+    select.addEventListener('change', function () {
+      panels.forEach(function (p) {
+        p.classList.toggle('on', p.getAttribute('data-idx') === select.value);
+      });
+    });
+  });
+
+  /* ---------- APPROACH LIKES (GitHub reactions) ---------- */
+  // Each community approach maps to a GitHub issue (label `approach-vote`,
+  // title = the option's data-vote-key). One unauthenticated API call
+  // fetches every issue's 👍 count; we sort approaches by likes (Classic
+  // always stays first) and reveal a like chip (with count) linking to the
+  // issue. Any failure (offline, rate limit, no issue yet) silently leaves
+  // the page exactly as rendered.
+  var VOTES_REPO = 'NGDeveloper125/Rust_Wiki';
+  if (document.querySelector('.approach-select option[data-vote-key]')) {
+    fetchVotes().then(applyVotes).catch(function () { /* graceful no-op */ });
+  }
+
+  // Fetch fresh counts on every page load so a reload always reflects the
+  // current votes. `cache: 'no-store'` also stops the browser's own HTTP
+  // cache from serving a stale API response. Anonymous GitHub API calls are
+  // limited to 60/hr per IP; if that's ever hit the fetch just fails and the
+  // page keeps its rendered (authored) order — no breakage.
+  function fetchVotes() {
+    var url = 'https://api.github.com/repos/' + VOTES_REPO +
+      '/issues?labels=approach-vote&state=open&per_page=100';
+    return fetch(url, { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) throw new Error('votes fetch failed: ' + res.status);
+      return res.json();
+    }).then(function (issues) {
+      var votes = {};
+      issues.forEach(function (issue) {
+        if (issue.pull_request) return; // the issues API also returns PRs
+        votes[issue.title] = {
+          count: (issue.reactions && issue.reactions['+1']) || 0,
+          url: issue.html_url
+        };
+      });
+      return votes;
+    });
+  }
+
+  function applyVotes(votes) {
+    document.querySelectorAll('.approach-select').forEach(function (select) {
+      var card = select.closest('.card');
+      var voted = false;
+      select.querySelectorAll('option[data-vote-key]').forEach(function (opt) {
+        var vote = votes[opt.getAttribute('data-vote-key')];
+        if (!vote) return;
+        voted = true;
+        var panel = card.querySelector('.approach-panel[data-idx="' + opt.value + '"]');
+        var chip = panel && panel.querySelector('.approach-like');
+        if (chip) {
+          chip.href = vote.url;
+          chip.querySelector('.like-n').textContent = vote.count;
+          chip.removeAttribute('hidden');
+        }
+      });
+      if (!voted) return;
+      // Re-append options sorted by likes, Classic (value "0") always first;
+      // ties keep authored order. Selection stays on Classic.
+      var options = Array.prototype.slice.call(select.querySelectorAll('option[data-vote-key]'));
+      options
+        .map(function (opt, i) {
+          var vote = votes[opt.getAttribute('data-vote-key')];
+          return { opt: opt, count: vote ? vote.count : 0, i: i };
+        })
+        .sort(function (a, b) { return b.count - a.count || a.i - b.i; })
+        .forEach(function (entry) { select.appendChild(entry.opt); });
+    });
+  }
+
   /* ---------- STICKY SECTION-TABS BAR ---------- */
   // Classic and embedded each render their own full set of sections
   // (`.flavor-classic` / `.flavor-embedded`), sharing tab labels via a

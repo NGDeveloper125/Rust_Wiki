@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::markdown;
-use crate::model::{Example, FrontMatter, Page, Scenario, Section};
+use crate::model::{Approach, Example, FrontMatter, Page, Scenario, Section};
 
 fn split_frontmatter(raw: &str) -> Result<(&str, &str), String> {
     let raw = raw.strip_prefix('\u{feff}').unwrap_or(raw);
@@ -27,6 +27,48 @@ fn split_frontmatter(raw: &str) -> Result<(&str, &str), String> {
         .or_else(|| body.strip_prefix('\n'))
         .unwrap_or(body);
     Ok((yaml, body))
+}
+
+/// Build `Scenario`s from `### Scenario:` blocks, splitting off any
+/// community `#### Approach:` blocks (with their attribution line and
+/// optional rationale) before the Classic rationale is extracted.
+fn build_scenarios(path: &Path, blocks: Vec<(String, String)>) -> Vec<Scenario> {
+    blocks
+        .into_iter()
+        .map(|(title, scenario_md)| {
+            let (classic_md, approach_blocks) = markdown::split_approaches(&scenario_md);
+            let (body_md, rationale_md) = markdown::split_rationale(&classic_md);
+            let approaches = approach_blocks
+                .into_iter()
+                .map(|(a_title, a_md)| {
+                    let (attribution_md, rest_md) = markdown::split_attribution(&a_md);
+                    if attribution_md.is_none() {
+                        eprintln!(
+                            "  warning: {} — approach \"{a_title}\" under scenario \"{title}\" is \
+                             missing its attribution line \
+                             (`*Contributed by [@handle](https://github.com/handle)*`).",
+                            path.display()
+                        );
+                    }
+                    let (a_body_md, a_rationale_md) = markdown::split_rationale(&rest_md);
+                    Approach {
+                        title: a_title,
+                        attribution_html: attribution_md
+                            .map(|a| markdown::to_html(&a))
+                            .unwrap_or_default(),
+                        body_html: markdown::to_html(&a_body_md),
+                        rationale_html: a_rationale_md.map(|r| markdown::to_html(&r)),
+                    }
+                })
+                .collect();
+            Scenario {
+                title,
+                body_html: markdown::to_html(&body_md),
+                rationale_html: rationale_md.map(|r| markdown::to_html(&r)),
+                approaches,
+            }
+        })
+        .collect()
 }
 
 fn find_section<'a>(sections: &'a [(String, String)], prefix: &str) -> Option<&'a str> {
@@ -93,17 +135,7 @@ pub fn build_page(
                 find_section(&h2, "Best practices & deeper information").unwrap_or_default();
 
             let (intro_md, scenario_blocks) = markdown::split_scenarios(best_practices_md);
-            let scenarios = scenario_blocks
-                .into_iter()
-                .map(|(title, scenario_md)| {
-                    let (body_md, rationale_md) = markdown::split_rationale(&scenario_md);
-                    Scenario {
-                        title,
-                        body_html: markdown::to_html(&body_md),
-                        rationale_html: rationale_md.map(|r| markdown::to_html(&r)),
-                    }
-                })
-                .collect();
+            let scenarios = build_scenarios(path, scenario_blocks);
 
             let (embedded_basic_usage_html, embedded_best_practices_intro_html, embedded_scenarios) =
                 if embedded_support == "none" {
@@ -125,17 +157,7 @@ pub fn build_page(
                     }
                     let (embedded_intro_md, embedded_scenario_blocks) =
                         markdown::split_scenarios(embedded_best_practices_md);
-                    let embedded_scenarios = embedded_scenario_blocks
-                        .into_iter()
-                        .map(|(title, scenario_md)| {
-                            let (body_md, rationale_md) = markdown::split_rationale(&scenario_md);
-                            Scenario {
-                                title,
-                                body_html: markdown::to_html(&body_md),
-                                rationale_html: rationale_md.map(|r| markdown::to_html(&r)),
-                            }
-                        })
-                        .collect();
+                    let embedded_scenarios = build_scenarios(path, embedded_scenario_blocks);
                     (
                         markdown::to_html(embedded_basic_usage_md),
                         markdown::to_html(&embedded_intro_md),

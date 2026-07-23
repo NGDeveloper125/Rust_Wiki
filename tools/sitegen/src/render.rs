@@ -109,17 +109,31 @@ fn render_examples(examples: &[crate::model::Example]) -> String {
         .join("\n        ")
 }
 
-fn render_scenarios(scenarios: &[crate::model::Scenario]) -> String {
+fn render_scenarios(scenarios: &[crate::model::Scenario], vote_prefix: &str) -> String {
     scenarios
         .iter()
         .map(|s| {
-            let rationale = s
-                .rationale_html
-                .as_ref()
-                .map(|r| format!("<div class=\"rationale\">{r}</div>"))
-                .unwrap_or_default();
-            format!(
-                r#"<div class="card">
+            if s.approaches.is_empty() {
+                render_single_scenario(s)
+            } else {
+                render_multi_scenario(s, vote_prefix)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n        ")
+}
+
+/// Render a scenario with only the Classic content — the exact markup the
+/// site produced before approaches existed, so approach-less pages stay
+/// byte-identical.
+fn render_single_scenario(s: &crate::model::Scenario) -> String {
+    let rationale = s
+        .rationale_html
+        .as_ref()
+        .map(|r| format!("<div class=\"rationale\">{r}</div>"))
+        .unwrap_or_default();
+    format!(
+        r#"<div class="card">
             <div class="scen-tag">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
               Scenario
@@ -128,12 +142,95 @@ fn render_scenarios(scenarios: &[crate::model::Scenario]) -> String {
             {body}
             {rationale}
           </div>"#,
-                title = html_escape(&s.title),
-                body = s.body_html,
+        title = html_escape(&s.title),
+        body = s.body_html,
+    )
+}
+
+/// Render a scenario that has community approaches: same card chrome plus an
+/// "Approach:" picker row (a native dropdown, "Classic" first and always the
+/// default) and one panel per approach, switched client-side by site.js.
+/// Options and panels pair by explicit value/data-idx (not DOM position),
+/// so site.js can reorder options by like-count without breaking pairing.
+/// Each approach option carries a `data-vote-key` matching the title of its
+/// GitHub vote issue (`<page-path>::<scenario>::<approach>`); site.js uses
+/// it to show 👍 reaction counts fetched from the GitHub API.
+fn render_multi_scenario(s: &crate::model::Scenario, vote_prefix: &str) -> String {
+    let mut options = String::from(r#"<option value="0" selected>Classic</option>"#);
+    for (i, a) in s.approaches.iter().enumerate() {
+        let vote_key = format!("{vote_prefix}::{}::{}", s.title, a.title);
+        options.push_str(&format!(
+            "\n                <option value=\"{idx}\" data-vote-key=\"{key}\">{title}</option>",
+            idx = i + 1,
+            key = html_escape(&vote_key),
+            title = html_escape(&a.title)
+        ));
+    }
+
+    let classic_rationale = s
+        .rationale_html
+        .as_ref()
+        .map(|r| format!("<div class=\"rationale\">{r}</div>"))
+        .unwrap_or_default();
+    let mut panels = format!(
+        r#"<div class="approach-panel on" data-idx="0">
+            {body}
+            {rationale}
+            </div>"#,
+        body = s.body_html,
+        rationale = classic_rationale,
+    );
+    for (i, a) in s.approaches.iter().enumerate() {
+        let like_chip = concat!(
+            r#"<a class="approach-like" hidden target="_blank" rel="noopener">"#,
+            r#"&#128077; <span class="like-n"></span> &mdash; like this approach on GitHub</a>"#
+        );
+        let byline = if a.attribution_html.is_empty() {
+            format!("<div class=\"approach-byline\">{like_chip}</div>")
+        } else {
+            format!(
+                "<div class=\"approach-byline\">{}{like_chip}</div>",
+                a.attribution_html
             )
-        })
-        .collect::<Vec<_>>()
-        .join("\n        ")
+        };
+        let rationale = a
+            .rationale_html
+            .as_ref()
+            .map(|r| format!("<div class=\"rationale\">{r}</div>"))
+            .unwrap_or_default();
+        panels.push_str(&format!(
+            r#"
+            <div class="approach-panel" data-idx="{idx}">
+            {byline}
+            {body}
+            {rationale}
+            </div>"#,
+            idx = i + 1,
+            byline = byline,
+            body = a.body_html,
+            rationale = rationale,
+        ));
+    }
+
+    format!(
+        r#"<div class="card">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>
+              Scenario
+            </div>
+            <h3 class="scenario-title">{title}</h3>
+            <div class="approach-picker">
+              <span class="approach-label">Approach:</span>
+              <select class="approach-select" aria-label="Approach for this scenario">
+                {options}
+              </select>
+            </div>
+            {panels}
+          </div>"#,
+        title = html_escape(&s.title),
+        options = options,
+        panels = panels,
+    )
 }
 
 pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
@@ -301,7 +398,7 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
             explanation = page.explanation_html,
             basic_usage = page.basic_usage_html,
             intro = page.best_practices_intro_html,
-            scenarios = render_scenarios(&page.scenarios),
+            scenarios = render_scenarios(&page.scenarios, page.href.trim_end_matches(".html")),
         );
 
         let embedded = if support == "none" {
@@ -335,7 +432,8 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
                 explanation = page.embedded_explanation_html,
                 basic_usage = page.embedded_basic_usage_html,
                 intro = page.embedded_best_practices_intro_html,
-                scenarios = render_scenarios(&page.embedded_scenarios),
+                scenarios =
+                    render_scenarios(&page.embedded_scenarios, page.href.trim_end_matches(".html")),
             )
         };
 

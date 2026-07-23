@@ -34,10 +34,22 @@ impl Section {
     }
 }
 
+/// A community-contributed alternative to a scenario's Classic content,
+/// parsed from a `#### Approach: <title>` block inside the scenario.
+pub struct Approach {
+    pub title: String,
+    /// Rendered HTML of the `*Contributed by [@handle](...)*` line; empty if missing.
+    pub attribution_html: String,
+    pub body_html: String,
+    pub rationale_html: Option<String>,
+}
+
 pub struct Scenario {
     pub title: String,
     pub body_html: String,
     pub rationale_html: Option<String>,
+    /// Community alternatives; empty => the scenario renders exactly as before.
+    pub approaches: Vec<Approach>,
 }
 
 /// A single titled entry under a syntax page's "Usage examples" section.
