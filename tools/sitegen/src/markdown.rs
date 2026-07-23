@@ -43,6 +43,72 @@ pub fn split_examples(body: &str) -> Vec<(String, String)> {
     split_on_prefix(body, "### ")
 }
 
+/// Split a scenario's markdown into its Classic content (everything before
+/// the first `#### Approach: ...` line) and the community approach blocks.
+/// Fence-aware: an `#### Approach: ` line inside a code fence is ignored.
+/// When no approach marker exists, the input is returned unchanged so
+/// existing pages keep producing byte-identical output.
+pub fn split_approaches(scenario_md: &str) -> (String, Vec<(String, String)>) {
+    let marker = "#### Approach: ";
+    let mut in_fence = false;
+    let mut has_marker = false;
+    for line in scenario_md.lines() {
+        if line.trim_start().starts_with("```") {
+            in_fence = !in_fence;
+        } else if !in_fence && line.starts_with(marker) {
+            has_marker = true;
+            break;
+        }
+    }
+    if !has_marker {
+        return (scenario_md.to_string(), Vec::new());
+    }
+
+    let mut classic = String::new();
+    let mut approaches: Vec<(String, String)> = Vec::new();
+    let mut current_title: Option<String> = None;
+    let mut current_body = String::new();
+    let mut in_fence = false;
+    for line in scenario_md.lines() {
+        let is_fence = line.trim_start().starts_with("```");
+        if is_fence {
+            in_fence = !in_fence;
+        }
+        if !is_fence && !in_fence && line.starts_with(marker) {
+            let rest = &line[marker.len()..];
+            if let Some(title) = current_title.take() {
+                approaches.push((title, current_body.trim().to_string()));
+            }
+            current_title = Some(rest.trim().to_string());
+            current_body = String::new();
+        } else if current_title.is_some() {
+            current_body.push_str(line);
+            current_body.push('\n');
+        } else {
+            classic.push_str(line);
+            classic.push('\n');
+        }
+    }
+    if let Some(title) = current_title {
+        approaches.push((title, current_body.trim().to_string()));
+    }
+    (classic.trim().to_string(), approaches)
+}
+
+/// Split an approach's markdown into its attribution line (a first block
+/// starting with `*Contributed by`) and the remaining body. Returns
+/// (None, original) when the attribution line is missing.
+pub fn split_attribution(approach_md: &str) -> (Option<String>, String) {
+    let mut blocks = split_blocks(approach_md);
+    if let Some(first) = blocks.first() {
+        if first.trim_start().starts_with("*Contributed by") {
+            let attribution = blocks.remove(0);
+            return (Some(attribution), blocks.join("\n\n"));
+        }
+    }
+    (None, approach_md.to_string())
+}
+
 fn split_on_prefix(body: &str, prefix: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     let mut current_title: Option<String> = None;
