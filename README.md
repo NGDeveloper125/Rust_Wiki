@@ -92,7 +92,7 @@ That reads `pages/` and writes HTML into `docs/`. The generator prints a warning
 Contributions of any size are welcome — a typo fix, an approach, an article, or just an idea.
 
 - 🐙 **GitHub:** open an [issue](https://github.com/NGDeveloper125/Rust_Wiki/issues) or a PR — best for anything about the content.
-- 📧 **Email:** `<add-your-email-here>` — for anything else, or to reach me directly.
+- 📧 **Email:** `RustyYellowPages@outlook.com` — for anything else, or to reach me directly.
 
 Two notes:
 
