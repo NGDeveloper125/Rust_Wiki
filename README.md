@@ -31,7 +31,7 @@ The site is fully static: HTML generated from markdown, no server, no database, 
 
 ## 🌱 Community
 
-The aim is for this reference to grow with contributions from people writing Rust, not just the maintainer. There are three ways knowledge gets added, each through a normal pull request:
+The aim is for this reference to grow with contributions from people writing Rust, not just the maintainer. There are three ways knowledge is added and shared — two through pull requests, one through discussion:
 
 ### 1. Approaches — *live now* ✅
 
@@ -45,9 +45,13 @@ Full walkthrough at the [bottom of this README](#-approaches-in-depth) and in **
 
 Technical, code-first articles on Rust and its ecosystem: how to implement something, how a crate works, how to solve a concrete problem — with real, compiling code in the article itself. This is not the place for opinion or think-pieces ("why you should use Rust", "where Rust will be in ten years"); an article shows code and explains it. Free-form prose, your byline, linked into the rest of the wiki.
 
-### 3. Conversations — *on the way* 🚧
+### 3. Conversations — *live now* ✅
 
-A community discussion area, mirrored into the site's own styling — a place to ask questions, compare approaches, and share what you know.
+A community discussion area, **mirrored into the site's own styling** from the repo's [GitHub Discussions](https://github.com/NGDeveloper125/Rust_Wiki/discussions) — a place to ask questions, compare approaches, and share what you know.
+
+Threads and replies live on GitHub Discussions; the site fetches them at build time and renders a read-only, styled copy at the [Conversations page](https://rustyyellowpages.dev/conversations/). To start a thread or reply you click through to GitHub — the site never accepts writes, so posting stays accountable and moderation uses GitHub's native tools. Unlike Approaches and Articles, **this isn't a pull request**: you just post on GitHub and it appears on the site at the next rebuild (a near-live snapshot, refreshed on a schedule and when discussions change).
+
+Full picture at the [bottom of this README](#-conversations-in-depth).
 
 ---
 
@@ -175,3 +179,29 @@ Readers can show which approaches they find most useful.
 - **Contributing is low-friction and safe.** Because an approach is an additive markdown block reviewed through a normal pull request, anyone can share a technique without risk of breaking the existing content.
 
 Together these turn each scenario from a one-voice recommendation into a small, curated collection of community knowledge — which is exactly how a living reference should grow.
+
+---
+
+<a id="-conversations-in-depth"></a>
+
+## 💬 Conversations, in depth
+
+Conversations is a **read-only mirror of the repo's GitHub Discussions**, rendered in the site's own look so discussion lives right next to the reference.
+
+### How it works
+
+The whole thing is static — there is no server and no database.
+
+- **Storage is GitHub Discussions.** Every thread and reply is a real GitHub Discussion in this repo. The site never stores or accepts messages.
+- **The site is a build-time snapshot.** When the site is generated it fetches all discussions via the GitHub API and renders a styled, read-only copy: an index of threads (title, author, date, category, reply count, a preview of the latest reply, and an **Expand** button that opens the whole thread inline) plus a dedicated page per thread.
+- **Writing happens on GitHub.** Every *"Start a conversation"* and *"Add a comment"* button links out to GitHub Discussions. A GitHub account is all you need — which keeps posting accountable and lets maintainers moderate with GitHub's native tools.
+- **It stays fresh automatically.** A GitHub Actions workflow rebuilds and republishes the site on a schedule (every ~6 hours), on each push, and whenever a discussion or comment changes — so new posts appear within minutes. It's a near-live snapshot, not live.
+- **Untrusted content is sanitized.** Discussion markdown is rendered safely: raw HTML is stripped and unsafe links are neutralized, so nothing posted on GitHub can run as code on the site.
+
+### How to take part
+
+1. Open the [Conversations page](https://rustyyellowpages.dev/conversations/) on the site (also reachable from the sidebar on every page), or go straight to the repo's [Discussions tab](https://github.com/NGDeveloper125/Rust_Wiki/discussions).
+2. Browse threads on the site; click through to GitHub to start one or reply.
+3. Post in the category that fits — **Approaches & Idioms**, **Ecosystem**, **Q&A**, or **Site feedback**.
+
+There's nothing to build, edit, or open a PR for — post on GitHub Discussions and it shows up on the site at the next rebuild.
