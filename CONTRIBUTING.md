@@ -11,6 +11,13 @@ long-form **[article](#articles)** (see below).
 Contribution is entirely PR-based markdown — no forms, no backend. You edit a
 page file, open a pull request, and a maintainer reviews and merges it.
 
+**Licensing of contributions:** by contributing, you agree that the content you
+submit (prose, code examples, articles, approaches, and any images) is published
+under the project's content license, **CC BY 4.0**, with attribution to you
+preserved; any code you contribute to the tooling is under the **MIT License** —
+the same terms as the rest of the project. See
+[LICENSE](LICENSE) and [LICENSE-CONTENT](LICENSE-CONTENT).
+
 ## What you can contribute
 
 Every concept page (`pages/concepts/<subgroup>/<slug>.md`) has a

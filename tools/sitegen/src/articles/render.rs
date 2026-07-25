@@ -129,7 +129,9 @@ fn render_card(a: &Article, i: usize) -> String {
           </div>
         </article>"#,
         vote_key = html_escape(&a.vote_key()),
-        href = html_escape(&a.href),
+        // The index lives at `articles/index.html`, so link to a sibling
+        // article by bare filename, not its site-root-relative `href`.
+        href = html_escape(&format!("{}.html", a.slug)),
         title = html_escape(&a.title),
         summary_html = render_inline(&a.summary),
         author = html_escape(&a.author),
