@@ -5,6 +5,7 @@ github: "NGDeveloper125"
 date: "2026-07-25"
 summary: "How Rust's ? operator turns verbose error plumbing into a single character — what it desugars to, how it works for both Result and Option, and the From conversion that lets it bridge error types."
 tags: ["error-handling", "result", "?", "beginner"]
+image: "images/a-tour-of-the-question-mark-operator.jpeg"
 ---
 
 Every language has to answer the same awkward question: *what happens when a
