@@ -114,7 +114,15 @@ A reference is only worth trusting if it gets corrected. Open an issue, send an 
 
 ## 📄 License
 
-See [LICENSE](LICENSE).
+This project is split into two parts, licensed separately:
+
+- **Code** — the site generator (`tools/`) and the site's JavaScript, CSS, and
+  HTML templates — is under the **MIT License**. See [LICENSE](LICENSE).
+- **Content** — the reference material under `pages/` (syntax and concept pages,
+  community articles, and approaches) — is under **Creative Commons Attribution
+  4.0 International (CC BY 4.0)**. See [LICENSE-CONTENT](LICENSE-CONTENT). You're
+  free to reuse and adapt it, including commercially, as long as you credit
+  Rusty Yellow Pages.
 
 ---
 
