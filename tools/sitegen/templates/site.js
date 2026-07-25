@@ -67,6 +67,43 @@
     });
   });
 
+  /* ---------- CONVERSATIONS: EXPAND + CATEGORY FILTER ---------- */
+  // Conversations index only. Each thread card bakes its full conversation
+  // into a hidden `.convo-full`; the expand button toggles it in place. The
+  // category chips show/hide cards by their `data-cat`. Both are no-ops on
+  // pages without these elements.
+  document.querySelectorAll('.convo-expand').forEach(function (btn) {
+    var full = btn.parentNode.querySelector('.convo-full');
+    if (!full) return;
+    btn.addEventListener('click', function () {
+      var opening = full.hasAttribute('hidden');
+      if (opening) {
+        full.removeAttribute('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.innerHTML = 'Collapse conversation &#9652;';
+      } else {
+        full.setAttribute('hidden', '');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.innerHTML = 'Expand full conversation &#9662;';
+      }
+    });
+  });
+
+  var convoFilters = Array.prototype.slice.call(document.querySelectorAll('.convo-filter'));
+  if (convoFilters.length) {
+    var convoItems = Array.prototype.slice.call(document.querySelectorAll('.convo-item'));
+    convoFilters.forEach(function (f) {
+      f.addEventListener('click', function () {
+        var cat = f.getAttribute('data-cat');
+        convoFilters.forEach(function (x) { x.classList.toggle('on', x === f); });
+        convoItems.forEach(function (it) {
+          var show = cat === '*' || it.getAttribute('data-cat') === cat;
+          it.classList.toggle('is-hidden', !show);
+        });
+      });
+    });
+  }
+
   /* ---------- APPROACH LIKES (GitHub reactions) ---------- */
   // Each community approach maps to a GitHub issue (label `approach-vote`,
   // title = the option's data-vote-key). One unauthenticated API call

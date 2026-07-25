@@ -469,7 +469,7 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
 
 pub fn render_landing_page(pages: &[Page]) -> String {
     let depth = 0;
-    let sidebar = render_sidebar(pages, None, depth);
+    let sidebar = render_sidebar(pages, None, depth, false);
 
     let mut groups_html = String::new();
     for section in [Section::Syntax, Section::Concepts] {
@@ -519,6 +519,17 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         </div>
       </section>
 
+      <section class="doc">
+        <h2 class="section-title">Community</h2>
+        <div class="related">
+          <div class="related-row">
+            <span class="related-label">Discuss</span>
+            <a class="chip" href="conversations/index.html">Conversations</a>
+          </div>
+        </div>
+        <p class="subtitle">A read-only mirror of the project&rsquo;s GitHub Discussions &mdash; ask questions, compare approaches, share what you know.</p>
+      </section>
+
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
         <span>Targets current stable Rust &middot; edition 2021</span>
@@ -532,7 +543,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
 
 pub fn render_page_document(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
     let depth = page.href.matches('/').count();
-    let sidebar = render_sidebar(pages, Some(page), depth);
+    let sidebar = render_sidebar(pages, Some(page), depth, false);
     let main = render_content_page(page, pages, index);
     shell(&page.front.title, depth, &sidebar, &main)
 }

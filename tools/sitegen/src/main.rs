@@ -1,4 +1,5 @@
 mod bodylinks;
+mod conversations;
 mod links;
 mod markdown;
 mod model;
@@ -109,6 +110,9 @@ fn main() {
 
     let landing_html = render::render_landing_page(&pages);
     std::fs::write(docs_root.join("index.html"), landing_html).expect("write index.html");
+
+    // Best-effort GitHub Discussions mirror. Never fails the build.
+    conversations::build(&repo_root, &docs_root, &pages);
 
     println!(
         "generated {} pages + 1 landing page into {}",
