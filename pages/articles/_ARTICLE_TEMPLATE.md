@@ -25,7 +25,7 @@ title: "Your article title"
 author: "Your Name"                 # display name shown in the byline
 github: "your-handle"               # your GitHub handle (a leading @ is fine)
 date: "2026-01-01"                  # YYYY-MM-DD; the maintainer adjusts this at merge
-summary: "One or two sentences shown on the article card and used for search."
+summary: "One or two sentences shown on the article card and used for search. Wrap code tokens in backticks, e.g. the `?` operator, so they read as code."
 tags: ["concept", "beginner"]       # small free list; `topics:` is also accepted
 # image: "images/<your-slug>.png"   # optional lead image; name it after this article's slug and drop it in pages/articles/images/ (see CONTRIBUTING.md → Articles → Images)
 ---

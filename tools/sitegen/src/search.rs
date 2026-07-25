@@ -46,7 +46,11 @@ pub fn build_search_index(pages: &[Page], articles: &[Article]) -> String {
     // Articles are indexed on title + summary + tags (not full body) to keep
     // the shipped index small and stable.
     for a in articles {
-        let kw = format!("{} {} {}", a.title, a.summary, a.tags.join(" ")).to_lowercase();
+        // Strip backticks so inline-code markers in the summary don't leak
+        // into the (plain-text) search keywords.
+        let kw = format!("{} {} {}", a.title, a.summary, a.tags.join(" "))
+            .replace('`', "")
+            .to_lowercase();
         entries.push(format!(
             "  {{ title: \"{title}\", crumb: \"Articles\", kind: \"article\", isToken: false, kw: \"{kw}\", href: \"{href}\" }}",
             title = js_string_escape(&a.title),

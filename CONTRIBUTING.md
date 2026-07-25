@@ -241,6 +241,11 @@ Your article body starts here...
 adjusts it at merge** so the publication date reflects when the article
 actually went live. Articles are listed newest-first by this date.
 
+**Inline code in the `summary`:** wrap code tokens in backticks — e.g.
+``summary: "How the `?` operator works"`` — and they render as distinct
+monospace on the card, so an operator like `?` reads as code instead of stray
+punctuation.
+
 ### Writing the body
 
 - Use any structure you like: `##` and `###` headings, paragraphs, lists,

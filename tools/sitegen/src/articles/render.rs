@@ -119,7 +119,7 @@ fn render_card(a: &Article, i: usize) -> String {
             {image}
             <div class="article-card-body">
               <h3 class="article-card-title">{title}</h3>
-              <p class="article-card-summary">{summary}</p>
+              <p class="article-card-summary">{summary_html}</p>
             </div>
           </a>
           <div class="article-card-foot">
@@ -131,11 +131,42 @@ fn render_card(a: &Article, i: usize) -> String {
         vote_key = html_escape(&a.vote_key()),
         href = html_escape(&a.href),
         title = html_escape(&a.title),
-        summary = html_escape(&a.summary),
+        summary_html = render_inline(&a.summary),
         author = html_escape(&a.author),
         date = fmt_date(&a.date),
         tags = render_tags(a),
     )
+}
+
+/// HTML-escape `s`, but render inline `` `code` `` spans (backtick-delimited)
+/// as a distinct monospace token. Lets a summary mark an operator or ident
+/// (e.g. `` `?` ``) so it reads as code rather than stray punctuation. If the
+/// backticks are unbalanced, they're left as literal characters.
+fn render_inline(s: &str) -> String {
+    if s.matches('`').count() < 2 {
+        return html_escape(s);
+    }
+    let balanced = s.matches('`').count() % 2 == 0;
+    let mut out = String::new();
+    let mut in_code = false;
+    for (i, seg) in s.split('`').enumerate() {
+        if i > 0 {
+            if balanced {
+                in_code = !in_code;
+            } else {
+                out.push('`'); // unbalanced — keep backticks literal
+            }
+        }
+        if in_code {
+            out.push_str(&format!(
+                "<code class=\"tok-inline\">{}</code>",
+                html_escape(seg)
+            ));
+        } else {
+            out.push_str(&html_escape(seg));
+        }
+    }
+    out
 }
 
 fn render_article(a: &Article, pages: &[Page]) -> String {
