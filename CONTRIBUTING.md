@@ -165,7 +165,7 @@ gh label create approach-vote --description "Vote issue for a community approach
 gh issue create \
   --title "concepts/collections-strings/vec::Creating a new object::Collect from an iterator" \
   --label approach-vote \
-  --body "React with a 👍 to vote for this approach. See it on the page: https://ngdeveloper125.github.io/Rust_Wiki/concepts/collections-strings/vec.html"
+  --body "React with a 👍 to vote for this approach. See it on the page: https://rustyyellowpages.dev/concepts/collections-strings/vec.html"
 ```
 
 Notes:
