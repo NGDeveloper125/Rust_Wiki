@@ -6,7 +6,7 @@
 
 Part dictionary, part wiki — meant to be kept open in a second tab while you code.
 
-[**Open the site →**](https://ngdeveloper125.github.io/Rust_Wiki/)
+[**Open the site →**](https://rustyyellowpages.dev/)
 
 </div>
 

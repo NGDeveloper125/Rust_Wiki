@@ -497,6 +497,107 @@
 
   .footer-note { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--content-border-soft); font-size: 13px; color: var(--content-fg-dim); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
+  /* ============ CONVERSATIONS (GitHub Discussions mirror) ============ */
+  /* sidebar top-level link */
+  .nav-toplinks { padding: 2px 0 8px; margin-bottom: 4px; border-bottom: 1px solid var(--chrome-edge-bottom); }
+  .nav-toplink {
+    display: flex; align-items: center; gap: 9px; position: relative;
+    padding: 8px 12px; margin: 1px 0; border-radius: var(--radius-sm);
+    color: var(--chrome-fg); font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+    opacity: .92; transition: background .18s var(--ease);
+  }
+  .nav-toplink svg { flex: none; opacity: .9; }
+  .nav-toplink:hover { background: var(--chrome-hover); opacity: 1; text-decoration: none; }
+  .nav-toplink.active { background: var(--chrome-active-bg); font-weight: 700; opacity: 1; }
+  .nav-toplink.active::before {
+    content: ""; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 16px; border-radius: 2px; background: var(--chrome-active-bar);
+  }
+
+  /* "Start a conversation" / "Add a comment on GitHub" call-to-action */
+  .convo-cta {
+    display: inline-flex; align-items: center; gap: 7px; flex: none;
+    padding: 9px 16px; border-radius: 999px;
+    background: var(--accent); color: var(--content-bg);
+    font-family: var(--font-sans); font-size: 13.5px; font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    transition: transform .12s var(--ease), background .18s var(--ease);
+  }
+  .convo-cta:hover { text-decoration: none; transform: translateY(-1px); background: var(--yellow-deep); }
+
+  /* category filter chips */
+  .convo-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 20px; }
+  .convo-filter {
+    border: 1px solid var(--chip-border); background: var(--chip-bg); color: var(--chip-fg);
+    font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+    padding: 5px 13px; border-radius: 999px; cursor: pointer;
+    transition: background .15s var(--ease), color .15s var(--ease);
+  }
+  .convo-filter:hover { background: color-mix(in srgb, var(--chip-bg) 70%, var(--accent) 30%); }
+  .convo-filter.on { background: var(--accent); color: var(--content-bg); border-color: var(--accent); }
+
+  /* thread list */
+  .convo-list { display: grid; gap: 16px; }
+  .convo-item.is-hidden { display: none; }
+  .convo-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .convo-title { font-family: var(--font-sans); font-size: 18px; font-weight: 700; color: var(--content-fg); }
+  .convo-title:hover { color: var(--accent); text-decoration: none; }
+  .convo-cat { flex: none; cursor: default; }
+  .convo-cat:hover { transform: none; background: var(--chip-bg); }
+  .convo-meta { font-size: 13px; color: var(--content-fg-dim); margin-top: 6px; }
+  .convo-author { color: var(--content-fg-dim); font-weight: 600; }
+  .convo-author:hover { color: var(--accent); }
+
+  .convo-preview { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--card-border); }
+  .convo-preview-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--content-fg-dim); margin-bottom: 6px;
+  }
+
+  .convo-expand {
+    margin-top: 14px; display: inline-flex; align-items: center; gap: 6px;
+    background: var(--content-bg-2); border: 1px solid var(--card-border); color: var(--content-fg-dim);
+    font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+    padding: 6px 13px; border-radius: 999px; cursor: pointer;
+    transition: color .15s var(--ease), border-color .15s var(--ease);
+  }
+  .convo-expand:hover { color: var(--accent); border-color: var(--accent); }
+  .convo-expand[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+  .convo-full { margin-top: 14px; }
+
+  /* individual post + comments */
+  .comment { margin: 0 0 14px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--content-bg-2); border: 1px solid var(--content-border-soft); }
+  .comment.convo-op { border-left: 3px solid var(--accent); }
+  .comment-head { font-size: 12.5px; color: var(--content-fg-dim); font-weight: 600; margin-bottom: 6px; }
+  .convo-replies-title { font-size: 18px; margin: 22px 0 12px; }
+  .convo-more { font-size: 13.5px; color: var(--content-fg-dim); }
+
+  /* sanitized markdown body: keep first/last margins tight inside cards */
+  .convo-body > :first-child { margin-top: 0; }
+  .convo-body > :last-child { margin-bottom: 0; }
+  .convo-body p { font-size: 15px; line-height: 1.7; margin: 10px 0; }
+  .convo-body ul, .convo-body ol { line-height: 1.7; font-size: 15px; padding-left: 22px; margin: 10px 0; }
+  .convo-body code { font-family: var(--font-mono); font-size: .88em; background: var(--code-bg); border: 1px solid var(--code-border); padding: 1px 5px; border-radius: 5px; }
+  .convo-body pre {
+    margin: 12px 0; padding: 14px 16px; overflow-x: auto;
+    background: var(--code-bg); border: 1px solid var(--code-border); border-radius: var(--radius-md);
+  }
+  .convo-body pre code { background: none; border: 0; padding: 0; font-size: 13.5px; line-height: 1.6; display: block; white-space: pre; }
+  .convo-body blockquote {
+    margin: 12px 0; padding: 6px 14px; border-left: 3px solid var(--card-border);
+    color: var(--content-fg-dim);
+  }
+  .convo-body table { border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  .convo-body th, .convo-body td { border: 1px solid var(--content-border); padding: 6px 10px; text-align: left; }
+  .convo-body img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+
+  /* actions row + empty state */
+  .convo-actions { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 16px; }
+  .convo-actions-foot { margin-top: 28px; }
+  .convo-open, .convo-github { font-size: 13.5px; font-weight: 600; }
+  .convo-empty { text-align: center; color: var(--content-fg-dim); }
+  .convo-empty p { margin: 8px 0; }
+
   /* backdrop for mobile sidebar */
   .backdrop { position: fixed; inset: var(--topbar-h) 0 0 0; background: var(--scrim); z-index: 25; opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); }
 

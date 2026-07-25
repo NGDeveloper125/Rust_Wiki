@@ -1,0 +1,83 @@
+name: Build and deploy site
+
+# Rebuilds the static site and deploys it to GitHub Pages via the Pages
+# artifact flow (no docs/ commits). The conversations page is a build-time
+# mirror of this repo's GitHub Discussions, so we also rebuild on a schedule
+# and on discussion activity to keep it near-live.
+#
+# One-time setup: Settings -> Pages -> Source -> "GitHub Actions".
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Every 6 hours, so new discussions appear even without a push/webhook.
+    - cron: "0 */6 * * *"
+  # Near-live refresh when someone posts or comments on a discussion.
+  discussion:
+  discussion_comment:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  # Lets the built-in GITHUB_TOKEN read Discussions via the GraphQL API.
+  discussions: read
+
+# Allow one build+deploy at a time; don't cancel an in-progress deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Cache the Rust toolchain build so scheduled runs are fast and cheap.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools/sitegen
+
+      # CI-side graceful-degradation cache: persists the last successful
+      # discussions snapshot between runs (no repo commits). If a fetch fails,
+      # the generator falls back to this instead of an empty page.
+      - name: Restore conversations snapshot
+        uses: actions/cache@v4
+        with:
+          path: data/conversations.json
+          key: convo-snapshot-${{ github.run_id }}
+          restore-keys: convo-snapshot-
+
+      - name: Generate site
+        run: cargo run --manifest-path tools/sitegen/Cargo.toml
+        env:
+          # Built-in token; the `discussions: read` permission above should be
+          # enough to read a public repo's Discussions. If GitHub ever rejects
+          # it, create a fine-grained PAT with "Discussions: read", add it as a
+          # repo secret, and set this to ${{ secrets.YOUR_SECRET_NAME }}.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Re-assert the custom domain in the artifact on every deploy, so an
+      # Actions publish can't silently clear the Pages "Custom domain" setting.
+      - name: Write CNAME
+        run: echo "rustyyellowpages.dev" > docs/CNAME
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

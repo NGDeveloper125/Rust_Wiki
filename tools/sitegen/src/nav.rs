@@ -72,8 +72,27 @@ fn render_nested_groups(
     }
 }
 
-pub fn render_sidebar(pages: &[Page], current: Option<&Page>, from_depth: usize) -> String {
+const CHAT_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>"#;
+
+/// The site's full sidebar. `active_conversations` marks the top-level
+/// "Conversations" link active (the conversations pages aren't in `pages`,
+/// so they can't be matched via `current`).
+pub fn render_sidebar(
+    pages: &[Page],
+    current: Option<&Page>,
+    from_depth: usize,
+    active_conversations: bool,
+) -> String {
     let mut out = String::new();
+
+    let convo_active = if active_conversations { " active" } else { "" };
+    out.push_str(&format!(
+        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{active}\" href=\"{href}\">{icon}<span>Conversations</span></a>\n    </div>\n",
+        active = convo_active,
+        href = href_from(from_depth, "conversations/index.html"),
+        icon = CHAT_SVG,
+    ));
+
     for section in [Section::Syntax, Section::Concepts] {
         out.push_str(&format!(
             "\n    <div class=\"nav-section-label\">{}</div>\n",
