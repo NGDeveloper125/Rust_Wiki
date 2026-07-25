@@ -299,4 +299,83 @@
     // el.textContent already has entities decoded by the browser
     el.innerHTML = hl(el.textContent);
   });
+
+  /* ---------- ARTICLES INDEX: search, sort, likes ---------- */
+  // The articles page renders a grid of `.article-card`s (newest-first from
+  // the build). This adds three client-side behaviors, all degrading to the
+  // rendered page if JS/network is unavailable:
+  //   1. a page-local text filter over card title + summary,
+  //   2. a sort toggle (Newest = authored order, Top rated = by like count),
+  //   3. like counts, fetched from `article-vote` GitHub issues exactly like
+  //      community approaches (label `article-vote`, title `article::<slug>`).
+  var grid = document.getElementById('article-grid');
+  var hasArticleVotes = grid || document.querySelector('.article-byline[data-vote-key]');
+  if (hasArticleVotes) {
+    var ARTICLE_VOTES_REPO = 'NGDeveloper125/Rust_Wiki';
+    var voteCounts = {}; // vote-key -> count
+
+    function cssEsc(s) {
+      return (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/["\\]/g, '\\$&');
+    }
+
+    // --- page-local search + sort (index grid only) ---
+    var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll('.article-card')) : [];
+    var searchBox = document.getElementById('article-search');
+    var sortSel = document.getElementById('article-sort');
+    var noMatch = document.getElementById('article-nomatch');
+
+    function cardText(card) {
+      var t = card.querySelector('.article-card-title');
+      var s = card.querySelector('.article-card-summary');
+      return ((t ? t.textContent : '') + ' ' + (s ? s.textContent : '')).toLowerCase();
+    }
+    function applyFilter() {
+      var q = (searchBox && searchBox.value.trim().toLowerCase()) || '';
+      var shown = 0;
+      cards.forEach(function (card) {
+        var hit = !q || cardText(card).indexOf(q) !== -1;
+        card.classList.toggle('is-hidden', !hit);
+        if (hit) shown++;
+      });
+      if (noMatch) noMatch.hidden = shown !== 0;
+    }
+    function applySort() {
+      if (!grid) return;
+      var mode = (sortSel && sortSel.value) || 'date';
+      cards.slice().sort(function (a, b) {
+        if (mode === 'rating') {
+          var ca = voteCounts[a.getAttribute('data-vote-key')] || 0;
+          var cb = voteCounts[b.getAttribute('data-vote-key')] || 0;
+          if (cb !== ca) return cb - ca;
+        }
+        // Fall back to authored (newest-first) order.
+        return (+a.getAttribute('data-i')) - (+b.getAttribute('data-i'));
+      }).forEach(function (card) { grid.appendChild(card); });
+    }
+    if (searchBox) searchBox.addEventListener('input', applyFilter);
+    if (sortSel) sortSel.addEventListener('change', applySort);
+
+    // --- like counts (index cards + the article page byline) ---
+    // Fetched from `article-vote` issues, same scheme as approach likes. Any
+    // failure (offline, rate limit, no issue yet) leaves the page as rendered.
+    fetch('https://api.github.com/repos/' + ARTICLE_VOTES_REPO +
+          '/issues?labels=article-vote&state=open&per_page=100', { cache: 'no-store' })
+      .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json(); })
+      .then(function (issues) {
+        issues.forEach(function (issue) {
+          if (issue.pull_request) return;
+          voteCounts[issue.title] = (issue.reactions && issue.reactions['+1']) || 0;
+          document.querySelectorAll('[data-vote-key="' + cssEsc(issue.title) + '"]').forEach(function (el) {
+            var chip = el.matches('.article-like') ? el : el.querySelector('.article-like');
+            if (!chip) return;
+            chip.href = issue.html_url;
+            var n = chip.querySelector('.like-n');
+            if (n) n.textContent = voteCounts[issue.title];
+            chip.removeAttribute('hidden');
+          });
+        });
+        applySort(); // reflect counts if "Top rated" is already selected
+      })
+      .catch(function () { /* graceful no-op */ });
+  }
 })();
