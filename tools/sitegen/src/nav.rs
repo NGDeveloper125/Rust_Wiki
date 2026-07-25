@@ -73,24 +73,37 @@ fn render_nested_groups(
 }
 
 const CHAT_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>"#;
+const ARTICLE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>"#;
 
-/// The site's full sidebar. `active_conversations` marks the top-level
-/// "Conversations" link active (the conversations pages aren't in `pages`,
-/// so they can't be matched via `current`).
+/// Which top-level ("not a wiki page") nav link is active, if any. The
+/// conversations/articles pages aren't in `pages`, so they can't be matched
+/// via `current` the way syntax/concept pages are.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TopNav {
+    None,
+    Conversations,
+    Articles,
+}
+
+/// The site's full sidebar. `active` marks whichever top-level link
+/// (Conversations / Articles) the current page belongs to.
 pub fn render_sidebar(
     pages: &[Page],
     current: Option<&Page>,
     from_depth: usize,
-    active_conversations: bool,
+    active: TopNav,
 ) -> String {
     let mut out = String::new();
 
-    let convo_active = if active_conversations { " active" } else { "" };
+    let sel = |t: TopNav| if active == t { " active" } else { "" };
     out.push_str(&format!(
-        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{active}\" href=\"{href}\">{icon}<span>Conversations</span></a>\n    </div>\n",
-        active = convo_active,
-        href = href_from(from_depth, "conversations/index.html"),
-        icon = CHAT_SVG,
+        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n    </div>\n",
+        ca = sel(TopNav::Conversations),
+        ch = href_from(from_depth, "conversations/index.html"),
+        cicon = CHAT_SVG,
+        aa = sel(TopNav::Articles),
+        ah = href_from(from_depth, "articles/index.html"),
+        aicon = ARTICLE_SVG,
     ));
 
     for section in [Section::Syntax, Section::Concepts] {

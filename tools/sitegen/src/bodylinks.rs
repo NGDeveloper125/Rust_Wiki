@@ -32,7 +32,19 @@ fn resolve_relative(current_dir: &str, target: &str) -> String {
 /// absolute, and external hrefs are left untouched. Unresolvable targets
 /// (page not yet written) still get a best-effort `.html` link plus a
 /// build warning, matching the front-matter cross-reference policy.
-fn rewrite_links_in(html: &str, current_dir: &str, depth: usize, known: &HashSet<String>) -> String {
+/// The set of every generated page's site-root-relative href. Used as the
+/// "known target" set when rewriting body links (both wiki pages and, via
+/// [`rewrite_links_in`], articles).
+pub(crate) fn known_hrefs(pages: &[Page]) -> HashSet<String> {
+    pages.iter().map(|p| p.href.clone()).collect()
+}
+
+pub(crate) fn rewrite_links_in(
+    html: &str,
+    current_dir: &str,
+    depth: usize,
+    known: &HashSet<String>,
+) -> String {
     let mut out = String::with_capacity(html.len());
     let mut rest = html;
     loop {
@@ -80,7 +92,7 @@ fn rewrite_links_in(html: &str, current_dir: &str, depth: usize, known: &HashSet
 }
 
 pub fn rewrite_all(pages: &mut [Page]) {
-    let known: HashSet<String> = pages.iter().map(|p| p.href.clone()).collect();
+    let known = known_hrefs(pages);
     for page in pages.iter_mut() {
         let current_dir = format!("{}/{}", section_dir_name(page.section), page.subgroup);
         let depth = page.href.matches('/').count();

@@ -5,7 +5,8 @@ Thanks for wanting to contribute! The main way to contribute is adding an
 different way to implement the *exact same scenario*. The site's own
 recommended way stays as the default **"Classic"** entry; your approach
 appears as an extra option in the scenario's `Approach:` dropdown, with your
-name on it. You can also propose a brand-new scenario (see below).
+name on it. You can also propose a brand-new scenario, or write a full
+long-form **[article](#articles)** (see below).
 
 Contribution is entirely PR-based markdown — no forms, no backend. You edit a
 page file, open a pull request, and a maintainer reviews and merges it.
@@ -177,6 +178,131 @@ Notes:
 - If an approach is renamed, rename its issue title to match.
 - The site reads the first 100 open `approach-vote` issues in one API call;
   revisit (pagination) if we ever approach that many.
+
+## Articles
+
+Beyond per-scenario approaches, you can contribute a **full article** — a
+long-form, **technical, code-first** piece about how Rust works or how to
+implement something (say, a deep dive into error handling, or how to build a
+custom iterator). Articles are free-form prose: unlike concept and syntax pages
+they are **not** forced into the `Explanation` / `Basic usage` /
+`Best practices` structure. Write it however the topic wants to be written — but
+every article is about code and implementation: it shows real, compiling Rust
+and explains it.
+
+Two things articles are *not*: opinion or think-pieces with no code ("why you
+should use Rust", "where Rust will be in ten years"), and crate/library
+showcases — those get their own dedicated section. Articles are for the
+language and how to build with it.
+
+Like everything else here, an article is a markdown pull request: you add one
+file, open a PR, and a maintainer reviews and merges it. It then appears on the
+[Articles page](https://rustyyellowpages.dev/articles/).
+
+### Where the file goes
+
+One markdown file, flat, under `pages/articles/`:
+
+```
+pages/articles/<your-slug>.md
+```
+
+The file name becomes the URL (`articles/<your-slug>.html`), so pick a short,
+descriptive, hyphenated slug (e.g. `a-tour-of-the-question-mark-operator.md`).
+
+**Start from the template.** Copy
+[`pages/articles/_ARTICLE_TEMPLATE.md`](pages/articles/_ARTICLE_TEMPLATE.md),
+rename the copy to your slug, and fill it in — the frontmatter and a suggested
+structure are already there. Files whose name starts with `_` (like the
+template) are skipped by the generator, so the template never appears on the
+site; the same trick works for a work-in-progress draft (`_my-draft.md`).
+
+### Frontmatter
+
+Every article starts with this YAML block. All fields except `tags` and
+`image` are **required** — the build prints a clear error naming the file and
+the missing field if one is absent, and skips the article until it's fixed.
+
+```yaml
+---
+title: "A tour of the ? operator: error handling that gets out of your way"
+author: "Your Name"                # display name for the byline
+github: "your-handle"              # your GitHub handle (a leading @ is fine)
+date: "2026-07-25"                 # YYYY-MM-DD — see the note below
+summary: "One or two sentences shown in listings and used for search."
+tags: ["error-handling", "result", "beginner"]   # small free list; `topics:` also accepted
+image: "images/optional-lead.png"  # optional; see "Images" below
+---
+
+Your article body starts here...
+```
+
+**About `date`:** set it to the day you open the PR; the **maintainer sets or
+adjusts it at merge** so the publication date reflects when the article
+actually went live. Articles are listed newest-first by this date.
+
+### Writing the body
+
+- Use any structure you like: `##` and `###` headings, paragraphs, lists,
+  block quotes, tables, and code blocks.
+- Code fences are plain (untagged) — all code on this site is treated as Rust
+  and highlighted client-side. Use `// <-` comments to point at key lines,
+  matching the rest of the site.
+- **Link liberally into the wiki.** Link to another page's markdown file and
+  the generator rewrites it to the right `.html` URL, exactly like scenario
+  bodies do:
+
+  ```markdown
+  The [`?` operator](../syntax/operators/question-mark.md) unwraps a
+  [`Result<T, E>`](../concepts/error-handling/result.md) or returns early.
+  ```
+
+  Paths are relative to `pages/articles/`, so wiki pages are `../concepts/...`
+  or `../syntax/...`. A link with no matching page prints a build warning.
+
+### Images (optional)
+
+To include an image, drop the file in `pages/articles/images/` and reference it
+as `images/<file>` — either as the frontmatter `image:` (a lead image shown on
+the card and at the top of the article) or inline in the body with normal
+markdown. An external `https://…` URL works in `image:` too. Keep images small
+and relevant; the site ships them as-is.
+
+### Review criteria
+
+A maintainer will check that the article is:
+
+- **Technically accurate**, and any code **compiles** on stable Rust (paste it
+  into the [Rust Playground](https://play.rust-lang.org/) to check).
+- **On-topic** — a Rust concept, language feature, or the standard library
+  (crate/library showcases belong in the upcoming crates section, not here).
+- **Original content** you wrote (or have the right to contribute), not a
+  copy of an existing post or the docs.
+- **Civil and constructive** in tone. Opinion and "here's how I'd approach it"
+  pieces are welcome; put-downs of people or projects are not.
+
+### For maintainers: enabling the like/rating on a merged article
+
+Articles use the same 👍 mechanism as approaches. Readers "like" an article by
+reacting to its GitHub issue, the count shows on the article's card and byline,
+and the Articles page can sort by it (**Sort → Top rated**). After merging,
+create the article's vote issue — title exactly `article::<slug>` (the file
+stem), with the `article-vote` label:
+
+```
+# once per repo:
+gh label create article-vote --description "Vote issue for a community article" --color F5C518
+
+# once per merged article:
+gh issue create \
+  --title "article::a-tour-of-the-question-mark-operator" \
+  --label article-vote \
+  --body "React with a 👍 to like this article. Read it: https://rustyyellowpages.dev/articles/a-tour-of-the-question-mark-operator.html"
+```
+
+Until the issue exists the article simply shows no like chip and sorts as 0
+under "Top rated" — nothing breaks. The site reads the first 100 open
+`article-vote` issues in one anonymous API call.
 
 ## Conversations & questions (no PR needed)
 

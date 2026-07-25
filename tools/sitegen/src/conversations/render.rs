@@ -7,7 +7,7 @@ use std::path::Path;
 use super::sanitize;
 use super::{Author, Conversation, Snapshot, REPO_NAME, REPO_OWNER};
 use crate::model::Page;
-use crate::nav::render_sidebar;
+use crate::nav::{render_sidebar, TopNav};
 use crate::render::{href_from, shell};
 use crate::util::html_escape;
 
@@ -30,7 +30,7 @@ fn new_discussion_url() -> String {
 }
 
 fn render_index(snap: &Snapshot, pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, true);
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations);
     let home = href_from(DEPTH, "index.html");
 
     let breadcrumb = format!(
@@ -171,7 +171,7 @@ fn render_index_item(c: &Conversation) -> String {
 }
 
 fn render_thread(c: &Conversation, pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, true);
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations);
     let home = href_from(DEPTH, "index.html");
     let index = "index.html";
 

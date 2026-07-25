@@ -1,3 +1,4 @@
+mod articles;
 mod bodylinks;
 mod conversations;
 mod links;
@@ -87,6 +88,9 @@ fn main() {
 
     bodylinks::rewrite_all(&mut pages);
 
+    let mut articles = articles::load(&pages_root);
+    articles::rewrite_body_links(&mut articles, &pages);
+
     let index = links::LinkIndex::build(&pages);
 
     let assets_dir = docs_root.join("assets");
@@ -97,7 +101,7 @@ fn main() {
     std::fs::copy(templates_root.join("site.js"), assets_dir.join("site.js"))
         .expect("copy site.js");
 
-    let search_index_js = search::build_search_index(&pages);
+    let search_index_js = search::build_search_index(&pages, &articles);
     std::fs::write(assets_dir.join("search-index.js"), search_index_js)
         .expect("write search-index.js");
 
@@ -110,6 +114,8 @@ fn main() {
 
     let landing_html = render::render_landing_page(&pages);
     std::fs::write(docs_root.join("index.html"), landing_html).expect("write index.html");
+
+    articles::build(&pages_root, &docs_root, &articles, &pages);
 
     // Best-effort GitHub Discussions mirror. Never fails the build.
     conversations::build(&repo_root, &docs_root, &pages);

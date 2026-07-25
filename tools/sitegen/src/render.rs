@@ -1,6 +1,6 @@
 use crate::links::{render_chip_row, LinkIndex};
 use crate::model::{group_label, Page, Section};
-use crate::nav::render_sidebar;
+use crate::nav::{render_sidebar, TopNav};
 use crate::util::html_escape;
 
 pub fn href_from(depth: usize, target: &str) -> String {
@@ -469,7 +469,7 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
 
 pub fn render_landing_page(pages: &[Page]) -> String {
     let depth = 0;
-    let sidebar = render_sidebar(pages, None, depth, false);
+    let sidebar = render_sidebar(pages, None, depth, TopNav::None);
 
     let mut groups_html = String::new();
     for section in [Section::Syntax, Section::Concepts] {
@@ -523,11 +523,15 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         <h2 class="section-title">Community</h2>
         <div class="related">
           <div class="related-row">
+            <span class="related-label">Read</span>
+            <a class="chip" href="articles/index.html">Articles</a>
+          </div>
+          <div class="related-row">
             <span class="related-label">Discuss</span>
             <a class="chip" href="conversations/index.html">Conversations</a>
           </div>
         </div>
-        <p class="subtitle">A read-only mirror of the project&rsquo;s GitHub Discussions &mdash; ask questions, compare approaches, share what you know.</p>
+        <p class="subtitle">Community deep dives into Rust concepts, and a read-only mirror of the project&rsquo;s GitHub Discussions &mdash; ask questions, compare approaches, share what you know.</p>
       </section>
 
       <div class="footer-note">
@@ -543,7 +547,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
 
 pub fn render_page_document(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
     let depth = page.href.matches('/').count();
-    let sidebar = render_sidebar(pages, Some(page), depth, false);
+    let sidebar = render_sidebar(pages, Some(page), depth, TopNav::None);
     let main = render_content_page(page, pages, index);
     shell(&page.front.title, depth, &sidebar, &main)
 }
