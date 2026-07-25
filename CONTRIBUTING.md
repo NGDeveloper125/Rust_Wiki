@@ -268,6 +268,23 @@ the card and at the top of the article) or inline in the body with normal
 markdown. An external `https://…` URL works in `image:` too. Keep images small
 and relevant; the site ships them as-is.
 
+**Name assets after the article they belong to.** Use the article's slug (the
+markdown file name without `.md`) as the image name, so it's obvious which
+article an asset serves:
+
+```
+pages/articles/
+  a-tour-of-the-question-mark-operator.md
+  images/
+    a-tour-of-the-question-mark-operator.png        # the lead image
+    a-tour-of-the-question-mark-operator-fig-1.png  # extra images: slug + a suffix
+```
+
+Then the frontmatter is `image: images/a-tour-of-the-question-mark-operator.png`.
+This keeps each article's assets self-documenting and avoids name collisions in
+the shared `images/` folder. A lead image reads best as a wide banner (about a
+**2:1** aspect ratio).
+
 ### Review criteria
 
 A maintainer will check that the article is:
