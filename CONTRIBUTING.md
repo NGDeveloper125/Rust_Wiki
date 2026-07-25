@@ -177,3 +177,21 @@ Notes:
 - If an approach is renamed, rename its issue title to match.
 - The site reads the first 100 open `approach-vote` issues in one API call;
   revisit (pagination) if we ever approach that many.
+
+## Conversations & questions (no PR needed)
+
+Not every contribution is a pull request. For questions, comparing approaches,
+ecosystem chat, or feedback on the site, use the repo's
+[**GitHub Discussions**](https://github.com/NGDeveloper125/Rust_Wiki/discussions).
+Those threads are mirrored, read-only, onto the site's
+[Conversations page](https://rustyyellowpages.dev/conversations/) in the site's
+own styling and refreshed automatically — so a good discussion becomes a
+browsable part of the reference.
+
+- Posting and replying happen on GitHub (a GitHub account is all you need); the
+  site never accepts writes, and there's nothing to build or edit.
+- Pick the category that fits: **Approaches & Idioms**, **Ecosystem**, **Q&A**,
+  or **Site feedback**.
+- It's the right place for open-ended discussion; use a **pull request** (above)
+  when you want to actually add an approach or scenario to a page, and an
+  **issue** to report something wrong or broken.
