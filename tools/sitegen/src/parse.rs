@@ -3,7 +3,7 @@ use std::path::Path;
 use crate::markdown;
 use crate::model::{Approach, Example, FrontMatter, Page, Scenario, Section};
 
-fn split_frontmatter(raw: &str) -> Result<(&str, &str), String> {
+pub(crate) fn split_frontmatter(raw: &str) -> Result<(&str, &str), String> {
     let raw = raw.strip_prefix('\u{feff}').unwrap_or(raw);
     let rest = raw.strip_prefix("---").ok_or("missing opening `---`")?;
     let rest = rest

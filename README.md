@@ -41,9 +41,11 @@ Every scenario on a concept page starts with the site's recommended **Classic** 
 
 Full walkthrough at the [bottom of this README](#-approaches-in-depth) and in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-### 2. Articles — *on the way* 🚧
+### 2. Articles — *live now* ✅
 
-Technical, code-first articles on Rust and its ecosystem: how to implement something, how a crate works, how to solve a concrete problem — with real, compiling code in the article itself. This is not the place for opinion or think-pieces ("why you should use Rust", "where Rust will be in ten years"); an article shows code and explains it. Free-form prose, your byline, linked into the rest of the wiki.
+Community-written, **technical, code-first articles** — how something in Rust actually works, how to implement a feature, how to solve a concrete problem — with real, compiling code in the article itself and links into the rest of the wiki. Free-form prose, your byline on it, and readers can 👍 the ones they find useful. It's *not* the place for opinion or think-pieces ("why you should use Rust", "where Rust will be in ten years"); an article shows code and explains it. Crate and library write-ups will get their own dedicated section — articles are for the language and how to build with it.
+
+Full walkthrough at the [bottom of this README](#-articles-in-depth) and in **[CONTRIBUTING.md](CONTRIBUTING.md#articles)**.
 
 ### 3. Conversations — *live now* ✅
 
@@ -64,6 +66,7 @@ Content is authored in markdown under `pages/`; the HTML under `docs/` is genera
 1. Edit or add the relevant file:
    - Syntax entries → `pages/syntax/<group>/<slug>.md`
    - Concept pages → `pages/concepts/<subgroup>/<slug>.md`
+   - Articles → `pages/articles/<slug>.md` (copy `_ARTICLE_TEMPLATE.md` to start)
 2. Open a pull request describing what you changed and why.
 
 The site is regenerated and republished when the PR is merged, so a markdown-only PR is all that's needed. The most common contribution — adding an **Approach** — is a purely additive markdown block. **[CONTRIBUTING.md](CONTRIBUTING.md)** has the exact format and the review criteria.
@@ -179,6 +182,55 @@ Readers can show which approaches they find most useful.
 - **Contributing is low-friction and safe.** Because an approach is an additive markdown block reviewed through a normal pull request, anyone can share a technique without risk of breaking the existing content.
 
 Together these turn each scenario from a one-voice recommendation into a small, curated collection of community knowledge — which is exactly how a living reference should grow.
+
+---
+
+<a id="-articles-in-depth"></a>
+
+## 📝 Articles, in depth
+
+Articles are community-written, **technical, code-first** pieces about how Rust works and how to build with it, rendered in the site's own styling and cross-linked into the rest of the wiki.
+
+### What an article is
+
+Where a concept page is a look-it-up reference and an approach is one scenario's alternative, an **article** is a longer, standalone, technical piece that takes a single thing — what the `?` operator really does under the hood, how to implement a custom iterator, how lifetimes flow through a function — and works through it with real, compiling code and the reasoning behind it.
+
+Articles are **free-form**: unlike concept and syntax pages they have no fixed section structure, so use whatever headings fit the topic. What they are *not*: opinion or think-pieces with no code ("why you should use Rust", "where Rust will be in ten years"), or crate/library showcases (a dedicated crates section is coming). Every article is about code and implementation.
+
+### The goal
+
+- **Go deeper than a reference entry can.** Some things need more room than a scenario or a look-up page — how something works under the hood, or how to actually build it — and an article gives that room without cluttering the dictionary.
+- **Grow the reference with the community's knowledge, credited.** Every article carries its author's byline and GitHub link, so sharing what you know is recognised.
+- **Stay technical and code-first.** Every article shows real, compiling Rust and explains it — how something works or how to implement it — so readers leave with something they can use, not an opinion to agree or disagree with.
+
+### How it works
+
+The whole thing is static — there is no server and no database.
+
+- Each article is a single markdown file under `pages/articles/`. At build time it's rendered to `articles/<slug>.html` and added to the **Articles index** — a card grid showing each article's title, summary, byline, tags, and an optional image.
+- The index has a **search box** (filter the cards by words in the title or summary) and a **sort toggle**: *Newest* (default) or *Top rated*.
+- Article bodies link into the wiki: a relative link to a concept or syntax page's markdown file is rewritten to the right `.html` URL at build time, so articles sit naturally alongside the reference.
+
+### How to add a new article
+
+You add an article by dropping a markdown file in `pages/articles/` and opening a pull request — no forms, no accounts beyond GitHub, no backend.
+
+1. Copy [`pages/articles/_ARTICLE_TEMPLATE.md`](pages/articles/_ARTICLE_TEMPLATE.md) and rename the copy to your slug — the file name becomes the URL, e.g. `pages/articles/lifetimes-without-the-fear.md`. Files whose name starts with `_` are skipped by the generator, so the template itself never publishes (and the same trick parks a work-in-progress draft as `_my-draft.md`).
+2. Fill in the frontmatter — `title`, `author`, `github`, `date`, `summary`, plus a few `tags` (everything except `tags` and an optional `image` is required). If a required field is missing the build prints a clear error naming the file and the field.
+3. Write the body in free-form markdown, with real compiling code and `// <-` comments on the key lines. Link into the wiki wherever it helps.
+4. Open the PR. A maintainer reviews it (code compiles, on-topic for the language/its concepts, original, civil), **sets the publication `date` at merge**, and merges — and your article is live on the [Articles page](https://rustyyellowpages.dev/articles/).
+
+The full frontmatter reference and style guidance are in **[CONTRIBUTING.md](CONTRIBUTING.md#articles)**.
+
+### How to like an article
+
+Just like approaches, readers can show which articles they find most useful.
+
+- Each article has a **👍 like button** on its card in the index and in its byline.
+- Clicking it opens a small GitHub issue for that article; react with a **👍** there to cast your like. (A GitHub account is all you need — which keeps the count honest.)
+- The site reads those counts live from GitHub on each load, shows the current number on the button, and the Articles page's **Top rated** sort orders by them — so the community's favourites rise to the top.
+
+*(For maintainers: enabling the like button on a merged article means creating its `article-vote` issue — the exact step is in [CONTRIBUTING.md](CONTRIBUTING.md#articles).)*
 
 ---
 

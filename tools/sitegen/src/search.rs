@@ -1,3 +1,4 @@
+use crate::articles::Article;
 use crate::model::{group_label, Page, Section};
 
 fn js_string_escape(s: &str) -> String {
@@ -18,8 +19,8 @@ fn is_token_kind(kind: &str) -> bool {
     matches!(kind, "operator" | "punctuation" | "keyword" | "comment")
 }
 
-pub fn build_search_index(pages: &[Page]) -> String {
-    let mut entries = Vec::with_capacity(pages.len());
+pub fn build_search_index(pages: &[Page], articles: &[Article]) -> String {
+    let mut entries = Vec::with_capacity(pages.len() + articles.len());
     for p in pages {
         let kind_label = match p.section {
             Section::Syntax => "syntax",
@@ -41,6 +42,23 @@ pub fn build_search_index(pages: &[Page]) -> String {
             href = js_string_escape(&p.href),
         ));
     }
+
+    // Articles are indexed on title + summary + tags (not full body) to keep
+    // the shipped index small and stable.
+    for a in articles {
+        // Strip backticks so inline-code markers in the summary don't leak
+        // into the (plain-text) search keywords.
+        let kw = format!("{} {} {}", a.title, a.summary, a.tags.join(" "))
+            .replace('`', "")
+            .to_lowercase();
+        entries.push(format!(
+            "  {{ title: \"{title}\", crumb: \"Articles\", kind: \"article\", isToken: false, kw: \"{kw}\", href: \"{href}\" }}",
+            title = js_string_escape(&a.title),
+            kw = js_string_escape(&kw),
+            href = js_string_escape(&a.href),
+        ));
+    }
+
     format!(
         "window.SEARCH_INDEX = [\n{}\n];\n",
         entries.join(",\n")
