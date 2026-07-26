@@ -8,7 +8,7 @@ use super::sanitize;
 use super::{Author, Conversation, Snapshot, REPO_NAME, REPO_OWNER};
 use crate::model::Page;
 use crate::nav::{render_sidebar, TopNav};
-use crate::render::{href_from, shell};
+use crate::render::{abs_url, href_from, shell, Head};
 use crate::util::html_escape;
 
 /// Depth of every conversations page (`docs/conversations/<file>.html`).
@@ -89,7 +89,14 @@ fn render_index(snap: &Snapshot, pages: &[Page]) -> String {
 "#
     );
 
-    shell("Conversations", DEPTH, &sidebar, &main)
+    let head = Head {
+        title: "Rust - Conversations - Rusty Yellow Pages".to_string(),
+        description: "A read-only mirror of the project's GitHub Discussions — ask questions, compare approaches, and share what you know about Rust.".to_string(),
+        canonical: abs_url("conversations/index.html"),
+        og_type: "website",
+        image: None,
+    };
+    shell(&head, DEPTH, &sidebar, &main)
 }
 
 /// Distinct category filter chips (client-side filtering via site.js).
@@ -229,7 +236,17 @@ fn render_thread(c: &Conversation, pages: &[Page]) -> String {
         gh = html_escape(&c.url),
     );
 
-    shell(&c.title, DEPTH, &sidebar, &main)
+    let head = Head {
+        title: format!("Rust - {} - Rusty Yellow Pages", c.title),
+        description: format!(
+            "{} — a community discussion in the Rusty Yellow Pages Rust reference.",
+            c.title
+        ),
+        canonical: abs_url(&format!("conversations/{}", thread_filename(c))),
+        og_type: "article",
+        image: None,
+    };
+    shell(&head, DEPTH, &sidebar, &main)
 }
 
 /// The full conversation body (original post + every fetched comment).
@@ -301,7 +318,7 @@ fn category_badge(c: &Conversation) -> String {
     )
 }
 
-fn thread_filename(c: &Conversation) -> String {
+pub(crate) fn thread_filename(c: &Conversation) -> String {
     let slug = slugify(&c.title);
     if slug.is_empty() {
         format!("{}.html", c.number)
