@@ -14,9 +14,11 @@ see_also: ["Result<T, E>", "Option<T>", "Custom error types", "The Error trait"]
 success value and lets execution continue, or immediately returns from
 the enclosing function with the failure — converting an `Err`'s error
 type into the function's own error type along the way, if a conversion is
-available. This page is about *when and why* to reach for that
-propagation shape, not the token's exact grammar or every place it's
-legal to write — that's the syntax page for `?` itself.
+available.
+
+This page is about *when and why* to reach for that propagation shape,
+not the token's exact grammar or every place it's legal to write — that's
+the syntax page for `?` itself.
 
 It exists to eliminate the boilerplate manual `Result` handling produces.
 Before `?`, propagating a failure meant writing out

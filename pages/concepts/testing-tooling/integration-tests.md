@@ -19,7 +19,9 @@ items. Where a [unit test](unit-tests.md) can see private helpers because
 it's compiled inside the same module, an integration test is deliberately
 locked out of them, which is exactly the point: it proves the crate
 *works when used from outside*, not merely that its internals are
-individually correct. The [Crates](../modules-crates-visibility/crates.md)
+individually correct.
+
+The [Crates](../modules-crates-visibility/crates.md)
 page covers that crate-boundary mechanics in more depth; this page's
 angle is the testing methodology it enables.
 

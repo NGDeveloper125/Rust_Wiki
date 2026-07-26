@@ -15,7 +15,9 @@ Every macro invocation — declarative or procedural, function-like or a
 tokens. That group may be wrapped in `(...)`, `[...]`, or `{...}`. To the
 compiler these three are **100% interchangeable**: `vec!(1, 2, 3)`,
 `vec![1, 2, 3]`, and `vec!{1, 2, 3}` all parse identically and expand
-identically. This page is about that choice of bracket; see
+identically.
+
+This page is about that choice of bracket; see
 [`!`](../operators/exclamation-mark.md) for the marker itself and what
 makes something a macro invocation in the first place.
 

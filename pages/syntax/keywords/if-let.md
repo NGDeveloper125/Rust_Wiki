@@ -15,8 +15,9 @@ does, any names `PATTERN` introduces are bound within the following block. It
 differs from a plain [`if`](if.md) in what's being tested: a plain `if`
 requires a `bool` condition, while `if let` succeeds or fails based on
 whether a pattern matches — the two are not interchangeable, and `if let`
-exists precisely for patterns that don't reduce to a single boolean. See
-[if let / while let](../../concepts/pattern-matching/if-let-and-while-let.md)
+exists precisely for patterns that don't reduce to a single boolean.
+
+See [if let / while let](../../concepts/pattern-matching/if-let-and-while-let.md)
 for the deeper "why" — when this lighter form is preferable to a full
 `match`.
 

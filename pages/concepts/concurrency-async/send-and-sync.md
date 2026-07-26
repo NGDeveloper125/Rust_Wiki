@@ -18,7 +18,9 @@ bounds — a function that spawns a thread with `std::thread::spawn`
 requires its closure's captures to be `Send`, so a program that tries to
 share an unsafe-to-share type across threads simply fails to compile,
 rather than shipping a data race that only shows up under load in
-production. See [Marker traits](../traits-polymorphism/marker-traits.md)
+production.
+
+See [Marker traits](../traits-polymorphism/marker-traits.md)
 for how `Send`/`Sync` fit alongside `Copy` and `Sized` as a category and
 how the auto-trait mechanism derives them.
 

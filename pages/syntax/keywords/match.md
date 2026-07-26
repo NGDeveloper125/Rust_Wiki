@@ -14,7 +14,9 @@ see_also: ["=>", "if let", "@"]
 `pattern => expression`, and runs the first arm whose pattern fits. Arms are
 separated by commas; the comma after an arm is optional when the arm's
 expression is itself a `{ ... }` block, since the closing brace already ends
-the arm. See [match expressions](../../concepts/pattern-matching/match-expressions.md)
+the arm.
+
+See [match expressions](../../concepts/pattern-matching/match-expressions.md)
 for the deeper "why" — when `match` earns its keep over lighter forms like
 `if let`, and how it relates to designing with enums.
 
