@@ -3,6 +3,28 @@ use crate::model::{group_label, Page, Section};
 use crate::nav::{render_sidebar, TopNav};
 use crate::util::html_escape;
 
+/// Public base URL of the deployed site, used for absolute `<link rel="canonical">`
+/// URLs and the sitemap. Change this in one place if the site moves to a custom
+/// domain (e.g. `https://rustyyellowpages.dev/`).
+pub const SITE_BASE: &str = "https://ngdeveloper125.github.io/Rust_Wiki/";
+
+/// The `<head>` metadata for a page. All string fields are raw (unescaped);
+/// [`shell`] escapes them at render time.
+pub struct Head {
+    /// Full `<title>` text.
+    pub title: String,
+    /// `<meta name="description">` text.
+    pub description: String,
+    /// Absolute `<link rel="canonical">` URL.
+    pub canonical: String,
+}
+
+/// Build an absolute site URL from a site-root-relative path
+/// (e.g. `"syntax/operators/ampersand.html"`). An empty path yields the base.
+pub fn abs_url(site_relative_path: &str) -> String {
+    format!("{SITE_BASE}{site_relative_path}")
+}
+
 pub fn href_from(depth: usize, target: &str) -> String {
     if depth == 0 {
         target.to_string()
@@ -45,7 +67,7 @@ fn topbar(depth: usize) -> String {
 }
 
 /// Wrap `sidebar_html` + `main_html` in the full document shell.
-pub fn shell(title: &str, depth: usize, sidebar_html: &str, main_html: &str) -> String {
+pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> String {
     let css = href_from(depth, "assets/site.css");
     let search_index_js = href_from(depth, "assets/search-index.js");
     let site_js = href_from(depth, "assets/site.js");
@@ -56,6 +78,8 @@ pub fn shell(title: &str, depth: usize, sidebar_html: &str, main_html: &str) -> 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
+<meta name="description" content="{description}">
+<link rel="canonical" href="{canonical}">
 <link rel="stylesheet" href="{css}">
 </head>
 <body>
@@ -79,6 +103,9 @@ pub fn shell(title: &str, depth: usize, sidebar_html: &str, main_html: &str) -> 
 </body>
 </html>
 "#,
+        title = html_escape(&head.title),
+        description = html_escape(&head.description),
+        canonical = html_escape(&head.canonical),
         topbar = topbar(depth),
         site_root = "../".repeat(depth),
     )
@@ -537,7 +564,12 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         groups = groups_html,
     );
 
-    shell("Rusty Yellow Pages - Home", depth, &sidebar, &main)
+    let head = Head {
+        title: "Rusty Yellow Pages - Home".to_string(),
+        description: "A free, open-source reference for the Rust programming language — every syntax element and every language concept gets its own page, densely cross-linked. Look things up fast.".to_string(),
+        canonical: abs_url(""),
+    };
+    shell(&head, depth, &sidebar, &main)
 }
 
 /// Singular noun for a syntax subgroup, used to make bare-symbol pages
@@ -560,8 +592,9 @@ fn syntax_group_noun(subgroup: &str) -> &'static str {
 /// "Rust" and the topic so a query like `rust traits` matches, and keeps the
 /// site name at the end. Syntax pages get their group noun appended so a bare
 /// symbol like `?` reads as `Rust - ? Operator - Rusty Yellow Pages`.
+/// Returned raw; [`shell`] escapes it.
 fn page_title(page: &Page) -> String {
-    let t = html_escape(&page.front.title);
+    let t = &page.front.title;
     match page.section {
         Section::Syntax => format!(
             "Rust - {t} {group} - Rusty Yellow Pages",
@@ -571,9 +604,33 @@ fn page_title(page: &Page) -> String {
     }
 }
 
+/// A search-friendly `<meta name="description">` for a content page. Returned
+/// raw; [`shell`] escapes it.
+fn page_description(page: &Page) -> String {
+    let t = &page.front.title;
+    match page.section {
+        Section::Syntax => format!(
+            "{t} — a Rust {noun}. What it means and how to use it, with quick examples.",
+            noun = syntax_group_noun(&page.subgroup).to_lowercase()
+        ),
+        Section::Concepts => format!(
+            "{t} in Rust — explanation, examples, and best practices, densely cross-linked."
+        ),
+    }
+}
+
+/// The full `<head>` metadata for a content page.
+fn page_head(page: &Page) -> Head {
+    Head {
+        title: page_title(page),
+        description: page_description(page),
+        canonical: abs_url(&page.href),
+    }
+}
+
 pub fn render_page_document(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
     let depth = page.href.matches('/').count();
     let sidebar = render_sidebar(pages, Some(page), depth, TopNav::None);
     let main = render_content_page(page, pages, index);
-    shell(&page_title(page), depth, &sidebar, &main)
+    shell(&page_head(page), depth, &sidebar, &main)
 }
