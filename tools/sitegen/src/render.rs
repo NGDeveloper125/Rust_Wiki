@@ -17,6 +17,42 @@ pub struct Head {
     pub description: String,
     /// Absolute `<link rel="canonical">` URL.
     pub canonical: String,
+    /// Open Graph `og:type` — `"website"` for most pages, `"article"` for articles.
+    pub og_type: &'static str,
+    /// Absolute URL of a share image, if the page has one (article lead images).
+    pub image: Option<String>,
+}
+
+impl Head {
+    /// The Open Graph / Twitter Card tag block for this page.
+    fn social_meta(&self) -> String {
+        let mut s = format!(
+            r#"<meta property="og:type" content="{og_type}">
+<meta property="og:site_name" content="Rusty Yellow Pages">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{description}">
+<meta property="og:url" content="{canonical}">
+<meta name="twitter:card" content="{card}">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{description}">"#,
+            og_type = self.og_type,
+            title = html_escape(&self.title),
+            description = html_escape(&self.description),
+            canonical = html_escape(&self.canonical),
+            card = if self.image.is_some() {
+                "summary_large_image"
+            } else {
+                "summary"
+            },
+        );
+        if let Some(image) = &self.image {
+            s.push_str(&format!(
+                "\n<meta property=\"og:image\" content=\"{img}\">\n<meta name=\"twitter:image\" content=\"{img}\">",
+                img = html_escape(image),
+            ));
+        }
+        s
+    }
 }
 
 /// Build an absolute site URL from a site-root-relative path
@@ -80,6 +116,7 @@ pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> 
 <title>{title}</title>
 <meta name="description" content="{description}">
 <link rel="canonical" href="{canonical}">
+{social_meta}
 <link rel="stylesheet" href="{css}">
 </head>
 <body>
@@ -106,6 +143,7 @@ pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> 
         title = html_escape(&head.title),
         description = html_escape(&head.description),
         canonical = html_escape(&head.canonical),
+        social_meta = head.social_meta(),
         topbar = topbar(depth),
         site_root = "../".repeat(depth),
     )
@@ -568,6 +606,8 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         title: "Rusty Yellow Pages - Home".to_string(),
         description: "A free, open-source reference for the Rust programming language — every syntax element and every language concept gets its own page, densely cross-linked. Look things up fast.".to_string(),
         canonical: abs_url(""),
+        og_type: "website",
+        image: None,
     };
     shell(&head, depth, &sidebar, &main)
 }
@@ -625,6 +665,8 @@ fn page_head(page: &Page) -> Head {
         title: page_title(page),
         description: page_description(page),
         canonical: abs_url(&page.href),
+        og_type: "website",
+        image: None,
     }
 }
 

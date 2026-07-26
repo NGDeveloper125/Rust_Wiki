@@ -93,6 +93,8 @@ fn render_index(snap: &Snapshot, pages: &[Page]) -> String {
         title: "Rust - Conversations - Rusty Yellow Pages".to_string(),
         description: "A read-only mirror of the project's GitHub Discussions — ask questions, compare approaches, and share what you know about Rust.".to_string(),
         canonical: abs_url("conversations/index.html"),
+        og_type: "website",
+        image: None,
     };
     shell(&head, DEPTH, &sidebar, &main)
 }
@@ -241,6 +243,8 @@ fn render_thread(c: &Conversation, pages: &[Page]) -> String {
             c.title
         ),
         canonical: abs_url(&format!("conversations/{}", thread_filename(c))),
+        og_type: "article",
+        image: None,
     };
     shell(&head, DEPTH, &sidebar, &main)
 }
