@@ -4,9 +4,10 @@ use crate::nav::{render_sidebar, TopNav};
 use crate::util::html_escape;
 
 /// Public base URL of the deployed site, used for absolute `<link rel="canonical">`
-/// URLs and the sitemap. Change this in one place if the site moves to a custom
-/// domain (e.g. `https://rustyyellowpages.dev/`).
-pub const SITE_BASE: &str = "https://ngdeveloper125.github.io/Rust_Wiki/";
+/// URLs, Open Graph URLs, the sitemap, and robots.txt. The site is served from
+/// the `rustyyellowpages.dev` custom domain (see `docs/CNAME`), where the repo
+/// lives at the domain root — so paths carry no `/Rust_Wiki/` prefix.
+pub const SITE_BASE: &str = "https://rustyyellowpages.dev/";
 
 /// The `<head>` metadata for a page. All string fields are raw (unescaped);
 /// [`shell`] escapes them at render time.
