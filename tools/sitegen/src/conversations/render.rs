@@ -89,7 +89,7 @@ fn render_index(snap: &Snapshot, pages: &[Page]) -> String {
 "#
     );
 
-    shell("Conversations", DEPTH, &sidebar, &main)
+    shell("Rust - Conversations - Rusty Yellow Pages", DEPTH, &sidebar, &main)
 }
 
 /// Distinct category filter chips (client-side filtering via site.js).
@@ -229,7 +229,12 @@ fn render_thread(c: &Conversation, pages: &[Page]) -> String {
         gh = html_escape(&c.url),
     );
 
-    shell(&c.title, DEPTH, &sidebar, &main)
+    shell(
+        &format!("Rust - {} - Rusty Yellow Pages", html_escape(&c.title)),
+        DEPTH,
+        &sidebar,
+        &main,
+    )
 }
 
 /// The full conversation body (original post + every fetched comment).

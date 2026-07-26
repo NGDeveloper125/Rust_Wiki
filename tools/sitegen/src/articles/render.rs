@@ -99,7 +99,7 @@ fn render_index(articles: &[Article], pages: &[Page]) -> String {
 "#
     );
 
-    shell("Articles", DEPTH, &sidebar, &main)
+    shell("Rust - Articles - Rusty Yellow Pages", DEPTH, &sidebar, &main)
 }
 
 /// One card in the index grid. `i` is the authored (newest-first) position,
@@ -242,7 +242,12 @@ fn render_article(a: &Article, pages: &[Page]) -> String {
         body = a.body_html,
     );
 
-    shell(&a.title, DEPTH, &sidebar, &main)
+    shell(
+        &format!("Rust - {} - Rusty Yellow Pages", html_escape(&a.title)),
+        DEPTH,
+        &sidebar,
+        &main,
+    )
 }
 
 fn render_tags(a: &Article) -> String {

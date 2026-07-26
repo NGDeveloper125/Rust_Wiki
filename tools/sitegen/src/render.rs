@@ -55,7 +55,7 @@ pub fn shell(title: &str, depth: usize, sidebar_html: &str, main_html: &str) -> 
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title} &mdash; Rusty Yellow Pages</title>
+<title>{title}</title>
 <link rel="stylesheet" href="{css}">
 </head>
 <body>
@@ -503,12 +503,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
     }
 
     let main = format!(
-        r#"      <div class="page-head">
-        <div class="title-block">
-          <h1 class="page-title">Rusty Yellow Pages</h1>
-        </div>
-      </div>
-      <p class="lead">A free, open-source, deep reference for the Rust programming language &mdash; a directory you look things up in. Every syntax element and every language concept gets its own page, densely cross-linked.</p>
+        r#"      <p class="lead">A free, open-source, deep reference for the Rust programming language &mdash; a directory you look things up in. Every syntax element and every language concept gets its own page, densely cross-linked.</p>
 
       <hr class="divider">
 
@@ -542,12 +537,43 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         groups = groups_html,
     );
 
-    shell("Rusty Yellow Pages", depth, &sidebar, &main)
+    shell("Rusty Yellow Pages - Home", depth, &sidebar, &main)
+}
+
+/// Singular noun for a syntax subgroup, used to make bare-symbol pages
+/// (`?`, `&`, `match`) into descriptive, searchable `<title>` text.
+fn syntax_group_noun(subgroup: &str) -> &'static str {
+    match subgroup {
+        "keywords" => "Keyword",
+        "operators" => "Operator",
+        "lifetimes" => "Lifetime",
+        "literals" => "Literal",
+        "punctuation" => "Punctuation",
+        "comments" => "Comment",
+        "attributes" => "Attribute",
+        "macros" => "Macro",
+        _ => "Syntax",
+    }
+}
+
+/// The `<title>` text for a content page, tuned for search: it leads with
+/// "Rust" and the topic so a query like `rust traits` matches, and keeps the
+/// site name at the end. Syntax pages get their group noun appended so a bare
+/// symbol like `?` reads as `Rust - ? Operator - Rusty Yellow Pages`.
+fn page_title(page: &Page) -> String {
+    let t = html_escape(&page.front.title);
+    match page.section {
+        Section::Syntax => format!(
+            "Rust - {t} {group} - Rusty Yellow Pages",
+            group = syntax_group_noun(&page.subgroup)
+        ),
+        Section::Concepts => format!("Rust - {t} - Rusty Yellow Pages"),
+    }
 }
 
 pub fn render_page_document(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
     let depth = page.href.matches('/').count();
     let sidebar = render_sidebar(pages, Some(page), depth, TopNav::None);
     let main = render_content_page(page, pages, index);
-    shell(&page.front.title, depth, &sidebar, &main)
+    shell(&page_title(page), depth, &sidebar, &main)
 }
