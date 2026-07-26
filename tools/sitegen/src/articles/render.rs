@@ -7,7 +7,7 @@ use std::path::Path;
 use super::{Article, DEPTH};
 use crate::model::Page;
 use crate::nav::{render_sidebar, TopNav};
-use crate::render::{href_from, shell};
+use crate::render::{abs_url, href_from, shell, Head};
 use crate::util::html_escape;
 
 /// The repo's contributor guide, linked from the "write an article" CTA.
@@ -99,7 +99,14 @@ fn render_index(articles: &[Article], pages: &[Page]) -> String {
 "#
     );
 
-    shell("Articles", DEPTH, &sidebar, &main)
+    let head = Head {
+        title: "Rust - Articles - Rusty Yellow Pages".to_string(),
+        description: "Community-written, technical articles about how Rust works and how to implement things — real, compiling code with the reasoning behind it.".to_string(),
+        canonical: abs_url("articles/index.html"),
+        og_type: "website",
+        image: None,
+    };
+    shell(&head, DEPTH, &sidebar, &main)
 }
 
 /// One card in the index grid. `i` is the authored (newest-first) position,
@@ -242,7 +249,25 @@ fn render_article(a: &Article, pages: &[Page]) -> String {
         body = a.body_html,
     );
 
-    shell(&a.title, DEPTH, &sidebar, &main)
+    let image = a.image.as_ref().and_then(|src| {
+        let src = src.trim();
+        if src.is_empty() {
+            None
+        } else if src.starts_with("http://") || src.starts_with("https://") {
+            Some(src.to_string())
+        } else {
+            // Repo-local path like `images/foo.png`, relative to `docs/articles/`.
+            Some(abs_url(&format!("articles/{src}")))
+        }
+    });
+    let head = Head {
+        title: format!("Rust - {} - Rusty Yellow Pages", a.title),
+        description: a.summary.clone(),
+        canonical: abs_url(&a.href),
+        og_type: "article",
+        image,
+    };
+    shell(&head, DEPTH, &sidebar, &main)
 }
 
 fn render_tags(a: &Article) -> String {

@@ -8,6 +8,7 @@ mod nav;
 mod parse;
 mod render;
 mod search;
+mod sitemap;
 mod util;
 
 use std::path::{Path, PathBuf};
@@ -118,7 +119,16 @@ fn main() {
     articles::build(&pages_root, &docs_root, &articles, &pages);
 
     // Best-effort GitHub Discussions mirror. Never fails the build.
-    conversations::build(&repo_root, &docs_root, &pages);
+    let conversation_urls = conversations::build(&repo_root, &docs_root, &pages);
+
+    let sitemap_xml = sitemap::build(&pages, &articles, &conversation_urls);
+    std::fs::write(docs_root.join("sitemap.xml"), sitemap_xml).expect("write sitemap.xml");
+
+    let robots = format!(
+        "User-agent: *\nAllow: /\nSitemap: {}sitemap.xml\n",
+        render::SITE_BASE
+    );
+    std::fs::write(docs_root.join("robots.txt"), robots).expect("write robots.txt");
 
     println!(
         "generated {} pages + 1 landing page into {}",
