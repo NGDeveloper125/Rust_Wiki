@@ -11,7 +11,12 @@ see_also: ["gen"]
 ## Explanation
 
 `yield` has been reserved since the 2015 edition, part of the
-[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html).
+[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html):
+the lexer recognizes it as a keyword token, but no grammar rule in stable
+Rust gives it any meaning. Using `yield` as an ordinary identifier is a
+compile error today. The raw-identifier form `r#yield` is legal, the same
+escape hatch every reserved keyword offers.
+
 It's closely tied to — and likely to be subsumed by — the newer
 [`gen`](gen.md) reservation from the 2024 edition: `yield value` is the
 piece inside a hypothetical `gen fn`/`gen { }` block that would suspend
@@ -28,10 +33,6 @@ experimental nightly implementation gated behind
 the exact syntax could still change, but `yield` is one of this
 section's more concretely-motivated reservations precisely because it's
 paired with `gen`'s active work rather than standing alone.
-
-Using `yield` as an ordinary identifier is a compile error today. The
-raw-identifier form `r#yield` is legal, the same escape hatch every
-reserved keyword offers.
 
 ## Usage examples
 

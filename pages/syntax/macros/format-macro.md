@@ -11,10 +11,12 @@ see_also: ["println! / print! / eprintln! / eprint!", "write! / writeln!"]
 ## Explanation
 
 `format!` takes a format string plus arguments and returns a freshly
-allocated `String` — the same `{}`/`{:?}` placeholder grammar used by
-`println!`, `eprintln!`, and `write!` all bottom out in this one
-mini-language, and this page is its canonical home; the other formatting
-macros link back here rather than re-deriving it.
+allocated `String`.
+
+The same `{}`/`{:?}` placeholder grammar is used by `println!`,
+`eprintln!`, and `write!` — they all bottom out in this one mini-language,
+and this page is its canonical home; the other formatting macros link back
+here rather than re-deriving it.
 
 Inside `{}`, an argument is selected three ways: **positional**, by index
 (`{0}`, `{1}`, referring back to arguments by position, which allows

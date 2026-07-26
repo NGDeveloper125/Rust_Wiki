@@ -12,7 +12,9 @@ see_also: ["///", "//!"]
 
 An attribute attaches metadata to a piece of Rust code, consumed by the
 compiler, a lint pass, or a macro — never by the program's own runtime
-logic. Every specific attribute covered elsewhere in this wiki
+logic.
+
+Every specific attribute covered elsewhere in this wiki
 (`#[derive(...)]`, `#[cfg(...)]`, `#[test]`, `#[repr(...)]`, and dozens
 more) is one particular *consumer* of this single shared syntax; this
 page covers the grammar and placement rules all of them share.

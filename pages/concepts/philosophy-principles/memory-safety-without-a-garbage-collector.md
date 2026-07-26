@@ -12,7 +12,9 @@ see_also: ["Ownership", "The borrow checker", "RAII & the Drop trait", "Lifetime
 Rust guarantees memory safety — no use-after-free, no double-free, no
 dangling references, no data races on shared memory — entirely through
 compile-time checks, with zero runtime tracing, no collection pauses, and
-no reference-counting overhead paid by default. This places it outside the
+no reference-counting overhead paid by default.
+
+This places it outside the
 two camps memory management has historically been split between.
 Garbage-collected languages (Java, Go, Python, JavaScript, C#) trade away
 manual memory management for a runtime that tracks liveness and reclaims

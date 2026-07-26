@@ -9,16 +9,16 @@ see_also: ["Deref & DerefMut coercion", "Traits", "Dependency injection via trai
 
 ## Explanation
 
+This anti-pattern is a specific misuse of `Deref`: implementing it on a
+wrapper type not to make it act like a reference, but purely to make the
+wrapper "inherit" every method of the type it wraps — a `Wrapper<Inner>`
+that implements `Deref<Target = Inner>` so `wrapper.some_inner_method()`
+compiles via autoderef, imitating the way a subclass in an object-oriented
+language inherits its parent's methods.
 [Deref & DerefMut coercion](../ownership-borrowing/deref-coercion.md)
-covers what `Deref` is *for*: letting a smart pointer transparently act
-like a reference to whatever it wraps, so `Box<String>` can be used
-almost anywhere a `&String` is expected. This page is about a specific
-misuse of that mechanism: implementing `Deref` on a wrapper type not to
-make it act like a reference, but purely to make the wrapper "inherit"
-every method of the type it wraps — a `Wrapper<Inner>` that implements
-`Deref<Target = Inner>` so `wrapper.some_inner_method()` compiles via
-autoderef, imitating the way a subclass in an object-oriented language
-inherits its parent's methods.
+covers what `Deref` is *for* by contrast: letting a smart pointer
+transparently act like a reference to whatever it wraps, so `Box<String>`
+can be used almost anywhere a `&String` is expected.
 
 It's tempting because it genuinely works and requires almost no code: one
 `impl Deref for Wrapper` block, and every public method of `Inner`

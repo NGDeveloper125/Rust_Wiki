@@ -10,12 +10,19 @@ see_also: ["yield", "async"]
 
 ## Explanation
 
-`gen` is the newest reservation in this group: it became a reserved
-keyword only in the **2024 edition**, unlike the rest of this section's
-keywords, most of which have been reserved since 2015. That recency
-matches how recent the design work behind it is.
+`gen` is a reserved keyword in the **2024 edition** and later: the lexer
+recognizes it as a keyword token, but no grammar rule in stable Rust
+gives it any meaning. Using `gen` as an ordinary identifier is a compile
+error in the 2024 edition (and later); it was never reserved in
+2015/2018/2021, so existing code using `gen` as a variable or function
+name from those editions is unaffected until it migrates. The
+raw-identifier form `r#gen` is legal in any edition, the same escape
+hatch every reserved keyword offers.
 
-`gen` is earmarked for a possible future **generator/coroutine** syntax —
+`gen` is the newest reservation in this group — the rest of this
+section's keywords have mostly been reserved since 2015 — and that
+recency matches how recent the design work behind it is. `gen` is
+earmarked for a possible future **generator/coroutine** syntax —
 `gen fn` or `gen { }` blocks that produce a sequence of values one at a
 time via [`yield`](yield.md), the same way `async fn` produces a
 `Future` that resolves via `.await`. The analogy is close and
@@ -34,13 +41,6 @@ reserved specifically in 2024 rather than having sat unclaimed since
 stable yet, and reservation doesn't guarantee eventual stabilization —
 but of this section's keywords, `gen` and [`become`](become.md) are the
 two with genuine forward motion behind them.
-
-Using `gen` as an ordinary identifier is a compile error in the 2024
-edition (and later); it was never reserved in 2015/2018/2021, so
-existing code using `gen` as a variable or function name from those
-editions is unaffected until it migrates. The raw-identifier form
-`r#gen` is legal in any edition, the same escape hatch every reserved
-keyword offers.
 
 ## Usage examples
 

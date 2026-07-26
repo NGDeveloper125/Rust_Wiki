@@ -17,9 +17,10 @@ keyword**: it has no special meaning anywhere else in the language and is
 recognized only in this exact position, immediately after `&` and
 immediately before `const` or `mut` — everywhere else, `raw` is a perfectly
 ordinary identifier (a variable, field, or function can still be named
-`raw`). The operators were stabilized in Rust 1.82.
+`raw`).
 
-The point of contrast is the older, more common idiom:
+The operators were stabilized in Rust 1.82. The point of contrast is the
+older, more common idiom:
 `&expr as *const T` / `&mut expr as *mut T`. That's a two-step operation —
 first `&`/`&mut` creates a genuine reference to `expr` (which must satisfy
 every validity requirement a reference has: proper alignment, no

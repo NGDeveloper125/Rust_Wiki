@@ -9,14 +9,14 @@ see_also: ["The Iterator trait", "Iterator adaptors", "Iterator consumers", "Cus
 
 ## Explanation
 
-Building an [adaptor](iterator-adaptors.md) chain does no work by itself.
-Writing `data.iter().map(f).filter(g)` only constructs a small nested
-struct describing what *would* happen to an item if one arrived — no
-call to `f` or `g` actually happens at that line. Work only starts when
-something pulls values through the chain: a `for` loop, or a
-[consumer](iterator-consumers.md) like `sum` or `collect`. This is what
-"lazy" means here — computation is deferred until it's demanded, rather
-than run eagerly as each step is written.
+Laziness in Rust's iterators means computation is deferred until it's
+demanded, rather than run eagerly as each step is written. Building an
+[adaptor](iterator-adaptors.md) chain does no work by itself: writing
+`data.iter().map(f).filter(g)` only constructs a small nested struct
+describing what *would* happen to an item if one arrived — no call to `f`
+or `g` actually happens at that line. Work only starts when something
+pulls values through the chain: a `for` loop, or a
+[consumer](iterator-consumers.md) like `sum` or `collect`.
 
 This deferral is what makes infinite iterators usable at all. A range
 like `0..` never terminates on its own, but because nothing runs until

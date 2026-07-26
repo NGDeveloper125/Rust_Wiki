@@ -9,6 +9,10 @@ see_also: ["Result<T, E>", "Custom error types", "mem::take / mem::replace"]
 
 ## Explanation
 
+This idiom is a signature shape: when a function consumes an argument by
+value and can fail, it hands that argument back to the caller inside the
+error rather than swallowing it.
+
 A function that takes an argument by value — consuming it, per normal
 [move semantics](../ownership-borrowing/move-semantics.md) — has a
 problem when it can fail partway through: if it returns only an error,

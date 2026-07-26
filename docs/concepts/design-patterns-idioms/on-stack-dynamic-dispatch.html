@@ -956,17 +956,20 @@
       <div class="flavor flavor-classic">
       <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
-        <p>A trait object almost always shows up behind <code>Box</code> in introductory
-examples — <code>Box&lt;dyn Trait&gt;</code> — which quietly bundles a heap allocation
-into every mention of dynamic dispatch. But the actual mechanism behind
+        <p>On-stack dynamic dispatch is runtime polymorphism without a heap
+allocation. The mechanism behind
 <a href="../../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.html">trait objects</a>
 is just a fat pointer: a data pointer plus a vtable pointer, and neither
 half requires the data itself to live on the heap. <code>&amp;dyn Trait</code> and
 <code>&amp;mut dyn Trait</code> build that same fat pointer around a plain reference to
 a value that can live anywhere — most usefully, as an ordinary local on
 the stack — which means runtime polymorphism and heap allocation are two
-independent decisions, not one, even though beginner examples usually
-reach for both at once.</p>
+independent decisions, not one.</p>
+<p>A trait object almost always shows up behind <code>Box</code> in introductory
+examples — <code>Box&lt;dyn Trait&gt;</code> — which quietly bundles a heap allocation
+into every mention of dynamic dispatch, even though beginner examples
+reach for both at once only by habit, not because the mechanism requires
+it.</p>
 <p>The idiom is to keep concrete values as ordinary stack-local bindings
 and reach for <code>&amp;dyn Trait</code> only at the single point where one variable
 needs to refer to "whichever one of these it turns out to be" —

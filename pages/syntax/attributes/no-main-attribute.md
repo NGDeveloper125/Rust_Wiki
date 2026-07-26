@@ -10,11 +10,10 @@ see_also: ["#![no_std]"]
 
 ## Explanation
 
-`#![no_std]` is an inner attribute placed at the very top of a crate root
-that disables `#![no_main]`'s counterpart, ordinary Rust program startup:
-it stops the compiler from generating the small runtime shim that
-normally sets up the process, installs a panic/stack-overflow guard, and
-then calls a Rust `fn main`.
+`#![no_main]` is an inner attribute placed at the very top of a crate root
+that disables ordinary Rust program startup: it stops the compiler from
+generating the small runtime shim that normally sets up the process,
+installs a panic/stack-overflow guard, and then calls a Rust `fn main`.
 
 Every ordinary Rust binary has more going on at startup than just the
 `fn main` a programmer writes: the compiler emits a real, C-ABI `main`

@@ -9,17 +9,21 @@ see_also: ["Trait objects & dynamic dispatch (dyn Trait)", "The strategy pattern
 
 ## Explanation
 
-A trait object almost always shows up behind `Box` in introductory
-examples — `Box<dyn Trait>` — which quietly bundles a heap allocation
-into every mention of dynamic dispatch. But the actual mechanism behind
+On-stack dynamic dispatch is runtime polymorphism without a heap
+allocation. The mechanism behind
 [trait objects](../traits-polymorphism/trait-objects-dynamic-dispatch.md)
 is just a fat pointer: a data pointer plus a vtable pointer, and neither
 half requires the data itself to live on the heap. `&dyn Trait` and
 `&mut dyn Trait` build that same fat pointer around a plain reference to
 a value that can live anywhere — most usefully, as an ordinary local on
 the stack — which means runtime polymorphism and heap allocation are two
-independent decisions, not one, even though beginner examples usually
-reach for both at once.
+independent decisions, not one.
+
+A trait object almost always shows up behind `Box` in introductory
+examples — `Box<dyn Trait>` — which quietly bundles a heap allocation
+into every mention of dynamic dispatch, even though beginner examples
+reach for both at once only by habit, not because the mechanism requires
+it.
 
 The idiom is to keep concrete values as ordinary stack-local bindings
 and reach for `&dyn Trait` only at the single point where one variable

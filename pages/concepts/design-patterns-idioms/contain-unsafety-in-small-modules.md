@@ -9,20 +9,21 @@ see_also: ["Unsafe Rust", "Modules", "Visibility & privacy (pub and friends)"]
 
 ## Explanation
 
-This idiom is about *where the boundary of trust lives* around unsafe
-code, not about `unsafe` itself — see [Unsafe Rust](../memory-unsafe/unsafe-rust.md)
-for the mechanism and what the keyword actually changes. The idea:
-instead of scattering `unsafe` blocks across a codebase wherever a raw
-pointer or FFI call happens to be convenient, gather everything that
-depends on a given unsafe invariant into one small, deliberately scoped
-[module](../modules-crates-visibility/modules.md), keep every field and
-helper that participates in the invariant private to that module, and
-expose only a safe API at the module's boundary. Every caller outside
-the module then gets ordinary safe Rust back — the compiler re-enforces
-all of its usual guarantees the moment code crosses back out — because
-the module's author has already discharged the unsafe contract once, in
-one reviewable place, instead of it being re-litigated at every call
-site that happens to need it.
+This idiom gathers everything that depends on a given unsafe invariant
+into one small, deliberately scoped
+[module](../modules-crates-visibility/modules.md), instead of scattering
+`unsafe` blocks across a codebase wherever a raw pointer or FFI call
+happens to be convenient: keep every field and helper that participates
+in the invariant private to that module, and expose only a safe API at
+the module's boundary. Every caller outside the module then gets ordinary
+safe Rust back — the compiler re-enforces all of its usual guarantees the
+moment code crosses back out — because the module's author has already
+discharged the unsafe contract once, in one reviewable place, instead of
+it being re-litigated at every call site that happens to need it.
+
+It is about *where the boundary of trust lives* around unsafe code, not
+about `unsafe` itself — see [Unsafe Rust](../memory-unsafe/unsafe-rust.md)
+for the mechanism and what the keyword actually changes.
 
 The size of the module matters as much as its existence. A module with
 five unsafe operations spread across a thousand lines of unrelated safe

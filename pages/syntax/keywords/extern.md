@@ -12,11 +12,12 @@ see_also: ["extern crate", unsafe]
 
 `extern` marks a boundary between Rust and a foreign calling convention —
 almost always C, or something that presents a C-compatible ABI. It has
-two main forms, plus an ABI-string vocabulary shared by both. (A third,
-mostly-historical form, `extern crate`, declares a dependency on another
-Rust crate rather than a foreign-language boundary and is covered on its
-own page, [`extern crate`](extern-crate.md) — this page covers only the
-FFI/ABI use of plain `extern`.)
+two main forms, plus an ABI-string vocabulary shared by both.
+
+A third, mostly-historical form, `extern crate`, declares a dependency on
+another Rust crate rather than a foreign-language boundary and is covered
+on its own page, [`extern crate`](extern-crate.md) — this page covers only
+the FFI/ABI use of plain `extern`.
 
 **`extern "C" { ... }` — a block declaring foreign items.** This form
 tells the compiler the signature of a function or `static` that lives in

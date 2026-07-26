@@ -10,12 +10,10 @@ see_also: []
 
 ## Explanation
 
-Both attributes are written as inner attributes (`#![...]`) at the top of
-a crate root, and both set something today more commonly configured from
-`Cargo.toml` instead. They're covered together because they serve the
-same purpose — telling a standalone `rustc` invocation something Cargo
-would otherwise supply — and both are considerably rarer to see written
-by hand than they were before Cargo existed.
+`#![crate_type = "..."]` and `#![crate_name = "..."]` are inner attributes
+(`#![...]`) written at the top of a crate root, each telling the compiler
+one thing about the artifact it is producing: what *kind* of artifact to
+build, and what *name* to give it.
 
 `#![crate_type = "..."]` selects what kind of artifact the compiler
 produces: `"bin"` for an executable, `"lib"` for an ordinary Rust library,
@@ -36,6 +34,11 @@ bare `rustc` invocations, documentation generation setups, or unusual
 build pipelines that compile a file without a surrounding Cargo project;
 inside an ordinary Cargo-managed crate, the package name in `Cargo.toml`
 is the conventional place to control this.
+
+They're covered together because they serve the same purpose — telling a
+standalone `rustc` invocation something Cargo would otherwise supply — and
+both are considerably rarer to see written by hand than they were before
+Cargo existed.
 
 ## Usage examples
 

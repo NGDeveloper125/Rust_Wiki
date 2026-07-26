@@ -956,16 +956,16 @@
       <div class="flavor flavor-classic">
       <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
-        <p><a href="../../concepts/ownership-borrowing/deref-coercion.html">Deref &amp; DerefMut coercion</a>
-covers what <code>Deref</code> is <em>for</em>: letting a smart pointer transparently act
-like a reference to whatever it wraps, so <code>Box&lt;String&gt;</code> can be used
-almost anywhere a <code>&amp;String</code> is expected. This page is about a specific
-misuse of that mechanism: implementing <code>Deref</code> on a wrapper type not to
-make it act like a reference, but purely to make the wrapper "inherit"
-every method of the type it wraps — a <code>Wrapper&lt;Inner&gt;</code> that implements
-<code>Deref&lt;Target = Inner&gt;</code> so <code>wrapper.some_inner_method()</code> compiles via
-autoderef, imitating the way a subclass in an object-oriented language
-inherits its parent's methods.</p>
+        <p>This anti-pattern is a specific misuse of <code>Deref</code>: implementing it on a
+wrapper type not to make it act like a reference, but purely to make the
+wrapper "inherit" every method of the type it wraps — a <code>Wrapper&lt;Inner&gt;</code>
+that implements <code>Deref&lt;Target = Inner&gt;</code> so <code>wrapper.some_inner_method()</code>
+compiles via autoderef, imitating the way a subclass in an object-oriented
+language inherits its parent's methods.
+<a href="../../concepts/ownership-borrowing/deref-coercion.html">Deref &amp; DerefMut coercion</a>
+covers what <code>Deref</code> is <em>for</em> by contrast: letting a smart pointer
+transparently act like a reference to whatever it wraps, so <code>Box&lt;String&gt;</code>
+can be used almost anywhere a <code>&amp;String</code> is expected.</p>
 <p>It's tempting because it genuinely works and requires almost no code: one
 <code>impl Deref for Wrapper</code> block, and every public method of <code>Inner</code>
 suddenly appears to be a method of <code>Wrapper</code> too, without writing a

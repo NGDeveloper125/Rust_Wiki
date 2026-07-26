@@ -12,9 +12,9 @@ see_also: ["Ownership", "Memory safety without a garbage collector"]
 RAII — Resource Acquisition Is Initialization — ties a resource's
 lifetime to a value's scope: acquiring the resource happens in a
 constructor, releasing it happens automatically when the value is
-dropped. Rust inherits this idea directly from C++, and builds it into
-the language as the default way *any* resource — heap memory, a file
-handle, a mutex lock, a network socket — gets cleaned up.
+dropped. Rust builds this into the language as the default way *any*
+resource — heap memory, a file handle, a mutex lock, a network socket —
+gets cleaned up.
 
 The mechanism is the `Drop` trait: implementing `fn drop(&mut self)` lets
 a type run arbitrary cleanup code the instant its owner goes out of
@@ -27,8 +27,9 @@ Combined with ownership's single-owner guarantee, this is what lets Rust
 promise deterministic, automatic cleanup without a garbage collector:
 there's never ambiguity about *when* a value's resources should be
 released, because there's never ambiguity about who owns it or when that
-owner's scope ends. This is a stricter, more automatic version of the
-same discipline C++ programmers already practice by hand with RAII guard
+owner's scope ends. Rust inherits this idea directly from C++, but as a
+stricter, more automatic version of the same discipline C++ programmers
+already practice by hand with RAII guard
 types — Rust just makes the compiler enforce that every type follows it,
 rather than relying on the programmer to write correct destructors and
 never forget to use them.

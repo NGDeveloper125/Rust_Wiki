@@ -11,7 +11,13 @@ see_also: ["?"]
 ## Explanation
 
 `unsized` has been reserved since the 2015 edition, part of the
-[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html).
+[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html):
+the lexer recognizes it as a keyword token, but no grammar rule gives it
+any meaning, so there is nothing you can currently write with it. Using
+`unsized` as an ordinary identifier is a compile error today. The
+raw-identifier form `r#unsized` is legal, the same escape hatch every
+reserved keyword offers.
+
 Its role is subtler than the other entries in this section: it isn't
 pure speculation about some unbuilt feature so much as the unused flip
 side of a mechanism that already shipped.
@@ -28,10 +34,6 @@ since `?Sized` already provides that escape hatch and has since before
 1.0, there's no functional gap for a separate `unsized` keyword to fill.
 This is likely why it has remained reserved-but-unclaimed rather than
 becoming real syntax.
-
-Using `unsized` as an ordinary identifier is a compile error today. The
-raw-identifier form `r#unsized` is legal, the same escape hatch every
-reserved keyword offers.
 
 ## Usage examples
 

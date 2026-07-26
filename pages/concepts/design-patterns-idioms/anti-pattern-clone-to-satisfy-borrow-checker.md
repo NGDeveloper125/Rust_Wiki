@@ -9,15 +9,15 @@ see_also: ["Copy vs Clone", "mem::take / mem::replace", "Borrowing (shared refer
 
 ## Explanation
 
+This anti-pattern is reaching for `.clone()` not because the code actually
+needs a second, independent copy, but purely to make a borrow-checker
+error disappear. The tell is that nothing in the resulting program ever
+reads the clone as a *distinct* value — it exists solely because the
+original was still borrowed somewhere the compiler could see, and
+duplicating it was the fastest way to make that inconvenience go away.
 [Copy vs Clone](../ownership-borrowing/copy-vs-clone.md) explains what
 `.clone()` does and when duplicating a value is the right call — that's
-about `Clone` as a genuine design choice. This page is about its misuse:
-reaching for `.clone()` not because the code actually needs a second,
-independent copy, but purely to make a borrow-checker error disappear.
-The tell is that nothing in the resulting program ever reads the clone as
-a *distinct* value — it exists solely because the original was still
-borrowed somewhere the compiler could see, and duplicating it was the
-fastest way to make that inconvenience go away.
+about `Clone` as a genuine design choice; this page is about its misuse.
 
 It's tempting for an obvious reason: it always works. Given almost any
 "cannot borrow `x` as mutable because it is also borrowed as immutable"
