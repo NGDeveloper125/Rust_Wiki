@@ -13,7 +13,9 @@ A zero-cost abstraction is a language feature that lets you write code at a
 higher level — generic functions, iterator chains, trait-based
 polymorphism — without paying any runtime price for having written it that
 way, compared to the equivalent code written out by hand at the lower
-level. The phrase predates Rust: it's Bjarne Stroustrup's founding
+level.
+
+The phrase predates Rust: it's Bjarne Stroustrup's founding
 principle for C++, often summarized as "what you don't use, you don't pay
 for, and what you do use, you couldn't hand-code any better." Rust adopted
 the same constraint but applied it far more broadly and far more

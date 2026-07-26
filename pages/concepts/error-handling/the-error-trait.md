@@ -9,15 +9,15 @@ see_also: ["Custom error types", "Result<T, E>", "The ? operator (concept angle)
 
 ## Explanation
 
-`std::error::Error` (now `core::error::Error`, stabilized there since
-Rust 1.81) is the standard interface an error type is expected to
+`std::error::Error` is the standard interface an error type is expected to
 implement. Its requirements are small: a type must already implement
 `Display` (a human-readable message) and `Debug` (a developer-facing
 representation), and the trait itself adds exactly one method with a
 default implementation — `source()`, returning
 `Option<&(dyn Error + 'static)>`, the underlying cause this error wrapped,
 if any. That's the entire contract; the trait carries no data of its
-own.
+own. It is now also available as `core::error::Error`, stabilized there
+since Rust 1.81.
 
 It exists so that generic, error-agnostic code can exist at all. Without
 a shared trait, a top-level `main`, a logging layer, or an application's
