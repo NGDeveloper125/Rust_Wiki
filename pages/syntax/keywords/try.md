@@ -10,6 +10,13 @@ see_also: []
 
 ## Explanation
 
+`try` is a reserved keyword in the 2018 edition and later: the lexer
+recognizes it as a keyword token, but no grammar rule gives it any
+meaning, so there is nothing you can currently write with it. Using `try`
+as an ordinary identifier is a compile error in the 2018 edition and
+later. The raw-identifier form `r#try` is legal in any edition, the same
+escape hatch every reserved keyword offers.
+
 `try` was reserved specifically in the **2018 edition** — not 2015 like
 most of this section's keywords. Before 2018, `try` was a perfectly
 ordinary identifier; code from the 2015 edition that used `try` as a
@@ -35,10 +42,6 @@ library items in `std::convert` — fallible analogues of `From`/`Into`
 used constantly in everyday Rust. They have nothing to do with the
 reserved `try` keyword; a trait name and a keyword just happen to share
 a root word.
-
-Using `try` as an ordinary identifier is a compile error in the 2018
-edition and later. The raw-identifier form `r#try` is legal in any
-edition, the same escape hatch every reserved keyword offers.
 
 ## Usage examples
 

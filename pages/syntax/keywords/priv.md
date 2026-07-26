@@ -10,9 +10,15 @@ see_also: ["pub"]
 
 ## Explanation
 
-`priv` has been reserved since the 2015 edition, but unlike most of the
-purely speculative entries in this section, it has an actual small
-history: `priv` was briefly **real, usable syntax** in pre-1.0 Rust. In
+`priv` has been reserved since the 2015 edition: the lexer recognizes it
+as a keyword token, but no grammar rule gives it any meaning, so there is
+nothing you can currently write with it. Using `priv` as an ordinary
+identifier is a compile error today. The raw-identifier form `r#priv` is
+legal, the same escape hatch every reserved keyword offers.
+
+Unlike most of the purely speculative entries in this section, `priv` has
+an actual small history: it was briefly **real, usable syntax** in pre-1.0
+Rust. In
 that early design, visibility worked the other way around from today —
 items were implicitly *public* by default, and an explicit `priv`
 keyword was how you marked something private, the exact inverse role
@@ -21,10 +27,6 @@ today, items are private by default and `pub` is the marker you add to
 opt into visibility. `priv` was removed as functioning syntax but kept
 reserved, in case some future visibility refinement wants to reuse the
 word — no concrete proposal currently claims it.
-
-Using `priv` as an ordinary identifier is a compile error today. The
-raw-identifier form `r#priv` is legal, the same escape hatch every
-reserved keyword offers.
 
 ## Usage examples
 

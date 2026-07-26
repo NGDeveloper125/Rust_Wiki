@@ -11,7 +11,13 @@ see_also: ["final", "override", "dyn"]
 ## Explanation
 
 `virtual` has been reserved since the 2015 edition, part of the
-[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html).
+[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html):
+the lexer recognizes it as a keyword token, but no grammar rule gives it
+any meaning, so there is nothing you can currently write with it. Using
+`virtual` as an ordinary identifier is a compile error today. The
+raw-identifier form `r#virtual` is legal, the same escape hatch every
+reserved keyword offers.
+
 It sits with [`override`](override.md) and [`final`](final.md) as
 vocabulary borrowed from class-based inheritance (C++'s `virtual`
 methods, or similar mechanisms in Java/C#), reserved in case Rust ever
@@ -27,10 +33,6 @@ Rust just reaches it through ordinary trait objects rather than a
 class-hierarchy keyword. That existing, working path is plausibly a big
 part of why `virtual` has stayed unclaimed for over a decade: the
 functional gap it might have filled is already closed by `dyn`.
-
-Using `virtual` as an ordinary identifier is a compile error today. The
-raw-identifier form `r#virtual` is legal, the same escape hatch every
-reserved keyword offers.
 
 ## Usage examples
 

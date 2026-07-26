@@ -11,7 +11,13 @@ see_also: ["final", "virtual"]
 ## Explanation
 
 `override` has been reserved since the 2015 edition, part of the
-[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html).
+[Rust Reference's original reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html):
+the lexer recognizes it as a keyword token, but no grammar rule gives it
+any meaning, so there is nothing you can currently write with it. Using
+`override` as an ordinary identifier is a compile error today. The
+raw-identifier form `r#override` is legal, the same escape hatch every
+reserved keyword offers.
+
 Like [`final`](final.md) and [`virtual`](virtual.md), it reads as a piece
 of vocabulary from class-based inheritance (as in Java, C#, or C++,
 where `override` marks a method that intentionally replaces a base
@@ -21,10 +27,6 @@ there is no concrete proposal attaching real behavior to `override`
 today. It's speculative, held in reserve alongside `final` and `virtual`
 in case some future mechanism gives Rust a reason to distinguish an
 intentional override from an accidental name collision.
-
-Using `override` as an ordinary identifier is a compile error today. The
-raw-identifier form `r#override` is legal, the same escape hatch every
-reserved keyword offers.
 
 ## Usage examples
 

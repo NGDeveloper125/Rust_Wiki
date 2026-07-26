@@ -10,13 +10,17 @@ see_also: [extern]
 
 ## Explanation
 
-Before the 2018 edition, every crate a project depended on had to be
-declared twice: once in `Cargo.toml` under `[dependencies]`, and again in
-source with an `extern crate` item — `extern crate serde;` — to actually
-bring that crate's root into scope as a path segment usable from the
-current crate.
+`extern crate name;` is an item placed at a crate root that brings another
+crate's root into scope as a path segment usable from the current crate —
+`extern crate serde;` is what makes `serde::Deserialize` a writable path.
+It does not declare the dependency itself; that lives in `Cargo.toml`
+under `[dependencies]`. `extern crate` only makes an already-available
+crate nameable in source.
 
-The 2018 edition made this automatic: any crate listed in `Cargo.toml` is
+Before the 2018 edition, every crate a project depended on had to be
+declared both ways: once in `Cargo.toml` under `[dependencies]`, and again
+in source with an `extern crate` item. The 2018 edition made the second
+half automatic: any crate listed in `Cargo.toml` is
 available as a path root (`serde::Deserialize`, etc.) and importable with
 `use` without ever writing `extern crate`. In practice this makes
 `extern crate` almost entirely unnecessary today — it mostly survives in

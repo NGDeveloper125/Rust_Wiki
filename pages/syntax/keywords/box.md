@@ -10,8 +10,17 @@ see_also: []
 
 ## Explanation
 
-`box` has been reserved since the 2015 edition, and — like [`priv`](priv.md)
-— it has a real history rather than being purely speculative: for most of
+`box` has been reserved since the 2015 edition: the lexer recognizes it as
+a keyword token, but no grammar rule gives it any meaning, on stable or on
+nightly, so there is nothing you can currently write with it. It is not
+the `Box<T>` type — that's an ordinary `alloc` type built out of ordinary
+function calls, needing no keyword at all; the two only share a name.
+Using `box` as an ordinary identifier is a compile error in every edition.
+The raw-identifier form `r#box` is legal, the same escape hatch every
+reserved keyword offers.
+
+Unlike most of this section's entries, `box` has a real history rather
+than being purely speculative — the same as [`priv`](priv.md). For most of
 Rust's pre-1.0 life and for years afterward, `box expr` was experimental,
 nightly-only syntax for heap-allocating a value directly (`box 5` instead
 of `Box::new(5)`), gated behind the unstable `box_syntax` feature, with a
@@ -31,10 +40,6 @@ expression being boxed) that were never fully settled. `box` itself
 remains reserved, keeping the door open for some future heap-construction
 syntax, but there is no active nightly implementation using it today,
 unlike [`become`](become.md) or [`gen`](gen.md).
-
-Using `box` as an ordinary identifier is a compile error in every edition.
-The raw-identifier form `r#box` is legal, the same escape hatch every
-reserved keyword offers.
 
 ## Usage examples
 

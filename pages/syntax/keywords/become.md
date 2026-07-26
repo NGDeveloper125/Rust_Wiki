@@ -10,11 +10,16 @@ see_also: []
 
 ## Explanation
 
-`become` has been reserved since the 2015 edition, but unlike most of its
-neighbors in the
-[Rust Reference's reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html),
-it has genuine forward momentum: it's earmarked for **guaranteed
-tail-call elimination**. The idea is `become f(x)` as an explicit,
+`become` has been reserved since the 2015 edition, as part of the
+[Rust Reference's reserved-keyword list](https://doc.rust-lang.org/reference/keywords.html):
+the lexer recognizes it as a keyword token, but no grammar rule in stable
+Rust gives it any meaning. Using `become` as an ordinary identifier is a
+compile error today. The raw-identifier form `r#become` is legal, the same
+escape hatch every reserved keyword offers.
+
+Unlike most of its neighbors in that list, `become` has genuine forward
+momentum: it's earmarked for **guaranteed tail-call elimination**. The
+idea is `become f(x)` as an explicit,
 distinct alternative to `return f(x)` — one that promises the compiler
 will reuse the current stack frame for the call to `f` rather than
 pushing a new one, so a chain of `become` calls runs in constant stack
@@ -32,10 +37,6 @@ argument/return types between caller and callee, restrictions inside
 and the shape could still change before (if) it stabilizes — but this
 reservation is much closer to "future feature in progress" than the
 purely speculative entries like [`do`](do.md) or [`final`](final.md).
-
-Using `become` as an ordinary identifier is a compile error today. The
-raw-identifier form `r#become` is legal, the same escape hatch every
-reserved keyword offers.
 
 ## Usage examples
 
