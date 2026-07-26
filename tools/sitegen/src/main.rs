@@ -124,6 +124,12 @@ fn main() {
     let sitemap_xml = sitemap::build(&pages, &articles, &conversation_urls);
     std::fs::write(docs_root.join("sitemap.xml"), sitemap_xml).expect("write sitemap.xml");
 
+    let robots = format!(
+        "User-agent: *\nAllow: /\nSitemap: {}sitemap.xml\n",
+        render::SITE_BASE
+    );
+    std::fs::write(docs_root.join("robots.txt"), robots).expect("write robots.txt");
+
     println!(
         "generated {} pages + 1 landing page into {}",
         pages.len(),
