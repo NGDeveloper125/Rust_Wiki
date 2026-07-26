@@ -960,12 +960,16 @@
       <div class="flavor flavor-classic">
       <section class="doc" data-tab="explanation">
         <h2 class="section-title">Explanation</h2>
-        <p>Before the 2018 edition, every crate a project depended on had to be
-declared twice: once in <code>Cargo.toml</code> under <code>[dependencies]</code>, and again in
-source with an <code>extern crate</code> item — <code>extern crate serde;</code> — to actually
-bring that crate's root into scope as a path segment usable from the
-current crate.</p>
-<p>The 2018 edition made this automatic: any crate listed in <code>Cargo.toml</code> is
+        <p><code>extern crate name;</code> is an item placed at a crate root that brings another
+crate's root into scope as a path segment usable from the current crate —
+<code>extern crate serde;</code> is what makes <code>serde::Deserialize</code> a writable path.
+It does not declare the dependency itself; that lives in <code>Cargo.toml</code>
+under <code>[dependencies]</code>. <code>extern crate</code> only makes an already-available
+crate nameable in source.</p>
+<p>Before the 2018 edition, every crate a project depended on had to be
+declared both ways: once in <code>Cargo.toml</code> under <code>[dependencies]</code>, and again
+in source with an <code>extern crate</code> item. The 2018 edition made the second
+half automatic: any crate listed in <code>Cargo.toml</code> is
 available as a path root (<code>serde::Deserialize</code>, etc.) and importable with
 <code>use</code> without ever writing <code>extern crate</code>. In practice this makes
 <code>extern crate</code> almost entirely unnecessary today — it mostly survives in
