@@ -9,12 +9,12 @@ see_also: ["Visibility & privacy (pub and friends)", "Exhaustiveness checking", 
 
 ## Explanation
 
+This idiom uses privacy to keep the *ability to add fields later* without
+that addition becoming a breaking change for every downstream crate.
 [Visibility & privacy](../modules-crates-visibility/visibility-and-privacy.md)
-covers privacy as encapsulation — hiding a field so outside code can't
-put it in an invalid state. This idiom is the same mechanism aimed at a
-different, narrower goal: keeping the *ability to add fields later*
-without that addition becoming a breaking change for every downstream
-crate.
+covers the same mechanism aimed at a broader goal — privacy as
+encapsulation, hiding a field so outside code can't put it in an invalid
+state; this is that mechanism aimed at a narrower one.
 
 The problem it solves: if a public struct's fields are *all* `pub`,
 outside code is free to build it with a struct literal —

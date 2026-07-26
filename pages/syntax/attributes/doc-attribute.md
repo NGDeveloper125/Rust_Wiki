@@ -10,6 +10,12 @@ see_also: ["///", "//!"]
 
 ## Explanation
 
+`#[doc]` is the attribute rustdoc reads to control how an item is
+documented. It comes in two shapes: `#[doc = "..."]`, whose argument is a
+string that becomes documentation prose, and `#[doc(...)]`, whose
+parentheses hold a meta item that changes how rustdoc treats the item
+rather than adding any text to it.
+
 `#[doc = "..."]` is the attribute form every doc comment desugars into —
 an outer [`///`](../comments/outer-line-doc-comment.md) comment becomes an
 outer `#[doc = "..."]` attribute on the item that follows it, and an inner
