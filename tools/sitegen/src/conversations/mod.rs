@@ -78,7 +78,9 @@ pub struct Snapshot {
 ///
 /// Best-effort and infallible from the caller's perspective: it logs and
 /// degrades rather than returning an error, so `main` never has to guard it.
-pub fn build(repo_root: &Path, docs_root: &Path, pages: &[Page]) {
+/// Returns the site-root-relative paths of the pages it wrote (index + each
+/// thread) for inclusion in the sitemap; empty if writing failed.
+pub fn build(repo_root: &Path, docs_root: &Path, pages: &[Page]) -> Vec<String> {
     let snapshot_path = repo_root.join("data").join("conversations.json");
 
     let token = std::env::var("GITHUB_TOKEN")
@@ -118,12 +120,18 @@ pub fn build(repo_root: &Path, docs_root: &Path, pages: &[Page]) {
 
     if let Err(e) = render::write_pages(docs_root, &snapshot, pages) {
         eprintln!("conversations: could not write pages: {e}");
-    } else {
-        println!(
-            "conversations: rendered index + {} thread page(s)",
-            snapshot.conversations.len()
-        );
+        return Vec::new();
     }
+    println!(
+        "conversations: rendered index + {} thread page(s)",
+        snapshot.conversations.len()
+    );
+
+    let mut urls = vec!["conversations/index.html".to_string()];
+    for c in &snapshot.conversations {
+        urls.push(format!("conversations/{}", render::thread_filename(c)));
+    }
+    urls
 }
 
 fn load_snapshot(path: &Path) -> Snapshot {

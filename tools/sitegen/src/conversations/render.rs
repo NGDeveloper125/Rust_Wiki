@@ -318,7 +318,7 @@ fn category_badge(c: &Conversation) -> String {
     )
 }
 
-fn thread_filename(c: &Conversation) -> String {
+pub(crate) fn thread_filename(c: &Conversation) -> String {
     let slug = slugify(&c.title);
     if slug.is_empty() {
         format!("{}.html", c.number)
