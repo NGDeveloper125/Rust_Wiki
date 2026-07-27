@@ -106,6 +106,7 @@ fn topbar(depth: usize) -> String {
 /// Wrap `sidebar_html` + `main_html` in the full document shell.
 pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> String {
     let css = href_from(depth, "assets/site.css");
+    let favicon = href_from(depth, "favicon.svg");
     let search_index_js = href_from(depth, "assets/search-index.js");
     let site_js = href_from(depth, "assets/site.js");
     format!(
@@ -118,6 +119,7 @@ pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> 
 <meta name="description" content="{description}">
 <link rel="canonical" href="{canonical}">
 {social_meta}
+<link rel="icon" href="{favicon}" type="image/svg+xml">
 <link rel="stylesheet" href="{css}">
 </head>
 <body>
