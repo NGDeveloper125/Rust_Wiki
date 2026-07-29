@@ -590,11 +590,15 @@ pub fn render_landing_page(pages: &[Page]) -> String {
             <a class="chip" href="articles/index.html">Articles</a>
           </div>
           <div class="related-row">
+            <span class="related-label">Look up a crate</span>
+            <a class="chip" href="crates/index.html">Crates</a>
+          </div>
+          <div class="related-row">
             <span class="related-label">Discuss</span>
             <a class="chip" href="conversations/index.html">Conversations</a>
           </div>
         </div>
-        <p class="subtitle">Community deep dives into Rust concepts, and a read-only mirror of the project&rsquo;s GitHub Discussions &mdash; ask questions, compare approaches, share what you know.</p>
+        <p class="subtitle">Community deep dives into Rust concepts, a directory of the crates people reach for, and a read-only mirror of the project&rsquo;s GitHub Discussions &mdash; ask questions, compare approaches, share what you know.</p>
       </section>
 
       <div class="footer-note">

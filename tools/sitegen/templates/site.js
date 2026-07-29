@@ -300,66 +300,73 @@
     el.innerHTML = hl(el.textContent);
   });
 
-  /* ---------- ARTICLES INDEX: search, sort, likes ---------- */
-  // The articles page renders a grid of `.article-card`s (newest-first from
-  // the build). This adds three client-side behaviors, all degrading to the
-  // rendered page if JS/network is unavailable:
-  //   1. a page-local text filter over card title + summary,
-  //   2. a sort toggle (Newest = authored order, Top rated = by like count),
-  //   3. like counts, fetched from `article-vote` GitHub issues exactly like
-  //      community approaches (label `article-vote`, title `article::<slug>`).
-  var grid = document.getElementById('article-grid');
-  var hasArticleVotes = grid || document.querySelector('.article-byline[data-vote-key]');
-  if (hasArticleVotes) {
-    var ARTICLE_VOTES_REPO = 'NGDeveloper125/Rust_Wiki';
+  /* ---------- CARD INDEXES: search, sort, likes ---------- */
+  // The Articles and Crates index pages each render a grid of cards, plus a
+  // filter box and a sort dropdown. Both behave identically, so one setup
+  // function drives them; each card bakes its own filter text (`data-search`),
+  // authored position (`data-i`) and publication date (`data-date`) into the
+  // markup, so the client never has to scrape them back out of the DOM.
+  //
+  // Every behavior degrades to the rendered page if JS or the network is
+  // unavailable:
+  //   1. a page-local text filter over the card's `data-search`,
+  //   2. a sort toggle (authored order / newest / top rated),
+  //   3. like counts, fetched from GitHub vote issues exactly like community
+  //      approaches (label `<kind>-vote`, title `<kind>::<slug>`).
+  function cssEsc(s) {
+    return (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/["\\]/g, '\\$&');
+  }
+
+  function setupCardIndex(cfg) {
+    var grid = document.getElementById(cfg.gridId);
+    // The detail pages carry no grid but still show a like chip in the byline.
+    if (!grid && !document.querySelector(cfg.bylineSel + '[data-vote-key]')) return;
+
+    var VOTES_REPO = 'NGDeveloper125/Rust_Wiki';
     var voteCounts = {}; // vote-key -> count
 
-    function cssEsc(s) {
-      return (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/["\\]/g, '\\$&');
-    }
+    var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll(cfg.cardSel)) : [];
+    var searchBox = document.getElementById(cfg.searchId);
+    var sortSel = document.getElementById(cfg.sortId);
+    var noMatch = document.getElementById(cfg.nomatchId);
 
-    // --- page-local search + sort (index grid only) ---
-    var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll('.article-card')) : [];
-    var searchBox = document.getElementById('article-search');
-    var sortSel = document.getElementById('article-sort');
-    var noMatch = document.getElementById('article-nomatch');
-
-    function cardText(card) {
-      var t = card.querySelector('.article-card-title');
-      var s = card.querySelector('.article-card-summary');
-      return ((t ? t.textContent : '') + ' ' + (s ? s.textContent : '')).toLowerCase();
-    }
     function applyFilter() {
       var q = (searchBox && searchBox.value.trim().toLowerCase()) || '';
       var shown = 0;
       cards.forEach(function (card) {
-        var hit = !q || cardText(card).indexOf(q) !== -1;
+        var hit = !q || (card.getAttribute('data-search') || '').indexOf(q) !== -1;
         card.classList.toggle('is-hidden', !hit);
         if (hit) shown++;
       });
       if (noMatch) noMatch.hidden = shown !== 0;
     }
+
     function applySort() {
       if (!grid) return;
-      var mode = (sortSel && sortSel.value) || 'date';
+      var mode = (sortSel && sortSel.value) || '';
       cards.slice().sort(function (a, b) {
         if (mode === 'rating') {
           var ca = voteCounts[a.getAttribute('data-vote-key')] || 0;
           var cb = voteCounts[b.getAttribute('data-vote-key')] || 0;
           if (cb !== ca) return cb - ca;
+        } else if (mode === 'date') {
+          // ISO YYYY-MM-DD sorts chronologically as a plain string.
+          var da = a.getAttribute('data-date') || '';
+          var db = b.getAttribute('data-date') || '';
+          if (db !== da) return db < da ? -1 : 1;
         }
-        // Fall back to authored (newest-first) order.
+        // Fall back to the order the build wrote the cards in.
         return (+a.getAttribute('data-i')) - (+b.getAttribute('data-i'));
       }).forEach(function (card) { grid.appendChild(card); });
     }
+
     if (searchBox) searchBox.addEventListener('input', applyFilter);
     if (sortSel) sortSel.addEventListener('change', applySort);
 
-    // --- like counts (index cards + the article page byline) ---
-    // Fetched from `article-vote` issues, same scheme as approach likes. Any
-    // failure (offline, rate limit, no issue yet) leaves the page as rendered.
-    fetch('https://api.github.com/repos/' + ARTICLE_VOTES_REPO +
-          '/issues?labels=article-vote&state=open&per_page=100', { cache: 'no-store' })
+    // Any failure (offline, rate limit, no issue yet) leaves the page exactly
+    // as rendered.
+    fetch('https://api.github.com/repos/' + VOTES_REPO +
+          '/issues?labels=' + cfg.voteLabel + '&state=open&per_page=100', { cache: 'no-store' })
       .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(function (issues) {
         issues.forEach(function (issue) {
@@ -378,4 +385,15 @@
       })
       .catch(function () { /* graceful no-op */ });
   }
+
+  setupCardIndex({
+    gridId: 'article-grid', cardSel: '.article-card', bylineSel: '.article-byline',
+    searchId: 'article-search', sortId: 'article-sort', nomatchId: 'article-nomatch',
+    voteLabel: 'article-vote'
+  });
+  setupCardIndex({
+    gridId: 'crate-grid', cardSel: '.crate-card', bylineSel: '.crate-byline',
+    searchId: 'crate-search', sortId: 'crate-sort', nomatchId: 'crate-nomatch',
+    voteLabel: 'crate-vote'
+  });
 })();

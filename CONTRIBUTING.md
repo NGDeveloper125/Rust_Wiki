@@ -12,7 +12,7 @@ Contribution is entirely PR-based markdown — no forms, no backend. You edit a
 page file, open a pull request, and a maintainer reviews and merges it.
 
 **Licensing of contributions:** by contributing, you agree that the content you
-submit (prose, code examples, articles, approaches, and any images) is published
+submit (prose, code examples, articles, crate pages, approaches, and any images) is published
 under the project's content license, **CC BY 4.0**, with attribution to you
 preserved; any code you contribute to the tooling is under the **MIT License** —
 the same terms as the rest of the project. See
@@ -199,8 +199,8 @@ and explains it.
 
 Two things articles are *not*: opinion or think-pieces with no code ("why you
 should use Rust", "where Rust will be in ten years"), and crate/library
-showcases — those get their own dedicated section. Articles are for the
-language and how to build with it.
+write-ups — those have their own section, [Crates](#crates). Articles are for
+the language and how to build with it.
 
 Like everything else here, an article is a markdown pull request: you add one
 file, open a PR, and a maintainer reviews and merges it. It then appears on the
@@ -304,7 +304,7 @@ A maintainer will check that the article is:
 - **Technically accurate**, and any code **compiles** on stable Rust (paste it
   into the [Rust Playground](https://play.rust-lang.org/) to check).
 - **On-topic** — a Rust concept, language feature, or the standard library
-  (crate/library showcases belong in the upcoming crates section, not here).
+  (crate/library write-ups belong in [Crates](#crates), not here).
 - **Original content** you wrote (or have the right to contribute), not a
   copy of an existing post or the docs.
 - **Civil and constructive** in tone. Opinion and "here's how I'd approach it"
@@ -332,6 +332,131 @@ gh issue create \
 Until the issue exists the article simply shows no like chip and sorts as 0
 under "Top rated" — nothing breaks. The site reads the first 100 open
 `article-vote` issues in one anonymous API call.
+
+## Crates
+
+A **crate page** documents one crate from the ecosystem: what it is, the
+situations it's a good fit for, and a map of its API with a small call example
+for every item. It's the section you reach for when you've heard of a crate and
+want to know, in one page, whether it solves your problem and how to call it.
+
+Where an article is deliberately free-form, a crate page is the opposite: every
+crate page has the **same three sections, in the same order**, so looking up an
+unfamiliar crate always works the same way.
+
+| Section | What goes in it |
+| --- | --- |
+| `## Overview` | What the crate is and the problem it solves — plus what decides whether it belongs in a project (maturity, dependency weight, `no_std`, the obvious alternatives). |
+| `## When to use it` | Two to four `### Use case:` blocks: a concrete situation, real code, and a `**Why it fits:**` line. |
+| `## API map` | The API, grouped under `###` headings, with one `####` entry per item: what it does, a small call example, and a `**When to use it:**` line. |
+
+Like everything else here, a crate page is a markdown pull request: you add one
+file, open a PR, and a maintainer reviews and merges it. It then appears on the
+[Crates page](https://rustyyellowpages.dev/crates/).
+
+### Where the file goes
+
+One markdown file, flat, under `pages/crates/`, **named after the crate on
+crates.io**:
+
+```
+pages/crates/<crate-name>.md
+```
+
+The file name becomes the URL (`crates/<crate-name>.html`) and the default
+crates.io and docs.rs links, so `pages/crates/serde_json.md` is right and
+`pages/crates/serde-json-guide.md` is not. (If the name really has to differ,
+set `crate:` in the frontmatter.)
+
+**Start from the template.** Copy
+[`pages/crates/_CRATE_TEMPLATE.md`](pages/crates/_CRATE_TEMPLATE.md), rename the
+copy to the crate's name, and fill it in — the frontmatter and all three
+sections are already scaffolded. Files whose name starts with `_` are skipped by
+the generator, so the template never appears on the site (and the same trick
+parks a work-in-progress draft as `_my-draft.md`).
+
+### Frontmatter
+
+`title`, `author`, `github`, `date` and `summary` are **required** — the build
+prints a clear error naming the file and the missing field, and skips that page
+until it's fixed. Everything else is optional.
+
+```yaml
+---
+title: "anyhow"                    # usually just the crate's name
+crate: "anyhow"                    # optional; defaults to the file name
+version: "1.0"                     # optional; the release you wrote against
+no_std: "optional"                 # optional; yes | optional | no
+author: "Your Name"                # display name for the byline
+github: "your-handle"              # your GitHub handle (a leading @ is fine)
+date: "2026-07-29"                 # YYYY-MM-DD — the maintainer sets this at merge
+summary: "One or two sentences shown in listings and used for search."
+categories: ["error-handling"]     # small free list; `tags:` also accepted
+repository: "https://github.com/dtolnay/anyhow"   # optional
+docs: "https://docs.rs/anyhow"     # optional; defaults to docs.rs/<crate>
+---
+```
+
+`no_std` renders as the same support badge language features use, so a reader
+can tell at a glance whether a crate works on bare metal. Inline code in the
+`summary` works exactly as it does for articles: backtick a token and it renders
+as monospace on the card.
+
+### Writing the body
+
+- **Keep the three `##` headings exactly as they are** — `Overview`,
+  `When to use it`, `API map`. A missing one prints a build warning and the page
+  publishes without that section.
+- **Use cases** are `### Use case: <short title>` blocks. End each one with a
+  `**Why it fits:**` paragraph — it's rendered as a callout, the same as the
+  `**Why this way:**` line on a concept page's scenario.
+- **API entries** are `#### <item>` under a `###` group. Group by what a reader
+  is trying to *do* ("Creating an error", "Reading a file"), not by module path.
+  End each entry with a `**When to use it:**` paragraph — including what to
+  reach for instead when the answer is "not this".
+- **Every entry gets a call example.** One short, compiling snippet showing the
+  call is the point of the section; a prose tour that covers half the API isn't.
+- Code fences are plain (untagged) — all code on this site is treated as Rust
+  and highlighted client-side. Use `// <-` comments to point at key lines.
+- **Link liberally into the wiki.** Paths are relative to `pages/crates/`, so
+  wiki pages are `../concepts/...` or `../syntax/...`, and the generator
+  rewrites the `.md` target to the right `.html` URL.
+
+### Review criteria
+
+A maintainer will check that the page is:
+
+- **Accurate for the stated `version`**, and that every snippet **compiles**
+  against it.
+- **Complete enough to be useful** — the API map should cover what someone
+  actually needs to use the crate, not three cherry-picked functions.
+- **Fair.** A crate page is a reference entry, not a pitch: say what the crate
+  is bad at and when to use something else. Comparisons to alternatives are
+  welcome; put-downs of other projects or their authors are not.
+- **Original content** you wrote (or have the right to contribute) — not the
+  crate's README or docs.rs pages pasted in.
+
+### For maintainers: enabling the like/rating on a merged crate page
+
+Crate pages use the same 👍 mechanism as articles and approaches, and the
+Crates page can sort by it (**Sort → Top rated**). After merging, create the
+page's vote issue — title exactly `crate::<slug>` (the file stem), with the
+`crate-vote` label:
+
+```
+# once per repo:
+gh label create crate-vote --description "Vote issue for a community crate page" --color F5C518
+
+# once per merged crate page:
+gh issue create \
+  --title "crate::anyhow" \
+  --label crate-vote \
+  --body "React with a 👍 to like this crate page. Read it: https://rustyyellowpages.dev/crates/anyhow.html"
+```
+
+Until the issue exists the page simply shows no like chip and sorts as 0 under
+"Top rated" — nothing breaks. The site reads the first 100 open `crate-vote`
+issues in one anonymous API call.
 
 ## Conversations & questions (no PR needed)
 

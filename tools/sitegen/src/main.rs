@@ -1,6 +1,7 @@
 mod articles;
 mod bodylinks;
 mod conversations;
+mod crates;
 mod links;
 mod markdown;
 mod model;
@@ -92,6 +93,9 @@ fn main() {
     let mut articles = articles::load(&pages_root);
     articles::rewrite_body_links(&mut articles, &pages);
 
+    let mut crate_pages = crates::load(&pages_root);
+    crates::rewrite_body_links(&mut crate_pages, &pages);
+
     let index = links::LinkIndex::build(&pages);
 
     let assets_dir = docs_root.join("assets");
@@ -102,7 +106,7 @@ fn main() {
     std::fs::copy(templates_root.join("site.js"), assets_dir.join("site.js"))
         .expect("copy site.js");
 
-    let search_index_js = search::build_search_index(&pages, &articles);
+    let search_index_js = search::build_search_index(&pages, &articles, &crate_pages);
     std::fs::write(assets_dir.join("search-index.js"), search_index_js)
         .expect("write search-index.js");
 
@@ -118,10 +122,12 @@ fn main() {
 
     articles::build(&pages_root, &docs_root, &articles, &pages);
 
+    crates::build(&docs_root, &crate_pages, &pages);
+
     // Best-effort GitHub Discussions mirror. Never fails the build.
     let conversation_urls = conversations::build(&repo_root, &docs_root, &pages);
 
-    let sitemap_xml = sitemap::build(&pages, &articles, &conversation_urls);
+    let sitemap_xml = sitemap::build(&pages, &articles, &crate_pages, &conversation_urls);
     std::fs::write(docs_root.join("sitemap.xml"), sitemap_xml).expect("write sitemap.xml");
 
     let robots = format!(

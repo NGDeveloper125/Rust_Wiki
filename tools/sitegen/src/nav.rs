@@ -74,19 +74,21 @@ fn render_nested_groups(
 
 const CHAT_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>"#;
 const ARTICLE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>"#;
+const CRATE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg>"#;
 
 /// Which top-level ("not a wiki page") nav link is active, if any. The
-/// conversations/articles pages aren't in `pages`, so they can't be matched
-/// via `current` the way syntax/concept pages are.
+/// conversations/articles/crates pages aren't in `pages`, so they can't be
+/// matched via `current` the way syntax/concept pages are.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TopNav {
     None,
     Conversations,
     Articles,
+    Crates,
 }
 
 /// The site's full sidebar. `active` marks whichever top-level link
-/// (Conversations / Articles) the current page belongs to.
+/// (Conversations / Articles / Crates) the current page belongs to.
 pub fn render_sidebar(
     pages: &[Page],
     current: Option<&Page>,
@@ -97,13 +99,16 @@ pub fn render_sidebar(
 
     let sel = |t: TopNav| if active == t { " active" } else { "" };
     out.push_str(&format!(
-        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n    </div>\n",
+        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n      <a class=\"nav-toplink{ka}\" href=\"{kh}\">{kicon}<span>Crates</span></a>\n    </div>\n",
         ca = sel(TopNav::Conversations),
         ch = href_from(from_depth, "conversations/index.html"),
         cicon = CHAT_SVG,
         aa = sel(TopNav::Articles),
         ah = href_from(from_depth, "articles/index.html"),
         aicon = ARTICLE_SVG,
+        ka = sel(TopNav::Crates),
+        kh = href_from(from_depth, "crates/index.html"),
+        kicon = CRATE_SVG,
     ));
 
     for section in [Section::Syntax, Section::Concepts] {
