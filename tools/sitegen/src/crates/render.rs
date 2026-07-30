@@ -134,6 +134,7 @@ fn render_card(c: &Crate, i: usize) -> String {
           <div class="article-card-foot">
             <div class="article-card-meta">by {author}{apis}</div>
             {categories}
+            {links}
             <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span></a>
           </div>
         </article>"#,
@@ -148,7 +149,25 @@ fn render_card(c: &Crate, i: usize) -> String {
         summary_html = render_inline(&c.summary),
         author = html_escape(&c.author),
         categories = render_categories(c),
+        links = render_card_links(c),
     )
+}
+
+/// Outbound links on an index card: crates.io always, the source repository
+/// when the page records one. They sit in the card foot, outside the anchor
+/// wrapping the card body, so they aren't nested inside another link.
+fn render_card_links(c: &Crate) -> String {
+    let mut links = vec![format!(
+        r#"<a href="{url}" target="_blank" rel="noopener">crates.io</a>"#,
+        url = html_escape(&c.crates_io_url()),
+    )];
+    if let Some(repo) = c.repository.as_deref().filter(|r| !r.trim().is_empty()) {
+        links.push(format!(
+            r#"<a href="{url}" target="_blank" rel="noopener">repo</a>"#,
+            url = html_escape(repo),
+        ));
+    }
+    format!("<div class=\"crate-card-links\">{}</div>", links.join(""))
 }
 
 /// The lowercase haystack the index's filter box matches against, baked into
