@@ -19,7 +19,18 @@ pub fn split_h2(body: &str) -> Vec<(String, String)> {
 /// Split a "Best practices" section body into a leading intro (markdown
 /// before the first `### Scenario: ...`) and the scenario blocks themselves.
 pub fn split_scenarios(body: &str) -> (String, Vec<(String, String)>) {
-    let marker = "### Scenario: ";
+    split_intro_and_blocks(body, "### Scenario: ")
+}
+
+/// Split a crate page's "When to use it" section into a leading intro and the
+/// `### Use case: ...` blocks under it.
+pub fn split_use_cases(body: &str) -> (String, Vec<(String, String)>) {
+    split_intro_and_blocks(body, "### Use case: ")
+}
+
+/// Split a section body into the markdown before the first `marker` line and
+/// the (title, body) blocks each `marker` line introduces.
+fn split_intro_and_blocks(body: &str, marker: &str) -> (String, Vec<(String, String)>) {
     match body.find(&format!("\n{marker}")).or_else(|| {
         if body.starts_with(marker) {
             Some(0)
@@ -40,7 +51,17 @@ pub fn split_scenarios(body: &str) -> (String, Vec<(String, String)>) {
 /// Split a syntax page's "Usage examples" section body on top-level
 /// `### <title>` lines. Returns (title, raw markdown body under that title).
 pub fn split_examples(body: &str) -> Vec<(String, String)> {
+    split_h3(body)
+}
+
+/// Split a section body on `### <title>` lines.
+pub fn split_h3(body: &str) -> Vec<(String, String)> {
     split_on_prefix(body, "### ")
+}
+
+/// Split a section body on `#### <title>` lines.
+pub fn split_h4(body: &str) -> Vec<(String, String)> {
+    split_on_prefix(body, "#### ")
 }
 
 /// Split a scenario's markdown into its Classic content (everything before
@@ -161,12 +182,30 @@ fn split_blocks(md: &str) -> Vec<String> {
 /// "**Why this way:** ..." rationale markdown), per SECTION3_GUIDE.md's
 /// fixed format (the rationale is always the scenario's last block).
 pub fn split_rationale(scenario_md: &str) -> (String, Option<String>) {
-    let mut blocks = split_blocks(scenario_md);
+    split_trailing_block(scenario_md, "**Why this way:**")
+}
+
+/// Split a crate API entry's markdown into (main body markdown, optional
+/// trailing "**When to use it:** ..." block).
+pub fn split_when_to_use(md: &str) -> (String, Option<String>) {
+    split_trailing_block(md, "**When to use it:**")
+}
+
+/// Split a crate use case's markdown into (main body markdown, optional
+/// trailing "**Why it fits:** ..." block).
+pub fn split_why_it_fits(md: &str) -> (String, Option<String>) {
+    split_trailing_block(md, "**Why it fits:**")
+}
+
+/// Split markdown into (everything before, the final block) when that final
+/// block opens with `prefix`; otherwise return the input unchanged.
+fn split_trailing_block(md: &str, prefix: &str) -> (String, Option<String>) {
+    let mut blocks = split_blocks(md);
     if let Some(last) = blocks.last() {
-        if last.trim_start().starts_with("**Why this way:**") {
-            let rationale = blocks.pop().unwrap();
-            return (blocks.join("\n\n"), Some(rationale));
+        if last.trim_start().starts_with(prefix) {
+            let trailing = blocks.pop().unwrap();
+            return (blocks.join("\n\n"), Some(trailing));
         }
     }
-    (scenario_md.to_string(), None)
+    (md.to_string(), None)
 }

@@ -31,7 +31,7 @@ The site is fully static: HTML generated from markdown, no server, no database, 
 
 ## 🌱 Community
 
-The aim is for this reference to grow with contributions from people writing Rust, not just the maintainer. There are three ways knowledge is added and shared — two through pull requests, one through discussion:
+The aim is for this reference to grow with contributions from people writing Rust, not just the maintainer. There are four ways knowledge is added and shared — three through pull requests, one through discussion:
 
 ### 1. Approaches — *live now* ✅
 
@@ -43,11 +43,17 @@ Full walkthrough at the [bottom of this README](#-approaches-in-depth) and in **
 
 ### 2. Articles — *live now* ✅
 
-Community-written, **technical, code-first articles** — how something in Rust actually works, how to implement a feature, how to solve a concrete problem — with real, compiling code in the article itself and links into the rest of the wiki. Free-form prose, your byline on it, and readers can 👍 the ones they find useful. It's *not* the place for opinion or think-pieces ("why you should use Rust", "where Rust will be in ten years"); an article shows code and explains it. Crate and library write-ups will get their own dedicated section — articles are for the language and how to build with it.
+Community-written, **technical, code-first articles** — how something in Rust actually works, how to implement a feature, how to solve a concrete problem — with real, compiling code in the article itself and links into the rest of the wiki. Free-form prose, your byline on it, and readers can 👍 the ones they find useful. It's *not* the place for opinion or think-pieces ("why you should use Rust", "where Rust will be in ten years"); an article shows code and explains it. Crate and library write-ups have their own section (below) — articles are for the language and how to build with it.
 
 Full walkthrough at the [bottom of this README](#-articles-in-depth) and in **[CONTRIBUTING.md](CONTRIBUTING.md#articles)**.
 
-### 3. Conversations — *live now* ✅
+### 3. Crates — *live now* ✅
+
+The wiki covers the language; **Crates** covers the ecosystem. Each page documents one crate with the *same three sections every time* — what it is, the situations it's a good fit for, and a map of its API with a small call example, an explanation, and a "when to use it" for every item. That fixed shape is the point: looking up an unfamiliar crate works the same way every time, and you can skim to the one entry you need instead of reading a README end to end.
+
+Full walkthrough at the [bottom of this README](#-crates-in-depth) and in **[CONTRIBUTING.md](CONTRIBUTING.md#crates)**.
+
+### 4. Conversations — *live now* ✅
 
 A community discussion area, **mirrored into the site's own styling** from the repo's [GitHub Discussions](https://github.com/NGDeveloper125/Rust_Wiki/discussions) — a place to ask questions, compare approaches, and share what you know.
 
@@ -67,6 +73,7 @@ Content is authored in markdown under `pages/`; the HTML under `docs/` is genera
    - Syntax entries → `pages/syntax/<group>/<slug>.md`
    - Concept pages → `pages/concepts/<subgroup>/<slug>.md`
    - Articles → `pages/articles/<slug>.md` (copy `_ARTICLE_TEMPLATE.md` to start)
+   - Crate pages → `pages/crates/<crate-name>.md` (copy `_CRATE_TEMPLATE.md` to start)
 2. Open a pull request describing what you changed and why.
 
 The site is regenerated and republished when the PR is merged, so a markdown-only PR is all that's needed. The most common contribution — adding an **Approach** — is a purely additive markdown block. **[CONTRIBUTING.md](CONTRIBUTING.md)** has the exact format and the review criteria.
@@ -119,7 +126,7 @@ This project is split into two parts, licensed separately:
 - **Code** — the site generator (`tools/`) and the site's JavaScript, CSS, and
   HTML templates — is under the **MIT License**. See [LICENSE](LICENSE).
 - **Content** — the reference material under `pages/` (syntax and concept pages,
-  community articles, and approaches) — is under **Creative Commons Attribution
+  community articles, crate pages, and approaches) — is under **Creative Commons Attribution
   4.0 International (CC BY 4.0)**. See [LICENSE-CONTENT](LICENSE-CONTENT). You're
   free to reuse and adapt it, including commercially, as long as you credit
   Rusty Yellow Pages.
@@ -203,7 +210,7 @@ Articles are community-written, **technical, code-first** pieces about how Rust 
 
 Where a concept page is a look-it-up reference and an approach is one scenario's alternative, an **article** is a longer, standalone, technical piece that takes a single thing — what the `?` operator really does under the hood, how to implement a custom iterator, how lifetimes flow through a function — and works through it with real, compiling code and the reasoning behind it.
 
-Articles are **free-form**: unlike concept and syntax pages they have no fixed section structure, so use whatever headings fit the topic. What they are *not*: opinion or think-pieces with no code ("why you should use Rust", "where Rust will be in ten years"), or crate/library showcases (a dedicated crates section is coming). Every article is about code and implementation.
+Articles are **free-form**: unlike concept and syntax pages they have no fixed section structure, so use whatever headings fit the topic. What they are *not*: opinion or think-pieces with no code ("why you should use Rust", "where Rust will be in ten years"), or crate/library write-ups (those go in [Crates](#-crates-in-depth)). Every article is about code and implementation.
 
 ### The goal
 
@@ -239,6 +246,53 @@ Just like approaches, readers can show which articles they find most useful.
 - The site reads those counts live from GitHub on each load, shows the current number on the button, and the Articles page's **Top rated** sort orders by them — so the community's favourites rise to the top.
 
 *(For maintainers: enabling the like button on a merged article means creating its `article-vote` issue — the exact step is in [CONTRIBUTING.md](CONTRIBUTING.md#articles).)*
+
+---
+
+<a id="-crates-in-depth"></a>
+
+## 📦 Crates, in depth
+
+The wiki documents the language. **Crates** documents the ecosystem — one page per crate, all built the same way.
+
+### What a crate page is
+
+A crate page answers two questions in one place: *should I use this crate?* and *how do I call it?* It's aimed at the moment you've seen a crate name in someone's `Cargo.toml` or a blog post and want a straight answer without reading a README, a docs.rs index, and three issues.
+
+The defining feature is that **every crate page has the same three sections, in the same order** — the opposite of an article, which is deliberately free-form:
+
+1. **Overview** — what the crate is and the problem it solves, plus the things that decide whether it belongs in your project: maturity, dependency weight, `no_std` support, how it compares to the obvious alternatives.
+2. **When to use it** — two to four concrete situations the crate is a good fit for, each with real code and a short *why it fits*.
+3. **API map** — the crate's API, grouped by what you're trying to do, with **one entry per item**: what it does, a small call example, and a *when to use it* (including what to reach for instead when the answer is "not this").
+
+That fixed shape is the whole point. Once you've read one crate page you know exactly where to look in the next one, and the API map is skimmable — you can jump straight to the one function you needed a snippet for.
+
+### How it works
+
+The whole thing is static — there is no server and no database.
+
+- Each crate page is a single markdown file under `pages/crates/`, named after the crate on crates.io. At build time it's rendered to `crates/<crate-name>.html` and added to the **Crates index** — a card grid showing each crate's name, version, summary, categories, and how many API entries its map covers.
+- Every page states the **exact release it documents** and **who publishes the crate** (its crates.io owner), taken from crates.io rather than guessed — kept visually separate from the byline crediting whoever wrote the page. It links out to **crates.io**, **docs.rs**, and the crate's repository, and shows a `no_std` badge using the same language as the wiki's embedded-support badges.
+- Pages are kept honest by a maintainer-side `crate-sync` check that diffs every page against crates.io: owner and link changes are corrected automatically, while a new release is flagged for a human to re-check the API map before the documented version is bumped.
+- The index has a **search box** (filter by name, summary, or category) and a **sort toggle**: *A–Z* (default), *Newest*, or *Top rated*.
+- Crate pages link into the wiki: a relative link to a concept or syntax page's markdown file is rewritten to the right `.html` URL at build time, so a crate page can point at the language concepts it builds on.
+
+### How to add a new crate page
+
+Same as everything else here: drop a markdown file in `pages/crates/` and open a pull request.
+
+1. Copy [`pages/crates/_CRATE_TEMPLATE.md`](pages/crates/_CRATE_TEMPLATE.md) and rename the copy to the crate's name on crates.io — the file name becomes the URL and the default crates.io/docs.rs links, e.g. `pages/crates/anyhow.md`. Files whose name starts with `_` are skipped by the generator.
+2. Fill in the frontmatter — `title`, `author`, `github`, `date` and `summary` are required; `version`, `no_std`, `categories`, `repository` and `docs` are optional. A missing required field prints a clear build error naming the file and the field.
+3. Fill in the three sections, keeping the headings exactly as the template has them. Every API entry gets a compiling call example and a *when to use it*.
+4. Open the PR. A maintainer reviews it (accurate for the stated version, snippets compile, the API map is complete enough to be useful, and the page is *fair* — a reference entry, not a pitch), **sets the publication `date` at merge**, and merges — and the page is live on the [Crates page](https://rustyyellowpages.dev/crates/).
+
+The full frontmatter reference and section-by-section guidance are in **[CONTRIBUTING.md](CONTRIBUTING.md#crates)**.
+
+### How to like a crate page
+
+Identical to articles: each page has a **👍 like button** on its index card and in its byline, which opens a small GitHub issue for that page — react with a **👍** there to cast your like. Counts are read live from GitHub on each load, and the Crates page's **Top rated** sort orders by them.
+
+*(For maintainers: enabling the like button on a merged crate page means creating its `crate-vote` issue — the exact step is in [CONTRIBUTING.md](CONTRIBUTING.md#crates).)*
 
 ---
 

@@ -8,7 +8,7 @@ use super::{Article, DEPTH};
 use crate::model::Page;
 use crate::nav::{render_sidebar, TopNav};
 use crate::render::{abs_url, href_from, shell, Head};
-use crate::util::html_escape;
+use crate::util::{fmt_date, html_escape, render_inline};
 
 /// The repo's contributor guide, linked from the "write an article" CTA.
 const CONTRIBUTE_URL: &str =
@@ -121,7 +121,7 @@ fn render_card(a: &Article, i: usize) -> String {
     };
 
     format!(
-        r#"<article class="article-card" data-i="{i}" data-vote-key="{vote_key}">
+        r#"<article class="article-card" data-i="{i}" data-date="{iso}" data-search="{search}" data-vote-key="{vote_key}">
           <a class="article-card-link" href="{href}">
             {image}
             <div class="article-card-body">
@@ -135,6 +135,8 @@ fn render_card(a: &Article, i: usize) -> String {
             <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span></a>
           </div>
         </article>"#,
+        iso = html_escape(&a.date),
+        search = html_escape(&search_text(a)),
         vote_key = html_escape(&a.vote_key()),
         // The index lives at `articles/index.html`, so link to a sibling
         // article by bare filename, not its site-root-relative `href`.
@@ -147,35 +149,12 @@ fn render_card(a: &Article, i: usize) -> String {
     )
 }
 
-/// HTML-escape `s`, but render inline `` `code` `` spans (backtick-delimited)
-/// as a distinct monospace token. Lets a summary mark an operator or ident
-/// (e.g. `` `?` ``) so it reads as code rather than stray punctuation. If the
-/// backticks are unbalanced, they're left as literal characters.
-fn render_inline(s: &str) -> String {
-    if s.matches('`').count() < 2 {
-        return html_escape(s);
-    }
-    let balanced = s.matches('`').count() % 2 == 0;
-    let mut out = String::new();
-    let mut in_code = false;
-    for (i, seg) in s.split('`').enumerate() {
-        if i > 0 {
-            if balanced {
-                in_code = !in_code;
-            } else {
-                out.push('`'); // unbalanced — keep backticks literal
-            }
-        }
-        if in_code {
-            out.push_str(&format!(
-                "<code class=\"tok-inline\">{}</code>",
-                html_escape(seg)
-            ));
-        } else {
-            out.push_str(&html_escape(seg));
-        }
-    }
-    out
+/// The lowercase haystack the index's filter box matches against, baked into
+/// the card so the client never has to scrape it back out of the DOM.
+fn search_text(a: &Article) -> String {
+    format!("{} {} {}", a.title, a.summary, a.tags.join(" "))
+        .replace('`', "")
+        .to_lowercase()
 }
 
 fn render_article(a: &Article, pages: &[Page]) -> String {
@@ -283,30 +262,3 @@ fn render_tags(a: &Article) -> String {
     format!("<div class=\"article-tags\">{tags}</div>")
 }
 
-/// `YYYY-MM-DD` -> `Mon D, YYYY`; anything else is shown verbatim.
-fn fmt_date(iso: &str) -> String {
-    let d = iso.get(..10).unwrap_or(iso);
-    let parts: Vec<&str> = d.split('-').collect();
-    if parts.len() == 3 {
-        const MONTHS: [&str; 12] = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-        ];
-        if let (Ok(m), Ok(day)) = (parts[1].parse::<usize>(), parts[2].parse::<u32>()) {
-            if (1..=12).contains(&m) {
-                return format!("{} {}, {}", MONTHS[m - 1], day, parts[0]);
-            }
-        }
-    }
-    d.to_string()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn fmt_date_iso() {
-        assert_eq!(fmt_date("2026-07-25"), "Jul 25, 2026");
-        assert_eq!(fmt_date("whenever"), "whenever");
-    }
-}

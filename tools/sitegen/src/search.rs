@@ -1,4 +1,5 @@
 use crate::articles::Article;
+use crate::crates::Crate;
 use crate::model::{group_label, Page, Section};
 
 fn js_string_escape(s: &str) -> String {
@@ -19,8 +20,8 @@ fn is_token_kind(kind: &str) -> bool {
     matches!(kind, "operator" | "punctuation" | "keyword" | "comment")
 }
 
-pub fn build_search_index(pages: &[Page], articles: &[Article]) -> String {
-    let mut entries = Vec::with_capacity(pages.len() + articles.len());
+pub fn build_search_index(pages: &[Page], articles: &[Article], crates: &[Crate]) -> String {
+    let mut entries = Vec::with_capacity(pages.len() + articles.len() + crates.len());
     for p in pages {
         let kind_label = match p.section {
             Section::Syntax => "syntax",
@@ -56,6 +57,27 @@ pub fn build_search_index(pages: &[Page], articles: &[Article]) -> String {
             title = js_string_escape(&a.title),
             kw = js_string_escape(&kw),
             href = js_string_escape(&a.href),
+        ));
+    }
+
+    // Crate pages are indexed on name + summary + categories, matching the
+    // articles policy of keeping the shipped index small and stable.
+    for c in crates {
+        let kw = format!(
+            "{} {} {} {} {}",
+            c.title,
+            c.crate_name,
+            c.summary,
+            c.categories.join(" "),
+            c.publisher.as_deref().unwrap_or_default(),
+        )
+        .replace('`', "")
+        .to_lowercase();
+        entries.push(format!(
+            "  {{ title: \"{title}\", crumb: \"Crates\", kind: \"crate\", isToken: false, kw: \"{kw}\", href: \"{href}\" }}",
+            title = js_string_escape(&c.title),
+            kw = js_string_escape(&kw),
+            href = js_string_escape(&c.href),
         ));
     }
 

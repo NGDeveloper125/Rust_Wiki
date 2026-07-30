@@ -17,8 +17,9 @@
   how to implement things (error handling, custom iterators, lifetimes, …) —
   real, compiling code with the reasoning behind it. NOT opinion/think-pieces
   ("why you should use Rust", "where Rust will be in 10 years") — an article
-  shows code and explains it. NOT crate/library write-ups (those get their own
-  dedicated section). See CONTRIBUTING.md ("Articles") for the full guidelines.
+  shows code and explains it. NOT crate/library write-ups (those go in
+  pages/crates/, see CONTRIBUTING.md "Crates"). See CONTRIBUTING.md
+  ("Articles") for the full guidelines.
 -->
 ---
 title: "Your article title"
