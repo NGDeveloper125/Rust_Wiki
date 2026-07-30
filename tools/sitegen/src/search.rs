@@ -64,11 +64,12 @@ pub fn build_search_index(pages: &[Page], articles: &[Article], crates: &[Crate]
     // articles policy of keeping the shipped index small and stable.
     for c in crates {
         let kw = format!(
-            "{} {} {} {}",
+            "{} {} {} {} {}",
             c.title,
             c.crate_name,
             c.summary,
-            c.categories.join(" ")
+            c.categories.join(" "),
+            c.publisher.as_deref().unwrap_or_default(),
         )
         .replace('`', "")
         .to_lowercase();

@@ -385,7 +385,9 @@ until it's fixed. Everything else is optional.
 ---
 title: "anyhow"                    # usually just the crate's name
 crate: "anyhow"                    # optional; defaults to the file name
-version: "1.0"                     # optional; the release you wrote against
+version: "1.0.104"                 # optional; the exact release you wrote against
+publisher: "David Tolnay (dtolnay)"               # optional; the crates.io owner(s)
+publisher_url: "https://crates.io/users/dtolnay"  # optional; link for the above
 no_std: "optional"                 # optional; yes | optional | no
 author: "Your Name"                # display name for the byline
 github: "your-handle"              # your GitHub handle (a leading @ is fine)
@@ -397,10 +399,29 @@ docs: "https://docs.rs/anyhow"     # optional; defaults to docs.rs/<crate>
 ---
 ```
 
+**`version` and `publisher` are facts about someone else's software — copy them
+from the crate's crates.io page, don't guess.** `version` is the exact release
+you wrote the page against (`1.0.104`, not `1.0`), because it's the claim a
+reader relies on when they check whether the API map still applies. `publisher`
+is the crate's owner as crates.io lists it; owners can be users or teams and a
+crate can have several, so it's free text — a single user reads best as
+`Name (login)` with `publisher_url` pointing at their crates.io page.
+
+The page keeps these upstream facts visually separate from your byline: the
+crate line says who publishes the *crate*, the byline below says who wrote the
+*page*.
+
 `no_std` renders as the same support badge language features use, so a reader
 can tell at a glance whether a crate works on bare metal. Inline code in the
 `summary` works exactly as it does for articles: backtick a token and it renders
 as monospace on the card.
+
+**Keeping a page current.** Crates release; pages go stale. The maintainer runs
+a local `crate-sync` check that compares every page against crates.io and
+reports drift — a new release, a changed owner, a moved repository. Link and
+owner fixes are applied automatically; a version bump only happens after someone
+has re-checked the API map, since the `version` field is a promise about what
+the entries below it document.
 
 ### Writing the body
 

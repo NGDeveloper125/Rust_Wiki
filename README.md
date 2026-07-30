@@ -272,7 +272,8 @@ That fixed shape is the whole point. Once you've read one crate page you know ex
 The whole thing is static — there is no server and no database.
 
 - Each crate page is a single markdown file under `pages/crates/`, named after the crate on crates.io. At build time it's rendered to `crates/<crate-name>.html` and added to the **Crates index** — a card grid showing each crate's name, version, summary, categories, and how many API entries its map covers.
-- Every page links out to **crates.io**, **docs.rs**, and the crate's repository, and shows a `no_std` badge using the same language as the wiki's embedded-support badges.
+- Every page states the **exact release it documents** and **who publishes the crate** (its crates.io owner), taken from crates.io rather than guessed — kept visually separate from the byline crediting whoever wrote the page. It links out to **crates.io**, **docs.rs**, and the crate's repository, and shows a `no_std` badge using the same language as the wiki's embedded-support badges.
+- Pages are kept honest by a maintainer-side `crate-sync` check that diffs every page against crates.io: owner and link changes are corrected automatically, while a new release is flagged for a human to re-check the API map before the documented version is bumped.
 - The index has a **search box** (filter by name, summary, or category) and a **sort toggle**: *A–Z* (default), *Newest*, or *Top rated*.
 - Crate pages link into the wiki: a relative link to a concept or syntax page's markdown file is rewritten to the right `.html` URL at build time, so a crate page can point at the language concepts it builds on.
 

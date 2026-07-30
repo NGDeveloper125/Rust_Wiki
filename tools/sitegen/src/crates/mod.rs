@@ -39,9 +39,17 @@ struct FrontMatter {
     /// slug, which is why pages are named after the crate they document.
     #[serde(default, rename = "crate")]
     crate_name: Option<String>,
-    /// The release the page was written against, e.g. `"1.0"`.
+    /// The release the page was written against, e.g. `"1.0.104"`.
     #[serde(default)]
     version: Option<String>,
+    /// Who publishes the crate — its crates.io owner(s), as displayed there.
+    /// Owners can be users or teams, and a crate can have several, so this is
+    /// free text rather than a handle.
+    #[serde(default)]
+    publisher: Option<String>,
+    /// Optional link for `publisher` (a crates.io user/team page).
+    #[serde(default)]
+    publisher_url: Option<String>,
     /// `yes` / `optional` / `no` — whether the crate works without `std`.
     #[serde(default)]
     no_std: Option<String>,
@@ -93,6 +101,8 @@ pub struct Crate {
     pub title: String,
     pub crate_name: String,
     pub version: Option<String>,
+    pub publisher: Option<String>,
+    pub publisher_url: Option<String>,
     pub no_std: Option<String>,
     pub author: String,
     pub github: String,
@@ -233,6 +243,8 @@ pub fn load(pages_root: &Path) -> Vec<Crate> {
             title: front.title,
             crate_name,
             version: front.version,
+            publisher: front.publisher,
+            publisher_url: front.publisher_url,
             no_std: front.no_std,
             author: front.author,
             github: front.github,
@@ -365,6 +377,8 @@ mod tests {
             title: "anyhow".into(),
             crate_name: "anyhow".into(),
             version: None,
+            publisher: None,
+            publisher_url: None,
             no_std: None,
             author: "A".into(),
             github: "@handle".into(),

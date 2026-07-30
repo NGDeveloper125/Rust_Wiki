@@ -6,7 +6,9 @@
        crates.io, e.g. `pages/crates/serde_json.md`. The file name becomes the
        URL (`crates/<name>.html`) and the default crates.io / docs.rs links.
     2. Fill in the frontmatter below (title, author, github, date and summary
-       are required — the build errors and names any missing field).
+       are required — the build errors and names any missing field). Take
+       `version` and `publisher` from the crate's crates.io page so they are
+       real, verified values, not guesses.
     3. Fill in the three sections. Unlike an article, a crate page has a FIXED
        structure: every crate page has these same three `##` headings, in this
        order, so a reader can look up any crate the same way every time.
@@ -23,7 +25,9 @@
 ---
 title: "crate_name"                 # usually just the crate's name
 # crate: "crate_name"               # only if it differs from this file's name
-version: "1.0"                      # the release you wrote the page against
+version: "1.0.0"                    # the exact release you wrote the page against
+publisher: "Their Name (handle)"    # the crate's owner(s) as shown on crates.io
+publisher_url: "https://crates.io/users/handle"   # optional link for the above
 no_std: "optional"                  # yes | optional | no — omit if unknown
 author: "Your Name"                 # display name shown in the byline
 github: "your-handle"               # your GitHub handle (a leading @ is fine)

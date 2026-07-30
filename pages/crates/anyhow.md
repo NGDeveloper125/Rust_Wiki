@@ -1,6 +1,8 @@
 ---
 title: "anyhow"
-version: "1.0"
+version: "1.0.104"
+publisher: "David Tolnay (dtolnay)"
+publisher_url: "https://crates.io/users/dtolnay"
 no_std: "optional"
 author: "NGDeveloper125"
 github: "NGDeveloper125"
@@ -39,10 +41,10 @@ usual partner for that side of the line, and the two compose: a library returns
 its own enum, and the application that consumes it swallows all of them into
 `anyhow::Error`.
 
-Practically it is one dependency with no required transitive dependencies, it
-compiles fast, it is one of the most widely used crates in the ecosystem, and it
-works in `no_std` builds with `default-features = false` (it still needs
-`alloc`).
+Practically: one dependency with no required transitive dependencies, so it
+compiles fast; dual-licensed `MIT OR Apache-2.0`, the same as the standard
+library; a minimum supported Rust version of 1.68; and it works in `no_std`
+builds with `default-features = false` (it still needs `alloc`).
 
 ## When to use it
 

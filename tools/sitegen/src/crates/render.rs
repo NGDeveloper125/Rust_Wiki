@@ -155,11 +155,12 @@ fn render_card(c: &Crate, i: usize) -> String {
 /// the card so the client never has to scrape it back out of the DOM.
 fn search_text(c: &Crate) -> String {
     format!(
-        "{} {} {} {}",
+        "{} {} {} {} {}",
         c.title,
         c.crate_name,
         c.summary,
-        c.categories.join(" ")
+        c.categories.join(" "),
+        c.publisher.as_deref().unwrap_or_default(),
     )
     .replace('`', "")
     .to_lowercase()
@@ -172,6 +173,25 @@ fn render_version(c: &Crate) -> String {
         }
         _ => String::new(),
     }
+}
+
+/// "published by &lt;owner&gt;" — the crate's crates.io owner(s), linked to their
+/// crates.io page when `publisher_url` is set. Renders nothing without a
+/// `publisher`, since guessing an owner would be worse than omitting one.
+fn render_publisher(c: &Crate) -> String {
+    let name = match c.publisher.as_deref().map(str::trim) {
+        Some(p) if !p.is_empty() => p,
+        _ => return String::new(),
+    };
+    let inner = match c.publisher_url.as_deref().map(str::trim) {
+        Some(url) if !url.is_empty() => format!(
+            r#"<a href="{url}" target="_blank" rel="noopener">{name}</a>"#,
+            url = html_escape(url),
+            name = html_escape(name),
+        ),
+        _ => html_escape(name),
+    };
+    format!("<span>published by {inner}</span>")
 }
 
 /// `no_std: yes | optional | no` as the site's existing support badge, so a
@@ -320,19 +340,39 @@ fn render_crate(c: &Crate, pages: &[Page]) -> String {
         url = html_escape(&c.crates_io_url()),
     );
 
+    // Two separate facts, deliberately not mixed: who publishes the *crate*
+    // (upstream, from crates.io) and who wrote this *page* (a contributor here).
+    // The crates.io name only earns a line of its own when it isn't already the
+    // page title (e.g. a page titled "Serde JSON" documenting `serde_json`).
+    let crate_name = if c.crate_name == c.title {
+        String::new()
+    } else {
+        format!(
+            "<span class=\"crate-name\">{}</span>",
+            html_escape(&c.crate_name)
+        )
+    };
+    let crate_meta = format!(
+        r#"<div class="crate-meta">
+        {crate_name}
+        {version}
+        {publisher}
+        {no_std}
+      </div>"#,
+        version = render_version(c),
+        publisher = render_publisher(c),
+        no_std = render_no_std(c),
+    );
+
     let byline = format!(
         r#"<div class="crate-byline" data-vote-key="{vote_key}">
-        <span>written by <a class="article-author" href="{gh}" target="_blank" rel="noopener">{author}</a> &middot; {date}</span>
-        {version}
-        {no_std}
+        <span>page written by <a class="article-author" href="{gh}" target="_blank" rel="noopener">{author}</a> &middot; {date}</span>
         <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span> &mdash; like this page on GitHub</a>
       </div>"#,
         vote_key = html_escape(&c.vote_key()),
         gh = html_escape(&c.github_url()),
         author = html_escape(&c.author),
         date = fmt_date(&c.date),
-        version = render_version(c),
-        no_std = render_no_std(c),
     );
 
     let summary = format!("<p class=\"lead\">{}</p>", render_inline(&c.summary));
@@ -349,6 +389,8 @@ fn render_crate(c: &Crate, pages: &[Page]) -> String {
         r#"      {breadcrumb}
 
       {page_head}
+
+      {crate_meta}
 
       {byline}
 
@@ -424,7 +466,9 @@ mod tests {
         Crate {
             title: "anyhow".into(),
             crate_name: "anyhow".into(),
-            version: Some("1.0".into()),
+            version: Some("1.0.104".into()),
+            publisher: Some("David Tolnay (dtolnay)".into()),
+            publisher_url: Some("https://crates.io/users/dtolnay".into()),
             no_std: Some("optional".into()),
             author: "A".into(),
             github: "handle".into(),
