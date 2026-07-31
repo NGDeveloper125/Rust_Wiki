@@ -9,6 +9,10 @@ use crate::util::html_escape;
 /// lives at the domain root, so paths carry no `/Rust_Wiki/` prefix.
 pub const SITE_BASE: &str = "https://rustyyellowpages.dev/";
 
+/// The project's GitHub repository, linked from the landing page's call for
+/// contributions.
+pub const REPO_URL: &str = "https://github.com/NGDeveloper125/Rust_Wiki";
+
 /// The `<head>` metadata for a page. All string fields are raw (unescaped);
 /// [`shell`] escapes them at render time.
 pub struct Head {
@@ -105,6 +109,24 @@ fn topbar(depth: usize) -> String {
 
 /// Wrap `sidebar_html` + `main_html` in the full document shell.
 pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> String {
+    shell_with_page_class(head, depth, sidebar_html, main_html, "")
+}
+
+/// [`shell`], plus an extra class on the `<article class="page">` wrapper.
+/// Used by the landing page to opt into the wider measure (`page-wide`),
+/// since it is a directory of links rather than a column of prose.
+pub fn shell_with_page_class(
+    head: &Head,
+    depth: usize,
+    sidebar_html: &str,
+    main_html: &str,
+    extra_page_class: &str,
+) -> String {
+    let page_class = if extra_page_class.is_empty() {
+        String::new()
+    } else {
+        format!(" {extra_page_class}")
+    };
     let css = href_from(depth, "assets/site.css");
     let favicon = href_from(depth, "favicon.svg");
     let search_index_js = href_from(depth, "assets/search-index.js");
@@ -131,7 +153,7 @@ pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> 
   </aside>
 
   <main class="content">
-    <article class="page">
+    <article class="page{page_class}">
 {main_html}
     </article>
   </main>
@@ -539,8 +561,13 @@ pub fn render_landing_page(pages: &[Page]) -> String {
     let depth = 0;
     let sidebar = render_sidebar(pages, None, depth, TopNav::None);
 
+    // Browse: one block per section (Syntax, Concepts), each block a stack of
+    // sub-group rows. The CSS rules the sub-group rows apart with a hairline and
+    // the section blocks apart with a heavier one.
     let mut groups_html = String::new();
     for section in [Section::Syntax, Section::Concepts] {
+        let mut rows = String::new();
+        let mut section_count = 0usize;
         for (folder, label) in crate::model::group_order(section) {
             let mut group_pages: Vec<&Page> = pages
                 .iter()
@@ -550,6 +577,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
                 continue;
             }
             group_pages.sort_by(|a, b| a.front.title.cmp(&b.front.title));
+            section_count += group_pages.len();
             let links: String = group_pages
                 .iter()
                 .map(|p| {
@@ -562,22 +590,40 @@ pub fn render_landing_page(pages: &[Page]) -> String {
                     format!("<a class=\"chip\" href=\"{href}\">{label_html}</a>")
                 })
                 .collect::<Vec<_>>()
-                .join("\n            ");
-            groups_html.push_str(&format!(
-                "\n          <div class=\"related-row\">\n            <span class=\"related-label\">{label} ({count})</span>\n            {links}\n          </div>\n",
+                .join("\n                ");
+            rows.push_str(&format!(
+                "\n              <div class=\"related-row\">\n                <span class=\"related-label\">{label} ({count})</span>\n                {links}\n              </div>\n",
                 count = group_pages.len(),
             ));
         }
+        if rows.is_empty() {
+            continue;
+        }
+        groups_html.push_str(&format!(
+            "\n          <div class=\"browse-group\">\n            <div class=\"browse-group-head\">\n              <h3 class=\"browse-group-title\">{label}</h3>\n              <span class=\"browse-group-count\">{section_count} pages</span>\n            </div>\n            <div class=\"related browse-rows\">{rows}\n            </div>\n          </div>\n",
+            label = section.label(),
+        ));
     }
 
     let main = format!(
-        r#"      <p class="lead">A free, open-source, deep reference for the Rust programming language &mdash; a directory you look things up in. Every syntax element and every language concept gets its own page, densely cross-linked.</p>
+        r#"      <section class="intro">
+        <p class="lead">Open source, community driven, information hub for the Rust programming language.</p>
+
+        <p>This project is built as a comprehensive tool to use while coding in Rust &mdash; a map of the language, split into <strong>syntax</strong> and <strong>concepts</strong>. Each page presents code examples and best-practice approaches alongside the general information.</p>
+
+        <p>Please help push this project forward by sharing your knowledge and your approach. Contributions of all shapes are welcome: pointing out wrong information on a page, reporting bugs, flagging what is missing, adding articles, covering crates, or just taking part in the conversations. I hope this tool will be helpful to anyone in the community. Enjoy your coding!</p>
+
+        <div class="intro-actions">
+          <a class="chip" href="{contributing}">How to contribute</a>
+          <a class="chip" href="{repo}">GitHub repository</a>
+        </div>
+      </section>
 
       <hr class="divider">
 
       <section class="doc">
         <h2 class="section-title">Browse</h2>
-        <div class="related">
+        <div class="browse">
         {groups}
         </div>
       </section>
@@ -607,16 +653,18 @@ pub fn render_landing_page(pages: &[Page]) -> String {
       </div>
 "#,
         groups = groups_html,
+        contributing = format!("{REPO_URL}/blob/main/CONTRIBUTING.md"),
+        repo = REPO_URL,
     );
 
     let head = Head {
         title: "Rusty Yellow Pages - Home".to_string(),
-        description: "A free, open-source reference for the Rust programming language — every syntax element and every language concept gets its own page, densely cross-linked. Look things up fast.".to_string(),
+        description: "Open source, community driven information hub for the Rust programming language — every syntax element and every language concept gets its own page, with code examples and best-practice approaches.".to_string(),
         canonical: abs_url(""),
         og_type: "website",
         image: None,
     };
-    shell(&head, depth, &sidebar, &main)
+    shell_with_page_class(&head, depth, &sidebar, &main, "page-wide")
 }
 
 /// Singular noun for a syntax subgroup, used to make bare-symbol pages
