@@ -562,7 +562,7 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
 fn section_blurb(section: Section) -> &'static str {
     match section {
         Section::Syntax => "a dictionary, one page per token",
-        Section::Concepts => "a wiki, with scenarios and approaches",
+        Section::Concepts => "a wiki with scenarios and approaches",
     }
 }
 
@@ -651,7 +651,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         r#"      <section class="hero">
         <div class="hero-inner">
           <div class="hero-lead">
-            <h1 class="hero-title"><span class="hl-syntax">Open source</span>,<br><span class="hl-concepts">community driven</span>,<br>information hub for the <span class="tok">Rust</span><br>programming language.</h1>
+            <h1 class="hero-title"><span class="hl-syntax">Open-source</span>,<br><span class="hl-concepts">community-driven</span><br>information hub for the <span class="tok">Rust</span><br>programming language.</h1>
             <div class="hero-actions">
               <a class="btn btn-primary" href="{contributing}">How to contribute</a>
               <a class="btn" href="{repo}">GitHub repository</a>
@@ -660,11 +660,11 @@ pub fn render_landing_page(pages: &[Page]) -> String {
           <div class="hero-notes">
             <div class="hero-note">
               <div class="eyebrow">What it is</div>
-              <p>This project is built as a comprehensive tool to use while coding in Rust &mdash; a map of the language, split into <strong class="hl-syntax">syntax</strong> and <strong class="hl-concepts">concepts</strong>. Each page presents code examples and best-practice approaches alongside the general information.</p>
+              <p>This project is built as a comprehensive tool to use while coding in Rust &mdash; a map of the language, split into <strong class="hl-syntax">syntax</strong> and <strong class="hl-concepts">concepts</strong>. Each page presents code examples and best-practice approaches alongside general information.</p>
             </div>
             <div class="hero-note">
               <div class="eyebrow">How to help</div>
-              <p class="dim">Please help push this project forward by sharing your knowledge and your approach. Contributions of all shapes are welcome: pointing out wrong information on a page, reporting bugs, flagging what is missing, adding articles, covering crates, or just taking part in the conversations. I hope this tool will be helpful to anyone in the community. <em>Enjoy your coding!</em></p>
+              <p class="dim">Please help push this project forward by sharing your knowledge and your approach. Contributions of all kinds are welcome: pointing out wrong information on a page, reporting bugs, flagging what is missing, adding articles, covering crates, or just taking part in the conversations. I hope this tool will be helpful to everyone in the community. <em>Enjoy your coding!</em></p>
             </div>
           </div>
         </div>
@@ -716,7 +716,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
 
     let head = Head {
         title: "Rusty Yellow Pages - Home".to_string(),
-        description: "Open source, community driven information hub for the Rust programming language — every syntax element and every language concept gets its own page, with code examples and best-practice approaches.".to_string(),
+        description: "Open-source, community-driven information hub for the Rust programming language — every syntax element and every language concept gets its own page, with code examples and best-practice approaches.".to_string(),
         canonical: abs_url(""),
         og_type: "website",
         image: None,
