@@ -19,6 +19,20 @@
     });
   });
 
+  /* ---------- LANDING GROUP CARDS ---------- */
+  /* Each Browse card owns the panel of page chips named by aria-controls.
+     The panel spans every grid column, so unhiding it opens a full-width row
+     right below its card. No-op on pages without cards. */
+  document.querySelectorAll('.group-card').forEach(function (card) {
+    var panel = document.getElementById(card.getAttribute('aria-controls'));
+    if (!panel) return;
+    card.addEventListener('click', function () {
+      var open = card.getAttribute('aria-expanded') !== 'true';
+      card.setAttribute('aria-expanded', open ? 'true' : 'false');
+      panel.hidden = !open;
+    });
+  });
+
   /* ---------- CLOSE MOBILE NAV ON LINK TAP ---------- */
   document.querySelectorAll('.nav-link').forEach(function (link) {
     link.addEventListener('click', function () {

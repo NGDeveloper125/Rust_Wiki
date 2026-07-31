@@ -1,6 +1,6 @@
 use crate::links::{render_chip_row, LinkIndex};
 use crate::model::{group_label, Page, Section};
-use crate::nav::{render_sidebar, TopNav};
+use crate::nav::{render_sidebar, TopNav, CHEVRON_SVG};
 use crate::util::html_escape;
 
 /// Public base URL of the deployed site, used for absolute `<link rel="canonical">`
@@ -113,8 +113,8 @@ pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> 
 }
 
 /// [`shell`], plus an extra class on the `<article class="page">` wrapper.
-/// Used by the landing page to opt into the wider measure (`page-wide`),
-/// since it is a directory of links rather than a column of prose.
+/// Used by the landing page (`page-landing`), which drops the prose measure
+/// so its hero band can run the full width of the content column.
 pub fn shell_with_page_class(
     head: &Head,
     depth: usize,
@@ -557,104 +557,161 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
     )
 }
 
+/// One-line characterisation of a section, shown next to its page count in
+/// the landing page's Browse header.
+fn section_blurb(section: Section) -> &'static str {
+    match section {
+        Section::Syntax => "a dictionary, one page per token",
+        Section::Concepts => "a wiki, with scenarios and approaches",
+    }
+}
+
+/// The landing page's Browse grid for one section: a card per group, each
+/// followed by the hidden panel of page chips it expands. The panel is a grid
+/// child spanning every column, so opening a card inserts a full-width row
+/// directly beneath it. Returns the rendered block plus the section's page and
+/// group counts.
+fn render_browse_section(pages: &[Page], section: Section, depth: usize) -> (String, usize, usize) {
+    let section_name = match section {
+        Section::Syntax => "syntax",
+        Section::Concepts => "concepts",
+    };
+    let mut cards = String::new();
+    let mut page_count = 0usize;
+    let mut group_count = 0usize;
+
+    for (folder, label) in crate::model::group_order(section) {
+        let mut group_pages: Vec<&Page> = pages
+            .iter()
+            .filter(|p| p.section == section && p.subgroup == *folder)
+            .collect();
+        if group_pages.is_empty() {
+            continue;
+        }
+        group_pages.sort_by(|a, b| a.front.title.cmp(&b.front.title));
+        page_count += group_pages.len();
+        group_count += 1;
+
+        let panel_id = format!("group-{section_name}-{folder}");
+        let chips: String = group_pages
+            .iter()
+            .map(|p| {
+                let href = href_from(depth, &p.href);
+                let label_html = if p.section == Section::Syntax {
+                    format!("<span class=\"tok\">{}</span>", html_escape(&p.front.title))
+                } else {
+                    html_escape(&p.front.title)
+                };
+                format!("<a class=\"chip\" href=\"{href}\">{label_html}</a>")
+            })
+            .collect::<Vec<_>>()
+            .join("\n              ");
+
+        cards.push_str(&format!(
+            r#"
+            <button class="group-card" aria-expanded="false" aria-controls="{panel_id}">
+              <span class="group-card-head"><span class="group-name">{label}</span>{CHEVRON_SVG}</span>
+              <span class="group-count">{count} pages</span>
+            </button>
+            <div class="group-panel" id="{panel_id}" hidden>
+              {chips}
+            </div>
+"#,
+            count = group_pages.len(),
+        ));
+    }
+
+    let html = format!(
+        r#"
+        <div class="browse-section is-{section_name}">
+          <div class="browse-kicker">
+            <h3 class="kicker-title">{label}</h3>
+            <span class="kicker-note">{page_count} pages &middot; {blurb}</span>
+          </div>
+          <div class="group-grid">{cards}
+          </div>
+        </div>
+"#,
+        label = section.label(),
+        blurb = section_blurb(section),
+    );
+    (html, page_count, group_count)
+}
+
 pub fn render_landing_page(pages: &[Page]) -> String {
     let depth = 0;
     let sidebar = render_sidebar(pages, None, depth, TopNav::None);
 
-    // Browse: one block per section (Syntax, Concepts), each block a stack of
-    // sub-group rows. The CSS rules the sub-group rows apart with a hairline and
-    // the section blocks apart with a heavier one.
-    let mut groups_html = String::new();
-    for section in [Section::Syntax, Section::Concepts] {
-        let mut rows = String::new();
-        let mut section_count = 0usize;
-        for (folder, label) in crate::model::group_order(section) {
-            let mut group_pages: Vec<&Page> = pages
-                .iter()
-                .filter(|p| p.section == section && p.subgroup == *folder)
-                .collect();
-            if group_pages.is_empty() {
-                continue;
-            }
-            group_pages.sort_by(|a, b| a.front.title.cmp(&b.front.title));
-            section_count += group_pages.len();
-            let links: String = group_pages
-                .iter()
-                .map(|p| {
-                    let href = href_from(depth, &p.href);
-                    let label_html = if p.section == Section::Syntax {
-                        format!("<span class=\"tok\">{}</span>", html_escape(&p.front.title))
-                    } else {
-                        html_escape(&p.front.title)
-                    };
-                    format!("<a class=\"chip\" href=\"{href}\">{label_html}</a>")
-                })
-                .collect::<Vec<_>>()
-                .join("\n                ");
-            rows.push_str(&format!(
-                "\n              <div class=\"related-row\">\n                <span class=\"related-label\">{label} ({count})</span>\n                {links}\n              </div>\n",
-                count = group_pages.len(),
-            ));
-        }
-        if rows.is_empty() {
-            continue;
-        }
-        groups_html.push_str(&format!(
-            "\n          <div class=\"browse-group\">\n            <div class=\"browse-group-head\">\n              <h3 class=\"browse-group-title\">{label}</h3>\n              <span class=\"browse-group-count\">{section_count} pages</span>\n            </div>\n            <div class=\"related browse-rows\">{rows}\n            </div>\n          </div>\n",
-            label = section.label(),
-        ));
-    }
+    let (syntax_html, syntax_pages, syntax_groups) =
+        render_browse_section(pages, Section::Syntax, depth);
+    let (concepts_html, concepts_pages, concepts_groups) =
+        render_browse_section(pages, Section::Concepts, depth);
 
     let main = format!(
-        r#"      <section class="intro">
-        <p class="lead">Open source, community driven, information hub for the Rust programming language.</p>
-
-        <p>This project is built as a comprehensive tool to use while coding in Rust &mdash; a map of the language, split into <strong>syntax</strong> and <strong>concepts</strong>. Each page presents code examples and best-practice approaches alongside the general information.</p>
-
-        <p>Please help push this project forward by sharing your knowledge and your approach. Contributions of all shapes are welcome: pointing out wrong information on a page, reporting bugs, flagging what is missing, adding articles, covering crates, or just taking part in the conversations. I hope this tool will be helpful to anyone in the community. Enjoy your coding!</p>
-
-        <div class="intro-actions">
-          <a class="chip" href="{contributing}">How to contribute</a>
-          <a class="chip" href="{repo}">GitHub repository</a>
+        r#"      <section class="hero">
+        <div class="hero-inner">
+          <div class="hero-lead">
+            <h1 class="hero-title"><span class="hl-syntax">Open source</span>,<br><span class="hl-concepts">community driven</span>,<br>information hub for the <span class="tok">Rust</span><br>programming language.</h1>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="{contributing}">How to contribute</a>
+              <a class="btn" href="{repo}">GitHub repository</a>
+            </div>
+          </div>
+          <div class="hero-notes">
+            <div class="hero-note">
+              <div class="eyebrow">What it is</div>
+              <p>This project is built as a comprehensive tool to use while coding in Rust &mdash; a map of the language, split into <strong class="hl-syntax">syntax</strong> and <strong class="hl-concepts">concepts</strong>. Each page presents code examples and best-practice approaches alongside the general information.</p>
+            </div>
+            <div class="hero-note">
+              <div class="eyebrow">How to help</div>
+              <p class="dim">Please help push this project forward by sharing your knowledge and your approach. Contributions of all shapes are welcome: pointing out wrong information on a page, reporting bugs, flagging what is missing, adding articles, covering crates, or just taking part in the conversations. I hope this tool will be helpful to anyone in the community. <em>Enjoy your coding!</em></p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <hr class="divider">
+      <div class="landing-body">
+        <section class="doc">
+          <div class="browse-head">
+            <h2 class="section-title">Browse</h2>
+            <span class="browse-count">{total_pages} pages &middot; {total_groups} groups</span>
+          </div>
+          {syntax}
+          {concepts}
+        </section>
 
-      <section class="doc">
-        <h2 class="section-title">Browse</h2>
-        <div class="browse">
-        {groups}
+        <hr class="divider">
+
+        <div class="community-grid">
+          <a class="community-card" href="articles/index.html">
+            <span class="eyebrow">Read</span>
+            <span class="community-title">Articles</span>
+            <span class="community-desc">Community deep dives into Rust concepts.</span>
+          </a>
+          <a class="community-card" href="crates/index.html">
+            <span class="eyebrow">Look up a crate</span>
+            <span class="community-title">Crates</span>
+            <span class="community-desc">A directory of the crates people reach for.</span>
+          </a>
+          <a class="community-card" href="conversations/index.html">
+            <span class="eyebrow">Discuss</span>
+            <span class="community-title">Conversations</span>
+            <span class="community-desc">A mirror of the project&rsquo;s GitHub Discussions.</span>
+          </a>
         </div>
-      </section>
 
-      <section class="doc">
-        <h2 class="section-title">Community</h2>
-        <div class="related">
-          <div class="related-row">
-            <span class="related-label">Read</span>
-            <a class="chip" href="articles/index.html">Articles</a>
-          </div>
-          <div class="related-row">
-            <span class="related-label">Look up a crate</span>
-            <a class="chip" href="crates/index.html">Crates</a>
-          </div>
-          <div class="related-row">
-            <span class="related-label">Discuss</span>
-            <a class="chip" href="conversations/index.html">Conversations</a>
-          </div>
+        <div class="footer-note">
+          <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
+          <span>Targets current stable Rust &middot; edition 2021</span>
         </div>
-        <p class="subtitle">Community deep dives into Rust concepts, a directory of the crates people reach for, and a read-only mirror of the project&rsquo;s GitHub Discussions &mdash; ask questions, compare approaches, share what you know.</p>
-      </section>
-
-      <div class="footer-note">
-        <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
-        <span>Targets current stable Rust &middot; edition 2021</span>
       </div>
 "#,
-        groups = groups_html,
         contributing = format!("{REPO_URL}/blob/main/CONTRIBUTING.md"),
         repo = REPO_URL,
+        syntax = syntax_html,
+        concepts = concepts_html,
+        total_pages = syntax_pages + concepts_pages,
+        total_groups = syntax_groups + concepts_groups,
     );
 
     let head = Head {
@@ -664,7 +721,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         og_type: "website",
         image: None,
     };
-    shell_with_page_class(&head, depth, &sidebar, &main, "page-wide")
+    shell_with_page_class(&head, depth, &sidebar, &main, "page-landing")
 }
 
 /// Singular noun for a syntax subgroup, used to make bare-symbol pages

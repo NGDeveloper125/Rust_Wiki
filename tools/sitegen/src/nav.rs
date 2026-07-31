@@ -2,7 +2,7 @@ use crate::model::{group_order, nav_bucket, subgroup_order, Page, Section};
 use crate::render::href_from;
 use crate::util::html_escape;
 
-const CHEVRON_SVG: &str = r#"<svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>"#;
+pub const CHEVRON_SVG: &str = r#"<svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>"#;
 
 fn render_page_link(p: &Page, current: Option<&Page>, from_depth: usize, out: &mut String) {
     let href = href_from(from_depth, &p.href);
