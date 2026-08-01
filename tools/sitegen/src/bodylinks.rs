@@ -96,12 +96,21 @@ pub fn rewrite_all(pages: &mut [Page]) {
     for page in pages.iter_mut() {
         let current_dir = format!("{}/{}", section_dir_name(page.section), page.subgroup);
         let depth = page.href.matches('/').count();
-        page.explanation_html = rewrite_links_in(&page.explanation_html, &current_dir, depth, &known);
-        page.basic_usage_html = rewrite_links_in(&page.basic_usage_html, &current_dir, depth, &known);
-        page.best_practices_intro_html =
-            rewrite_links_in(&page.best_practices_intro_html, &current_dir, depth, &known);
-        page.embedded_notes_html =
-            rewrite_links_in(&page.embedded_notes_html, &current_dir, depth, &known);
+        // Every rendered-markdown field on the page, both flavours: a field
+        // left out here ships its `.md` hrefs to the reader verbatim, and the
+        // page still renders, so the omission is invisible without the check
+        // in `main`.
+        for field in [
+            &mut page.explanation_html,
+            &mut page.basic_usage_html,
+            &mut page.best_practices_intro_html,
+            &mut page.embedded_notes_html,
+            &mut page.embedded_explanation_html,
+            &mut page.embedded_basic_usage_html,
+            &mut page.embedded_best_practices_intro_html,
+        ] {
+            *field = rewrite_links_in(field, &current_dir, depth, &known);
+        }
         for s in page
             .scenarios
             .iter_mut()
@@ -120,7 +129,11 @@ pub fn rewrite_all(pages: &mut [Page]) {
                 }
             }
         }
-        for ex in page.usage_examples.iter_mut() {
+        for ex in page
+            .usage_examples
+            .iter_mut()
+            .chain(page.embedded_usage_examples.iter_mut())
+        {
             ex.body_html = rewrite_links_in(&ex.body_html, &current_dir, depth, &known);
         }
     }

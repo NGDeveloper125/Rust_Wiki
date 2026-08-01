@@ -136,9 +136,64 @@ fn main() {
     );
     std::fs::write(docs_root.join("robots.txt"), robots).expect("write robots.txt");
 
+    let stale_md_links = report_unrewritten_md_links(&docs_root);
+
     println!(
         "generated {} pages + 1 landing page into {}",
         pages.len(),
         docs_root.display()
     );
+    if stale_md_links > 0 {
+        eprintln!(
+            "warning: {stale_md_links} markdown link(s) reached the generated site and will 404 \
+             for readers — a rendered-markdown field is most likely missing from \
+             bodylinks::rewrite_all"
+        );
+    }
+}
+
+/// Count `href="....md"` targets that survived into the generated site, naming
+/// each one.
+///
+/// Body-link rewriting turns markdown cross-references into `.html` hrefs, so a
+/// surviving `.md` target is always a dead link. Nothing else catches it: the
+/// page around it renders correctly, and the link only fails when a reader
+/// clicks it. Links out to markdown on another host (the repo's own
+/// CONTRIBUTING.md, say) are left alone.
+fn report_unrewritten_md_links(docs_root: &Path) -> usize {
+    fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                walk(&path, out);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("html") {
+                out.push(path);
+            }
+        }
+    }
+
+    let mut html_files = Vec::new();
+    walk(docs_root, &mut html_files);
+    html_files.sort();
+
+    let mut found = 0;
+    for file in &html_files {
+        let Ok(html) = std::fs::read_to_string(file) else {
+            continue;
+        };
+        for (idx, _) in html.match_indices("href=\"") {
+            let after = &html[idx + 6..];
+            let Some(end) = after.find('"') else { continue };
+            let target = &after[..end];
+            let is_external = target.starts_with("http://") || target.starts_with("https://");
+            if target.ends_with(".md") && !is_external {
+                found += 1;
+                eprintln!("  warning: {} links to \"{target}\"", file.display());
+            }
+        }
+    }
+    found
 }
