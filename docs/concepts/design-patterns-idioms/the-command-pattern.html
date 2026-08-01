@@ -1213,7 +1213,7 @@ the <code>alloc</code> crate for two independent reasons: the <code>Vec</code> i
 the heap, and each <code>Box&lt;dyn Command&gt;</code> stores its command behind a heap
 allocation so the queue can hold different concrete command types side
 by side (the same <code>Box&lt;dyn Trait&gt;</code> mechanism the
-<a href="../../syntax/keywords/box.md"><code>box</code> keyword page</a> covers — see that page
+<a href="../../syntax/keywords/box.html"><code>box</code> keyword page</a> covers — see that page
 for why there's no fixed-capacity substitute for <code>Box&lt;T&gt;</code> itself, unlike
 <code>heapless::Vec&lt;T, N&gt;</code> for <code>Vec</code>). Neither requirement disappears just
 because the target is embedded, but there are two genuinely idiomatic
@@ -1225,15 +1225,15 @@ a PWM channel — the idiomatic no-heap shape is a fixed-size <code>enum Command
 array or a <code>heapless::spsc::Queue&lt;Command, N&gt;</code> instead of a <code>Vec</code>. This
 gives up the ability for downstream/plugin crates to add new command
 types (the enum has to be extended in this crate), which is exactly the
-tradeoff the <a href="the-visitor-pattern.md">visitor</a> and
-<a href="the-strategy-pattern.md">strategy</a> pages make the same way — but it's
+tradeoff the <a href="../../concepts/design-patterns-idioms/the-visitor-pattern.html">visitor</a> and
+<a href="../../concepts/design-patterns-idioms/the-strategy-pattern.html">strategy</a> pages make the same way — but it's
 usually the right one for firmware, where the full command set really is
 closed at build time anyway.</p>
 <p>If the command set genuinely needs to stay open (a plugin-style
 architecture is unusual but not impossible in embedded, e.g. a scripting
 layer registering handlers), and the invoker only needs to <em>call</em> the
 command rather than <em>own and store</em> it for later, <code>&amp;dyn Command</code>/<code>&amp;mut dyn FnMut()</code> gets runtime polymorphism with no allocation at all — the
-same <a href="on-stack-dynamic-dispatch.md">on-stack dynamic dispatch</a> trick
+same <a href="../../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.html">on-stack dynamic dispatch</a> trick
 applied to actions instead of data. This only works when something else
 already owns the command for the reference's whole lifetime; an undo
 stack that needs to <em>keep</em> commands around after the call that created
