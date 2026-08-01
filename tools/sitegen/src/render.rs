@@ -13,6 +13,17 @@ pub const SITE_BASE: &str = "https://rustyyellowpages.dev/";
 /// contributions.
 pub const REPO_URL: &str = "https://github.com/NGDeveloper125/Rust_Wiki";
 
+/// Site-root-relative path of the share card used for any page without a lead
+/// image of its own, so links unfurl as a card rather than a bare text summary
+/// wherever they are posted. Rendered from
+/// `tools/sitegen/templates/og-card.html`; it is a committed asset rather than
+/// a generated one, so the dimensions below must be kept in step with the file.
+const DEFAULT_SHARE_IMAGE: &str = "assets/og-card.png";
+const DEFAULT_SHARE_IMAGE_W: u32 = 1200;
+const DEFAULT_SHARE_IMAGE_H: u32 = 630;
+const DEFAULT_SHARE_IMAGE_ALT: &str =
+    "Rusty Yellow Pages \u{2014} a free, open-source Rust reference";
+
 /// The `<head>` metadata for a page. All string fields are raw (unescaped);
 /// [`shell`] escapes them at render time.
 pub struct Head {
@@ -31,29 +42,36 @@ pub struct Head {
 impl Head {
     /// The Open Graph / Twitter Card tag block for this page.
     fn social_meta(&self) -> String {
+        // Every page carries an image: its own if it has one, otherwise the
+        // site-wide card. Dimensions and alt text are only emitted for the
+        // latter, since a page's own image has neither known to us here.
+        let image = match &self.image {
+            Some(own) => own.clone(),
+            None => abs_url(DEFAULT_SHARE_IMAGE),
+        };
         let mut s = format!(
             r#"<meta property="og:type" content="{og_type}">
 <meta property="og:site_name" content="Rusty Yellow Pages">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{description}">
 <meta property="og:url" content="{canonical}">
-<meta name="twitter:card" content="{card}">
+<meta property="og:image" content="{image}">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
-<meta name="twitter:description" content="{description}">"#,
+<meta name="twitter:description" content="{description}">
+<meta name="twitter:image" content="{image}">"#,
             og_type = self.og_type,
             title = html_escape(&self.title),
             description = html_escape(&self.description),
             canonical = html_escape(&self.canonical),
-            card = if self.image.is_some() {
-                "summary_large_image"
-            } else {
-                "summary"
-            },
+            image = html_escape(&image),
         );
-        if let Some(image) = &self.image {
+        if self.image.is_none() {
             s.push_str(&format!(
-                "\n<meta property=\"og:image\" content=\"{img}\">\n<meta name=\"twitter:image\" content=\"{img}\">",
-                img = html_escape(image),
+                "\n<meta property=\"og:image:width\" content=\"{DEFAULT_SHARE_IMAGE_W}\">\
+                 \n<meta property=\"og:image:height\" content=\"{DEFAULT_SHARE_IMAGE_H}\">\
+                 \n<meta property=\"og:image:alt\" content=\"{alt}\">",
+                alt = html_escape(DEFAULT_SHARE_IMAGE_ALT),
             ));
         }
         s
