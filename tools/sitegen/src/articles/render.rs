@@ -27,7 +27,7 @@ pub fn write_pages(docs_root: &Path, articles: &[Article], pages: &[Page]) -> io
 
 fn render_index(articles: &[Article], pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Articles);
-    let home = href_from(DEPTH, "index.html");
+    let home = href_from(DEPTH, "");
 
     let breadcrumb = format!(
         r#"<nav class="breadcrumb" aria-label="Breadcrumb">
@@ -102,7 +102,7 @@ fn render_index(articles: &[Article], pages: &[Page]) -> String {
     let head = Head {
         title: "Rust - Articles - Rusty Yellow Pages".to_string(),
         description: "Community-written, technical articles about how Rust works and how to implement things — real, compiling code with the reasoning behind it.".to_string(),
-        canonical: abs_url("articles/index.html"),
+        canonical: abs_url("articles/"),
         og_type: "website",
         image: None,
     };
@@ -159,8 +159,8 @@ fn search_text(a: &Article) -> String {
 
 fn render_article(a: &Article, pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Articles);
-    let home = href_from(DEPTH, "index.html");
-    let index = "index.html";
+    let home = href_from(DEPTH, "");
+    let index = "./";
 
     let breadcrumb = format!(
         r#"<nav class="breadcrumb" aria-label="Breadcrumb">

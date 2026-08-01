@@ -17,11 +17,11 @@ pub fn build(pages: &[Page], articles: &[Article], crates: &[Crate], extra: &[St
     for p in pages {
         locs.push(abs_url(&p.href));
     }
-    locs.push(abs_url("articles/index.html"));
+    locs.push(abs_url("articles/"));
     for a in articles {
         locs.push(abs_url(&a.href));
     }
-    locs.push(abs_url("crates/index.html"));
+    locs.push(abs_url("crates/"));
     for c in crates {
         locs.push(abs_url(&c.href));
     }

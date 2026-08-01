@@ -84,16 +84,28 @@ pub fn abs_url(site_relative_path: &str) -> String {
     format!("{SITE_BASE}{site_relative_path}")
 }
 
+/// Build a relative href from a page `depth` directories below the site root
+/// to a site-root-relative `target`.
+///
+/// Index pages are addressed as directories (`""` for the site root,
+/// `"articles/"`) rather than by filename, so that the URL a visitor lands on
+/// is the one `<link rel="canonical">` and the sitemap advertise. The empty
+/// target needs the explicit `./` at depth 0: an empty href would resolve to
+/// the current page rather than to the site root.
 pub fn href_from(depth: usize, target: &str) -> String {
     if depth == 0 {
-        target.to_string()
+        if target.is_empty() {
+            "./".to_string()
+        } else {
+            target.to_string()
+        }
     } else {
         "../".repeat(depth) + target
     }
 }
 
 fn topbar(depth: usize) -> String {
-    let home = href_from(depth, "index.html");
+    let home = href_from(depth, "");
     format!(
         r##"<header class="topbar">
   <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
@@ -343,7 +355,7 @@ fn render_multi_scenario(s: &crate::model::Scenario, vote_prefix: &str) -> Strin
 
 pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
     let depth = page.href.matches('/').count();
-    let home = href_from(depth, "index.html");
+    let home = href_from(depth, "");
     let group_lbl = group_label(page.section, &page.subgroup);
     let title_html = if page.section == Section::Syntax {
         format!("<span class=\"tok\">{}</span>", html_escape(&page.front.title))
@@ -701,17 +713,17 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         <hr class="divider">
 
         <div class="community-grid">
-          <a class="community-card" href="articles/index.html">
+          <a class="community-card" href="articles/">
             <span class="eyebrow">Read</span>
             <span class="community-title">Articles</span>
             <span class="community-desc">Community deep dives into Rust concepts.</span>
           </a>
-          <a class="community-card" href="crates/index.html">
+          <a class="community-card" href="crates/">
             <span class="eyebrow">Look up a crate</span>
             <span class="community-title">Crates</span>
             <span class="community-desc">A directory of the crates people reach for.</span>
           </a>
-          <a class="community-card" href="conversations/index.html">
+          <a class="community-card" href="conversations/">
             <span class="eyebrow">Discuss</span>
             <span class="community-title">Conversations</span>
             <span class="community-desc">A mirror of the project&rsquo;s GitHub Discussions.</span>

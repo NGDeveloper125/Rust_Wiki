@@ -101,13 +101,13 @@ pub fn render_sidebar(
     out.push_str(&format!(
         "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n      <a class=\"nav-toplink{ka}\" href=\"{kh}\">{kicon}<span>Crates</span></a>\n    </div>\n",
         ca = sel(TopNav::Conversations),
-        ch = href_from(from_depth, "conversations/index.html"),
+        ch = href_from(from_depth, "conversations/"),
         cicon = CHAT_SVG,
         aa = sel(TopNav::Articles),
-        ah = href_from(from_depth, "articles/index.html"),
+        ah = href_from(from_depth, "articles/"),
         aicon = ARTICLE_SVG,
         ka = sel(TopNav::Crates),
-        kh = href_from(from_depth, "crates/index.html"),
+        kh = href_from(from_depth, "crates/"),
         kicon = CRATE_SVG,
     ));
 
