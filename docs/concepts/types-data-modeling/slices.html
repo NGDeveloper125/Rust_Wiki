@@ -1105,7 +1105,7 @@ let mut stack_buf = [0xFFu8; 8];
 fill_zero(&amp;mut stack_buf); // &lt;- a stack array, viewed as a slice
 
 static mut DMA_BUF: [u8; 8] = [0xFF; 8];
-unsafe { fill_zero(&amp;mut DMA_BUF); } // &lt;- 'static memory at a fixed address, viewed the same way
+unsafe { fill_zero(&amp;mut *(&amp;raw mut DMA_BUF)); } // &lt;- 'static memory at a fixed address, viewed the same way
 </code></pre>
 
       </section>
@@ -1134,7 +1134,7 @@ let mut quick_cmd = [0u8; 4]; // stack-allocated, short-lived
 let n1 = read_bytes(&amp;[0x01, 0x02], &amp;mut quick_cmd);
 
 static mut DMA_RX: [u8; 256] = [0; 256]; // 'static, address-stable for DMA
-let n2 = unsafe { read_bytes(&amp;[0xAA; 10], &amp;mut DMA_RX) };
+let n2 = unsafe { read_bytes(&amp;[0xAA; 10], &amp;mut *(&amp;raw mut DMA_RX)) };
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> writing the function against <code>&amp;mut [u8]</code> instead of a
@@ -1176,7 +1176,7 @@ memory the target may not have to spare.</p>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
-        <span>Targets current stable Rust &middot; edition 2021</span>
+        <span>Targets current stable Rust &middot; edition 2024</span>
       </div>
 
     </article>

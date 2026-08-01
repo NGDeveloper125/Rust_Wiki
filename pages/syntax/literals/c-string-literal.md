@@ -76,7 +76,7 @@ identifier string across that FFI boundary.
 ```
 use core::ffi::{c_char, CStr};
 
-extern "C" {
+unsafe extern "C" {
     fn hal_register_peripheral(name: *const c_char) -> i32;
 }
 

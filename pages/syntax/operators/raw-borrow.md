@@ -116,7 +116,7 @@ struct DeviceStatus {
     flags: u32,
 }
 
-extern "C" {
+unsafe extern "C" {
     fn poll_device() -> *const DeviceStatus;
 }
 

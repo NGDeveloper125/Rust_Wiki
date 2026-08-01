@@ -129,7 +129,7 @@ let mut stack_buf = [0xFFu8; 8];
 fill_zero(&mut stack_buf); // <- a stack array, viewed as a slice
 
 static mut DMA_BUF: [u8; 8] = [0xFF; 8];
-unsafe { fill_zero(&mut DMA_BUF); } // <- 'static memory at a fixed address, viewed the same way
+unsafe { fill_zero(&mut *(&raw mut DMA_BUF)); } // <- 'static memory at a fixed address, viewed the same way
 ```
 
 ## Best practices & deeper information (Embedded)
@@ -152,7 +152,7 @@ let mut quick_cmd = [0u8; 4]; // stack-allocated, short-lived
 let n1 = read_bytes(&[0x01, 0x02], &mut quick_cmd);
 
 static mut DMA_RX: [u8; 256] = [0; 256]; // 'static, address-stable for DMA
-let n2 = unsafe { read_bytes(&[0xAA; 10], &mut DMA_RX) };
+let n2 = unsafe { read_bytes(&[0xAA; 10], &mut *(&raw mut DMA_RX)) };
 ```
 
 **Why this way:** writing the function against `&mut [u8]` instead of a
