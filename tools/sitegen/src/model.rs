@@ -17,6 +17,11 @@ pub struct FrontMatter {
     pub related_syntax: Vec<String>,
     #[serde(default)]
     pub see_also: Vec<String>,
+    /// Extra search terms that should resolve to this page. For names that
+    /// aren't syntax and so get no page of their own — `Some`, `None`, `Ok`,
+    /// `Err` — but that readers still type into the search box.
+    #[serde(default)]
+    pub search_aliases: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

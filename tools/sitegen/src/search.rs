@@ -31,14 +31,43 @@ pub fn build_search_index(pages: &[Page], articles: &[Article], crates: &[Crate]
             && p.front.kind.as_deref().map(is_token_kind).unwrap_or(false);
         let group_lbl = group_label(p.section, &p.subgroup);
         let crumb = format!("{} \u{203a} {}", p.section.label(), group_lbl);
-        let kw = format!("{} {}", p.front.title, p.slug.replace('-', " ")).to_lowercase();
+        let aliases: Vec<String> = p
+            .front
+            .search_aliases
+            .iter()
+            .map(|a| a.trim().to_lowercase())
+            .filter(|a| !a.is_empty())
+            .collect();
+        let kw = format!(
+            "{} {} {}",
+            p.front.title,
+            p.slug.replace('-', " "),
+            aliases.join(" ")
+        )
+        .trim_end()
+        .to_lowercase();
+
+        // Emitted only for the handful of pages that declare aliases, so the
+        // shipped index stays as small as it was for everything else. The
+        // client scores an exact alias hit as highly as an exact title hit.
+        let alias_field = if aliases.is_empty() {
+            String::new()
+        } else {
+            let list = aliases
+                .iter()
+                .map(|a| format!("\"{}\"", js_string_escape(a)))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("alias: [{list}], ")
+        };
 
         entries.push(format!(
-            "  {{ title: \"{title}\", crumb: \"{crumb}\", kind: \"{kind}\", isToken: {tok}, kw: \"{kw}\", href: \"{href}\" }}",
+            "  {{ title: \"{title}\", crumb: \"{crumb}\", kind: \"{kind}\", isToken: {tok}, {alias}kw: \"{kw}\", href: \"{href}\" }}",
             title = js_string_escape(&p.front.title),
             crumb = js_string_escape(&crumb),
             kind = kind_label,
             tok = is_token,
+            alias = alias_field,
             kw = js_string_escape(&kw),
             href = js_string_escape(&p.href),
         ));

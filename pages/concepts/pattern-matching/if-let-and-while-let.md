@@ -5,6 +5,7 @@ embedded_support: full
 groups: ["Pattern Matching"]
 related_syntax: ["if let", while, "else", match]
 see_also: ["match expressions", "Destructuring", "Option<T>", "Result<T, E>"]
+search_aliases: ["if let Some", "while let Some", "if let Ok", "if let Err"]
 ---
 
 ## Explanation

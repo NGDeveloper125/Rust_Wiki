@@ -255,16 +255,32 @@
   function close() { dd.classList.remove('open'); hlIndex = -1; }
   function pick(p) { window.location.href = ROOT + p.href; }
 
+  // 0 = the query names this page outright (exact title, or one of its
+  // search aliases: "Some", "Err", ...), 1 = the title starts with it,
+  // 2 = it matched somewhere in the keywords. Lower sorts first.
+  function score(p, q) {
+    var t = p.title.toLowerCase();
+    if (t === q) return 0;
+    if (p.alias && p.alias.indexOf(q) !== -1) return 0;
+    if (t.indexOf(q) === 0) return 1;
+    return 2;
+  }
+
   function query() {
     var q = input.value.trim().toLowerCase();
     if (!q) {
       // show a default set on focus
       render(PAGES.slice(0, 5), '');
     } else {
-      render(PAGES.filter(function (p) {
-        return p.title.toLowerCase().indexOf(q) !== -1 ||
-               (p.kw || '').indexOf(q) !== -1;
-      }), q);
+      var hits = [];
+      PAGES.forEach(function (p, i) {
+        if (p.title.toLowerCase().indexOf(q) !== -1 || (p.kw || '').indexOf(q) !== -1) {
+          hits.push({ p: p, i: i, s: score(p, q) });
+        }
+      });
+      // `i` breaks ties so equally-scored pages keep their index order.
+      hits.sort(function (a, b) { return a.s - b.s || a.i - b.i; });
+      render(hits.map(function (h) { return h.p; }), q);
     }
     open();
   }
