@@ -551,7 +551,7 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
-        <span>Targets current stable Rust &middot; edition 2021</span>
+        <span>Targets current stable Rust &middot; edition 2024</span>
       </div>
 "#,
     )
@@ -702,7 +702,7 @@ pub fn render_landing_page(pages: &[Page]) -> String {
 
         <div class="footer-note">
           <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
-          <span>Targets current stable Rust &middot; edition 2021</span>
+          <span>Targets current stable Rust &middot; edition 2024</span>
         </div>
       </div>
 "#,

@@ -71,7 +71,7 @@ terminator.
 ```
 use core::ffi::{c_char, CStr};
 
-extern "C" {
+unsafe extern "C" {
     fn vendor_flash_load_image(path: *const c_char) -> i32;
 }
 
