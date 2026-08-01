@@ -127,7 +127,7 @@ pub fn build(repo_root: &Path, docs_root: &Path, pages: &[Page]) -> Vec<String> 
         snapshot.conversations.len()
     );
 
-    let mut urls = vec!["conversations/index.html".to_string()];
+    let mut urls = vec!["conversations/".to_string()];
     for c in &snapshot.conversations {
         urls.push(format!("conversations/{}", render::thread_filename(c)));
     }

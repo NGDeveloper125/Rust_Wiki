@@ -27,7 +27,7 @@ pub fn write_pages(docs_root: &Path, crates: &[Crate], pages: &[Page]) -> io::Re
 
 fn render_index(crates: &[Crate], pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Crates);
-    let home = href_from(DEPTH, "index.html");
+    let home = href_from(DEPTH, "");
 
     let breadcrumb = format!(
         r#"<nav class="breadcrumb" aria-label="Breadcrumb">
@@ -103,7 +103,7 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
     let head = Head {
         title: "Rust - Crates - Rusty Yellow Pages".to_string(),
         description: "A directory of Rust crates — what each one is, when it's a good fit, and a map of its API with a call example for every item.".to_string(),
-        canonical: abs_url("crates/index.html"),
+        canonical: abs_url("crates/"),
         og_type: "website",
         image: None,
     };
@@ -336,8 +336,8 @@ fn render_api_groups(groups: &[ApiGroup]) -> String {
 
 fn render_crate(c: &Crate, pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Crates);
-    let home = href_from(DEPTH, "index.html");
-    let index = "index.html";
+    let home = href_from(DEPTH, "");
+    let index = "./";
 
     let breadcrumb = format!(
         r#"<nav class="breadcrumb" aria-label="Breadcrumb">

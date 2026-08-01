@@ -31,7 +31,7 @@ fn new_discussion_url() -> String {
 
 fn render_index(snap: &Snapshot, pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations);
-    let home = href_from(DEPTH, "index.html");
+    let home = href_from(DEPTH, "");
 
     let breadcrumb = format!(
         r#"<nav class="breadcrumb" aria-label="Breadcrumb">
@@ -92,7 +92,7 @@ fn render_index(snap: &Snapshot, pages: &[Page]) -> String {
     let head = Head {
         title: "Rust - Conversations - Rusty Yellow Pages".to_string(),
         description: "A read-only mirror of the project's GitHub Discussions — ask questions, compare approaches, and share what you know about Rust.".to_string(),
-        canonical: abs_url("conversations/index.html"),
+        canonical: abs_url("conversations/"),
         og_type: "website",
         image: None,
     };
@@ -179,8 +179,8 @@ fn render_index_item(c: &Conversation) -> String {
 
 fn render_thread(c: &Conversation, pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations);
-    let home = href_from(DEPTH, "index.html");
-    let index = "index.html";
+    let home = href_from(DEPTH, "");
+    let index = "./";
 
     let breadcrumb = format!(
         r#"<nav class="breadcrumb" aria-label="Breadcrumb">
