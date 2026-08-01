@@ -5,6 +5,7 @@ embedded_support: full
 groups: ["Error Handling", "Functional Programming", "Handling Errors & Failure", "Unique to Rust", "Coming from Python / JavaScript", "Coming from Java / C#", "Coming from Haskell / functional languages"]
 related_syntax: [match, "if let", "?"]
 see_also: ["Result<T, E>", "The ? operator (concept angle)", "match expressions", "Enums (algebraic data types)"]
+search_aliases: ["Some", "None", "null"]
 ---
 
 ## Explanation

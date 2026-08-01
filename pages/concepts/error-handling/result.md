@@ -5,6 +5,7 @@ embedded_support: full
 groups: ["Error Handling", "Functional Programming", "Handling Errors & Failure", "Unique to Rust", "Coming from Python / JavaScript", "Coming from Haskell / functional languages"]
 related_syntax: [match, "if let", "?"]
 see_also: ["Option<T>", "The ? operator (concept angle)", "Custom error types", "The Error trait"]
+search_aliases: ["Ok", "Err"]
 ---
 
 ## Explanation
