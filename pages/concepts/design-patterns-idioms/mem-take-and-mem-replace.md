@@ -128,6 +128,43 @@ to pull an owned value out of interior-mutable storage while leaving a
 valid replacement behind, per the
 [std docs for `mem::replace`](https://doc.rust-lang.org/std/mem/fn.replace.html).
 
+#### Approach: RefCell::replace
+
+*Contributed by [@NGDeveloper125](https://github.com/NGDeveloper125)*
+
+`RefCell` already packages this exact swap as a method. `replace` takes the
+mutable borrow and performs the `mem::replace` in one call, returning the
+old value, so the intermediate `RefMut` binding and the `&mut *slot`
+reborrow both disappear.
+
+```
+use std::cell::RefCell;
+
+struct Session {
+    last_message: RefCell<String>,
+}
+
+impl Session {
+    fn set_message(&self, new_message: String) -> String {
+        self.last_message.replace(new_message) // <- borrows and swaps in one step, returns the old String
+    }
+}
+
+let session = Session { last_message: RefCell::new("connected".to_string()) };
+let previous = session.set_message("processing".to_string());
+println!("{previous}"); // "connected"
+```
+
+**Why this way:** there is no reborrow to get wrong, and the borrow is held
+for exactly the length of the swap rather than for as long as the binding
+stays in scope — which is what turns a later `borrow()` in the same
+function into a panic. The limitation is reach: `replace` exists on
+`RefCell` and `Cell`, so the moment the value lives behind a plain
+`&mut` — a struct field, a slice element, a `MutexGuard` — `mem::replace`
+is the tool again. It also panics on an outstanding borrow with no way to
+recover; `try_borrow_mut` plus `mem::replace` is the version that lets you
+handle that case instead of aborting.
+
 ## Explanation (Embedded)
 
 The mechanism is identical, and the "no allocation" property that's a

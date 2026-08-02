@@ -452,47 +452,10 @@
   .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--code-bg); font-weight: 700; }
   .btn-primary:hover { background: var(--link-hover); border-color: var(--link-hover); color: var(--code-bg); }
 
-  /* ---- landing body ---- */
-  .landing-body { max-width: var(--landing-measure); margin: 0 auto; padding-top: 36px; }
+  /* ---- section heads, shared by the landing page and the 404 page ---- */
   .browse-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
   .browse-head .section-title { margin: 0; font-size: 24px; }
   .browse-count { font-size: 13px; color: var(--content-fg-dim); }
-
-  .browse-section + .browse-section { margin-top: 6px; }
-  .browse-kicker { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 18px 0 8px; }
-  .kicker-title { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
-  .browse-section.is-concepts .kicker-title { color: var(--accent-2); }
-  .kicker-note { font-size: 12px; color: var(--content-fg-dim); }
-
-  /* ---- group cards + the chip panel each one expands ---- */
-  .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
-  .group-card {
-    display: flex; flex-direction: column; gap: 4px; text-align: left;
-    padding: 14px 16px; cursor: pointer;
-    border: 1px solid var(--card-border); border-radius: 10px;
-    background: var(--card-bg); color: var(--content-fg);
-    font-family: var(--font-sans);
-    transition: border-color .18s var(--ease), background .18s var(--ease);
-  }
-  .group-card:hover { border-color: var(--accent); background: var(--content-bg-2); }
-  .browse-section.is-concepts .group-card:hover { border-color: var(--accent-2); }
-  .group-card-head { display: flex; align-items: center; gap: 8px; }
-  .group-name { flex: 1; font-size: 15px; font-weight: 700; }
-  .group-card .chev { flex: none; opacity: .55; transition: transform .2s var(--ease); }
-  .group-card[aria-expanded="true"] { border-color: var(--accent); background: var(--content-bg-2); }
-  .browse-section.is-concepts .group-card[aria-expanded="true"] { border-color: var(--accent-2); }
-  .group-card[aria-expanded="true"] .chev { transform: rotate(90deg); opacity: 1; }
-  .group-count { font-family: var(--font-mono); font-size: 12px; color: var(--chip-fg); }
-
-  /* full-width row, so it opens directly under the card that owns it */
-  .group-panel {
-    grid-column: 1 / -1;
-    display: flex; flex-wrap: wrap; gap: 8px;
-    padding: 16px 18px; margin: -2px 0 6px;
-    border: 1px solid var(--card-border); border-radius: 10px;
-    background: var(--content-bg-2);
-  }
-  .group-panel[hidden] { display: none; }
 
   /* ---- community cards ---- */
   .community-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
@@ -944,3 +907,215 @@
     .browse-head { flex-direction: column; gap: 4px; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* ============================================================
+     LANDING PAGE
+     Every value here is an existing custom property, so both
+     themes work without a second set of rules.
+     ============================================================ */
+
+  /* `// <-` is the site-wide "read this line" convention; site.js tags
+     matching comments with .tok-anno so they lift out of the comment colour
+     instead of being buried in it. Applies wherever code is rendered. */
+  :root[data-theme="dark"]  { --t-anno: #ffd84a; --t-anno-bg: rgba(245,197,24,.10); }
+  :root[data-theme="light"] { --t-anno: #8a5a00; --t-anno-bg: rgba(217,172,10,.14); }
+  .tok-anno {
+    color: var(--t-anno); font-style: normal; font-weight: 700;
+    background: var(--t-anno-bg); border-radius: 4px;
+    padding: 1px 5px; margin-left: 2px;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  }
+
+  /* Scenario code renders as a bare <pre> everywhere on the site. On the
+     landing page the specimen is the point, so it gets the .codeblock
+     treatment. Scoped to .page-landing; concept pages are unaffected. */
+  .page-landing pre {
+    margin: 16px 0; padding: 15px 18px; overflow-x: auto;
+    background: var(--code-bg); border: 1px solid var(--code-border);
+    border-radius: var(--radius-md);
+  }
+  .page-landing pre code {
+    font-family: var(--font-mono); font-size: 13.5px; line-height: 1.7;
+    color: var(--t-default); white-space: pre; display: block;
+  }
+
+  /* ---- full-bleed bands, each holding one centred measure ---- */
+  .lp-band {
+    margin-left: calc(var(--content-pad-x) * -1);
+    margin-right: calc(var(--content-pad-x) * -1);
+    padding: 40px var(--content-pad-x);
+    border-top: 1px solid var(--content-border-soft);
+    transition: background .35s var(--ease);
+  }
+  .lp-band-quiet { background: var(--content-bg-2); }
+  .lp-band-tight { border-top: 0; padding-top: 18px; padding-bottom: 18px; }
+  .lp-band-deep { background: var(--code-bg); border-top-color: var(--content-border); }
+  .lp-inner { max-width: var(--landing-measure); margin: 0 auto; }
+
+  .lp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+  .lp-head h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.4px; }
+  .lp-head .lp-head-note { font-size: 13px; color: var(--content-fg-dim); }
+  .content .lp-intro { margin: 4px 0 22px; font-size: 15.5px; line-height: 1.7; color: var(--content-fg-dim); max-width: 74ch; text-wrap: pretty; }
+
+  /* ---- hero: three concrete lookups ---- */
+  .content p.lp-subhead {
+    margin: 0; font-size: 18px; line-height: 1.6; color: var(--content-fg-mid);
+    max-width: 46ch; text-wrap: pretty;
+  }
+  .lp-lookups { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+  .lp-lookup {
+    display: flex; align-items: baseline; gap: 11px;
+    font-size: 15.5px; line-height: 1.55; color: var(--content-fg-mid);
+  }
+  .lp-lookup::before {
+    content: "\2192"; flex: none;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    color: var(--accent); opacity: .65;
+  }
+  .lp-lookup code {
+    font-family: var(--font-mono); font-size: .9em; color: var(--chip-fg);
+    background: var(--chip-bg); border: 1px solid var(--chip-border);
+    padding: 1px 6px; border-radius: 5px;
+  }
+
+  /* ---- provenance line: deliberately quieter than its neighbours ---- */
+  .lp-trust {
+    display: flex; align-items: flex-start; gap: 14px;
+    max-width: var(--landing-measure); margin: 0 auto;
+    padding: 16px 0;
+  }
+  .lp-trust .eyebrow { display: block; margin-bottom: 6px; }
+  .content .lp-trust p {
+    margin: 0; font-size: 14.5px; line-height: 1.65;
+    color: var(--content-fg-dim); max-width: 82ch; text-wrap: pretty;
+  }
+  .lp-trust strong { color: var(--content-fg-mid); font-weight: 700; }
+
+  /* ---- specimen: a real concept page, rendered inline ---- */
+  .lp-specimen {
+    border: 1px solid var(--card-border); border-radius: var(--radius-lg);
+    background: var(--content-bg); overflow: hidden; box-shadow: var(--shadow-card);
+  }
+  .lp-specimen-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; flex-wrap: wrap;
+    padding: 11px 18px; background: var(--content-bg-2);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .lp-specimen-crumb {
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--content-fg-dim);
+  }
+  .lp-specimen-crumb .sep { opacity: .45; }
+  .lp-specimen-crumb .here { color: var(--content-fg); font-weight: 600; }
+  .lp-specimen-bar .segmented { transform: scale(.9); transform-origin: right center; }
+  .lp-specimen-body { padding: 20px 22px 22px; }
+  .lp-specimen-body > .spec-flavor > .card:first-child { margin-top: 0; }
+  .lp-specimen .card { box-shadow: none; }
+  .lp-specimen-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; flex-wrap: wrap;
+    padding: 13px 18px; border-top: 1px solid var(--card-border);
+    background: var(--content-bg-2); font-size: 13.5px; color: var(--content-fg-dim);
+  }
+  .spec-flavor[hidden] { display: none; }
+
+  /* the embedded-variant callout, next to the specimen's Embedded tab */
+  .lp-embedded {
+    display: flex; align-items: flex-start; gap: 12px;
+    margin: 0 0 16px; padding: 13px 16px;
+    border: 1px dashed var(--card-border); border-radius: var(--radius-md);
+    background: var(--content-bg-2);
+  }
+  .lp-embedded .support-badge { margin: 0; flex: none; white-space: nowrap; }
+  .content .lp-embedded p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--content-fg-dim); }
+  .lp-embedded strong { color: var(--content-fg); }
+
+  /* labels naming the parts of the specimen */
+  .lp-legend { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 0 0 16px; }
+  .lp-legend-item {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 600; color: var(--content-fg-dim); white-space: nowrap;
+    background: var(--content-bg-2); border: 1px solid var(--content-border-soft);
+    padding: 4px 11px; border-radius: 999px;
+  }
+  .lp-legend-item b { color: var(--accent); font-weight: 700; }
+  .lp-legend-item code { font-family: var(--font-mono); color: var(--t-anno); }
+
+  /* ---- browse: two dense columns, one per section ---- */
+  .lp-browse { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 34px; align-items: start; }
+  .lp-browse-col { min-width: 0; }
+  .lp-col-head {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    padding-bottom: 8px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--content-border-soft);
+  }
+  .lp-col-title { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .lp-browse-col.is-concepts .lp-col-title { color: var(--accent-2); }
+  .lp-col-note { font-size: 12px; color: var(--content-fg-dim); }
+  .lp-glist { display: grid; gap: 1px; }
+  .lp-grow {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 8px 11px; cursor: pointer; text-align: left;
+    background: transparent; color: var(--content-fg);
+    border: 1px solid transparent; border-radius: 7px;
+    font-family: var(--font-sans); font-size: 14.5px;
+    transition: background .15s var(--ease), border-color .15s var(--ease);
+  }
+  .lp-grow:hover { background: var(--content-bg-2); border-color: var(--card-border); }
+  .lp-grow[aria-expanded="true"] { background: var(--content-bg-2); border-color: var(--accent); }
+  .lp-browse-col.is-concepts .lp-grow[aria-expanded="true"] { border-color: var(--accent-2); }
+  .lp-grow .chev { flex: none; opacity: .5; transition: transform .2s var(--ease); }
+  .lp-grow[aria-expanded="true"] .chev { transform: rotate(90deg); opacity: 1; }
+  .lp-grow-name { flex: 1; font-weight: 600; }
+  .lp-grow-n { flex: none; font-family: var(--font-mono); font-size: 12px; color: var(--chip-fg); }
+  .lp-gpanel {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    padding: 12px 12px 14px; margin: 2px 0 6px;
+    border-left: 2px solid var(--card-border);
+  }
+  .lp-gpanel[hidden] { display: none; }
+  .lp-gpanel .chip { font-size: 12.5px; padding: 4px 10px; }
+
+  /* ---- feature cards ---- */
+  .lp-features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .lp-feature {
+    display: flex; flex-direction: column; gap: 9px; padding: 20px;
+    border: 1px solid var(--card-border); border-radius: var(--radius-lg);
+    background: var(--card-bg); color: var(--content-fg);
+    transition: border-color .18s var(--ease), transform .12s var(--ease);
+  }
+  .lp-feature:hover { text-decoration: none; border-color: var(--accent); transform: translateY(-2px); }
+  .lp-feature h3 { margin: 0; font-size: 16.5px; font-weight: 700; line-height: 1.35; letter-spacing: -.2px; text-wrap: pretty; }
+  .content .lp-feature p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--content-fg-dim); }
+  .lp-feature-go { margin-top: auto; padding-top: 4px; font-size: 13px; font-weight: 700; color: var(--accent); }
+
+  /* ---- how to help ---- */
+  .lp-help { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 34px; align-items: start; }
+  .lp-help-actions { margin-top: 18px; }
+  .content .lp-help p { color: var(--content-fg-dim); font-size: 15.5px; }
+  .content .lp-help p em { font-style: normal; font-weight: 600; color: var(--content-fg); }
+  .lp-ways { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .lp-way { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--content-border-soft); }
+  .lp-way:last-child { border-bottom: 0; }
+  .lp-way-k { flex: none; width: 104px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--eyebrow); padding-top: 2px; }
+  .lp-way-v { font-size: 14.5px; line-height: 1.6; color: var(--content-fg-dim); }
+  .lp-way-v strong { color: var(--content-fg); font-weight: 700; }
+
+  /* ---- responsive ---- */
+  @media (max-width: 1120px) {
+    .lp-browse { grid-template-columns: minmax(0, 1fr); }
+    .lp-features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lp-help { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  }
+  @media (max-width: 900px) {
+    .lp-band { padding: 32px var(--content-pad-x); }
+    .lp-specimen-bar .segmented { transform: scale(.85); }
+  }
+  @media (max-width: 680px) {
+    .lp-features { grid-template-columns: minmax(0, 1fr); }
+    .lp-way { flex-direction: column; gap: 2px; }
+    .lp-way-k { width: auto; }
+    .lp-specimen-bar { flex-direction: column; align-items: flex-start; }
+    .lp-specimen-bar .segmented { transform: none; }
+  }
