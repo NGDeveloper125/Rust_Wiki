@@ -87,7 +87,7 @@ pub fn discount_price(price_cents: u32, percent_off: u8) -> u32 {
 **Why this way:** keeping the pricing logic in its own crate means
 neither consumer depends on code it doesn't use, and either can evolve
 independently — exactly the case the
-[Rust Design Patterns' "Prefer small crates" idiom](https://rust-unofficial.github.io/patterns/idioms/prefer-small-crates.html)
+[Rust Design Patterns' "Prefer small crates" idiom](https://rust-unofficial.github.io/patterns/patterns/structural/small-crates.html)
 argues for; a [workspace](../modules-crates-visibility/workspaces.md)
 is what makes a split like this practical without publishing anything.
 
@@ -174,6 +174,6 @@ still `#![no_std]`-safe" a one-crate question a reviewer (or CI running
 where a single crate mixing driver logic and `std`-based logging would
 make that check depend on which feature flags happen to be enabled — the
 same
-[Rust Design Patterns' "Prefer small crates" idiom](https://rust-unofficial.github.io/patterns/idioms/prefer-small-crates.html)
+[Rust Design Patterns' "Prefer small crates" idiom](https://rust-unofficial.github.io/patterns/patterns/structural/small-crates.html)
 argument, with `no_std` audit scope as the embedded-specific payoff on
 top of faster rebuilds and independent versioning.

@@ -109,7 +109,7 @@ if let Ok(paid) = order.pay(500) {
 **Why this way:** there is no `ship` method on `UnpaidOrder` at all, so
 "ship before paying" isn't a bug that can even be written, let alone one
 that needs a runtime guard — exactly the guarantee the
-[Rust Design Patterns' typestate entry](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
+[Embedded Rust Book's typestate programming chapter](https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html)
 describes.
 
 ### Scenario: Validating input
@@ -281,7 +281,7 @@ led.set_high(); // <- only reachable once into_output() has actually run
 so "write to a pin still wired as an input" isn't a bug that can even be
 written, let alone one caught only by testing on real hardware — this is
 the exact guarantee the
-[Rust Design Patterns' typestate entry](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
+[Embedded Rust Book's typestate programming chapter](https://docs.rust-embedded.org/book/static-guarantees/typestate-programming.html)
 describes, and it's why typestate is the default way `embedded-hal`-
 ecosystem crates model pin modes today.
 

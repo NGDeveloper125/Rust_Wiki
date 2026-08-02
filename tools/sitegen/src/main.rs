@@ -120,6 +120,9 @@ fn main() {
     let landing_html = render::render_landing_page(&pages);
     std::fs::write(docs_root.join("index.html"), landing_html).expect("write index.html");
 
+    let not_found_html = render::render_not_found_page(&pages);
+    std::fs::write(docs_root.join("404.html"), not_found_html).expect("write 404.html");
+
     articles::build(&pages_root, &docs_root, &articles, &pages);
 
     crates::build(&docs_root, &crate_pages, &pages);

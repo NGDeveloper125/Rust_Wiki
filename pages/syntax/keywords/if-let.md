@@ -106,7 +106,7 @@ fn describe(frame: &Frame) -> String {
 Each pattern is tried in order until one matches, which
 reads as "which of these shapes is it" without the ceremony of a `match`'s
 arms for a case this small — the
-[Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+[Rust Book](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 introduces `if let` for exactly this "only some shapes need code" situation.
 
 ### Handling and propagating errors
@@ -127,7 +127,7 @@ fn report_metric(result: Result<(), String>) {
 When the success case genuinely needs no follow-up, `if
 let Err(...)` avoids writing an `Ok(()) => {}` arm that would say nothing —
 the same "only one shape matters here" reasoning the
-[Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+[Rust Book](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 gives for preferring `if let` over a full `match` when only one outcome
 needs handling.
 

@@ -201,5 +201,5 @@ past it to the HAL or PAC, keeps board-specific wiring (which pin the
 LED is actually on) in one place instead of duplicated across every
 application crate that targets the same board — the same "small crate,
 curated dependency direction" argument the
-[Rust Design Patterns' "Prefer small crates"](https://rust-unofficial.github.io/patterns/idioms/prefer-small-crates.html)
+[Rust Design Patterns' "Prefer small crates"](https://rust-unofficial.github.io/patterns/patterns/structural/small-crates.html)
 idiom makes generally.

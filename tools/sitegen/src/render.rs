@@ -84,6 +84,13 @@ pub fn abs_url(site_relative_path: &str) -> String {
     format!("{SITE_BASE}{site_relative_path}")
 }
 
+/// Depth marker for a page that can be served from any URL: the 404 page,
+/// which GitHub Pages returns for every missing path while the browser keeps
+/// the address that was asked for. A relative href would resolve against that
+/// address rather than against `/404.html`, so such a page links root-absolute
+/// instead. Passing this to [`href_from`] switches it into that mode.
+pub const ANY_URL: usize = usize::MAX;
+
 /// Build a relative href from a page `depth` directories below the site root
 /// to a site-root-relative `target`.
 ///
@@ -93,7 +100,9 @@ pub fn abs_url(site_relative_path: &str) -> String {
 /// target needs the explicit `./` at depth 0: an empty href would resolve to
 /// the current page rather than to the site root.
 pub fn href_from(depth: usize, target: &str) -> String {
-    if depth == 0 {
+    if depth == ANY_URL {
+        format!("/{target}")
+    } else if depth == 0 {
         if target.is_empty() {
             "./".to_string()
         } else {
@@ -200,7 +209,13 @@ pub fn shell_with_page_class(
         canonical = html_escape(&head.canonical),
         social_meta = head.social_meta(),
         topbar = topbar(depth),
-        site_root = "../".repeat(depth),
+        // Prefix the search's result links, so it has to follow the same
+        // root-absolute rule as every other link on an ANY_URL page.
+        site_root = if depth == ANY_URL {
+            "/".to_string()
+        } else {
+            "../".repeat(depth)
+        },
     )
 }
 
@@ -752,6 +767,84 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         image: None,
     };
     shell_with_page_class(&head, depth, &sidebar, &main, "page-landing")
+}
+
+/// The page GitHub Pages serves for any URL that doesn't resolve.
+///
+/// Rendered at [`ANY_URL`] depth, so the sidebar, top navigation and search all
+/// keep working from whatever address the reader actually asked for — which is
+/// the point of replacing the default: someone who mistyped a URL or followed a
+/// stale link lands somewhere they can search from rather than on a dead end.
+///
+/// Deliberately absent from `sitemap.xml`, and nothing links to it. It needs no
+/// `noindex`: GitHub Pages serves it with a genuine 404 status, which is what
+/// keeps it out of search results.
+pub fn render_not_found_page(pages: &[Page]) -> String {
+    let depth = ANY_URL;
+    let sidebar = render_sidebar(pages, None, depth, TopNav::None);
+
+    let main = format!(
+        r#"      <section class="doc">
+        <div class="browse-head">
+          <h2 class="section-title">This page isn&rsquo;t here</h2>
+          <span class="browse-count">Error 404</span>
+        </div>
+
+        <p>The address you asked for doesn&rsquo;t match any page on this site.
+        It may have been renamed since the link you followed was written, or
+        the URL may have picked up a typo on the way here.</p>
+
+        <p>Every page is in the search box at the top &mdash; press
+        <code>/</code> to jump straight to it. It matches tokens as
+        well as words, so <code>?</code>, <code>&amp;</code> and
+        <code>impl</code> all find their own pages. The full contents are in the
+        sidebar too.</p>
+
+        <hr class="divider">
+
+        <div class="community-grid">
+          <a class="community-card" href="{home}">
+            <span class="eyebrow">Start over</span>
+            <span class="community-title">Home</span>
+            <span class="community-desc">Browse every group in Syntax and Concepts.</span>
+          </a>
+          <a class="community-card" href="{articles}">
+            <span class="eyebrow">Read</span>
+            <span class="community-title">Articles</span>
+            <span class="community-desc">Community deep dives into Rust concepts.</span>
+          </a>
+          <a class="community-card" href="{crates}">
+            <span class="eyebrow">Look up a crate</span>
+            <span class="community-title">Crates</span>
+            <span class="community-desc">A directory of the crates people reach for.</span>
+          </a>
+          <a class="community-card" href="{repo}/issues">
+            <span class="eyebrow">Something we broke?</span>
+            <span class="community-title">Report a dead link</span>
+            <span class="community-desc">If a link on this site sent you here, we&rsquo;d like to know.</span>
+          </a>
+        </div>
+
+        <div class="footer-note">
+          <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
+          <span>Targets current stable Rust &middot; edition 2024</span>
+        </div>
+      </section>
+"#,
+        home = href_from(depth, ""),
+        articles = href_from(depth, "articles/"),
+        crates = href_from(depth, "crates/"),
+        repo = REPO_URL,
+    );
+
+    let head = Head {
+        title: "Page not found - Rusty Yellow Pages".to_string(),
+        description: "That page doesn't exist on Rusty Yellow Pages. Search the full reference, or start again from the contents.".to_string(),
+        canonical: abs_url("404.html"),
+        og_type: "website",
+        image: None,
+    };
+    shell(&head, depth, &sidebar, &main)
 }
 
 /// Singular noun for a syntax subgroup, used to make bare-symbol pages

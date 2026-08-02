@@ -130,7 +130,7 @@ log_event(String::from("order shipped"));  // String, borrowed via AsRef for the
 ```
 
 **Why this way:** the API Guidelines'
-[C-CONV](https://rust-lang.github.io/api-guidelines/conversions.html)
+[C-CONV](https://rust-lang.github.io/api-guidelines/interoperability.html#conversions-use-the-standard-traits-from-asref-asmut-c-conv-traits)
 recommend `AsRef` for functions that only need a borrowed view, since it
 lets `&str` and `String` (and other string-like types) all satisfy the
 same signature without the caller converting first.
