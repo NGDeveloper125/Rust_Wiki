@@ -101,7 +101,10 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
     );
 
     let head = Head {
-        title: "Rust - Crates - Rusty Yellow Pages".to_string(),
+        // Not "Rust - Crates - ...": that is the title of the Crates *concept*
+        // page, and two pages sharing one title are indistinguishable in search
+        // results, browser tabs and history.
+        title: "Rust - Crate Directory - Rusty Yellow Pages".to_string(),
         description: "A directory of Rust crates — what each one is, when it's a good fit, and a map of its API with a call example for every item.".to_string(),
         canonical: abs_url("crates/"),
         og_type: "website",
