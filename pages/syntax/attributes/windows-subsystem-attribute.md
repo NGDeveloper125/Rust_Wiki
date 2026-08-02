@@ -64,7 +64,7 @@ keeps the crate portable — the attribute would otherwise need to be
 present unconditionally, which is harmless on Windows but reads as
 misleading boilerplate on every other target, since the attribute has no
 effect there at all; the
-[Rust Reference](https://doc.rust-lang.org/reference/attributes/no_std_no_core.html#the-windows_subsystem-attribute)
+[Rust Reference](https://doc.rust-lang.org/reference/runtime.html#the-windows_subsystem-attribute)
 documents `windows_subsystem` as a Windows-target-only piece of PE
 metadata with `"console"` as the implicit default when the attribute is
 absent.

@@ -83,7 +83,7 @@ fn serve(cache: &HashMap<String, CachedResponse>, key: &str) -> String {
 **Why this way:** when only one pattern needs a reaction, `if let` says
 so directly instead of making a reader scan a `match` arm that just
 returns `()`; the
-[Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+[Rust Book](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 introduces `if let` specifically as this more concise alternative.
 
 ### Scenario: Working with collections
@@ -135,7 +135,7 @@ if let Err(e) = save_config("app.toml", "port = 8080") { // <- only the failure 
 action, matching only the `Err` arm with `if let` avoids an `Ok(()) => {}`
 arm that would say nothing useful — the same "only one shape matters
 here" reasoning the
-[Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+[Rust Book](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 gives for preferring `if let` over a full `match`.
 
 ## Explanation (Embedded)
@@ -208,7 +208,7 @@ fn poll_uart(uart: &mut Uart) {
 often than "a byte arrived," so writing out a `None => {}` arm on every
 iteration would be pure noise; `if let` says directly that only one
 shape matters here, the same reasoning the
-[Rust Book](https://doc.rust-lang.org/book/ch06-03-concise-control-flow-with-if-let-and-let-else.html)
+[Rust Book](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 gives for preferring it over a full `match`.
 
 ### Scenario: Working with collections
