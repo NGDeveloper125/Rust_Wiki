@@ -1065,6 +1065,14 @@ book documents as the idiomatic way to change or extract a value behind
               Scenario
             </div>
             <h3 class="scenario-title">Interior mutability</h3>
+            <div class="approach-picker">
+              <span class="approach-label">Approach:</span>
+              <select class="approach-select" aria-label="Approach for this scenario">
+                <option value="0" selected>Classic</option>
+                <option value="1" data-vote-key="concepts/design-patterns-idioms/mem-take-and-mem-replace::Interior mutability::RefCell::replace">RefCell::replace</option>
+              </select>
+            </div>
+            <div class="approach-panel on" data-idx="0">
             <p>Swapping the string held inside a <code>RefCell</code> for a new one, while getting
 the old string back to log it, needs to move the old value out of a
 borrowed <code>&amp;mut String</code> — exactly what <code>mem::replace</code> is for.</p>
@@ -1093,6 +1101,42 @@ to pull an owned value out of interior-mutable storage while leaving a
 valid replacement behind, per the
 <a href="https://doc.rust-lang.org/std/mem/fn.replace.html">std docs for <code>mem::replace</code></a>.</p>
 </div>
+            </div>
+            <div class="approach-panel" data-idx="1">
+            <div class="approach-byline"><p><em>Contributed by <a href="https://github.com/NGDeveloper125">@NGDeveloper125</a></em></p>
+<a class="approach-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span> &mdash; like this approach on GitHub</a></div>
+            <p><code>RefCell</code> already packages this exact swap as a method. <code>replace</code> takes the
+mutable borrow and performs the <code>mem::replace</code> in one call, returning the
+old value, so the intermediate <code>RefMut</code> binding and the <code>&amp;mut *slot</code>
+reborrow both disappear.</p>
+<pre><code class="rust">use std::cell::RefCell;
+
+struct Session {
+    last_message: RefCell&lt;String&gt;,
+}
+
+impl Session {
+    fn set_message(&amp;self, new_message: String) -&gt; String {
+        self.last_message.replace(new_message) // &lt;- borrows and swaps in one step, returns the old String
+    }
+}
+
+let session = Session { last_message: RefCell::new("connected".to_string()) };
+let previous = session.set_message("processing".to_string());
+println!("{previous}"); // "connected"
+</code></pre>
+
+            <div class="rationale"><p><strong>Why this way:</strong> there is no reborrow to get wrong, and the borrow is held
+for exactly the length of the swap rather than for as long as the binding
+stays in scope — which is what turns a later <code>borrow()</code> in the same
+function into a panic. The limitation is reach: <code>replace</code> exists on
+<code>RefCell</code> and <code>Cell</code>, so the moment the value lives behind a plain
+<code>&amp;mut</code> — a struct field, a slice element, a <code>MutexGuard</code> — <code>mem::replace</code>
+is the tool again. It also panics on an outstanding borrow with no way to
+recover; <code>try_borrow_mut</code> plus <code>mem::replace</code> is the version that lets you
+handle that case instead of aborting.</p>
+</div>
+            </div>
           </div>
         </div>
       </section>

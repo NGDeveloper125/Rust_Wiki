@@ -611,17 +611,20 @@ fn section_blurb(section: Section) -> &'static str {
     }
 }
 
-/// The landing page's Browse grid for one section: a card per group, each
-/// followed by the hidden panel of page chips it expands. The panel is a grid
-/// child spanning every column, so opening a card inserts a full-width row
-/// directly beneath it. Returns the rendered block plus the section's page and
-/// group counts.
-fn render_browse_section(pages: &[Page], section: Section, depth: usize) -> (String, usize, usize) {
+/// The landing page's Browse column for one section: a compact row per group
+/// (name, then page count) over the hidden panel of page chips it expands.
+///
+/// The previous layout gave each of the 23 groups an equal-sized card and
+/// wrapped them into a field that had to be read in both directions. A single
+/// column of rows reads top to bottom, lets Syntax and Concepts sit side by
+/// side, and takes roughly a third of the height. Returns the rendered column
+/// plus the section's page and group counts.
+fn render_browse_column(pages: &[Page], section: Section, depth: usize) -> (String, usize, usize) {
     let section_name = match section {
         Section::Syntax => "syntax",
         Section::Concepts => "concepts",
     };
-    let mut cards = String::new();
+    let mut rows = String::new();
     let mut page_count = 0usize;
     let mut group_count = 0usize;
 
@@ -652,13 +655,12 @@ fn render_browse_section(pages: &[Page], section: Section, depth: usize) -> (Str
             .collect::<Vec<_>>()
             .join("\n              ");
 
-        cards.push_str(&format!(
+        rows.push_str(&format!(
             r#"
-            <button class="group-card" aria-expanded="false" aria-controls="{panel_id}">
-              <span class="group-card-head"><span class="group-name">{label}</span>{CHEVRON_SVG}</span>
-              <span class="group-count">{count} pages</span>
+            <button type="button" class="lp-grow" aria-expanded="false" aria-controls="{panel_id}">
+              {CHEVRON_SVG}<span class="lp-grow-name">{label}</span><span class="lp-grow-n">{count}</span>
             </button>
-            <div class="group-panel" id="{panel_id}" hidden>
+            <div class="lp-gpanel" id="{panel_id}" hidden>
               {chips}
             </div>
 "#,
@@ -668,14 +670,14 @@ fn render_browse_section(pages: &[Page], section: Section, depth: usize) -> (Str
 
     let html = format!(
         r#"
-        <div class="browse-section is-{section_name}">
-          <div class="browse-kicker">
-            <h3 class="kicker-title">{label}</h3>
-            <span class="kicker-note">{page_count} pages &middot; {blurb}</span>
+          <div class="lp-browse-col is-{section_name}">
+            <div class="lp-col-head">
+              <h3 class="lp-col-title">{label}</h3>
+              <span class="lp-col-note">{page_count} pages &middot; {blurb}</span>
+            </div>
+            <div class="lp-glist">{rows}
+            </div>
           </div>
-          <div class="group-grid">{cards}
-          </div>
-        </div>
 "#,
         label = section.label(),
         blurb = section_blurb(section),
@@ -683,20 +685,205 @@ fn render_browse_section(pages: &[Page], section: Section, depth: usize) -> (Str
     (html, page_count, group_count)
 }
 
+/// The scenario icon, shared by the landing page's inline specimen. The two
+/// scenario renderers above still carry their own copy; they are left alone so
+/// this change cannot alter a single concept page's output.
+const SCENARIO_ICON: &str = r#"<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M2 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M16 3.1a3 3 0 0 1 0 5.8M22 21v-1a5 5 0 0 0-3-4.6"/></svg>"#;
+
+/// The concept page the landing page shows a real excerpt of.
+///
+/// "What a page looks like" and "Approaches" are not mock-ups: they render this
+/// page's own parsed markdown through the same code path a concept page uses,
+/// so the homepage cannot drift from the page it is advertising.
+const SPECIMEN_HREF: &str = "concepts/design-patterns-idioms/mem-take-and-mem-replace.html";
+const SPECIMEN_SCENARIO: &str = "Modifying an existing object";
+
+/// The scenario the Approaches section demonstrates, which must be a
+/// *different* one from [`SPECIMEN_SCENARIO`]: the picker opens on its Classic
+/// panel, so pointing both sections at one scenario would print the same card
+/// twice on the same page.
+const APPROACHES_SCENARIO: &str = "Interior mutability";
+
+/// Find a scenario on `page` by title, falling back to its first one.
+///
+/// A renamed scenario should cost the homepage its intended excerpt, not a
+/// whole section, so this degrades rather than giving up — and says so.
+fn pick_scenario<'a>(page: &'a Page, title: &str) -> Option<&'a crate::model::Scenario> {
+    if let Some(found) = page.scenarios.iter().find(|s| s.title == title) {
+        return Some(found);
+    }
+    let fallback = page.scenarios.first()?;
+    eprintln!(
+        "  warning: landing scenario \"{title}\" not found on {SPECIMEN_HREF}; \
+         fell back to \"{}\"",
+        fallback.title
+    );
+    Some(fallback)
+}
+
+/// The page the landing page excerpts, plus the two distinct scenarios its
+/// demo sections render.
+fn find_specimen<'a>(
+    pages: &'a [Page],
+) -> Option<(
+    &'a Page,
+    &'a crate::model::Scenario,
+    Option<&'a crate::model::Scenario>,
+)> {
+    let Some(page) = pages.iter().find(|p| p.href == SPECIMEN_HREF) else {
+        eprintln!(
+            "  warning: landing specimen page {SPECIMEN_HREF} not found; \
+             \"What a page looks like\" and \"Approaches\" were left off the homepage"
+        );
+        return None;
+    };
+    let specimen = pick_scenario(page, SPECIMEN_SCENARIO)?;
+    // Only offer the approaches scenario if it really is a different card.
+    let approaches = page
+        .scenarios
+        .iter()
+        .find(|s| s.title == APPROACHES_SCENARIO)
+        .filter(|s| s.title != specimen.title);
+    Some((page, specimen, approaches))
+}
+
+/// "What a page looks like": one real scenario inside a frame that reproduces
+/// the concept page's own chrome, so a first-time visitor can see the shape of
+/// a page without leaving the homepage. The Classic panel is the scenario
+/// exactly as its page renders it; the Embedded panel carries that page's
+/// embedded basic-usage example behind the same segmented control, since the
+/// parallel embedded content is the thing most visitors never discover.
+fn render_specimen(page: &Page, scenario: &crate::model::Scenario, depth: usize) -> String {
+    let rationale = scenario
+        .rationale_html
+        .as_ref()
+        .map(|r| format!("<div class=\"rationale\">{r}</div>"))
+        .unwrap_or_default();
+
+    let embedded_example = if page.embedded_basic_usage_html.is_empty() {
+        String::new()
+    } else {
+        format!(
+            r#"<div class="card">
+                  <div class="scen-tag">{SCENARIO_ICON}Basic usage example (Embedded)</div>
+                  {body}
+                </div>"#,
+            body = page.embedded_basic_usage_html,
+        )
+    };
+
+    format!(
+        r#"      <div class="lp-band">
+        <div class="lp-inner">
+          <div class="lp-head">
+            <h2>What a page looks like</h2>
+            <span class="lp-head-note">Live excerpt &middot; {section} &rarr; {group}</span>
+          </div>
+          <p class="lp-intro">A concept page doesn&rsquo;t stop at an explanation. <strong>Best practices &amp; deeper information</strong> breaks the topic into concrete scenarios &mdash; &ldquo;creating a new object&rdquo;, &ldquo;working with collections&rdquo; &mdash; each with a recommended way to handle it, the code, and the reasoning.</p>
+
+          <div class="lp-legend">
+            <span class="lp-legend-item"><b>1</b> the scenario</span>
+            <span class="lp-legend-item"><b>2</b> the key line, marked <code>// &lt;-</code></span>
+            <span class="lp-legend-item"><b>3</b> why this way, not another</span>
+          </div>
+
+          <div class="lp-specimen">
+            <div class="lp-specimen-bar">
+              <div class="lp-specimen-crumb">
+                <span>{section}</span><span class="sep">/</span><span>{group}</span><span class="sep">/</span><span class="here">{title}</span>
+              </div>
+              <div class="segmented" role="tablist" aria-label="Content flavour">
+                <button type="button" class="spec-seg on" data-flavor="classic" role="tab" aria-selected="true">Classic</button>
+                <button type="button" class="spec-seg" data-flavor="embedded" role="tab" aria-selected="false">Embedded</button>
+              </div>
+            </div>
+
+            <div class="lp-specimen-body">
+              <div class="spec-flavor" data-flavor="classic">
+                <div class="card">
+                  <div class="scen-tag">{SCENARIO_ICON}Scenario</div>
+                  <h3 class="scenario-title">{scen_title}</h3>
+                  {body}
+                  {rationale}
+                </div>
+              </div>
+              <div class="spec-flavor" data-flavor="embedded" hidden>
+                <div class="lp-embedded">
+                  <span class="support-badge">Embedded: {badge}</span>
+                  <p><strong>Many concept pages carry a second, parallel Embedded variant</strong> written for <code>no_std</code> and bare-metal work &mdash; its own explanation, its own examples, its own scenarios. Every page states its support level up front.</p>
+                </div>
+                {embedded_example}
+              </div>
+            </div>
+
+            <div class="lp-specimen-foot">
+              <span>Excerpt from a real page &mdash; nothing here is a mock-up.</span>
+              <a href="{href}">Open the full page &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>"#,
+        section = page.section.label(),
+        group = html_escape(&group_label(page.section, &page.subgroup)),
+        title = html_escape(&page.front.title),
+        scen_title = html_escape(&scenario.title),
+        badge = embedded_badge(page.embedded_support()),
+        href = href_from(depth, &page.href),
+        body = scenario.body_html,
+    )
+}
+
+/// The Approaches section: the same scenario again, this time through
+/// [`render_multi_scenario`] — the picker concept pages use, panels and vote
+/// keys included, so the demo is the production component rather than a
+/// look-alike. Skipped when the scenario has no approaches yet, since a
+/// one-entry dropdown would demonstrate nothing.
+fn render_approaches_section(page: &Page, scenario: &crate::model::Scenario) -> String {
+    if scenario.approaches.is_empty() {
+        return String::new();
+    }
+    let card = render_multi_scenario(scenario, page.href.trim_end_matches(".html"));
+    format!(
+        r#"      <div class="lp-band lp-band-deep">
+        <div class="lp-inner">
+          <div class="lp-head">
+            <h2>Approaches</h2>
+            <span class="lp-head-note">Community-contributed &middot; live on the site today</span>
+          </div>
+          <p class="lp-intro">There is rarely one right way to do something in Rust. Every scenario starts with the site&rsquo;s recommended <strong>Classic</strong> solution; anyone can add an alternative implementation of the <em>exact same scenario</em>, attributed to them. Switch below &mdash; the code, the explanation and the byline all change together.</p>
+          {card}
+        </div>
+      </div>"#
+    )
+}
+
 pub fn render_landing_page(pages: &[Page]) -> String {
     let depth = 0;
     let sidebar = render_sidebar(pages, None, depth, TopNav::None);
 
     let (syntax_html, syntax_pages, syntax_groups) =
-        render_browse_section(pages, Section::Syntax, depth);
+        render_browse_column(pages, Section::Syntax, depth);
     let (concepts_html, concepts_pages, concepts_groups) =
-        render_browse_section(pages, Section::Concepts, depth);
+        render_browse_column(pages, Section::Concepts, depth);
+    let total_pages = syntax_pages + concepts_pages;
+    let total_groups = syntax_groups + concepts_groups;
+
+    let (specimen, approaches) = match find_specimen(pages) {
+        Some((page, specimen_scenario, approaches_scenario)) => (
+            render_specimen(page, specimen_scenario, depth),
+            approaches_scenario
+                .map(|s| render_approaches_section(page, s))
+                .unwrap_or_default(),
+        ),
+        None => (String::new(), String::new()),
+    };
 
     let main = format!(
         r#"      <section class="hero">
         <div class="hero-inner">
           <div class="hero-lead">
-            <h1 class="hero-title"><span class="hl-syntax">Open-source</span>,<br><span class="hl-concepts">community-driven</span><br>information hub for the <span class="tok">Rust</span><br>programming language.</h1>
+            <h1 class="hero-title">A <span class="hl-syntax">Rust</span> reference<br>for people <span class="hl-concepts">writing Rust</span>.</h1>
+            <p class="lp-subhead">Part dictionary, part wiki &mdash; meant to be kept open in a second tab while you code.</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="{contributing}">How to contribute</a>
               <a class="btn" href="{repo}">GitHub repository</a>
@@ -704,47 +891,89 @@ pub fn render_landing_page(pages: &[Page]) -> String {
           </div>
           <div class="hero-notes">
             <div class="hero-note">
-              <div class="eyebrow">What it is</div>
-              <p>This project is built as a comprehensive tool to use while coding in Rust &mdash; a map of the language, split into <strong class="hl-syntax">syntax</strong> and <strong class="hl-concepts">concepts</strong>. Each page presents code examples and best-practice approaches alongside general information.</p>
-            </div>
-            <div class="hero-note">
-              <div class="eyebrow">How to help</div>
-              <p class="dim">Please help push this project forward by sharing your knowledge and your approach. Contributions of all kinds are welcome: pointing out wrong information on a page, reporting bugs, flagging what is missing, adding articles, covering crates, or just taking part in the conversations. I hope this tool will be helpful to everyone in the community. <em>Enjoy your coding!</em></p>
+              <div class="eyebrow">Built for the moment you&rsquo;re mid-code</div>
+              <ul class="lp-lookups">
+                <li class="lp-lookup">what <code>?</code> desugars to</li>
+                <li class="lp-lookup">whether <code>Rc</code> is thread-safe</li>
+                <li class="lp-lookup">how a <code>match</code> guard behaves</li>
+              </ul>
+              <p>You want the answer, a snippet that compiles, and a short note on <em>why</em> &mdash; not a chapter.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <div class="landing-body">
-        <section class="doc">
-          <div class="browse-head">
-            <h2 class="section-title">Browse</h2>
-            <span class="browse-count">{total_pages} pages &middot; {total_groups} groups</span>
+      <div class="lp-band lp-band-quiet lp-band-tight">
+        <div class="lp-trust">
+          <div>
+            <div class="eyebrow">Where the content comes from</div>
+            <p>Every page is distilled from the <strong>official Rust documentation</strong> &mdash; the Book, the Reference, the Nomicon, the API guidelines, <code>std</code> docs &mdash; and the mainstream Rust books. It is curated, not invented. If something is wrong, outdated or misleading, that is exactly the kind of feedback worth sending.</p>
           </div>
-          {syntax}
-          {concepts}
-        </section>
-
-        <hr class="divider">
-
-        <div class="community-grid">
-          <a class="community-card" href="articles/">
-            <span class="eyebrow">Read</span>
-            <span class="community-title">Articles</span>
-            <span class="community-desc">Community deep dives into Rust concepts.</span>
-          </a>
-          <a class="community-card" href="crates/">
-            <span class="eyebrow">Look up a crate</span>
-            <span class="community-title">Crates</span>
-            <span class="community-desc">A directory of the crates people reach for.</span>
-          </a>
-          <a class="community-card" href="conversations/">
-            <span class="eyebrow">Discuss</span>
-            <span class="community-title">Conversations</span>
-            <span class="community-desc">A mirror of the project&rsquo;s GitHub Discussions.</span>
-          </a>
         </div>
+      </div>
 
+{specimen}
+
+{approaches}
+
+      <div class="lp-band">
+        <div class="lp-inner">
+          <div class="lp-head">
+            <h2>Browse</h2>
+            <span class="lp-head-note">{total_pages} pages &middot; {total_groups} groups &middot; press <code>/</code> to search</span>
+          </div>
+          <div class="lp-browse">{syntax}{concepts}
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-band">
+        <div class="lp-inner">
+          <div class="lp-head"><h2>Beyond the reference</h2></div>
+          <div class="lp-features">
+            <a class="lp-feature" href="articles/">
+              <div class="eyebrow">Articles</div>
+              <h3>Code-first write-ups &mdash; no think-pieces</h3>
+              <p>Community articles that show real, compiling Rust and explain it: how something works under the hood, or how to build it. Opinion pieces don&rsquo;t qualify.</p>
+              <span class="lp-feature-go">Read the articles &rarr;</span>
+            </a>
+            <a class="lp-feature" href="crates/">
+              <div class="eyebrow">Crates</div>
+              <h3>The same three sections, every crate</h3>
+              <p>Overview, when to use it, API map &mdash; in that order, every time. The fixed shape is the point: the second crate page you read is faster than the first.</p>
+              <span class="lp-feature-go">Look up a crate &rarr;</span>
+            </a>
+            <a class="lp-feature" href="conversations/">
+              <div class="eyebrow">Conversations</div>
+              <h3>GitHub Discussions, in the site&rsquo;s own styling</h3>
+              <p>Threads and replies live on GitHub Discussions; the site renders a read-only, near-live mirror, so discussion sits right next to the reference.</p>
+              <span class="lp-feature-go">Browse the threads &rarr;</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-band lp-band-deep">
+        <div class="lp-inner lp-help">
+          <div>
+            <div class="lp-head"><h2>How to help</h2></div>
+            <p>The aim is for this reference to grow with contributions from people writing Rust, not just the maintainer. Contributions of all kinds are welcome &mdash; pointing out wrong information, reporting bugs, flagging what is missing, adding an article, covering a crate, or just taking part in the conversations. <em>Enjoy your coding!</em></p>
+            <div class="hero-actions lp-help-actions">
+              <a class="btn btn-primary" href="{contributing}">Read CONTRIBUTING.md</a>
+              <a class="btn" href="{issues}">Open an issue</a>
+            </div>
+          </div>
+          <ul class="lp-ways">
+            <li class="lp-way"><span class="lp-way-k">Approach</span><span class="lp-way-v"><strong>The smallest useful PR.</strong> An additive markdown block on a scenario you know a better way through. You never touch anyone else&rsquo;s content.</span></li>
+            <li class="lp-way"><span class="lp-way-k">Article</span><span class="lp-way-v">A technical, code-first piece under <code>pages/articles/</code>, with your byline on it.</span></li>
+            <li class="lp-way"><span class="lp-way-k">Crate page</span><span class="lp-way-v">One crate, the three fixed sections, one entry per API item.</span></li>
+            <li class="lp-way"><span class="lp-way-k">Correction</span><span class="lp-way-v"><strong>Highest priority of all.</strong> A reference is only worth trusting if it gets corrected.</span></li>
+            <li class="lp-way"><span class="lp-way-k">Conversation</span><span class="lp-way-v">No PR needed &mdash; post on GitHub Discussions and it appears at the next rebuild.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="lp-inner">
         <div class="footer-note">
           <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
           <span>Targets current stable Rust &middot; edition 2024</span>
@@ -752,16 +981,22 @@ pub fn render_landing_page(pages: &[Page]) -> String {
       </div>
 "#,
         contributing = format!("{REPO_URL}/blob/main/CONTRIBUTING.md"),
+        issues = format!("{REPO_URL}/issues/new"),
         repo = REPO_URL,
         syntax = syntax_html,
         concepts = concepts_html,
-        total_pages = syntax_pages + concepts_pages,
-        total_groups = syntax_groups + concepts_groups,
     );
 
     let head = Head {
         title: "Rusty Yellow Pages - Home".to_string(),
-        description: "Open-source, community-driven information hub for the Rust programming language — every syntax element and every language concept gets its own page, with code examples and best-practice approaches.".to_string(),
+        // Counts are interpolated rather than written out: a description that
+        // states a number has to be regenerated to stay true, and nothing in
+        // the build would notice if it stopped being.
+        description: format!(
+            "A Rust reference for people writing Rust — part dictionary, part wiki. \
+             {syntax_pages} syntax entries and {concepts_pages} concept pages, each with \
+             compiling examples, scenario-based best practices and community approaches."
+        ),
         canonical: abs_url(""),
         og_type: "website",
         image: None,

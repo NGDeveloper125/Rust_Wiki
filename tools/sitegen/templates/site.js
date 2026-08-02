@@ -19,17 +19,41 @@
     });
   });
 
-  /* ---------- LANDING GROUP CARDS ---------- */
-  /* Each Browse card owns the panel of page chips named by aria-controls.
-     The panel spans every grid column, so unhiding it opens a full-width row
-     right below its card. No-op on pages without cards. */
-  document.querySelectorAll('.group-card').forEach(function (card) {
-    var panel = document.getElementById(card.getAttribute('aria-controls'));
+  /* ---------- LANDING BROWSE ROWS ---------- */
+  /* Each Browse row owns the panel of page chips named by aria-controls, and
+     reports its state through aria-expanded, which is also what the chevron
+     rotation is keyed off. No-op on pages without rows. */
+  document.querySelectorAll('.lp-grow').forEach(function (row) {
+    var panel = document.getElementById(row.getAttribute('aria-controls'));
     if (!panel) return;
-    card.addEventListener('click', function () {
-      var open = card.getAttribute('aria-expanded') !== 'true';
-      card.setAttribute('aria-expanded', open ? 'true' : 'false');
+    row.addEventListener('click', function () {
+      var open = row.getAttribute('aria-expanded') !== 'true';
+      row.setAttribute('aria-expanded', open ? 'true' : 'false');
       panel.hidden = !open;
+    });
+  });
+
+  /* ---------- LANDING SPECIMEN: CLASSIC / EMBEDDED ---------- */
+  /* The specimen reproduces a concept page's segmented control, but scoped to
+     itself: the site-wide toggle above flips a class on <body>, which would
+     also swap content the landing page doesn't have. This one just shows the
+     matching .spec-flavor panel inside the same specimen. */
+  document.querySelectorAll('.lp-specimen').forEach(function (specimen) {
+    var segs = Array.prototype.slice.call(specimen.querySelectorAll('.spec-seg'));
+    var panels = Array.prototype.slice.call(specimen.querySelectorAll('.spec-flavor'));
+    if (!segs.length || !panels.length) return;
+    segs.forEach(function (seg) {
+      seg.addEventListener('click', function () {
+        var want = seg.getAttribute('data-flavor');
+        segs.forEach(function (s) {
+          var on = s === seg;
+          s.classList.toggle('on', on);
+          s.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panels.forEach(function (p) {
+          p.hidden = p.getAttribute('data-flavor') !== want;
+        });
+      });
     });
   });
 
@@ -309,7 +333,14 @@
     while ((m = re.exec(code))) {
       out += e(code.slice(last, m.index));
       last = re.lastIndex;
-      if (m[1]) out += '<span class="tok-comment">' + e(m[1]) + '</span>';
+      // `// <-` is the site-wide convention for "read this line". Tag those
+      // comments so CSS can lift them out of the muted comment colour every
+      // other comment shares. textContent arrives already entity-decoded, so
+      // the literal `<-` is what reaches this test.
+      if (m[1]) {
+        var anno = /^\/\/\s*<-/.test(m[1]) ? ' tok-anno' : '';
+        out += '<span class="tok-comment' + anno + '">' + e(m[1]) + '</span>';
+      }
       else if (m[2]) out += '<span class="tok-string">' + e(m[2]) + '</span>';
       else if (m[3]) out += '<span class="tok-string">' + e(m[3]) + '</span>';
       else if (m[4]) out += '<span class="tok-number">' + e(m[4]) + '</span>';
