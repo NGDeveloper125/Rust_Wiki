@@ -760,16 +760,43 @@ fn render_specimen(page: &Page, scenario: &crate::model::Scenario, depth: usize)
         .map(|r| format!("<div class=\"rationale\">{r}</div>"))
         .unwrap_or_default();
 
-    let embedded_example = if page.embedded_basic_usage_html.is_empty() {
-        String::new()
-    } else {
-        format!(
+    // Prefer the embedded treatment of the *same* scenario, so the two tabs
+    // are the one topic handled twice rather than two unrelated excerpts —
+    // which is the claim the section makes. Falling back to another embedded
+    // scenario, and only then to the basic-usage example, keeps the panel
+    // populated for pages whose embedded half is arranged differently.
+    let embedded_scenario = page
+        .embedded_scenarios
+        .iter()
+        .find(|s| s.title == scenario.title)
+        .or_else(|| page.embedded_scenarios.first());
+
+    let embedded_example = match embedded_scenario {
+        Some(es) => {
+            let es_rationale = es
+                .rationale_html
+                .as_ref()
+                .map(|r| format!("<div class=\"rationale\">{r}</div>"))
+                .unwrap_or_default();
+            format!(
+                r#"<div class="card">
+                  <div class="scen-tag">{SCENARIO_ICON}Scenario</div>
+                  <h3 class="scenario-title">{title}</h3>
+                  {body}
+                  {es_rationale}
+                </div>"#,
+                title = html_escape(&es.title),
+                body = es.body_html,
+            )
+        }
+        None if !page.embedded_basic_usage_html.is_empty() => format!(
             r#"<div class="card">
                   <div class="scen-tag">{SCENARIO_ICON}Basic usage example (Embedded)</div>
                   {body}
                 </div>"#,
             body = page.embedded_basic_usage_html,
-        )
+        ),
+        None => String::new(),
     };
 
     format!(
@@ -781,7 +808,7 @@ fn render_specimen(page: &Page, scenario: &crate::model::Scenario, depth: usize)
           </div>
           <p class="lp-intro">A concept page doesn&rsquo;t stop at an explanation. <strong>Best practices &amp; deeper information</strong> breaks the topic into concrete scenarios &mdash; &ldquo;creating a new object&rdquo;, &ldquo;working with collections&rdquo; &mdash; each with a recommended way to handle it, the code, and the reasoning.</p>
 
-          <p class="lp-intro lp-intro-embedded">And nearly every concept page is written <strong>twice</strong>: once in the Classic Rust below, and again for <code>no_std</code> and bare-metal work, with its own explanation, its own examples and its own scenarios. That second pass is what the <strong>Embedded</strong> tab switches to &mdash; not a footnote about what to avoid.</p>
+          <p class="lp-intro lp-intro-embedded">And nearly every concept page is written <strong>twice</strong>: once in the Classic Rust below, and again for <code>no_std</code> and bare-metal work, with its own explanation, its own examples and its own scenarios. Switch to it by pressing the <strong>Embedded</strong> button.</p>
 
           <div class="lp-legend">
             <span class="lp-legend-item"><b>1</b> the scenario</span>
