@@ -993,12 +993,16 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         // string is also the og:title, so it is the headline on every shared
         // link as well as the one in search results.
         title: "Rust reference for people writing Rust - Rusty Yellow Pages".to_string(),
+        // Kept under ~155 characters, which is roughly where search results
+        // stop showing it. The old opening repeated the title verbatim, which
+        // buys nothing when the two are displayed together, and pushed the
+        // approaches — the thing no other Rust reference has — past the cut.
+        //
         // Counts are interpolated rather than written out: a description that
         // states a number has to be regenerated to stay true, and nothing in
         // the build would notice if it stopped being.
         description: format!(
-            "A Rust reference for people writing Rust — part dictionary, part wiki. \
-             {syntax_pages} syntax entries and {concepts_pages} concept pages, each with \
+            "{syntax_pages} Rust syntax entries and {concepts_pages} concept pages, each with \
              compiling examples, scenario-based best practices and community approaches."
         ),
         canonical: abs_url(""),
