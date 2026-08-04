@@ -771,6 +771,31 @@ fn render_specimen(page: &Page, scenario: &crate::model::Scenario, depth: usize)
         .find(|s| s.title == scenario.title)
         .or_else(|| page.embedded_scenarios.first());
 
+    // The section's claim is that the page is written twice, so the two tabs
+    // have to be the same topic for it to demonstrate anything. Both fall-back
+    // branches still render, and a weaker section looks exactly like a correct
+    // one, so say it out loud — across the concept set only about two thirds of
+    // scenarios have an embedded counterpart under the same title, and four
+    // pages have no embedded half at all.
+    match embedded_scenario {
+        Some(es) if es.title == scenario.title => {}
+        Some(es) => eprintln!(
+            "  warning: landing specimen: {} has no Embedded scenario titled \"{}\", so the \
+             Embedded tab shows \"{}\" — the two tabs are no longer the same topic",
+            page.href, scenario.title, es.title
+        ),
+        None if !page.embedded_basic_usage_html.is_empty() => eprintln!(
+            "  warning: landing specimen: {} has no Embedded scenarios; the Embedded tab falls \
+             back to its basic-usage example",
+            page.href
+        ),
+        None => eprintln!(
+            "  warning: landing specimen: {} has no Embedded content at all, so the Embedded tab \
+             shows only the callout and the \"written twice\" claim above it is false for it",
+            page.href
+        ),
+    }
+
     let embedded_example = match embedded_scenario {
         Some(es) => {
             let es_rationale = es
