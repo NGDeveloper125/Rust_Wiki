@@ -781,6 +781,8 @@ fn render_specimen(page: &Page, scenario: &crate::model::Scenario, depth: usize)
           </div>
           <p class="lp-intro">A concept page doesn&rsquo;t stop at an explanation. <strong>Best practices &amp; deeper information</strong> breaks the topic into concrete scenarios &mdash; &ldquo;creating a new object&rdquo;, &ldquo;working with collections&rdquo; &mdash; each with a recommended way to handle it, the code, and the reasoning.</p>
 
+          <p class="lp-intro lp-intro-embedded">And nearly every concept page is written <strong>twice</strong>: once in the Classic Rust below, and again for <code>no_std</code> and bare-metal work, with its own explanation, its own examples and its own scenarios. That second pass is what the <strong>Embedded</strong> tab switches to &mdash; not a footnote about what to avoid.</p>
+
           <div class="lp-legend">
             <span class="lp-legend-item"><b>1</b> the scenario</span>
             <span class="lp-legend-item"><b>2</b> the key line, marked <code>// &lt;-</code></span>
@@ -810,7 +812,7 @@ fn render_specimen(page: &Page, scenario: &crate::model::Scenario, depth: usize)
               <div class="spec-flavor" data-flavor="embedded" hidden>
                 <div class="lp-embedded">
                   <span class="support-badge">Embedded: {badge}</span>
-                  <p><strong>Many concept pages carry a second, parallel Embedded variant</strong> written for <code>no_std</code> and bare-metal work &mdash; its own explanation, its own examples, its own scenarios. Every page states its support level up front.</p>
+                  <p><strong>This is the Embedded half of the same page</strong> &mdash; written for <code>no_std</code> and bare-metal work, with its own explanation, its own examples and its own scenarios. Every page states its support level up front, as above.</p>
                 </div>
                 {embedded_example}
               </div>
