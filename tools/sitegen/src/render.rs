@@ -993,14 +993,18 @@ pub fn render_landing_page(pages: &[Page]) -> String {
         // string is also the og:title, so it is the headline on every shared
         // link as well as the one in search results.
         title: "Rust reference for people writing Rust - Rusty Yellow Pages".to_string(),
-        // Counts are interpolated rather than written out: a description that
-        // states a number has to be regenerated to stay true, and nothing in
-        // the build would notice if it stopped being.
-        description: format!(
-            "A Rust reference for people writing Rust — part dictionary, part wiki. \
-             {syntax_pages} syntax entries and {concepts_pages} concept pages, each with \
-             compiling examples, scenario-based best practices and community approaches."
-        ),
+        // What the project is for, not how much of it there is or how it is
+        // arranged: page counts and per-page structure are both things that
+        // change, and neither says why the site exists. The three things that
+        // do are named here — mapping the language technically, giving the
+        // reasoning alongside the practice, and getting the community to
+        // share and compare. Kept under ~155 characters, which is roughly
+        // where search results stop showing it; it is also the
+        // og:description, so it is what a shared link says too.
+        description: "Mapping Rust in technical detail — examples and best practices with the \
+                      reasoning behind them, and a community sharing knowledge and comparing \
+                      approaches."
+            .to_string(),
         canonical: abs_url(""),
         og_type: "website",
         image: None,
