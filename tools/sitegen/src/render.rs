@@ -988,7 +988,11 @@ pub fn render_landing_page(pages: &[Page]) -> String {
     );
 
     let head = Head {
-        title: "Rusty Yellow Pages - Home".to_string(),
+        // Leads with the term people search and ends with the site name, the
+        // same shape every content page uses. "Home" said nothing, and this
+        // string is also the og:title, so it is the headline on every shared
+        // link as well as the one in search results.
+        title: "Rust reference for people writing Rust - Rusty Yellow Pages".to_string(),
         // Counts are interpolated rather than written out: a description that
         // states a number has to be regenerated to stay true, and nothing in
         // the build would notice if it stopped being.
