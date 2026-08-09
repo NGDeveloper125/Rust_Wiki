@@ -228,9 +228,10 @@ fn render_no_std(c: &Crate) -> String {
     };
     format!(
         r#"<span class="support-badge {class}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          {icon}
           {label}
-        </span>"#
+        </span>"#,
+        icon = crate::render::support_badge_icon(class),
     )
 }
 
@@ -524,6 +525,24 @@ mod tests {
         assert!(render_no_std(&c).contains("level-full"));
         c.no_std = None;
         assert!(render_no_std(&c).is_empty());
+    }
+
+    /// The check mark is an assertion that the crate supports `no_std`, so
+    /// `no_std: no` must not carry one.
+    #[test]
+    fn only_supported_levels_get_a_check_mark() {
+        const CHECK: &str = "M20 6 9 17l-5-5";
+        let mut c = sample();
+
+        c.no_std = Some("no".into());
+        let none = render_no_std(&c);
+        assert!(!none.contains(CHECK), "no_std: no rendered a check mark: {none}");
+        assert!(none.contains("M18 6 6 18"), "no_std: no should render a cross");
+
+        c.no_std = Some("yes".into());
+        assert!(render_no_std(&c).contains(CHECK));
+        c.no_std = Some("optional".into());
+        assert!(render_no_std(&c).contains(CHECK));
     }
 
     #[test]

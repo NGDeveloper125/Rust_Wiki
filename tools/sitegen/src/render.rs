@@ -227,6 +227,24 @@ fn embedded_badge(support: &str) -> &'static str {
     }
 }
 
+/// The icon inside a `support-badge`, chosen from its level class.
+///
+/// A check mark asserts that the thing is supported, so `level-none` gets a
+/// cross instead. The badge is read at a glance and the colour alone does not
+/// carry it — a red pill with a tick in it says "supported" to anyone skimming,
+/// and to anyone who can't separate the red from the green. `level-partial`
+/// keeps the check because partial support is still support.
+///
+/// Shared by the language-feature badge and the crate `no_std` badge so the two
+/// cannot drift apart.
+pub fn support_badge_icon(level_class: &str) -> &'static str {
+    if level_class == "level-none" {
+        r#"<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>"#
+    } else {
+        r#"<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>"#
+    }
+}
+
 fn render_examples(examples: &[crate::model::Example]) -> String {
     examples
         .iter()
@@ -442,9 +460,10 @@ pub fn render_content_page(page: &Page, pages: &[Page], index: &LinkIndex) -> St
     };
     let support_badge_html = format!(
         r#"<span class="support-badge {badge_class}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          {icon}
           Embedded support: {support_label}
         </span>"#,
+        icon = support_badge_icon(badge_class),
         support_label = embedded_badge(support),
     );
 
