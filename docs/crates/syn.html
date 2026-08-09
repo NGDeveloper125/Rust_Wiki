@@ -997,16 +997,24 @@ syntax tree covers nearly all of Rust, and any crate that derives anything drags
 it into the build graph — which is why it sits near the top of the download
 charts without most people ever writing <code>use syn</code>. The mitigation is feature
 gating, which syn takes further than almost any crate:</p>
-<p>| Feature | Default | What it buys |
-| --- | --- | --- |
-| <code>derive</code> | yes | <code>DeriveInput</code> and the types a <code>#[derive]</code> needs |
-| <code>parsing</code> | yes | Tokens → tree |
-| <code>printing</code> | yes | Tree → tokens, via <code>quote</code> |
-| <code>clone-impls</code> | yes | <code>Clone</code> on the tree types |
-| <code>proc-macro</code> | yes | Bridging to the real <code>proc_macro::TokenStream</code> |
-| <code>full</code> | <strong>no</strong> | Items, expressions, statements — everything beyond a derive |
-| <code>extra-traits</code> | no | <code>Debug</code>, <code>Eq</code>, <code>Hash</code> on tree types — useful while developing |
-| <code>visit</code>, <code>visit-mut</code>, <code>fold</code> | no | Generated traversal traits |</p>
+<p>On by default, and all a derive macro needs:</p>
+<ul>
+<li><code>derive</code> — <code>DeriveInput</code> and the types a <code>#[derive]</code> sees.</li>
+<li><code>parsing</code> — tokens into a tree.</li>
+<li><code>printing</code> — a tree back into tokens, via <code>quote</code>.</li>
+<li><code>clone-impls</code> — <code>Clone</code> on the tree types.</li>
+<li><code>proc-macro</code> — bridging to the real <code>proc_macro::TokenStream</code>.</li>
+</ul>
+<p>Off by default, and opted into one at a time:</p>
+<ul>
+<li><code>full</code> — items, expressions and statements: everything beyond what a derive
+sees. This is the one people miss, because the error for a missing <code>full</code> is a
+type that simply doesn't exist.</li>
+<li><code>extra-traits</code> — <code>Debug</code>, <code>Eq</code> and <code>Hash</code> on the tree types. Worth turning on
+while developing a macro, if only to be able to print what you parsed.</li>
+<li><code>visit</code>, <code>visit-mut</code>, <code>fold</code> — generated traversal traits, for rewriting a
+tree rather than reading it.</li>
+</ul>
 <p>A derive macro needs only the defaults. Reach for <code>full</code> only when you parse
 whole functions or expressions, and turn <code>default-features = false</code> on if you're
 using syn to parse a small custom syntax rather than Rust itself.</p>

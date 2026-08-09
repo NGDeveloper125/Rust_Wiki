@@ -38,16 +38,23 @@ it into the build graph — which is why it sits near the top of the download
 charts without most people ever writing `use syn`. The mitigation is feature
 gating, which syn takes further than almost any crate:
 
-| Feature | Default | What it buys |
-| --- | --- | --- |
-| `derive` | yes | `DeriveInput` and the types a `#[derive]` needs |
-| `parsing` | yes | Tokens → tree |
-| `printing` | yes | Tree → tokens, via `quote` |
-| `clone-impls` | yes | `Clone` on the tree types |
-| `proc-macro` | yes | Bridging to the real `proc_macro::TokenStream` |
-| `full` | **no** | Items, expressions, statements — everything beyond a derive |
-| `extra-traits` | no | `Debug`, `Eq`, `Hash` on tree types — useful while developing |
-| `visit`, `visit-mut`, `fold` | no | Generated traversal traits |
+On by default, and all a derive macro needs:
+
+- `derive` — `DeriveInput` and the types a `#[derive]` sees.
+- `parsing` — tokens into a tree.
+- `printing` — a tree back into tokens, via `quote`.
+- `clone-impls` — `Clone` on the tree types.
+- `proc-macro` — bridging to the real `proc_macro::TokenStream`.
+
+Off by default, and opted into one at a time:
+
+- `full` — items, expressions and statements: everything beyond what a derive
+  sees. This is the one people miss, because the error for a missing `full` is a
+  type that simply doesn't exist.
+- `extra-traits` — `Debug`, `Eq` and `Hash` on the tree types. Worth turning on
+  while developing a macro, if only to be able to print what you parsed.
+- `visit`, `visit-mut`, `fold` — generated traversal traits, for rewriting a
+  tree rather than reading it.
 
 A derive macro needs only the defaults. Reach for `full` only when you parse
 whole functions or expressions, and turn `default-features = false` on if you're
