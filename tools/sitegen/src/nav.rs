@@ -75,6 +75,7 @@ fn render_nested_groups(
 const CHAT_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>"#;
 const ARTICLE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>"#;
 const CRATE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg>"#;
+const MORE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>"#;
 
 /// Which top-level ("not a wiki page") nav link is active, if any. The
 /// conversations/articles/crates pages aren't in `pages`, so they can't be
@@ -85,10 +86,11 @@ pub enum TopNav {
     Conversations,
     Articles,
     Crates,
+    More,
 }
 
 /// The site's full sidebar. `active` marks whichever top-level link
-/// (Conversations / Articles / Crates) the current page belongs to.
+/// (Conversations / Articles / Crates / More) the current page belongs to.
 pub fn render_sidebar(
     pages: &[Page],
     current: Option<&Page>,
@@ -99,7 +101,7 @@ pub fn render_sidebar(
 
     let sel = |t: TopNav| if active == t { " active" } else { "" };
     out.push_str(&format!(
-        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n      <a class=\"nav-toplink{ka}\" href=\"{kh}\">{kicon}<span>Crates</span></a>\n    </div>\n",
+        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n      <a class=\"nav-toplink{ka}\" href=\"{kh}\">{kicon}<span>Crates</span></a>\n      <a class=\"nav-toplink{ma}\" href=\"{mh}\">{micon}<span>More</span></a>\n    </div>\n",
         ca = sel(TopNav::Conversations),
         ch = href_from(from_depth, "conversations/"),
         cicon = CHAT_SVG,
@@ -109,6 +111,9 @@ pub fn render_sidebar(
         ka = sel(TopNav::Crates),
         kh = href_from(from_depth, "crates/"),
         kicon = CRATE_SVG,
+        ma = sel(TopNav::More),
+        mh = href_from(from_depth, "more/"),
+        micon = MORE_SVG,
     ));
 
     for section in [Section::Syntax, Section::Concepts] {

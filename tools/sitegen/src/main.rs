@@ -5,6 +5,7 @@ mod crates;
 mod links;
 mod markdown;
 mod model;
+mod more;
 mod nav;
 mod parse;
 mod render;
@@ -126,6 +127,8 @@ fn main() {
     articles::build(&pages_root, &docs_root, &articles, &pages);
 
     crates::build(&docs_root, &crate_pages, &pages);
+
+    more::build(&docs_root, &pages);
 
     // Best-effort GitHub Discussions mirror. Never fails the build.
     let conversation_urls = conversations::build(&repo_root, &docs_root, &pages);
