@@ -1,10 +1,9 @@
 //! The "More" section: a small hub plus the pages that sit under it.
 //!
 //! Right now that is LangColorMap, the reference for the site's syntax colour
-//! system. The colour data lives here rather than in markdown because it is
-//! structured — every slot has a name, a description, a sample and a colour per
-//! theme — and because the same table will later drive the highlighter itself,
-//! so there should only ever be one copy of it.
+//! system. The colour table lives here rather than in markdown because it is
+//! structured data, and because the same table will later drive the highlighter
+//! itself — there should only ever be one copy of it.
 
 use std::io;
 use std::path::Path;
@@ -18,249 +17,57 @@ const DEPTH: usize = 1;
 
 /// One syntax role and the colour reserved for it.
 ///
-/// `class` is the CSS slug. It is deliberately prefixed `cm-` on the page
-/// rather than reusing the live highlighter's `tok-` classes: the palette is
-/// still being tuned, and the map should be able to show a proposed colour
+/// `class` is both the CSS slug and the name shown in the list. It is prefixed
+/// `cm-` on the page rather than reusing the live highlighter's `tok-` classes:
+/// the palette is still being tuned, and the map must be able to show it
 /// without repainting every code block on the site.
 pub struct Slot {
     pub class: &'static str,
-    pub label: &'static str,
+    /// Shown as the row's tooltip.
     pub covers: &'static str,
-    /// Pre-built HTML: the sample with its own token wrapped in `cm-<class>`.
-    pub sample: &'static str,
     pub dark: &'static str,
     pub light: &'static str,
 }
 
-pub struct Group {
-    pub title: &'static str,
-    pub blurb: &'static str,
-    pub slots: &'static [Slot],
-}
-
-/// Grouped by what the thing *is*, not by what colour it ended up.
-///
-/// Ordering by hue puts `field` beside `generic-param` because both happen to
-/// be blue, which tells a reader nothing. Grouping by role puts the things a
-/// reader is trying to tell apart next to each other, which is the whole point
-/// of the system.
-pub const GROUPS: &[Group] = &[
-    Group {
-        title: "Declarations",
-        blurb: "Introducing a name is a different act from using it, so the declaration sites get their own colours. These are the anchors of a snippet — the places where something comes into existence.",
-        slots: &[
-            Slot {
-                class: "type-def",
-                label: "Type declaration",
-                covers: "The name at <code>struct X</code>, <code>enum X</code>, <code>union X</code>, <code>trait X</code> or <code>type X =</code>.",
-                sample: r#"<span class="cm-keyword">struct</span> <span class="cm-type-def">Counter</span>"#,
-                dark: "#7BFF57",
-                light: "#7BFF57",
-            },
-            Slot {
-                class: "fn-def",
-                label: "Function declaration",
-                covers: "The name at <code>fn X(&hellip;)</code>, whether it is free, associated or a method.",
-                sample: r#"<span class="cm-keyword">fn</span> <span class="cm-fn-def">record</span><span class="cm-punct">(&hellip;)</span>"#,
-                dark: "#FF5C7A",
-                light: "#FF5C7A",
-            },
-        ],
-    },
-    Group {
-        title: "Types",
-        blurb: "Everything that names a type rather than a value. Return position gets its own colour because what a function hands back is the thing most often looked up in a hurry.",
-        slots: &[
-            Slot {
-                class: "type",
-                label: "Type",
-                covers: "A struct, enum, union, primitive or alias used as a type.",
-                sample: r#"<span class="cm-type">HashMap</span><span class="cm-punct">&lt;</span><span class="cm-type">String</span><span class="cm-punct">,</span> <span class="cm-type">u32</span><span class="cm-punct">&gt;</span>"#,
-                dark: "#1FFF9E",
-                light: "#1FFF9E",
-            },
-            Slot {
-                class: "trait",
-                label: "Trait",
-                covers: "A trait named in a bound, an <code>impl</code> block or behind <code>dyn</code>.",
-                sample: r#"<span class="cm-keyword">impl</span> <span class="cm-trait">Summarize</span> <span class="cm-keyword">for</span> <span class="cm-type">Counter</span>"#,
-                dark: "#019D59",
-                light: "#019D59",
-            },
-            Slot {
-                class: "generic-param",
-                label: "Generic parameter",
-                covers: "A type or const parameter declared in <code>&lt;&hellip;&gt;</code>.",
-                sample: r#"<span class="cm-punct">&lt;</span><span class="cm-generic-param">T</span><span class="cm-punct">,</span> <span class="cm-keyword">const</span> <span class="cm-generic-param">N</span><span class="cm-punct">:</span> <span class="cm-type">usize</span><span class="cm-punct">&gt;</span>"#,
-                dark: "#A9D6F5",
-                light: "#A9D6F5",
-            },
-            Slot {
-                class: "type-return",
-                label: "Return type",
-                covers: "Any type in return position, after <code>-&gt;</code>. It overrides the colour the same name would carry anywhere else.",
-                sample: r#"<span class="cm-punct">-&gt;</span> <span class="cm-type-return">Option</span><span class="cm-punct">&lt;</span><span class="cm-type-return">usize</span><span class="cm-punct">&gt;</span>"#,
-                dark: "#70FFE7",
-                light: "#70FFE7",
-            },
-        ],
-    },
-    Group {
-        title: "Values",
-        blurb: "The names that hold data. Rust draws no line between a variable and an instance &mdash; both are bindings holding a value &mdash; so neither does this map.",
-        slots: &[
-            Slot {
-                class: "variable",
-                label: "Variable",
-                covers: "Every binding, function parameter and closure parameter.",
-                sample: r#"<span class="cm-keyword">let</span> <span class="cm-keyword">mut</span> <span class="cm-variable">counter</span>"#,
-                dark: "#34E7EA",
-                light: "#34E7EA",
-            },
-            Slot {
-                class: "field",
-                label: "Field",
-                covers: "A struct field, a tuple index, and an enum variant &mdash; all of them name a member of a type.",
-                sample: r#"<span class="cm-keyword">self</span><span class="cm-punct">.</span><span class="cm-field">counts</span><span class="cm-punct">,</span> <span class="cm-field">Some</span><span class="cm-punct">,</span> <span class="cm-field">None</span>"#,
-                dark: "#7ED1FB",
-                light: "#7ED1FB",
-            },
-            Slot {
-                class: "constant",
-                label: "Constant",
-                covers: "A <code>const</code> or <code>static</code> name.",
-                sample: r#"<span class="cm-keyword">const</span> <span class="cm-constant">MAX_ENTRIES</span>"#,
-                dark: "#E5D9A8",
-                light: "#E5D9A8",
-            },
-        ],
-    },
-    Group {
-        title: "Calls",
-        blurb: "Where the system earns its keep. A function reached through a type, through a value, or through nothing at all are three different things, and most highlighting paints them identically.",
-        slots: &[
-            Slot {
-                class: "call-assoc",
-                label: "Associated call",
-                covers: "A function called on the type itself, through <code>::</code>.",
-                sample: r#"<span class="cm-type">Counter</span><span class="cm-punct">::</span><span class="cm-call-assoc">new</span><span class="cm-punct">()</span>"#,
-                dark: "#F5A55A",
-                light: "#F5A55A",
-            },
-            Slot {
-                class: "call-method",
-                label: "Method call",
-                covers: "A function called on a value, through <code>.</code>.",
-                sample: r#"<span class="cm-variable">counter</span><span class="cm-punct">.</span><span class="cm-call-method">record</span><span class="cm-punct">()</span>"#,
-                dark: "#FFEA00",
-                light: "#FFEA00",
-            },
-            Slot {
-                class: "call-free",
-                label: "Free call",
-                covers: "A function called with no receiver at all.",
-                sample: r#"<span class="cm-call-free">tally</span><span class="cm-punct">(&amp;</span><span class="cm-variable">values</span><span class="cm-punct">)</span>"#,
-                dark: "#D9A98A",
-                light: "#D9A98A",
-            },
-            Slot {
-                class: "macro",
-                label: "Macro",
-                covers: "A macro invocation. The trailing <code>!</code> already marks it, so the colour is free to be quiet.",
-                sample: r#"<span class="cm-macro">println!</span><span class="cm-punct">(</span><span class="cm-string">"{}"</span><span class="cm-punct">)</span>"#,
-                dark: "#D972EE",
-                light: "#D972EE",
-            },
-        ],
-    },
-    Group {
-        title: "Literals",
-        blurb: "Values written directly into the source rather than named.",
-        slots: &[
-            Slot {
-                class: "string",
-                label: "String",
-                covers: "String, char, byte and raw literals.",
-                sample: r#"<span class="cm-string">"words"</span><span class="cm-punct">,</span> <span class="cm-string">'&middot;'</span>"#,
-                dark: "#86D7BF",
-                light: "#86D7BF",
-            },
-            Slot {
-                class: "number",
-                label: "Number",
-                covers: "Integer, float and bool literals.",
-                sample: r#"<span class="cm-number">128</span><span class="cm-punct">,</span> <span class="cm-number">0.5</span><span class="cm-punct">,</span> <span class="cm-number">true</span>"#,
-                dark: "#A17297",
-                light: "#A17297",
-            },
-            Slot {
-                class: "lifetime",
-                label: "Lifetime",
-                covers: "A lifetime, and a loop label, which is written the same way.",
-                sample: r#"<span class="cm-punct">&amp;</span><span class="cm-lifetime">'a</span> <span class="cm-type">str</span><span class="cm-punct">,</span> <span class="cm-lifetime">'outer</span><span class="cm-punct">:</span>"#,
-                dark: "#F2DB69",
-                light: "#F2DB69",
-            },
-        ],
-    },
-    Group {
-        title: "Structure",
-        blurb: "The scaffolding a snippet is written on. These carry one colour each and are meant to recede, so the names above them stand out.",
-        slots: &[
-            Slot {
-                class: "keyword",
-                label: "Keyword",
-                covers: "Every language keyword, from <code>let</code> to <code>unsafe</code>. Splitting them apart adds colours without adding meaning.",
-                sample: r#"<span class="cm-keyword">let</span> <span class="cm-keyword">mut</span><span class="cm-punct">,</span> <span class="cm-keyword">impl</span><span class="cm-punct">,</span> <span class="cm-keyword">unsafe</span>"#,
-                dark: "#FFB700",
-                light: "#FFB700",
-            },
-            Slot {
-                class: "module",
-                label: "Module",
-                covers: "A crate or module segment inside a path.",
-                sample: r#"<span class="cm-module">std</span><span class="cm-punct">::</span><span class="cm-module">collections</span><span class="cm-punct">::</span><span class="cm-type">HashMap</span>"#,
-                dark: "#8FA8D8",
-                light: "#8FA8D8",
-            },
-            Slot {
-                class: "attribute",
-                label: "Attribute",
-                covers: "An outer or inner attribute, in full.",
-                sample: r#"<span class="cm-attribute">#[derive(Debug)]</span>"#,
-                dark: "#944695",
-                light: "#944695",
-            },
-            Slot {
-                class: "comment",
-                label: "Comment",
-                covers: "Every comment form, including doc comments.",
-                sample: r#"<span class="cm-comment">/// Counts words, keyed by label.</span>"#,
-                dark: "#FFFFFF",
-                light: "#FFFFFF",
-            },
-            Slot {
-                class: "punct",
-                label: "Punctuation",
-                covers: "Operators, delimiters and separators.",
-                sample: r#"<span class="cm-punct">? &nbsp; -&gt; &nbsp; :: &nbsp; &amp;&amp;</span>"#,
-                dark: "#A9C4C2",
-                light: "#A9C4C2",
-            },
-        ],
-    },
+/// Ordered by hue rather than alphabetically or by role, so neighbouring rows
+/// are neighbouring colours and the palette can be read as a whole.
+pub const SLOTS: &[Slot] = &[
+    Slot { class: "macro",         covers: "println!, vec!",                          dark: "#D972EE", light: "#D972EE" },
+    Slot { class: "attribute",     covers: "#[derive(&hellip;)]",                     dark: "#944695", light: "#944695" },
+    Slot { class: "number",        covers: "int, float, bool",                        dark: "#A17297", light: "#A17297" },
+    Slot { class: "fn-def",        covers: "the name at fn X(&hellip;), all kinds",   dark: "#FF5C7A", light: "#FF5C7A" },
+    Slot { class: "call-free",     covers: "bare foo()",                              dark: "#D9A98A", light: "#D9A98A" },
+    Slot { class: "call-assoc",    covers: "Type::new()",                             dark: "#F5A55A", light: "#F5A55A" },
+    Slot { class: "keyword",       covers: "fn let const mut self impl pub &hellip;", dark: "#FFB700", light: "#FFB700" },
+    Slot { class: "constant",      covers: "const / static names",                    dark: "#E5D9A8", light: "#E5D9A8" },
+    Slot { class: "lifetime",      covers: "'a, 'static, labels",                     dark: "#F2DB69", light: "#F2DB69" },
+    Slot { class: "call-method",   covers: "x.foo()",                                 dark: "#FFEA00", light: "#FFEA00" },
+    Slot { class: "type-def",      covers: "the name at struct/enum/trait/type X",    dark: "#7BFF57", light: "#7BFF57" },
+    Slot { class: "trait",         covers: "trait names",                             dark: "#019D59", light: "#019D59" },
+    Slot { class: "type",          covers: "struct, enum, primitive, alias — at use", dark: "#1FFF9E", light: "#1FFF9E" },
+    Slot { class: "string",        covers: "string, char, byte, raw",                 dark: "#86D7BF", light: "#86D7BF" },
+    Slot { class: "type-return",   covers: "any type after ->",                       dark: "#70FFE7", light: "#70FFE7" },
+    Slot { class: "variable",      covers: "every binding, param, closure param",     dark: "#34E7EA", light: "#34E7EA" },
+    Slot { class: "field",         covers: "field def, x.field, .0, enum variants",   dark: "#7ED1FB", light: "#7ED1FB" },
+    Slot { class: "generic-param", covers: "T, E, const generics",                    dark: "#A9D6F5", light: "#A9D6F5" },
+    Slot { class: "module",        covers: "std, collections",                        dark: "#8FA8D8", light: "#8FA8D8" },
+    Slot { class: "comment",       covers: "all comments",                            dark: "#FFFFFF", light: "#FFFFFF" },
+    Slot { class: "punct",         covers: "operators, :: -> ?",                      dark: "#A9C4C2", light: "#A9C4C2" },
 ];
 
-/// Every slot, flattened, in group order.
-pub fn all_slots() -> impl Iterator<Item = &'static Slot> {
-    GROUPS.iter().flat_map(|g| g.slots.iter())
-}
+/// The snippet under the list: every slot exercised at least once.
+///
+/// Pre-highlighted, so it carries no `class="rust"` — that class is the live
+/// highlighter's hook, and it would rewrite the markup and throw these spans
+/// away. See the test at the bottom of this file.
+const SPECIMEN: &str = include_str!("langcolormap-specimen.html");
 
 /// The `--cm-*` custom properties for both themes, emitted into the page so the
 /// palette can move without a stylesheet edit while it is still being tuned.
 fn palette_style() -> String {
     let vars = |pick: fn(&Slot) -> &'static str| {
-        all_slots()
+        SLOTS
+            .iter()
             .map(|s| format!("--cm-{}:{};", s.class, pick(s)))
             .collect::<Vec<_>>()
             .join("")
@@ -272,43 +79,31 @@ fn palette_style() -> String {
     )
 }
 
-fn render_slot(s: &Slot) -> String {
-    format!(
-        r#"<div class="cmap-row">
-            <div class="cmap-id">
-              <span class="cmap-chip" style="background:var(--cm-{class})"></span>
-              <span class="cmap-label cm-{class}">{label}</span>
-            </div>
-            <code class="cmap-sample">{sample}</code>
-            <p class="cmap-covers">{covers}</p>
-            <code class="cmap-hex"><span class="cmap-hex-dark">{dark}</span><span class="cmap-hex-light">{light}</span></code>
-          </div>"#,
-        class = s.class,
-        label = s.label,
-        sample = s.sample,
-        covers = s.covers,
-        dark = s.dark,
-        light = s.light,
-    )
-}
-
-fn render_group(g: &Group) -> String {
-    let rows: String = g
-        .slots
+fn render_slot_list() -> String {
+    let rows: String = SLOTS
         .iter()
-        .map(render_slot)
+        .map(|s| {
+            format!(
+                r#"<div class="cmap-row" title="{covers}">
+            <span class="cmap-chip" style="background:var(--cm-{class})"></span>
+            <span class="cmap-name cm-{class}">{class}</span>
+            <span class="cmap-hex"><span class="cmap-hex-dark">{dark}</span><span class="cmap-hex-light">{light}</span></span>
+          </div>"#,
+                class = s.class,
+                covers = s.covers,
+                dark = s.dark,
+                light = s.light,
+            )
+        })
         .collect::<Vec<_>>()
         .join("\n          ");
+
+    // Column-major fill needs an explicit row count to know where to wrap.
+    // Rounding up leaves the odd gap at the foot of the second column rather
+    // than splitting the list unevenly.
+    let rows_per_column = SLOTS.len().div_ceil(2);
     format!(
-        r#"<section class="cmap-group">
-          <h2 class="cmap-group-title">{title}</h2>
-          <p class="cmap-group-blurb">{blurb}</p>
-          <div class="cmap-rows">
-          {rows}
-          </div>
-        </section>"#,
-        title = g.title,
-        blurb = g.blurb,
+        "<div class=\"cmap-list\" style=\"grid-template-rows: repeat({rows_per_column}, auto)\">\n          {rows}\n        </div>"
     )
 }
 
@@ -316,12 +111,6 @@ fn render_colormap(pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::More);
     let home = href_from(DEPTH, "");
     let more = href_from(DEPTH, "more/");
-
-    let groups: String = GROUPS
-        .iter()
-        .map(render_group)
-        .collect::<Vec<_>>()
-        .join("\n\n        ");
 
     let main = format!(
         r#"      <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -338,13 +127,18 @@ fn render_colormap(pages: &[Page]) -> String {
 
       <p class="lead">Most syntax highlighting colours by token class &mdash; keywords one colour, identifiers another, and everything that looks like a name painted the same. Rust carries more than that. Reaching a function through a type is a different act from reaching one through a value, and declaring a struct is not the same as naming it as a type. This map gives each of those roles a colour of its own, used for that role and nothing else, so that a snippet tells you what every name <em>is</em> before you have read what it says.</p>
 
-      <p class="cmap-note">Grouped by what the thing is rather than by how the colours sort, so the roles you are trying to tell apart sit next to each other. The palette is still being tuned and this page moves with it.</p>
+      <p class="cmap-note">Ordered by hue, so neighbouring entries are neighbouring colours. Hover a row for what it covers. The palette is still being tuned and this page moves with it.</p>
 
       <hr class="divider">
 
       {palette}
 
-        {groups}
+        {list}
+
+      <h2 class="cmap-specimen-title">Every role, one snippet</h2>
+      <p class="cmap-note">Each colour above appears at least once below.</p>
+
+      <pre class="cmap-code"><code>{specimen}</code></pre>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
@@ -352,6 +146,8 @@ fn render_colormap(pages: &[Page]) -> String {
       </div>
 "#,
         palette = palette_style(),
+        list = render_slot_list(),
+        specimen = SPECIMEN,
     );
 
     let head = Head {
@@ -436,28 +232,41 @@ mod tests {
     #[test]
     fn every_slot_has_a_unique_class() {
         let mut seen = HashSet::new();
-        for s in all_slots() {
+        for s in SLOTS {
             assert!(seen.insert(s.class), "duplicate slot class: {}", s.class);
         }
     }
 
     #[test]
-    fn every_slot_samples_its_own_colour() {
-        // A row whose sample never uses its own class would show the reader a
-        // colour swatch next to code painted in someone else's colour.
-        for s in all_slots() {
-            let marker = format!("cm-{}\"", s.class);
+    fn the_specimen_exercises_every_slot() {
+        // The page claims every colour appears at least once below the list.
+        // A slot that never shows up would make that claim false, and would
+        // leave a colour on the page that the reader can never see in context.
+        for s in SLOTS {
+            let marker = format!("class=\"cm-{}\"", s.class);
+            let with_extra = format!("class=\"cm-{} ", s.class);
             assert!(
-                s.sample.contains(&marker),
-                "slot `{}` has no token of its own in its sample",
+                SPECIMEN.contains(&marker) || SPECIMEN.contains(&with_extra),
+                "slot `{}` never appears in the specimen",
                 s.class
             );
         }
     }
 
     #[test]
+    fn the_specimen_is_not_re_highlighted() {
+        // site.js rewrites the innerHTML of every `code.rust` it finds. If that
+        // class reached the specimen, the client would throw away the spans
+        // this page exists to show.
+        assert!(
+            !SPECIMEN.contains("\"rust\""),
+            "specimen carries the live highlighter's class and would be rewritten"
+        );
+    }
+
+    #[test]
     fn every_colour_is_a_full_hex() {
-        for s in all_slots() {
+        for s in SLOTS {
             for hex in [s.dark, s.light] {
                 assert!(
                     hex.len() == 7

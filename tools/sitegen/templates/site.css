@@ -1137,69 +1137,59 @@
   .more-card p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--content-fg-dim); }
   .more-card:hover { border-color: var(--accent); }
 
-  /* The note under the lead: says how the page is arranged, in a quieter voice
-     than the lead itself. */
+  /* Quieter than .lead: says how the page is arranged, not what it is for. */
   .content .cmap-note {
     margin: -6px 0 0; font-size: 14.5px; line-height: 1.7;
     color: var(--content-fg-dim); max-width: 74ch; text-wrap: pretty;
   }
 
-  .cmap-group { margin-top: 40px; }
-  .cmap-group:first-of-type { margin-top: 0; }
-  .content .cmap-group-title {
-    margin: 0 0 6px; font-size: 19px; font-weight: 700; color: var(--content-fg);
-  }
-  .content .cmap-group-blurb {
-    margin: 0 0 18px; font-size: 14.5px; line-height: 1.7;
-    color: var(--content-fg-dim); max-width: 78ch; text-wrap: pretty;
-  }
-
-  .cmap-rows { display: flex; flex-direction: column; gap: 1px; }
-
-  /* Four columns: identity, live sample, prose, hex. The sample column is
-     fixed-width so every sample starts at the same x — the colours are being
-     compared down the column, and ragged starts make that harder than it
-     needs to be. */
-  .cmap-row {
-    display: grid;
-    grid-template-columns: minmax(150px, 190px) minmax(0, 250px) minmax(0, 1fr) auto;
-    align-items: baseline; gap: 8px 18px;
-    padding: 11px 14px; border-radius: var(--radius-md);
+  /* Column-major fill, so the hue order runs down the first column and then
+     down the second — neighbouring colours stay neighbours on screen. The row
+     count comes from the generator, which knows how many slots there are. */
+  .cmap-list {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: column;
+    gap: 1px 22px; margin: 22px 0 0;
+    padding: 16px 18px; border-radius: var(--radius-md);
     background: var(--code-bg); border: 1px solid var(--code-border);
   }
-
-  .cmap-id { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .cmap-row {
+    display: flex; align-items: center; gap: 9px;
+    padding: 4px 6px; border-radius: 6px;
+  }
+  .cmap-row:hover { background: rgba(127, 127, 127, .12); }
   .cmap-chip {
-    width: 13px; height: 13px; border-radius: 4px; flex: none;
+    width: 14px; height: 14px; border-radius: 4px; flex: none;
     border: 1px solid rgba(127, 127, 127, .45);
   }
-  .cmap-label {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  .cmap-name {
+    font-family: var(--font-mono); font-size: 12.5px; font-weight: 700;
+    flex: 1 1 auto; min-width: 0;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-
-  .cmap-sample {
-    font-family: var(--font-mono); font-size: 13px; line-height: 1.6;
-    white-space: nowrap; overflow-x: auto; color: var(--t-default);
-  }
-  .cmap-covers {
-    margin: 0; font-size: 13.5px; line-height: 1.65;
-    color: var(--content-fg-dim); text-wrap: pretty;
-  }
-  .cmap-covers code {
-    font-family: var(--font-mono); font-size: .9em;
-    background: none; border: 0; padding: 0; color: var(--content-fg);
-  }
-
   .cmap-hex {
-    font-family: var(--font-mono); font-size: 12px; letter-spacing: .02em;
-    color: var(--content-fg-dim); text-transform: uppercase; white-space: nowrap;
+    font-family: var(--font-mono); font-size: 11.5px; flex: none;
+    color: var(--content-fg-dim); text-transform: uppercase;
   }
-  /* Only the hex for the theme actually on screen — showing both would invite
-     the reader to compare a colour they can see against one they cannot. */
+  /* Only the hex for the theme on screen — showing both would invite the reader
+     to compare a colour they can see against one they cannot. */
   .cmap-hex-light { display: none; }
   :root[data-theme="light"] .cmap-hex-light { display: inline; }
   :root[data-theme="light"] .cmap-hex-dark { display: none; }
+
+  .content .cmap-specimen-title {
+    margin: 44px 0 6px; font-size: 19px; font-weight: 700; color: var(--content-fg);
+  }
+  .cmap-code {
+    margin: 20px 0 0; padding: 18px 20px; overflow-x: auto;
+    border-radius: var(--radius-md);
+    background: var(--code-bg); border: 1px solid var(--code-border);
+  }
+  .cmap-code code {
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.65;
+    white-space: pre; display: block; color: var(--cm-variable);
+    background: none; border: 0; padding: 0;
+  }
 
   /* Slot colours. `cm-` rather than the highlighter's `tok-`: this page shows a
      palette that is still being tuned, and must be able to do that without
@@ -1225,9 +1215,15 @@
   .cm-attribute     { color: var(--cm-attribute); }
   .cm-comment       { color: var(--cm-comment); font-style: italic; }
   .cm-punct         { color: var(--cm-punct); }
+  /* Treatments that ride on a slot colour rather than being colours of their own. */
+  .cm-keyword.is-unsafe { font-weight: 700; }
+  .cm-string b { font-weight: 700; }
 
   @media (max-width: 900px) {
     .more-grid { grid-template-columns: 1fr; }
-    .cmap-row { grid-template-columns: minmax(0, 1fr); gap: 7px; }
-    .cmap-hex { justify-self: start; }
+    .cmap-list {
+      grid-template-columns: minmax(0, 1fr);
+      grid-auto-flow: row;
+      grid-template-rows: none !important;
+    }
   }
