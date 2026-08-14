@@ -1008,14 +1008,14 @@ the same type.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[derive(Default)] // &lt;- generates default(): every field gets its own type's default
-struct RetryPolicy {
-    max_attempts: u32, // defaults to 0
-    backoff_ms: u64,   // defaults to 0
-}
+        <pre><code class="rust-hl"><span class="tok-attribute">#[derive(Default)]</span> <span class="tok-comment tok-anno">// &lt;- generates default(): every field gets its own type's default</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-comment">// defaults to 0</span>
+    <span class="tok-variable">backoff_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>   <span class="tok-comment">// defaults to 0</span>
+<span class="tok-punct">}</span>
 
-let policy = RetryPolicy::default();
-println!("{}", policy.max_attempts);
+<span class="tok-keyword">let</span> <span class="tok-variable">policy</span> <span class="tok-punct">=</span> <span class="tok-type">RetryPolicy</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">policy</span><span class="tok-punct">.</span><span class="tok-field">max_attempts</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1033,25 +1033,25 @@ println!("{}", policy.max_attempts);
             <p>A server config has one field most callers care about and several they
 almost never touch — struct update syntax against <code>Default::default()</code>
 lets a caller set only what matters.</p>
-<pre><code class="rust">#[derive(Debug)]
-struct ServerConfig {
-    port: u16,
-    max_connections: u32,
-    timeout_ms: u64,
-    tls: bool,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ServerConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">tls</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Default for ServerConfig {
-    fn default() -&gt; Self { // &lt;- manual impl: the "sensible" defaults aren't all zero
-        ServerConfig { port: 8080, max_connections: 100, timeout_ms: 30_000, tls: false }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Default</span> <span class="tok-keyword">for</span> <span class="tok-type">ServerConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- manual impl: the &quot;sensible&quot; defaults aren't all zero</span>
+        <span class="tok-type">ServerConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-number">8080</span><span class="tok-punct">,</span> <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-number">30_000</span><span class="tok-punct">,</span> <span class="tok-variable">tls</span><span class="tok-punct">:</span> <span class="tok-number">false</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let config = ServerConfig {
-    port: 9090, // &lt;- only the override the caller actually needs
-    ..Default::default() // &lt;- every other field comes from ServerConfig::default()
-};
-println!("{config:?}");
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">ServerConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-number">9090</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- only the override the caller actually needs</span>
+    <span class="tok-punct">..</span><span class="tok-type">Default</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- every other field comes from ServerConfig::default()</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{config:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> struct update syntax against <code>Default::default()</code> scales
@@ -1072,19 +1072,19 @@ fields.</p>
 knows through a generic parameter can require <code>Default</code> and call it,
 something a <code>new()</code> convention alone could never offer since it isn't a
 trait a generic bound can name.</p>
-<pre><code class="rust">#[derive(Default)]
-struct Metrics {
-    requests: u64,
-    errors: u64,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Default)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Metrics</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">requests</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">errors</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn reset&lt;T: Default&gt;(slot: &amp;mut T) {
-    *slot = T::default(); // &lt;- works for any T that implements Default, not just Metrics
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">reset</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Default</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">slot</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">*</span><span class="tok-variable">slot</span> <span class="tok-punct">=</span> <span class="tok-type">T</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- works for any T that implements Default, not just Metrics</span>
+<span class="tok-punct">}</span>
 
-let mut metrics = Metrics { requests: 42, errors: 3 };
-reset(&amp;mut metrics);
-println!("{} {}", metrics.requests, metrics.errors);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">metrics</span> <span class="tok-punct">=</span> <span class="tok-type">Metrics</span> <span class="tok-punct">{</span> <span class="tok-variable">requests</span><span class="tok-punct">:</span> <span class="tok-number">42</span><span class="tok-punct">,</span> <span class="tok-variable">errors</span><span class="tok-punct">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-call-free">reset</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">metrics</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">metrics</span><span class="tok-punct">.</span><span class="tok-field">requests</span><span class="tok-punct">,</span> <span class="tok-variable">metrics</span><span class="tok-punct">.</span><span class="tok-field">errors</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> bounding a generic function on <code>Default</code> is the only
@@ -1124,13 +1124,13 @@ bound the same way hosted Rust does.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[derive(Default)] // &lt;- generates default(): every field gets its own type's default
-struct GpioConfig {
-    output: bool,    // defaults to false: floating input, the safest reset state
-    pull_up: bool,   // defaults to false
-}
+        <pre><code class="rust-hl"><span class="tok-attribute">#[derive(Default)]</span> <span class="tok-comment tok-anno">// &lt;- generates default(): every field gets its own type's default</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">GpioConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">output</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>    <span class="tok-comment">// defaults to false: floating input, the safest reset state</span>
+    <span class="tok-variable">pull_up</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>   <span class="tok-comment">// defaults to false</span>
+<span class="tok-punct">}</span>
 
-let config = GpioConfig::default();
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">GpioConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1149,23 +1149,23 @@ let config = GpioConfig::default();
 (baud rate) and several that are fine left at their most common setting
 — struct update syntax against <code>Default::default()</code> lets a caller set
 only what matters, without a full builder.</p>
-<pre><code class="rust">#[derive(Debug)]
-struct UartConfig {
-    baud_rate: u32,
-    parity: bool,
-    stop_bits: u8,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">UartConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">parity</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+    <span class="tok-variable">stop_bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Default for UartConfig {
-    fn default() -&gt; Self { // &lt;- manual impl: the "sensible" defaults aren't all zero
-        UartConfig { baud_rate: 9_600, parity: false, stop_bits: 1 }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Default</span> <span class="tok-keyword">for</span> <span class="tok-type">UartConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- manual impl: the &quot;sensible&quot; defaults aren't all zero</span>
+        <span class="tok-type">UartConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-number">9_600</span><span class="tok-punct">,</span> <span class="tok-variable">parity</span><span class="tok-punct">:</span> <span class="tok-number">false</span><span class="tok-punct">,</span> <span class="tok-variable">stop_bits</span><span class="tok-punct">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let config = UartConfig {
-    baud_rate: 115_200, // &lt;- only the override this firmware actually needs
-    ..Default::default() // &lt;- parity and stop_bits come from UartConfig::default()
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">UartConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-number">115_200</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- only the override this firmware actually needs</span>
+    <span class="tok-punct">..</span><span class="tok-type">Default</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- parity and stop_bits come from UartConfig::default()</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> struct update syntax against <code>Default::default()</code>
@@ -1187,18 +1187,18 @@ fields — and a UART's 8N1-at-9600 baud setup is exactly the kind of
 struct back to a known-safe starting point after detecting a fault,
 without knowing at compile time which specific peripheral's state struct
 it's holding.</p>
-<pre><code class="rust">#[derive(Default)]
-struct AdcState {
-    last_reading: u16,
-    overrun_count: u32,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Default)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">AdcState</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">overrun_count</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn reset&lt;T: Default&gt;(state: &amp;mut T) {
-    *state = T::default(); // &lt;- works for any peripheral state type that implements Default
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">reset</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Default</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">*</span><span class="tok-variable">state</span> <span class="tok-punct">=</span> <span class="tok-type">T</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- works for any peripheral state type that implements Default</span>
+<span class="tok-punct">}</span>
 
-let mut adc_state = AdcState { last_reading: 512, overrun_count: 3 };
-reset(&amp;mut adc_state);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">adc_state</span> <span class="tok-punct">=</span> <span class="tok-type">AdcState</span> <span class="tok-punct">{</span> <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-number">512</span><span class="tok-punct">,</span> <span class="tok-variable">overrun_count</span><span class="tok-punct">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-call-free">reset</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">adc_state</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> bounding a generic fault-recovery routine on <code>Default</code>

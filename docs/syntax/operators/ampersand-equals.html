@@ -989,8 +989,8 @@ isn't a "value" that can be compounded like this).</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Clearing bits with a mask</h3>
-            <pre><code class="rust">let mut flags = 0b1100u8;
-flags &amp;= 0b1010; // &lt;- clears bits not set in the mask, in place
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">flags</span> <span class="tok-punct">=</span> <span class="tok-number">0b1100u8</span><span class="tok-punct">;</span>
+<span class="tok-variable">flags</span> <span class="tok-punct">&amp;</span><span class="tok-punct">=</span> <span class="tok-number">0b1010</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- clears bits not set in the mask, in place</span>
 </code></pre>
 <p><strong>Restriction:</strong> the left-hand side must be a mutable binding
 (<code>let mut</code>) — <code>&amp;=</code> assigns in place.</p>
@@ -1001,13 +1001,13 @@ flags &amp;= 0b1010; // &lt;- clears bits not set in the mask, in place
             <p>Clearing a single flag bit without disturbing the rest of the set is the
 classic use of <code>&amp;=</code>: AND the current bits against the complement of the
 bit you want gone.</p>
-<pre><code class="rust">const FLAG_ACTIVE: u8   = 0b0001;
-const FLAG_PENDING: u8  = 0b0010;
-const FLAG_ARCHIVED: u8 = 0b0100;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">FLAG_ACTIVE</span><span class="tok-punct">:</span> <span class="tok-type">u8</span>   <span class="tok-punct">=</span> <span class="tok-number">0b0001</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">FLAG_PENDING</span><span class="tok-punct">:</span> <span class="tok-type">u8</span>  <span class="tok-punct">=</span> <span class="tok-number">0b0010</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">FLAG_ARCHIVED</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0b0100</span><span class="tok-punct">;</span>
 
-let mut status: u8 = FLAG_ACTIVE | FLAG_PENDING | FLAG_ARCHIVED;
-status &amp;= !FLAG_PENDING; // &lt;- clears the PENDING bit in place, keeping the others
-assert_eq!(status, FLAG_ACTIVE | FLAG_ARCHIVED);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-constant">FLAG_ACTIVE</span> <span class="tok-punct">|</span> <span class="tok-constant">FLAG_PENDING</span> <span class="tok-punct">|</span> <span class="tok-constant">FLAG_ARCHIVED</span><span class="tok-punct">;</span>
+<span class="tok-variable">status</span> <span class="tok-punct">&amp;</span><span class="tok-punct">=</span> <span class="tok-punct">!</span><span class="tok-constant">FLAG_PENDING</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- clears the PENDING bit in place, keeping the others</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">,</span> <span class="tok-constant">FLAG_ACTIVE</span> <span class="tok-punct">|</span> <span class="tok-constant">FLAG_ARCHIVED</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>flags &amp;= !bit</code> is the standard bit-clearing idiom in
 systems code generally, built on the
@@ -1044,16 +1044,16 @@ bits it isn't touching by hand.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Disabling one interrupt source in an interrupt-enable register</h3>
-            <pre><code class="rust">const TIMER_IER: *mut u32 = 0x4000_0C00 as *mut u32; // timer interrupt-enable register
-const UPDATE_IE: u32 = 1 &lt;&lt; 0; // update-event interrupt enable bit
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">TIMER_IER</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4000_0C00</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment">// timer interrupt-enable register</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">UPDATE_IE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-comment">// update-event interrupt enable bit</span>
 
-fn disable_update_interrupt() {
-    unsafe {
-        let mut ier = core::ptr::read_volatile(TIMER_IER);
-        ier &amp;= !UPDATE_IE; // &lt;- clears only the update-interrupt bit, leaves the rest as they were
-        core::ptr::write_volatile(TIMER_IER, ier);
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">disable_update_interrupt</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">ier</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">TIMER_IER</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">ier</span> <span class="tok-punct">&amp;</span><span class="tok-punct">=</span> <span class="tok-punct">!</span><span class="tok-constant">UPDATE_IE</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- clears only the update-interrupt bit, leaves the rest as they were</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-constant">TIMER_IER</span><span class="tok-punct">,</span> <span class="tok-variable">ier</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

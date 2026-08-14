@@ -1000,8 +1000,8 @@ purely speculative entries like <a href="../../syntax/keywords/do.html"><code>do
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Using the raw-identifier escape hatch</h3>
-            <pre><code class="rust">let become = 5;     // error: expected identifier, found reserved keyword `become`
-let r#become = 5;   // ok: the raw-identifier form escapes the reservation
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">become</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>     <span class="tok-comment">// error: expected identifier, found reserved keyword `become`</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r</span><span class="tok-punct">#</span><span class="tok-variable">become</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>   <span class="tok-comment">// ok: the raw-identifier form escapes the reservation</span>
 </code></pre>
 
           </div>
@@ -1011,20 +1011,20 @@ let r#become = 5;   // ok: the raw-identifier form escapes the reservation
 <code>become</code> targets: written naturally, each recursive call adds a stack
 frame, so a long enough chain risks a stack overflow. Today's real
 workaround is to rewrite the recursion as an explicit loop.</p>
-<pre><code class="rust">struct Node {
-    value: i64,
-    next: Option&lt;Box&lt;Node&gt;&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Node</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">next</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">Node</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-// Today's real alternative: an explicit loop, not recursion.
-fn sum(mut node: Option&lt;&amp;Node&gt;) -&gt; i64 {
-    let mut total = 0;
-    while let Some(n) = node {
-        total += n.value;
-        node = n.next.as_deref();
-    }
-    total
-}
+<span class="tok-comment">// Today's real alternative: an explicit loop, not recursion.</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sum</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">node</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">Node</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">while</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">node</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">total</span> <span class="tok-punct">+=</span> <span class="tok-variable">n</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">;</span>
+        <span class="tok-variable">node</span> <span class="tok-punct">=</span> <span class="tok-variable">n</span><span class="tok-punct">.</span><span class="tok-field">next</span><span class="tok-punct">.</span><span class="tok-call-method">as_deref</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">total</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without a stable tail-call guarantee, a recursive
 version of <code>sum</code> (<code>n.value + sum(n.next.as_deref())</code>) has no promise of
@@ -1066,8 +1066,8 @@ right now regardless of target.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">The `become` reservation, unaffected by target</h3>
-            <pre><code class="rust">let become = 5;     // error: expected identifier, found reserved keyword `become`, on every target
-let r#become = 5;   // ok: the raw-identifier form escapes the reservation, on every target
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">become</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>     <span class="tok-comment">// error: expected identifier, found reserved keyword `become`, on every target</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r</span><span class="tok-punct">#</span><span class="tok-variable">become</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>   <span class="tok-comment">// ok: the raw-identifier form escapes the reservation, on every target</span>
 </code></pre>
 
           </div>

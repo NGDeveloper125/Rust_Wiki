@@ -1015,19 +1015,19 @@ by-position-disambiguation pattern seen with tokens like <a href="../../syntax/o
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Inherent impl block alongside a trait impl block</h3>
-            <pre><code class="rust">struct Cat;
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Cat</span><span class="tok-punct">;</span>
 
-impl Cat { // &lt;- inherent impl block: no trait involved
-    fn new() -&gt; Self { Cat }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Cat</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- inherent impl block: no trait involved</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-type">Cat</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-trait Greet {
-    fn greet(&amp;self) -&gt; String;
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">Greet</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-impl Greet for Cat { // &lt;- trait impl block: connects Greet's methods to Cat
-    fn greet(&amp;self) -&gt; String { "meow".into() }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Greet</span> <span class="tok-keyword">for</span> <span class="tok-type">Cat</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- trait impl block: connects Greet's methods to Cat</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;meow&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1036,28 +1036,28 @@ impl Greet for Cat { // &lt;- trait impl block: connects Greet's methods to Cat
             <p>A plugin system needs many unrelated types behind one interface — each
 type gets its own <code>impl Trait for Type</code> block, and callers hold them all
 as <code>Box&lt;dyn Trait&gt;</code> without caring which concrete type is underneath.</p>
-<pre><code class="rust">trait Command {
-    fn run(&amp;self, input: &amp;str);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct EchoCommand;
-impl Command for EchoCommand { // &lt;- trait impl: connects Command's method to EchoCommand
-    fn run(&amp;self, input: &amp;str) {
-        println!("{input}");
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">EchoCommand</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Command</span> <span class="tok-keyword">for</span> <span class="tok-type">EchoCommand</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- trait impl: connects Command's method to EchoCommand</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{input}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct UppercaseCommand;
-impl Command for UppercaseCommand { // &lt;- a second, independent trait impl for a different type
-    fn run(&amp;self, input: &amp;str) {
-        println!("{}", input.to_uppercase());
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">UppercaseCommand</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Command</span> <span class="tok-keyword">for</span> <span class="tok-type">UppercaseCommand</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- a second, independent trait impl for a different type</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">to_uppercase</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let commands: Vec&lt;Box&lt;dyn Command&gt;&gt; = vec![Box::new(EchoCommand), Box::new(UppercaseCommand)];
-for command in &amp;commands {
-    command.run("status: ready");
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">commands</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">EchoCommand</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">UppercaseCommand</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">command</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">commands</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">command</span><span class="tok-punct">.</span><span class="tok-call-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;status: ready&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Each <code>impl Command for ...</code> block is independent and can
 live in its own module or crate, which is exactly the decoupling
@@ -1072,12 +1072,12 @@ implementations together.</p>
 accept <code>impl Trait</code> in argument position instead of a generic type
 parameter with a bound — same static dispatch, terser signature, at the
 cost of the caller being unable to name the type explicitly.</p>
-<pre><code class="rust">fn log_reading(value: impl std::fmt::Display) { // &lt;- `impl Trait` in argument position: not a block, no braces
-    println!("reading: {value}");
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Display</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `impl Trait` in argument position: not a block, no braces</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading: {value}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-log_reading(21.5);
-log_reading("overheating");
+<span class="tok-call-free">log_reading</span><span class="tok-punct">(</span><span class="tok-number">21.5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-call-free">log_reading</span><span class="tok-punct">(</span><span class="tok-string">&quot;overheating&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>impl Trait</code> in argument position desugars to the same
 monomorphized generic function as <code>fn log_reading&lt;T: Display&gt;(value: T)</code>
@@ -1115,23 +1115,23 @@ needs.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Implementing an embedded-hal trait for a custom driver type</h3>
-            <pre><code class="rust">struct MockLed {
-    state: bool,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">MockLed</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl embedded_hal::digital::OutputPin for MockLed { // &lt;- `impl Trait for Type`: connects OutputPin's methods to MockLed
-    type Error = core::convert::Infallible;
+<span class="tok-keyword">impl</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-trait">OutputPin</span> <span class="tok-keyword">for</span> <span class="tok-type">MockLed</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `impl Trait for Type`: connects OutputPin's methods to MockLed</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">convert</span><span class="tok-punct">::</span><span class="tok-type">Infallible</span><span class="tok-punct">;</span>
 
-    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt; {
-        self.state = true;
-        Ok(())
-    }
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">state</span> <span class="tok-punct">=</span> <span class="tok-number">true</span><span class="tok-punct">;</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
 
-    fn set_low(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt; {
-        self.state = false;
-        Ok(())
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">state</span> <span class="tok-punct">=</span> <span class="tok-number">false</span><span class="tok-punct">;</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

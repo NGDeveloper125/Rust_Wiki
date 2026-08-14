@@ -1000,12 +1000,12 @@ form useful for structuring multi-step logic without a <code>loop</code> at all.
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Exiting a `loop` immediately</h3>
-            <pre><code class="rust">let done = true;
-loop {
-    if done {
-        break; // &lt;- exits the loop immediately
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">done</span> <span class="tok-punct">=</span> <span class="tok-number">true</span><span class="tok-punct">;</span>
+<span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">done</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">break</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits the loop immediately</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>break value;</code> is legal inside <code>loop</code> and inside a
 labeled block (<code>'a: { ... break 'a value; }</code>), but not in <code>while</code>/<code>for</code> —
@@ -1019,22 +1019,22 @@ defined result.</p>
             <p>Searching a slice of orders for one matching an id can be written as a
 manual loop over an iterator so that a match arm can <code>break</code> with the
 found value once it's located.</p>
-<pre><code class="rust">struct Order { id: u32, total: f64 }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 
-let orders = [
-    Order { id: 101, total: 42.50 },
-    Order { id: 102, total: 19.99 },
-    Order { id: 103, total: 7.25 },
-];
+<span class="tok-keyword">let</span> <span class="tok-variable">orders</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">101</span><span class="tok-punct">,</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-number">42.50</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">102</span><span class="tok-punct">,</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-number">19.99</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">103</span><span class="tok-punct">,</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-number">7.25</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let mut iter = orders.iter();
-let found = loop {
-    match iter.next() {
-        Some(order) if order.id == 102 =&gt; break Some(order), // &lt;- `break` exits `loop`, carrying the found order out as its value
-        Some(_) =&gt; continue,
-        None =&gt; break None,
-    }
-};
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">iter</span> <span class="tok-punct">=</span> <span class="tok-variable">orders</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">found</span> <span class="tok-punct">=</span> <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">iter</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">id</span> <span class="tok-punct">==</span> <span class="tok-number">102</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">break</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `break` exits `loop`, carrying the found order out as its value</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">continue</span><span class="tok-punct">,</span>
+        <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">break</span> <span class="tok-field">None</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 <p>For a plain predicate search,
 <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.find"><code>Iterator::find</code></a>
@@ -1048,18 +1048,18 @@ express as cleanly.</p>
             <p>A loop draining a queue of commands can use <code>break</code> inside one arm of a
 <code>match</code> to stop only on a specific variant, while other variants keep the
 loop running.</p>
-<pre><code class="rust">enum Command { Process(u32), Retry, Shutdown }
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span> <span class="tok-field">Process</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Retry</span><span class="tok-punct">,</span> <span class="tok-type">Shutdown</span> <span class="tok-punct">}</span>
 
-let mut queue = vec![Command::Process(7), Command::Retry, Command::Shutdown];
-let mut processed = 0;
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">queue</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">Process</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">Retry</span><span class="tok-punct">,</span> <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">Shutdown</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">processed</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
 
-while let Some(cmd) = queue.pop() {
-    match cmd {
-        Command::Process(id) =&gt; processed += id,
-        Command::Retry =&gt; continue,
-        Command::Shutdown =&gt; break, // &lt;- exits the loop only when this arm matches; other arms keep looping
-    }
-}
+<span class="tok-keyword">while</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">queue</span><span class="tok-punct">.</span><span class="tok-call-method">pop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">cmd</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">Process</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">processed</span> <span class="tok-punct">+=</span> <span class="tok-variable">id</span><span class="tok-punct">,</span>
+        <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">Retry</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">continue</span><span class="tok-punct">,</span>
+        <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">Shutdown</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">break</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- exits the loop only when this arm matches; other arms keep looping</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Scoping the exit condition to one <code>match</code> arm reads more
 directly than a boolean flag checked after the match, and the
@@ -1097,26 +1097,26 @@ timed out.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Exiting a bounded polling loop with a value</h3>
-            <pre><code class="rust">let mut attempts = 0;
-let ready = loop {
-    if sensor.is_ready() {
-        break true; // &lt;- `break` carries a value out of the polling loop
-    }
-    attempts += 1;
-    if attempts &gt;= MAX_ATTEMPTS {
-        break false; // &lt;- times out instead of spinning forever on dead hardware
-    }
-};
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">attempts</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ready</span> <span class="tok-punct">=</span> <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-call-method">is_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">break</span> <span class="tok-number">true</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `break` carries a value out of the polling loop</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">attempts</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">attempts</span> <span class="tok-punct">&gt;=</span> <span class="tok-constant">MAX_ATTEMPTS</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">break</span> <span class="tok-number">false</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- times out instead of spinning forever on dead hardware</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Stopping a retry loop on the first successful transmission</h3>
-            <pre><code class="rust">for attempt in 0..3 {
-    if uart.try_send(byte).is_ok() {
-        break; // &lt;- stop retrying once the send succeeds
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">for</span> <span class="tok-variable">attempt</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">uart</span><span class="tok-punct">.</span><span class="tok-call-method">try_send</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">break</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- stop retrying once the send succeeds</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

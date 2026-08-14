@@ -1023,15 +1023,15 @@ rather than <em>handled</em>. Three situations where that's the case:</p>
             <p><code>main</code> can return <code>Result</code>, so an application can propagate failures all the way
 out and let the runtime print them — no error type of your own, no <code>From</code> impls,
 <code>?</code> across three unrelated error kinds in one function.</p>
-<pre><code class="rust">use anyhow::Result;
-use std::fs;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Result</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
 
-fn main() -&gt; Result&lt;()&gt; {
-    let text = fs::read_to_string("port.txt")?; // &lt;- std::io::Error
-    let port: u16 = text.trim().parse()?;       // &lt;- std::num::ParseIntError
-    println!("listening on {port}");
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">text</span> <span class="tok-punct">=</span> <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-string">&quot;port.txt&quot;</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- std::io::Error</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">=</span> <span class="tok-variable">text</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>       <span class="tok-comment tok-anno">// &lt;- std::num::ParseIntError</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;listening on {port}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> two unrelated error types flow through one <code>?</code> each and land in
@@ -1049,19 +1049,19 @@ chain of causes, and a backtrace if one was captured.</p>
             <p>A raw <code>No such file or directory (os error 2)</code> tells the user nothing about
 <em>which</em> file or <em>why</em> the program wanted it. <code>anyhow</code>'s <code>Context</code> trait attaches
 that explanation at each layer without discarding the original error.</p>
-<pre><code class="rust">use anyhow::{Context, Result};
-use std::fs;
-use std::path::Path;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Context</span><span class="tok-punct">,</span> <span class="tok-type">Result</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">path</span><span class="tok-punct">::</span><span class="tok-type">Path</span><span class="tok-punct">;</span>
 
-fn load_config(path: &amp;Path) -&gt; Result&lt;String&gt; {
-    fs::read_to_string(path)
-        .with_context(|| format!("reading config from {}", path.display()))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">load_config</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Path</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">with_context</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading config from {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">path</span><span class="tok-punct">.</span><span class="tok-call-method">display</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn start() -&gt; Result&lt;()&gt; {
-    let _cfg = load_config(Path::new("app.toml")).context("starting the server")?;
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_cfg</span> <span class="tok-punct">=</span> <span class="tok-call-free">load_config</span><span class="tok-punct">(</span><span class="tok-type">Path</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-string">&quot;app.toml&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">context</span><span class="tok-punct">(</span><span class="tok-string">&quot;starting the server&quot;</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> the printed error becomes a stack of explanations — <em>starting
@@ -1078,20 +1078,20 @@ original <code>io::Error</code> is still in the chain and can be downcast back o
             <h3 class="scenario-title">Handling one specific failure, reporting the rest</h3>
             <p>Type erasure doesn't mean giving up control. When exactly one failure deserves
 special treatment, downcast for that one and let everything else propagate.</p>
-<pre><code class="rust">use anyhow::{Context, Result};
-use std::fs;
-use std::io;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Context</span><span class="tok-punct">,</span> <span class="tok-type">Result</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">io</span><span class="tok-punct">;</span>
 
-fn read_or_default(path: &amp;str) -&gt; Result&lt;String&gt; {
-    match fs::read_to_string(path).with_context(|| format!("reading {path}")) {
-        Ok(text) =&gt; Ok(text),
-        Err(e) =&gt; match e.downcast_ref::&lt;io::Error&gt;() {
-            // &lt;- a missing file is fine; anything else is a real failure
-            Some(io) if io.kind() == io::ErrorKind::NotFound =&gt; Ok(String::new()),
-            _ =&gt; Err(e),
-        },
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_or_default</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">with_context</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading {path}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">match</span> <span class="tok-variable">e</span><span class="tok-punct">.</span><span class="tok-field">downcast_ref</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- a missing file is fine; anything else is a real failure</span>
+            <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">io</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-variable">io</span><span class="tok-punct">.</span><span class="tok-call-method">kind</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">==</span> <span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">ErrorKind</span><span class="tok-punct">::</span><span class="tok-field">NotFound</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+            <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> you pay the cost of a downcast only at the one place that
@@ -1116,10 +1116,10 @@ and a <code>Result</code> alias. Everything below is in the crate root.</p>
             <h4 class="api-sig"><code class="tok-inline">anyhow!</code></h4>
             <p>Builds an <code>Error</code> from a format string, or wraps any value that is
 <code>Debug + Display + Send + Sync + 'static</code>.</p>
-<pre><code class="rust">use anyhow::anyhow;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-variable">anyhow</span><span class="tok-punct">;</span>
 
-let name = "config.toml";
-let err = anyhow!("{name} is missing a [server] section");
+<span class="tok-keyword">let</span> <span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;config.toml&quot;</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-macro">anyhow!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{name} is missing a [server] section&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when the failure originates in your own code and there is no
@@ -1131,14 +1131,14 @@ about to <code>return Err(anyhow!(...))</code>, use <code>bail!</code> instead.<
             <h4 class="api-sig"><code class="tok-inline">bail!</code></h4>
             <p><code>return Err(anyhow!(...))</code> in one word. Takes exactly the same arguments as
 <code>anyhow!</code>.</p>
-<pre><code class="rust">use anyhow::{bail, Result};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">bail</span><span class="tok-punct">,</span> <span class="tok-type">Result</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-fn set_workers(n: usize) -&gt; Result&lt;()&gt; {
-    if n == 0 {
-        bail!("worker count must be at least 1");
-    }
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_workers</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">n</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">bail!</span><span class="tok-punct">(</span><span class="tok-string">&quot;worker count must be at least 1&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> for an early return on a failed check. It's the error-path
@@ -1150,13 +1150,13 @@ it expands to.</p>
             <h4 class="api-sig"><code class="tok-inline">ensure!</code></h4>
             <p>Asserts a condition and bails with the given message if it doesn't hold. With no
 message, it reports the failed condition verbatim.</p>
-<pre><code class="rust">use anyhow::{ensure, Result};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">ensure</span><span class="tok-punct">,</span> <span class="tok-type">Result</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-fn set_workers(n: usize) -&gt; Result&lt;()&gt; {
-    ensure!(n &gt;= 1, "worker count must be at least 1, got {n}");
-    ensure!(n &lt;= 512); // &lt;- message defaults to "Condition failed: `n &lt;= 512`"
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_workers</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">ensure!</span><span class="tok-punct">(</span><span class="tok-variable">n</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;worker count must be at least 1, got {n}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">ensure!</span><span class="tok-punct">(</span><span class="tok-variable">n</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">512</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- message defaults to &quot;Condition failed: `n &lt;= 512`&quot;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> for precondition checks at the top of a function. It is to
@@ -1168,9 +1168,9 @@ returns an error instead of unwinding, so it's safe on input you don't control.<
             <h4 class="api-sig"><code class="tok-inline">Error::msg</code></h4>
             <p>Builds an <code>Error</code> from a single <code>Display + Debug + Send + Sync + 'static</code> value,
 without the macro's format-string handling.</p>
-<pre><code class="rust">use anyhow::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-let err = Error::msg("shutting down");
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">msg</span><span class="tok-punct">(</span><span class="tok-string">&quot;shutting down&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you already have the message as a value — including in
@@ -1181,10 +1181,10 @@ For a literal or a format string, <code>anyhow!</code> reads better.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Error::new</code></h4>
             <p>Wraps an existing error that implements <code>std::error::Error + Send + Sync + 'static</code>, preserving it as the source.</p>
-<pre><code class="rust">use anyhow::Error;
-use std::io;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">io</span><span class="tok-punct">;</span>
 
-let err = Error::new(io::Error::new(io::ErrorKind::Other, "device offline"));
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">ErrorKind</span><span class="tok-punct">::</span><span class="tok-field">Other</span><span class="tok-punct">,</span> <span class="tok-string">&quot;device offline&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> rarely and explicitly — <code>?</code> and <code>.into()</code> already do this
@@ -1205,14 +1205,14 @@ and importing it brings both methods into scope.</p>
             <h4 class="api-sig"><code class="tok-inline">Context::context</code></h4>
             <p>Wraps the error in an extra layer of explanation, keeping the original as the
 cause. On an <code>Option</code>, it turns <code>None</code> into an error.</p>
-<pre><code class="rust">use anyhow::{Context, Result};
-use std::fs;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Context</span><span class="tok-punct">,</span> <span class="tok-type">Result</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
 
-fn read_key() -&gt; Result&lt;String&gt; {
-    let raw = fs::read_to_string("key.pem").context("reading the TLS key")?;
-    let first = raw.lines().next().context("the key file is empty")?; // &lt;- on Option
-    Ok(first.to_owned())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_key</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-string">&quot;key.pem&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">context</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading the TLS key&quot;</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">first</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">lines</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">context</span><span class="tok-punct">(</span><span class="tok-string">&quot;the key file is empty&quot;</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- on Option</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">first</span><span class="tok-punct">.</span><span class="tok-call-method">to_owned</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> on essentially every <code>?</code> that crosses a boundary the caller
@@ -1224,13 +1224,13 @@ is cheap to build (a literal, an existing <code>String</code>).</p>
             <h4 class="api-sig"><code class="tok-inline">Context::with_context</code></h4>
             <p>The same thing, but the context is built by a closure that only runs on the
 error path.</p>
-<pre><code class="rust">use anyhow::{Context, Result};
-use std::fs;
-use std::path::Path;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Context</span><span class="tok-punct">,</span> <span class="tok-type">Result</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">path</span><span class="tok-punct">::</span><span class="tok-type">Path</span><span class="tok-punct">;</span>
 
-fn read(path: &amp;Path) -&gt; Result&lt;String&gt; {
-    fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Path</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">with_context</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">path</span><span class="tok-punct">.</span><span class="tok-call-method">display</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> whenever building the message costs anything — any
@@ -1242,9 +1242,9 @@ format a message on every call and throw it away; this doesn't.</p>
             <h4 class="api-sig"><code class="tok-inline">Error::context</code></h4>
             <p>The same layering, but applied to an <code>anyhow::Error</code> you already hold rather
 than to a <code>Result</code>.</p>
-<pre><code class="rust">use anyhow::{anyhow, Error};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">anyhow</span><span class="tok-punct">,</span> <span class="tok-type">Error</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let err: Error = anyhow!("connection reset").context("syncing with upstream");
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-type">Error</span> <span class="tok-punct">=</span> <span class="tok-macro">anyhow!</span><span class="tok-punct">(</span><span class="tok-string">&quot;connection reset&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">context</span><span class="tok-punct">(</span><span class="tok-string">&quot;syncing with upstream&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you're manipulating an <code>Error</code> value directly — in a
@@ -1262,11 +1262,11 @@ let err: Error = anyhow!("connection reset").context("syncing with upstream");
             <p>A type alias for <code>std::result::Result&lt;T, anyhow::Error&gt;</code>. The second parameter
 still defaults, so <code>Result&lt;T, E&gt;</code> also works if you need a different error type
 in one signature.</p>
-<pre><code class="rust">use anyhow::Result;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Result</span><span class="tok-punct">;</span>
 
-fn parse_port(text: &amp;str) -&gt; Result&lt;u16&gt; {
-    Ok(text.trim().parse()?)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_port</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> as the return type of essentially every fallible function in
@@ -1277,14 +1277,14 @@ an application. Import it once per module and never spell the error type again.<
             <h4 class="api-sig"><code class="tok-inline">anyhow::Ok</code></h4>
             <p>A function that constructs an <code>Ok</code> already pinned to <code>anyhow::Error</code>, so type
 inference doesn't need help.</p>
-<pre><code class="rust">use anyhow::Result;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Result</span><span class="tok-punct">;</span>
 
-fn parse_all(lines: &amp;[&amp;str]) -&gt; Result&lt;Vec&lt;u16&gt;&gt; {
-    lines
-        .iter()
-        .map(|l| anyhow::Ok(l.trim().parse::&lt;u16&gt;()?)) // &lt;- fixes the closure's error type
-        .collect()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_all</span><span class="tok-punct">(</span><span class="tok-variable">lines</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">lines</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">l</span><span class="tok-punct">|</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">l</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- fixes the closure's error type</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> inside a closure or block whose error type the compiler
@@ -1302,13 +1302,13 @@ that uses <code>?</code>. Everywhere else, plain <code>Ok</code> is fine.</p>
             <h4 class="api-sig"><code class="tok-inline">Error::chain</code></h4>
             <p>Returns an iterator over this error and every error underneath it, outermost
 first.</p>
-<pre><code class="rust">use anyhow::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-fn log_causes(err: &amp;Error) {
-    for cause in err.chain() {
-        eprintln!("- {cause}");
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_causes</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">cause</span> <span class="tok-keyword">in</span> <span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">chain</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;- {cause}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you're formatting an error yourself — a log line, a
@@ -1319,11 +1319,11 @@ the crate's default rendering.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Error::root_cause</code></h4>
             <p>The last error in the chain: the original failure everything else wrapped.</p>
-<pre><code class="rust">use anyhow::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-fn is_fatal(err: &amp;Error) -&gt; bool {
-    err.root_cause().to_string().contains("disk full")
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_fatal</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">root_cause</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-string">&quot;disk full&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when only the bottom of the chain matters — deciding whether
@@ -1335,12 +1335,12 @@ to retry, or reporting the underlying failure without your own context layers.
             <h4 class="api-sig"><code class="tok-inline">Error::downcast_ref</code></h4>
             <p>Borrows the error back as a concrete type, if that type is anywhere in the
 chain.</p>
-<pre><code class="rust">use anyhow::Error;
-use std::io;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">io</span><span class="tok-punct">;</span>
 
-fn is_not_found(err: &amp;Error) -&gt; bool {
-    matches!(err.downcast_ref::&lt;io::Error&gt;(), Some(e) if e.kind() == io::ErrorKind::NotFound)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_not_found</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-field">downcast_ref</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-variable">e</span><span class="tok-punct">.</span><span class="tok-call-method">kind</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">==</span> <span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">ErrorKind</span><span class="tok-punct">::</span><span class="tok-field">NotFound</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the common way to recover from one specific failure while
@@ -1352,12 +1352,12 @@ borrow.</p>
             <h4 class="api-sig"><code class="tok-inline">Error::downcast</code></h4>
             <p>Takes the concrete error out by value, returning the original <code>Error</code> unchanged
 in the <code>Err</code> case so nothing is lost when the type doesn't match.</p>
-<pre><code class="rust">use anyhow::{Error, Result};
-use std::io;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Error</span><span class="tok-punct">,</span> <span class="tok-type">Result</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">io</span><span class="tok-punct">;</span>
 
-fn recover(err: Error) -&gt; Result&lt;io::Error&gt; {
-    err.downcast::&lt;io::Error&gt;() // &lt;- Err(e) hands the original error back
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">recover</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-field">downcast</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- Err(e) hands the original error back</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you need to <em>own</em> the concrete error — to return it, to
@@ -1368,12 +1368,12 @@ borrow is enough.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Error::is</code></h4>
             <p>Whether the chain contains an error of the given type.</p>
-<pre><code class="rust">use anyhow::Error;
-use std::io;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">io</span><span class="tok-punct">;</span>
 
-fn touched_the_filesystem(err: &amp;Error) -&gt; bool {
-    err.is::&lt;io::Error&gt;()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">touched_the_filesystem</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-field">is</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> for a plain yes/no check where you don't need the error
@@ -1384,11 +1384,11 @@ itself — classifying a failure for a metric or a log level.</p>
             <h4 class="api-sig"><code class="tok-inline">Error::backtrace</code></h4>
             <p>The backtrace captured when the error was created, if backtraces were enabled at
 runtime.</p>
-<pre><code class="rust">use anyhow::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-fn dump(err: &amp;Error) {
-    eprintln!("{}", err.backtrace());
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">dump</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">backtrace</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you're building your own crash report and want the
@@ -1406,11 +1406,11 @@ print. On Rust 1.65 and later it works on stable with no extra Cargo feature.</p
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">{}</code> — the message only</h4>
             <p><code>Display</code> prints just the outermost error, with no causes.</p>
-<pre><code class="rust">use anyhow::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-fn line(err: &amp;Error) -&gt; String {
-    format!("{err}")
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">line</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{err}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> in a message for the end user, where the chain would be
@@ -1420,11 +1420,11 @@ noise — a CLI's final "error: ..." line, a toast, an HTTP status message.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">{:#}</code> — the whole chain on one line</h4>
             <p>The alternate <code>Display</code> form joins every layer with <code>: </code>, outermost first.</p>
-<pre><code class="rust">use anyhow::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-fn line(err: &amp;Error) -&gt; String {
-    format!("{err:#}") // &lt;- "starting the server: reading app.toml: No such file..."
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">line</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{err:#}&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- &quot;starting the server: reading app.toml: No such file...&quot;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> for structured logging, where the full explanation has to
@@ -1435,11 +1435,11 @@ fit in a single field but you still want every cause.</p>
             <h4 class="api-sig"><code class="tok-inline">{:?}</code> — the full report</h4>
             <p><code>Debug</code> prints the error, a <code>Caused by:</code> list, and the backtrace if one was
 captured. This is what <code>main</code> returning <code>Result</code> uses on exit.</p>
-<pre><code class="rust">use anyhow::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">anyhow</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-fn report(err: &amp;Error) {
-    eprintln!("{err:?}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">report</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{err:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> as the last thing a program prints before it dies, and

@@ -1011,29 +1011,29 @@ undo-specific machinery beyond the trait itself.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait Command {
-    fn execute(&amp;self);
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct TurnOnLight;
-impl Command for TurnOnLight {
-    fn execute(&amp;self) {
-        println!("light: on");
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">TurnOnLight</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Command</span> <span class="tok-keyword">for</span> <span class="tok-type">TurnOnLight</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;light: on&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct TurnOffLight;
-impl Command for TurnOffLight {
-    fn execute(&amp;self) {
-        println!("light: off");
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">TurnOffLight</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Command</span> <span class="tok-keyword">for</span> <span class="tok-type">TurnOffLight</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;light: off&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let queue: Vec&lt;Box&lt;dyn Command&gt;&gt; = vec![Box::new(TurnOnLight), Box::new(TurnOffLight)];
-// &lt;- each queued command is a different concrete type, held behind one trait object
-for command in &amp;queue {
-    command.execute();
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">queue</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">TurnOnLight</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">TurnOffLight</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- each queued command is a different concrete type, held behind one trait object</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">command</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">queue</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">command</span><span class="tok-punct">.</span><span class="tok-call-method">execute</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1052,42 +1052,42 @@ for command in &amp;queue {
 deleting, formatting — can be reversed, and the set of action types
 keeps growing as features are added, which rules out a single fixed
 enum.</p>
-<pre><code class="rust">trait Command {
-    fn execute(&amp;self, doc: &amp;mut String);
-    fn undo(&amp;self, doc: &amp;mut String);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">doc</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">undo</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">doc</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Insert { text: String, at: usize }
-impl Command for Insert {
-    fn execute(&amp;self, doc: &amp;mut String) {
-        doc.insert_str(self.at, &amp;self.text);
-    }
-    fn undo(&amp;self, doc: &amp;mut String) {
-        doc.replace_range(self.at..self.at + self.text.len(), "");
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Insert</span> <span class="tok-punct">{</span> <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-variable">at</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Command</span> <span class="tok-keyword">for</span> <span class="tok-type">Insert</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">doc</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">doc</span><span class="tok-punct">.</span><span class="tok-call-method">insert_str</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">at</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">text</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">undo</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">doc</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">doc</span><span class="tok-punct">.</span><span class="tok-call-method">replace_range</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">at</span><span class="tok-punct">..</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">at</span> <span class="tok-punct">+</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">text</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct Editor {
-    text: String,
-    undo_stack: Vec&lt;Box&lt;dyn Command&gt;&gt;, // &lt;- heterogeneous history of every reversible action taken so far
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Editor</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">undo_stack</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- heterogeneous history of every reversible action taken so far</span>
+<span class="tok-punct">}</span>
 
-impl Editor {
-    fn apply(&amp;mut self, command: Box&lt;dyn Command&gt;) {
-        command.execute(&amp;mut self.text);
-        self.undo_stack.push(command);
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Editor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">command</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">command</span><span class="tok-punct">.</span><span class="tok-call-method">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">text</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">undo_stack</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">command</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    fn undo(&amp;mut self) {
-        if let Some(command) = self.undo_stack.pop() {
-            command.undo(&amp;mut self.text);
-        }
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">undo</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">command</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">undo_stack</span><span class="tok-punct">.</span><span class="tok-call-method">pop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">command</span><span class="tok-punct">.</span><span class="tok-call-method">undo</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">text</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut editor = Editor { text: String::new(), undo_stack: Vec::new() };
-editor.apply(Box::new(Insert { text: "hello".into(), at: 0 }));
-editor.undo();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">editor</span> <span class="tok-punct">=</span> <span class="tok-type">Editor</span> <span class="tok-punct">{</span> <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">undo_stack</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">editor</span><span class="tok-punct">.</span><span class="tok-call-method">apply</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Insert</span> <span class="tok-punct">{</span> <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-string">&quot;hello&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">at</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">editor</span><span class="tok-punct">.</span><span class="tok-call-method">undo</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> storing each applied action as a <code>Box&lt;dyn Command&gt;</code>
@@ -1107,44 +1107,44 @@ describes.</p>
             <p>A background worker processes a queue of jobs enqueued from unrelated
 parts of an application; each job is a different concrete type, but the
 worker only ever needs to call one method on whatever it's holding.</p>
-<pre><code class="rust">trait Job {
-    fn run(&amp;self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Job</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct SendEmail { to: String }
-impl Job for SendEmail {
-    fn run(&amp;self) {
-        println!("emailing {}", self.to);
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SendEmail</span> <span class="tok-punct">{</span> <span class="tok-variable">to</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Job</span> <span class="tok-keyword">for</span> <span class="tok-type">SendEmail</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;emailing {}&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">to</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct ResizeImage { path: String }
-impl Job for ResizeImage {
-    fn run(&amp;self) {
-        println!("resizing {}", self.path);
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ResizeImage</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Job</span> <span class="tok-keyword">for</span> <span class="tok-type">ResizeImage</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;resizing {}&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">path</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct Worker {
-    jobs: Vec&lt;Box&lt;dyn Job&gt;&gt;, // &lt;- FIFO queue of unrelated job types behind one trait object
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Worker</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">jobs</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Job</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- FIFO queue of unrelated job types behind one trait object</span>
+<span class="tok-punct">}</span>
 
-impl Worker {
-    fn enqueue(&amp;mut self, job: Box&lt;dyn Job&gt;) {
-        self.jobs.push(job);
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Worker</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">enqueue</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">job</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Job</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">jobs</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    fn run_all(&amp;mut self) {
-        for job in self.jobs.drain(..) { // &lt;- processes jobs in the order they were enqueued
-            job.run();
-        }
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run_all</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">job</span> <span class="tok-keyword">in</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">jobs</span><span class="tok-punct">.</span><span class="tok-call-method">drain</span><span class="tok-punct">(</span><span class="tok-punct">..</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- processes jobs in the order they were enqueued</span>
+            <span class="tok-variable">job</span><span class="tok-punct">.</span><span class="tok-call-method">run</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut worker = Worker { jobs: Vec::new() };
-worker.enqueue(Box::new(SendEmail { to: "a@example.com".into() }));
-worker.enqueue(Box::new(ResizeImage { path: "photo.png".into() }));
-worker.run_all();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">worker</span> <span class="tok-punct">=</span> <span class="tok-type">Worker</span> <span class="tok-punct">{</span> <span class="tok-variable">jobs</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">worker</span><span class="tok-punct">.</span><span class="tok-call-method">enqueue</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">SendEmail</span> <span class="tok-punct">{</span> <span class="tok-variable">to</span><span class="tok-punct">:</span> <span class="tok-string">&quot;a@example.com&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">worker</span><span class="tok-punct">.</span><span class="tok-call-method">enqueue</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">ResizeImage</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-string">&quot;photo.png&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">worker</span><span class="tok-punct">.</span><span class="tok-call-method">run_all</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Vec::drain</code> hands ownership of each queued command
@@ -1163,31 +1163,31 @@ the standard shape for a job queue per the
 performs a network call might fail — so <code>execute</code> should return a
 <code>Result</code> the runner can collect, instead of panicking and losing the
 rest of the batch.</p>
-<pre><code class="rust">trait Command {
-    fn execute(&amp;self) -&gt; Result&lt;(), String&gt;;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct SyncRemoteFile { url: String }
-impl Command for SyncRemoteFile {
-    fn execute(&amp;self) -&gt; Result&lt;(), String&gt; {
-        if self.url.starts_with("https://") {
-            Ok(())
-        } else {
-            Err(format!("refusing insecure url: {}", self.url)) // &lt;- command reports failure instead of panicking
-        }
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SyncRemoteFile</span> <span class="tok-punct">{</span> <span class="tok-variable">url</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Command</span> <span class="tok-keyword">for</span> <span class="tok-type">SyncRemoteFile</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">url</span><span class="tok-punct">.</span><span class="tok-call-method">starts_with</span><span class="tok-punct">(</span><span class="tok-string">&quot;https://&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;refusing insecure url: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">url</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- command reports failure instead of panicking</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn run_all(commands: &amp;[Box&lt;dyn Command&gt;]) -&gt; Vec&lt;String&gt; {
-    commands
-        .iter()
-        .filter_map(|command| command.execute().err()) // &lt;- collects every failure without stopping the queue
-        .collect()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">run_all</span><span class="tok-punct">(</span><span class="tok-variable">commands</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">commands</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">filter_map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">command</span><span class="tok-punct">|</span> <span class="tok-variable">command</span><span class="tok-punct">.</span><span class="tok-call-method">execute</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- collects every failure without stopping the queue</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let commands: Vec&lt;Box&lt;dyn Command&gt;&gt; = vec![Box::new(SyncRemoteFile { url: "http://x".into() })];
-let errors = run_all(&amp;commands);
-println!("{errors:?}");
+<span class="tok-keyword">let</span> <span class="tok-variable">commands</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">SyncRemoteFile</span> <span class="tok-punct">{</span> <span class="tok-variable">url</span><span class="tok-punct">:</span> <span class="tok-string">&quot;http://x&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">errors</span> <span class="tok-punct">=</span> <span class="tok-call-free">run_all</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">commands</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{errors:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> letting each command report failure through a
@@ -1246,19 +1246,19 @@ referent.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">enum Command { // &lt;- fixed-size enum in place of Box&lt;dyn Command&gt;: no allocator needed
-    SetPin { pin: u8, high: bool },
-    StartAdcConversion { channel: u8 },
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- fixed-size enum in place of Box&lt;dyn Command&gt;: no allocator needed</span>
+    <span class="tok-type">SetPin</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">:</span> <span class="tok-type">bool</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">StartAdcConversion</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn execute(cmd: Command) {
-    match cmd { // &lt;- static dispatch via match, standing in for Command::execute
-        Command::SetPin { pin, high } =&gt; { let _ = (pin, high); }
-        Command::StartAdcConversion { channel } =&gt; { let _ = channel; }
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-type">Command</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">cmd</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- static dispatch via match, standing in for Command::execute</span>
+        <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">SetPin</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">high</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+        <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">StartAdcConversion</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">channel</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-execute(Command::SetPin { pin: 13, high: true });
+<span class="tok-call-free">execute</span><span class="tok-punct">(</span><span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">SetPin</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-number">13</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">:</span> <span class="tok-number">true</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1277,40 +1277,40 @@ execute(Command::SetPin { pin: 13, high: true });
 all known at build time, queued from an interrupt handler and drained in
 the main loop — a closed set that never needs a new command type without
 a firmware rebuild anyway.</p>
-<pre><code class="rust">enum MotorCommand {
-    SetSpeed { rpm: u16 },
-    Stop,
-    ReverseDirection,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">MotorCommand</span> <span class="tok-punct">{</span>
+    <span class="tok-type">SetSpeed</span> <span class="tok-punct">{</span> <span class="tok-variable">rpm</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Stop</span><span class="tok-punct">,</span>
+    <span class="tok-type">ReverseDirection</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-const QUEUE_LEN: usize = 8;
+<span class="tok-keyword">const</span> <span class="tok-constant">QUEUE_LEN</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">8</span><span class="tok-punct">;</span>
 
-struct CommandQueue {
-    items: [Option&lt;MotorCommand&gt;; QUEUE_LEN], // &lt;- fixed-capacity queue: no Vec, no allocator
-    len: usize,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">CommandQueue</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">MotorCommand</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-constant">QUEUE_LEN</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- fixed-capacity queue: no Vec, no allocator</span>
+    <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl CommandQueue {
-    fn push(&amp;mut self, cmd: MotorCommand) {
-        if self.len &lt; QUEUE_LEN {
-            self.items[self.len] = Some(cmd);
-            self.len += 1;
-        }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">CommandQueue</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-type">MotorCommand</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">&lt;</span> <span class="tok-constant">QUEUE_LEN</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">[</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn drain(&amp;mut self) {
-        for slot in self.items.iter_mut().take(self.len) {
-            if let Some(cmd) = slot.take() {
-                match cmd { // &lt;- match plays Command::execute's role, dispatched statically
-                    MotorCommand::SetSpeed { rpm } =&gt; { let _ = rpm; }
-                    MotorCommand::Stop =&gt; {}
-                    MotorCommand::ReverseDirection =&gt; {}
-                }
-            }
-        }
-        self.len = 0;
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drain</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">slot</span> <span class="tok-keyword">in</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">.</span><span class="tok-call-method">iter_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">slot</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">match</span> <span class="tok-variable">cmd</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- match plays Command::execute's role, dispatched statically</span>
+                    <span class="tok-type">MotorCommand</span><span class="tok-punct">::</span><span class="tok-field">SetSpeed</span> <span class="tok-punct">{</span> <span class="tok-variable">rpm</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">rpm</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+                    <span class="tok-type">MotorCommand</span><span class="tok-punct">::</span><span class="tok-field">Stop</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+                    <span class="tok-type">MotorCommand</span><span class="tok-punct">::</span><span class="tok-field">ReverseDirection</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+                <span class="tok-punct">}</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> every command kind this firmware will ever issue is
@@ -1334,23 +1334,23 @@ registered for the duration of a single command dispatch pass; the
 handler set isn't a fixed enum the core crate can enumerate, but nothing
 needs to <em>own</em> the handler past the call that runs it, so a reference
 avoids allocating entirely.</p>
-<pre><code class="rust">trait Command {
-    fn execute(&amp;self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct SetPinCommand { pin: u8 }
-impl Command for SetPinCommand {
-    fn execute(&amp;self) {
-        let _ = self.pin; // stand-in for a real register write
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SetPinCommand</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Command</span> <span class="tok-keyword">for</span> <span class="tok-type">SetPinCommand</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pin</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a real register write</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn dispatch(cmd: &amp;dyn Command) { // &lt;- reference, not Box: no heap allocation required
-    cmd.execute();
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">dispatch</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- reference, not Box: no heap allocation required</span>
+    <span class="tok-variable">cmd</span><span class="tok-punct">.</span><span class="tok-call-method">execute</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let set_pin = SetPinCommand { pin: 5 }; // &lt;- an ordinary stack value, not boxed
-dispatch(&amp;set_pin);
+<span class="tok-keyword">let</span> <span class="tok-variable">set_pin</span> <span class="tok-punct">=</span> <span class="tok-type">SetPinCommand</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-number">5</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- an ordinary stack value, not boxed</span>
+<span class="tok-call-free">dispatch</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">set_pin</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>&amp;dyn Command</code> gets the same "invoker doesn't know the

@@ -994,7 +994,7 @@ taken literally.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Producing a &amp;str from a literal</h3>
-            <pre><code class="rust">let msg = "connected"; // &lt;- string literal: produces `&amp;'static str`, not `String`
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">msg</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;connected&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- string literal: produces `&amp;'static str`, not `String`</span>
 </code></pre>
 
           </div>
@@ -1002,12 +1002,12 @@ taken literally.</p>
             <h3 class="scenario-title">Working with text</h3>
             <p>A <code>format!</code> template is itself a string literal, with captured
 identifiers keeping the placeholder and its value next to each other.</p>
-<pre><code class="rust">fn format_status(sensor_id: &amp;str, reading: f64) -&gt; String {
-    format!("sensor \"{sensor_id}\" reported {reading:.1}") // &lt;- string literal: the format template itself
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">format_status</span><span class="tok-punct">(</span><span class="tok-variable">sensor_id</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor \&quot;{sensor_id}\&quot; reported {reading:.1}&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- string literal: the format template itself</span>
+<span class="tok-punct">}</span>
 
-let msg = format_status("temp-01", 21.53);
-assert_eq!(msg, "sensor \"temp-01\" reported 21.5");
+<span class="tok-keyword">let</span> <span class="tok-variable">msg</span> <span class="tok-punct">=</span> <span class="tok-call-free">format_status</span><span class="tok-punct">(</span><span class="tok-string">&quot;temp-01&quot;</span><span class="tok-punct">,</span> <span class="tok-number">21.53</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">msg</span><span class="tok-punct">,</span> <span class="tok-string">&quot;sensor \&quot;temp-01\&quot; reported 21.5&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Captured-identifier syntax (<code>{sensor_id}</code>) keeps the
 template and its values together instead of separated into positional
@@ -1021,18 +1021,18 @@ reads best once a template has more than a placeholder or two.</p>
             <p>A function parameter should ask for the least ownership it needs — <code>&amp;str</code>
 accepts a literal directly, with no allocation, while still working for
 an owned <code>String</code> through auto-deref.</p>
-<pre><code class="rust">// PREFER: `&amp;str` accepts a literal, a `String`, or a slice, no forced copy
-pub fn greet(name: &amp;str) -&gt; String {
-    format!("hello, {name}") // &lt;- string literal: the format template
-}
+<pre><code class="rust-hl"><span class="tok-comment">// PREFER: `&amp;str` accepts a literal, a `String`, or a slice, no forced copy</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello, {name}&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- string literal: the format template</span>
+<span class="tok-punct">}</span>
 
-// AVOID: `String` forces every caller to allocate, even for a literal like "guest"
-pub fn greet_owned(name: String) -&gt; String {
-    format!("hello, {name}")
-}
+<span class="tok-comment">// AVOID: `String` forces every caller to allocate, even for a literal like &quot;guest&quot;</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet_owned</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello, {name}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let a = greet("guest");                     // &lt;- string literal passed directly, no allocation
-let b = greet_owned("guest".to_string());   // caller must allocate just to satisfy the signature
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-call-free">greet</span><span class="tok-punct">(</span><span class="tok-string">&quot;guest&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                     <span class="tok-comment tok-anno">// &lt;- string literal passed directly, no allocation</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-call-free">greet_owned</span><span class="tok-punct">(</span><span class="tok-string">&quot;guest&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>   <span class="tok-comment">// caller must allocate just to satisfy the signature</span>
 </code></pre>
 <p>Accepting <code>&amp;str</code> instead of <code>String</code> lets a caller pass
 a literal with zero allocation while still accepting an owned <code>String</code>
@@ -1045,16 +1045,16 @@ makes exactly this argument for preferring <code>&amp;str</code> in a signature.
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>An error message built with a string literal template should include the
 offending input, not just describe the category of failure.</p>
-<pre><code class="rust">#[derive(Debug)]
-struct ParseError {
-    message: String,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ParseError</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn parse_port(input: &amp;str) -&gt; Result&lt;u16, ParseError&gt; {
-    input.parse::&lt;u16&gt;().map_err(|_| ParseError {
-        message: format!("\"{input}\" is not a valid port number"), // &lt;- string literal: the format template
-    })
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_port</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">ParseError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">ParseError</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;\&quot;{input}\&quot; is not a valid port number&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- string literal: the format template</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Including the offending value in the message gives the
 caller enough information to fix the problem without re-deriving it,
@@ -1094,26 +1094,26 @@ literal itself never requires either.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Logging a startup message with defmt, no heap involved</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use defmt::info;
+<span class="tok-keyword">use</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-variable">info</span><span class="tok-punct">;</span>
 
-fn log_startup() {
-    info!("firmware started"); // &lt;- string literal: `&amp;'static str` baked into rodata, no heap involved
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_startup</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;firmware started&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- string literal: `&amp;'static str` baked into rodata, no heap involved</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Formatting a status line into a heapless::String</h3>
-            <pre><code class="rust">use core::fmt::Write;
-use heapless::String;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">;</span>
 
-fn status_message(reading: f32) -&gt; String&lt;32&gt; {
-    let mut s: String&lt;32&gt; = String::new();
-    let _ = write!(s, "temp: {reading:.1}C"); // &lt;- string literal: the format template itself, still needs no heap
-    s
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">status_message</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">&lt;</span><span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">s</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">&lt;</span><span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">s</span><span class="tok-punct">,</span> <span class="tok-string">&quot;temp: {reading:.1}C&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- string literal: the format template itself, still needs no heap</span>
+    <span class="tok-variable">s</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

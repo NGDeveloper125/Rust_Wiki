@@ -988,7 +988,7 @@ GPU/graphics interop or memory-constrained contexts).</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Pinning a literal to f32</h3>
-            <pre><code class="rust">let ratio = 0.5f32; // &lt;- `f32` suffix pins the literal's type explicitly
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">ratio</span> <span class="tok-punct">=</span> <span class="tok-number">0.5f32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `f32` suffix pins the literal's type explicitly</span>
 </code></pre>
 
           </div>
@@ -997,14 +997,14 @@ GPU/graphics interop or memory-constrained contexts).</p>
             <p>In a generic numeric function, the compiler has nothing but the literals
 themselves to pin the type parameter — without a suffix, every argument
 would default to <code>f64</code>.</p>
-<pre><code class="rust">fn lerp&lt;T&gt;(a: T, b: T, t: T) -&gt; T
-where
-    T: std::ops::Add&lt;Output = T&gt; + std::ops::Sub&lt;Output = T&gt; + std::ops::Mul&lt;Output = T&gt; + Copy,
-{
-    a + (b - a) * t
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">lerp</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-variable">t</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-generic-param">T</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ops</span><span class="tok-punct">::</span><span class="tok-type">Add</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ops</span><span class="tok-punct">::</span><span class="tok-type">Sub</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ops</span><span class="tok-punct">::</span><span class="tok-type">Mul</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-type">Copy</span><span class="tok-punct">,</span>
+<span class="tok-punct">{</span>
+    <span class="tok-variable">a</span> <span class="tok-punct">+</span> <span class="tok-punct">(</span><span class="tok-variable">b</span> <span class="tok-punct">-</span> <span class="tok-variable">a</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-variable">t</span>
+<span class="tok-punct">}</span>
 
-let position = lerp(0.0f32, 10.0f32, 0.25f32); // &lt;- `f32` suffix: pins T to f32, not the f64 default
+<span class="tok-keyword">let</span> <span class="tok-variable">position</span> <span class="tok-punct">=</span> <span class="tok-call-free">lerp</span><span class="tok-punct">(</span><span class="tok-number">0.0f32</span><span class="tok-punct">,</span> <span class="tok-number">10.0f32</span><span class="tok-punct">,</span> <span class="tok-number">0.25f32</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `f32` suffix: pins T to f32, not the f64 default</span>
 </code></pre>
 <p>Without suffixes, <code>lerp(0.0, 10.0, 0.25)</code> would silently
 pick <code>f64</code> for <code>T</code>, which matters when the result is headed for
@@ -1043,22 +1043,22 @@ acceleration, rather than leaving it to inference.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Pinning ADC scaling math to f32 for hardware FPU acceleration</h3>
-            <pre><code class="rust">fn to_millivolts(raw: u16, vref: f32) -&gt; f32 {
-    (raw as f32 / 4095.0f32) * vref // &lt;- `f32` suffix keeps this on the Cortex-M4F's hardware FPU path, not software f64
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">to_millivolts</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">vref</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-variable">raw</span> <span class="tok-keyword">as</span> <span class="tok-type">f32</span> <span class="tok-punct">/</span> <span class="tok-number">4095.0f32</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-variable">vref</span> <span class="tok-comment tok-anno">// &lt;- `f32` suffix keeps this on the Cortex-M4F's hardware FPU path, not software f64</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Pinning a generic filter's type parameter to f32</h3>
-            <pre><code class="rust">fn low_pass&lt;T&gt;(prev: T, sample: T, alpha: T) -&gt; T
-where
-    T: core::ops::Add&lt;Output = T&gt; + core::ops::Sub&lt;Output = T&gt; + core::ops::Mul&lt;Output = T&gt; + Copy,
-{
-    prev + (sample - prev) * alpha
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">low_pass</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">prev</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-variable">sample</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-variable">alpha</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-generic-param">T</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ops</span><span class="tok-punct">::</span><span class="tok-type">Add</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ops</span><span class="tok-punct">::</span><span class="tok-type">Sub</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ops</span><span class="tok-punct">::</span><span class="tok-type">Mul</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-type">Copy</span><span class="tok-punct">,</span>
+<span class="tok-punct">{</span>
+    <span class="tok-variable">prev</span> <span class="tok-punct">+</span> <span class="tok-punct">(</span><span class="tok-variable">sample</span> <span class="tok-punct">-</span> <span class="tok-variable">prev</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-variable">alpha</span>
+<span class="tok-punct">}</span>
 
-let filtered = low_pass(0.0f32, 3.3f32, 0.1f32); // &lt;- `f32` suffixes: keep T = f32 instead of defaulting the generic to f64
+<span class="tok-keyword">let</span> <span class="tok-variable">filtered</span> <span class="tok-punct">=</span> <span class="tok-call-free">low_pass</span><span class="tok-punct">(</span><span class="tok-number">0.0f32</span><span class="tok-punct">,</span> <span class="tok-number">3.3f32</span><span class="tok-punct">,</span> <span class="tok-number">0.1f32</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `f32` suffixes: keep T = f32 instead of defaulting the generic to f64</span>
 </code></pre>
 
           </div>

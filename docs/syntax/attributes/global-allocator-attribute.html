@@ -1015,22 +1015,22 @@ from <code>alloc</code>.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Registering a minimal global allocator</h3>
-            <pre><code class="rust">#![no_std]
-extern crate alloc;
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
 
-use core::alloc::{GlobalAlloc, Layout};
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">GlobalAlloc</span><span class="tok-punct">,</span> <span class="tok-type">Layout</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct DummyAllocator;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">DummyAllocator</span><span class="tok-punct">;</span>
 
-unsafe impl GlobalAlloc for DummyAllocator {
-    unsafe fn alloc(&amp;self, _layout: Layout) -&gt; *mut u8 {
-        core::ptr::null_mut() // a real allocator would return a genuine pointer
-    }
-    unsafe fn dealloc(&amp;self, _ptr: *mut u8, _layout: Layout) {}
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">impl</span> <span class="tok-trait">GlobalAlloc</span> <span class="tok-keyword">for</span> <span class="tok-type">DummyAllocator</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">alloc</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">_layout</span><span class="tok-punct">:</span> <span class="tok-type">Layout</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">null_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment">// a real allocator would return a genuine pointer</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">dealloc</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">_ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">_layout</span><span class="tok-punct">:</span> <span class="tok-type">Layout</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[global_allocator] // &lt;- every alloc::vec::Vec/Box/String call now goes through DummyAllocator
-static ALLOCATOR: DummyAllocator = DummyAllocator;
+<span class="tok-attribute">#[global_allocator]</span> <span class="tok-comment tok-anno">// &lt;- every alloc::vec::Vec/Box/String call now goes through DummyAllocator</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">ALLOCATOR</span><span class="tok-punct">:</span> <span class="tok-type">DummyAllocator</span> <span class="tok-punct">=</span> <span class="tok-type">DummyAllocator</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1040,40 +1040,40 @@ static ALLOCATOR: DummyAllocator = DummyAllocator;
 sensor-reading buffer, which requires wiring up a heap allocator first —
 here, a simple bump allocator over a fixed static region, since there's
 no OS-provided heap to fall back on.</p>
-<pre><code class="rust">#![no_std]
-extern crate alloc;
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
 
-use core::alloc::{GlobalAlloc, Layout};
-use core::cell::UnsafeCell;
-use core::sync::atomic::{AtomicUsize, Ordering};
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">GlobalAlloc</span><span class="tok-punct">,</span> <span class="tok-type">Layout</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">UnsafeCell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-module">atomic</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">AtomicUsize</span><span class="tok-punct">,</span> <span class="tok-type">Ordering</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-const HEAP_SIZE: usize = 1024;
+<span class="tok-keyword">const</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">1024</span><span class="tok-punct">;</span>
 
-struct BumpAllocator {
-    heap: UnsafeCell&lt;[u8; HEAP_SIZE]&gt;,
-    next: AtomicUsize,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BumpAllocator</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">heap</span><span class="tok-punct">:</span> <span class="tok-type">UnsafeCell</span><span class="tok-punct">&lt;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">next</span><span class="tok-punct">:</span> <span class="tok-type">AtomicUsize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-unsafe impl Sync for BumpAllocator {} // safe: access is serialized via the atomic offset
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">impl</span> <span class="tok-trait">Sync</span> <span class="tok-keyword">for</span> <span class="tok-type">BumpAllocator</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// safe: access is serialized via the atomic offset</span>
 
-unsafe impl GlobalAlloc for BumpAllocator {
-    unsafe fn alloc(&amp;self, layout: Layout) -&gt; *mut u8 {
-        let offset = self.next.fetch_add(layout.size(), Ordering::SeqCst);
-        if offset + layout.size() &gt; HEAP_SIZE {
-            return core::ptr::null_mut(); // out of heap
-        }
-        unsafe { (self.heap.get() as *mut u8).add(offset) }
-    }
-    unsafe fn dealloc(&amp;self, _ptr: *mut u8, _layout: Layout) {
-        // bump allocators never reclaim individual allocations
-    }
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">impl</span> <span class="tok-trait">GlobalAlloc</span> <span class="tok-keyword">for</span> <span class="tok-type">BumpAllocator</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">alloc</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">layout</span><span class="tok-punct">:</span> <span class="tok-type">Layout</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">offset</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">next</span><span class="tok-punct">.</span><span class="tok-call-method">fetch_add</span><span class="tok-punct">(</span><span class="tok-variable">layout</span><span class="tok-punct">.</span><span class="tok-call-method">size</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Ordering</span><span class="tok-punct">::</span><span class="tok-field">SeqCst</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">offset</span> <span class="tok-punct">+</span> <span class="tok-variable">layout</span><span class="tok-punct">.</span><span class="tok-call-method">size</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;</span> <span class="tok-constant">HEAP_SIZE</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">null_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// out of heap</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">heap</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">dealloc</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">_ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">_layout</span><span class="tok-punct">:</span> <span class="tok-type">Layout</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// bump allocators never reclaim individual allocations</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[global_allocator] // &lt;- required: no_std + alloc has no default heap without this
-static HEAP: BumpAllocator = BumpAllocator {
-    heap: UnsafeCell::new([0; HEAP_SIZE]),
-    next: AtomicUsize::new(0),
-};
+<span class="tok-attribute">#[global_allocator]</span> <span class="tok-comment tok-anno">// &lt;- required: no_std + alloc has no default heap without this</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">HEAP</span><span class="tok-punct">:</span> <span class="tok-type">BumpAllocator</span> <span class="tok-punct">=</span> <span class="tok-type">BumpAllocator</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">heap</span><span class="tok-punct">:</span> <span class="tok-type">UnsafeCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">next</span><span class="tok-punct">:</span> <span class="tok-type">AtomicUsize</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>alloc</code>'s collection types have no allocator to call
 into until one is designated with <code>#[global_allocator]</code>; a bump allocator
@@ -1126,51 +1126,51 @@ already provides thread-safe heap primitives.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Wiring up embedded-alloc's Heap as the global allocator</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-extern crate alloc;
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
 
-use core::mem::MaybeUninit;
-use cortex_m_rt::entry;
-use embedded_alloc::Heap;
-use panic_halt as _;
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-type">MaybeUninit</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">embedded_alloc</span><span class="tok-punct">::</span><span class="tok-type">Heap</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-#[global_allocator] // &lt;- every alloc::vec::Vec/Box/String call routes through this Heap
-static HEAP: Heap = Heap::empty();
+<span class="tok-attribute">#[global_allocator]</span> <span class="tok-comment tok-anno">// &lt;- every alloc::vec::Vec/Box/String call routes through this Heap</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">HEAP</span><span class="tok-punct">:</span> <span class="tok-type">Heap</span> <span class="tok-punct">=</span> <span class="tok-type">Heap</span><span class="tok-punct">::</span><span class="tok-call-assoc">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    const HEAP_SIZE: usize = 4096;
-    static mut HEAP_MEM: [MaybeUninit&lt;u8&gt;; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
-    unsafe {
-        HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE); // &lt;- backing region chosen at runtime, not const
-    }
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">const</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">4096</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">HEAP_MEM</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">MaybeUninit</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-type">MaybeUninit</span><span class="tok-punct">::</span><span class="tok-call-assoc">uninit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-constant">HEAP</span><span class="tok-punct">.</span><span class="tok-call-method">init</span><span class="tok-punct">(</span><span class="tok-constant">HEAP_MEM</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span><span class="tok-punct">,</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- backing region chosen at runtime, not const</span>
+    <span class="tok-punct">}</span>
 
-    let mut samples: alloc::vec::Vec&lt;u16&gt; = alloc::vec::Vec::new();
-    samples.push(512);
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">512</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    loop {}
-}
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Avoiding a global allocator entirely with heapless</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use cortex_m_rt::entry;
-use heapless::Vec as HVec; // fixed-capacity: no #[global_allocator] required anywhere
-use panic_halt as _;
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span> <span class="tok-keyword">as</span> <span class="tok-type">HVec</span><span class="tok-punct">;</span> <span class="tok-comment">// fixed-capacity: no #[global_allocator] required anywhere</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    let mut samples: HVec&lt;u16, 32&gt; = HVec::new(); // capacity fixed at compile time
-    let _ = samples.push(512); // push returns Result instead of panicking/allocating on overflow
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">HVec</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HVec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// capacity fixed at compile time</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">512</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// push returns Result instead of panicking/allocating on overflow</span>
 
-    loop {}
-}
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Most firmware that only needs a small, boundable buffer never reaches for
 <code>#[global_allocator]</code> at all — <code>heapless::Vec</code>'s capacity is part of its

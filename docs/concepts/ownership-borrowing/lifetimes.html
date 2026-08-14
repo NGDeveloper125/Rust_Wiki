@@ -999,17 +999,17 @@ manual memory management otherwise needs.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn longest&lt;'a&gt;(x: &amp;'a str, y: &amp;'a str) -&gt; &amp;'a str { // &lt;- ties the output's lifetime to both inputs
-    if x.len() &gt; y.len() { x } else { y }
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">longest</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- ties the output's lifetime to both inputs</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">x</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">y</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-variable">y</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let s1 = String::from("long string");
-let result;
-{
-    let s2 = String::from("short");
-    result = longest(&amp;s1, &amp;s2);
-    println!("{result}"); // must be used while s2 is still alive
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">s1</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;long string&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">result</span><span class="tok-punct">;</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">s2</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;short&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-call-free">longest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">s1</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">s2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{result}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// must be used while s2 is still alive</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Restriction:</strong> the returned reference can't outlive the shorter-lived
 input — using <code>result</code> after <code>s2</code> goes out of scope would fail to
@@ -1030,19 +1030,19 @@ compile, since <code>'a</code> is bound by the shorter of the two borrows.</p>
             <p>A <code>Parser</code>'s methods should carry an explicit lifetime parameter only
 where the elision rules genuinely can't infer one — anywhere they can,
 writing <code>'a</code> out by hand adds noise without adding a constraint.</p>
-<pre><code class="rust">struct Parser&lt;'a&gt; {
-    input: &amp;'a str,
-    pos: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Parser</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">str</span><span class="tok-punct">,</span>
+    <span class="tok-variable">pos</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;'a&gt; Parser&lt;'a&gt; {
-    // AVOID: writing out a lifetime the elision rules already infer for free
-    // fn peek&lt;'b&gt;(&amp;'b self) -&gt; Option&lt;&amp;'b str&gt; { self.input.get(self.pos..) }
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-type">Parser</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// AVOID: writing out a lifetime the elision rules already infer for free</span>
+    <span class="tok-comment">// fn peek&lt;'b&gt;(&amp;'b self) -&gt; Option&lt;&amp;'b str&gt; { self.input.get(self.pos..) }</span>
 
-    fn peek(&amp;self) -&gt; Option&lt;&amp;str&gt; { // &lt;- PREFER: elided; output borrows from `&amp;self` automatically
-        self.input.get(self.pos..)
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">peek</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- PREFER: elided; output borrows from `&amp;self` automatically</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">input</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pos</span><span class="tok-punct">..</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an explicit lifetime that elision would have inferred
@@ -1062,18 +1062,18 @@ truly are load-bearing (see <a href="../../concepts/ownership-borrowing/lifetime
             <p>A function borrowing from two differently-lived inputs needs its
 lifetime annotation to be what lets the compiler catch a caller trying to
 use the result after the shorter-lived input is gone.</p>
-<pre><code class="rust">fn shorter&lt;'a&gt;(a: &amp;'a str, b: &amp;'a str) -&gt; &amp;'a str { // &lt;- ties the result to whichever input's borrow ends first
-    if a.len() &lt; b.len() { a } else { b }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">shorter</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- ties the result to whichever input's borrow ends first</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">a</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&lt;</span> <span class="tok-variable">b</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-variable">b</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let long_lived = String::from("configuration");
-let result;
-{
-    let short_lived = String::from("cfg");
-    result = shorter(&amp;long_lived, &amp;short_lived);
-    println!("{result}"); // must run while short_lived is still alive
-}
-// using `result` here would fail to compile: it may borrow from short_lived, now dropped
+<span class="tok-keyword">let</span> <span class="tok-variable">long_lived</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;configuration&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">result</span><span class="tok-punct">;</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">short_lived</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;cfg&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-call-free">shorter</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">long_lived</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">short_lived</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{result}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// must run while short_lived is still alive</span>
+<span class="tok-punct">}</span>
+<span class="tok-comment">// using `result` here would fail to compile: it may borrow from short_lived, now dropped</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> naming the shared lifetime <code>'a</code> across both parameters
@@ -1137,13 +1137,13 @@ it broke at runtime.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct SpiReading&lt;'a&gt; {
-    raw: &amp;'a [u8], // &lt;- borrowed: this reading doesn't own the buffer it was read into
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SpiReading</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- borrowed: this reading doesn't own the buffer it was read into</span>
+<span class="tok-punct">}</span>
 
-fn latest&lt;'a&gt;(buf: &amp;'a [u8]) -&gt; SpiReading&lt;'a&gt; {
-    SpiReading { raw: buf }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">latest</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">SpiReading</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-type">SpiReading</span> <span class="tok-punct">{</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-variable">buf</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1162,18 +1162,18 @@ fn latest&lt;'a&gt;(buf: &amp;'a [u8]) -&gt; SpiReading&lt;'a&gt; {
 reading, borrow it for the driver's whole lifetime, or own the bus
 outright — three different lifetime shapes for the same underlying task,
 each with a real tradeoff.</p>
-<pre><code class="rust">// (a) borrow only for the call: elision handles this, no named lifetime needed at all
-fn read_once(spi: &amp;mut impl embedded_hal::spi::SpiBus) -&gt; i16 { /* ... */ 0 }
+<pre><code class="rust-hl"><span class="tok-comment">// (a) borrow only for the call: elision handles this, no named lifetime needed at all</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_once</span><span class="tok-punct">(</span><span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">SpiBus</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span> <span class="tok-punct">{</span> <span class="tok-comment">/* ... */</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
 
-// (b) borrow for the driver's whole life: needs an explicit lifetime parameter
-struct Accelerometer&lt;'a, SPI&gt; {
-    spi: &amp;'a mut SPI, // &lt;- other code can still use `spi` once this driver is dropped
-}
+<span class="tok-comment">// (b) borrow for the driver's whole life: needs an explicit lifetime parameter</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Accelerometer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">,</span> <span class="tok-constant">SPI</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-keyword">mut</span> <span class="tok-constant">SPI</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- other code can still use `spi` once this driver is dropped</span>
+<span class="tok-punct">}</span>
 
-// (c) own the bus outright: no lifetime parameter, but the bus is locked to this driver for good
-struct OwningAccelerometer&lt;SPI&gt; {
-    spi: SPI,
-}
+<span class="tok-comment">// (c) own the bus outright: no lifetime parameter, but the bus is locked to this driver for good</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">OwningAccelerometer</span><span class="tok-punct">&lt;</span><span class="tok-constant">SPI</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-constant">SPI</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> shape (a) is right when nothing else needs the bus
@@ -1196,16 +1196,16 @@ covers from the mechanics side.</p>
 loop — unlike the accelerometer above, this data can't be borrowed from
 any <code>main</code>-local variable at all, because the interrupt has no
 relationship to whatever <code>main</code> happens to be running when it fires.</p>
-<pre><code class="rust">use core::cell::Cell;
-use critical_section::Mutex;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">Cell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
 
-static LAST_UART_ERROR: Mutex&lt;Cell&lt;Option&lt;u8&gt;&gt;&gt; = Mutex::new(Cell::new(None));
-// &lt;- 'static storage, not a borrowed &amp;'a field: the interrupt has no caller stack frame to tie a lifetime to
+<span class="tok-keyword">static</span> <span class="tok-constant">LAST_UART_ERROR</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">Cell</span><span class="tok-punct">&lt;</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Cell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- 'static storage, not a borrowed &amp;'a field: the interrupt has no caller stack frame to tie a lifetime to</span>
 
-#[interrupt]
-fn USART1() {
-    critical_section::with(|cs| LAST_UART_ERROR.borrow(cs).set(Some(read_error_flags())));
-}
+<span class="tok-attribute">#[interrupt]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">USART1</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-constant">LAST_UART_ERROR</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-call-free">read_error_flags</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a driver borrowing a bus (previous scenario) and an

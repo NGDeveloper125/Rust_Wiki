@@ -1004,8 +1004,8 @@ like a stale <code>#[allow]</code> would.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Suppressing a lint that must eventually fire again</h3>
-            <pre><code class="rust">#[expect(dead_code)] // &lt;- suppresses the lint, but warns if dead_code stops firing here
-fn planned_for_next_release() {}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[expect(dead_code)]</span> <span class="tok-comment tok-anno">// &lt;- suppresses the lint, but warns if dead_code stops firing here</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">planned_for_next_release</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1016,14 +1016,14 @@ is being rewritten in a follow-up change — <code>#[expect(dead_code)]</code> s
 the warning for now, but will itself start warning the moment the
 function either gets called again or is actually deleted, so the
 suppression can't quietly outlive its reason for existing.</p>
-<pre><code class="rust">#[expect(dead_code, reason = "will be wired into the new pricing pipeline in a follow-up change")]
-fn legacy_discount_calculation(price_cents: u32) -&gt; u32 {
-    price_cents / 2
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[expect(dead_code, reason = &quot;will be wired into the new pricing pipeline in a follow-up change&quot;)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">legacy_discount_calculation</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">price_cents</span> <span class="tok-punct">/</span> <span class="tok-number">2</span>
+<span class="tok-punct">}</span>
 
-fn current_pricing(price_cents: u32) -&gt; u32 {
-    price_cents // legacy_discount_calculation not called yet — dead_code fires, #[expect] fulfills its purpose
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">current_pricing</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">price_cents</span> <span class="tok-comment">// legacy_discount_calculation not called yet — dead_code fires, #[expect] fulfills its purpose</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>An <code>#[allow(dead_code)]</code> here would keep silencing the
 lint indefinitely even after <code>legacy_discount_calculation</code> gets wired in
@@ -1041,18 +1041,18 @@ that have outlived their reason for existing.</p>
 called by any test yet, while the rest of the suite is being written —
 <code>#[expect]</code> tracks that as a known, temporary gap rather than a
 permanently silenced warning.</p>
-<pre><code class="rust">#[cfg(test)]
-mod tests {
-    #[expect(dead_code, reason = "will be used once the boundary-condition tests are added")]
-    fn assert_within_cents(actual: u32, expected: u32, tolerance: u32) {
-        assert!(actual.abs_diff(expected) &lt;= tolerance);
-    }
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[expect(dead_code, reason = &quot;will be used once the boundary-condition tests are added&quot;)]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">assert_within_cents</span><span class="tok-punct">(</span><span class="tok-variable">actual</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">expected</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">tolerance</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">actual</span><span class="tok-punct">.</span><span class="tok-call-method">abs_diff</span><span class="tok-punct">(</span><span class="tok-variable">expected</span><span class="tok-punct">)</span> <span class="tok-punct">&lt;=</span> <span class="tok-variable">tolerance</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    #[test]
-    fn placeholder_until_more_tests_land() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">placeholder_until_more_tests_land</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-number">2</span> <span class="tok-punct">+</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Once a real test starts calling <code>assert_within_cents</code>,
 <code>dead_code</code> stops firing and the <code>#[expect]</code> itself becomes a visible
@@ -1087,10 +1087,10 @@ self-expiring gap instead of a silently-stale suppression.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Tracking a temporarily-unused HAL helper</h3>
-            <pre><code class="rust">#[expect(dead_code, reason = "will be called once the SPI DMA path lands")] // &lt;- warns again once dead_code stops firing
-fn configure_spi_dma_burst(len: usize) {
-    let _ = len;
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[expect(dead_code, reason = &quot;will be called once the SPI DMA path lands&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- warns again once dead_code stops firing</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure_spi_dma_burst</span><span class="tok-punct">(</span><span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">len</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

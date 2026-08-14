@@ -1009,10 +1009,10 @@ shared with C.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn square(n: i32) -&gt; i32 { n * n }
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">square</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span> <span class="tok-variable">n</span> <span class="tok-punct">*</span> <span class="tok-variable">n</span> <span class="tok-punct">}</span>
 
-let op: fn(i32) -&gt; i32 = square; // &lt;- `op`'s type is a function pointer, not a closure
-println!("{}", op(6));
+<span class="tok-keyword">let</span> <span class="tok-variable">op</span><span class="tok-punct">:</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">=</span> <span class="tok-variable">square</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `op`'s type is a function pointer, not a closure</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">op</span><span class="tok-punct">(</span><span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><strong>Restriction:</strong> only a function (or non-capturing closure) can be
 assigned to a <code>fn(...) -&gt; ...</code> binding — a closure that captures anything
@@ -1034,24 +1034,24 @@ hold it.</p>
             <p>A logging sink's formatter never needs to capture request-specific
 state, so its field is typed as a plain function pointer instead of a
 boxed closure — smaller, <code>Copy</code>, and simpler to construct.</p>
-<pre><code class="rust">struct Logger {
-    formatter: fn(level: &amp;str, message: &amp;str) -&gt; String,
-    // &lt;- fn pointer: no capture ever needed, fixed-size, and Copy
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Logger</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">formatter</span><span class="tok-punct">:</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-variable">level</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">,</span>
+    <span class="tok-comment tok-anno">// &lt;- fn pointer: no capture ever needed, fixed-size, and Copy</span>
+<span class="tok-punct">}</span>
 
-fn plain_formatter(level: &amp;str, message: &amp;str) -&gt; String {
-    format!("[{level}] {message}")
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">plain_formatter</span><span class="tok-punct">(</span><span class="tok-variable">level</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type-return">str</span><span class="tok-punct">,</span> <span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type-return">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[{level}] {message}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-impl Logger {
-    fn new() -&gt; Self {
-        Logger { formatter: plain_formatter }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Logger</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Logger</span> <span class="tok-punct">{</span> <span class="tok-variable">formatter</span><span class="tok-punct">:</span> <span class="tok-variable">plain_formatter</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn log(&amp;self, level: &amp;str, message: &amp;str) {
-        println!("{}", (self.formatter)(level, message));
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">log</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">level</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">formatter</span><span class="tok-punct">)</span><span class="tok-punct">(</span><span class="tok-variable">level</span><span class="tok-punct">,</span> <span class="tok-variable">message</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a <code>Box&lt;dyn Fn(...) -&gt; ...&gt;</code> field would also work here,
@@ -1070,19 +1070,19 @@ favors the simplest type that satisfies the actual requirement.</p>
             <p>A small calculator dispatches by operation name using a lookup table of
 named operations, all sharing one concrete <code>fn(f64, f64) -&gt; f64</code> type —
 no generic parameter is needed since every entry has the same shape.</p>
-<pre><code class="rust">const OPERATIONS: &amp;[(&amp;str, fn(f64, f64) -&gt; f64)] = &amp;[
-    // &lt;- an array of fn pointers: every closure below captures nothing, so all coerce to one type
-    ("add", |a, b| a + b),
-    ("sub", |a, b| a - b),
-    ("mul", |a, b| a * b),
-];
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">OPERATIONS</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span>
+    <span class="tok-comment tok-anno">// &lt;- an array of fn pointers: every closure below captures nothing, so all coerce to one type</span>
+    <span class="tok-punct">(</span><span class="tok-string">&quot;add&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">a</span> <span class="tok-punct">+</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">(</span><span class="tok-string">&quot;sub&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">a</span> <span class="tok-punct">-</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">(</span><span class="tok-string">&quot;mul&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">a</span> <span class="tok-punct">*</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-fn run_operation(name: &amp;str, a: f64, b: f64) -&gt; Option&lt;f64&gt; {
-    OPERATIONS
-        .iter()
-        .find(|(op_name, _)| *op_name == name)
-        .map(|(_, op)| op(a, b))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">run_operation</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">OPERATIONS</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">find</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">op_name</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-variable">op_name</span> <span class="tok-punct">==</span> <span class="tok-variable">name</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">,</span> <span class="tok-variable">op</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-call-free">op</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a non-capturing closure coerces to a function pointer
@@ -1101,15 +1101,15 @@ closure literals and named functions under one concrete element type.</p>
             <p>Applying one of several unit-conversion functions across a batch of
 sensor readings is a single, non-generic helper: the conversion is a
 parameter typed as a function pointer, not a generic closure bound.</p>
-<pre><code class="rust">fn to_fahrenheit(c: f64) -&gt; f64 { c * 9.0 / 5.0 + 32.0 }
-fn to_kelvin(c: f64) -&gt; f64 { c + 273.15 }
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">to_fahrenheit</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-variable">c</span> <span class="tok-punct">*</span> <span class="tok-number">9.0</span> <span class="tok-punct">/</span> <span class="tok-number">5.0</span> <span class="tok-punct">+</span> <span class="tok-number">32.0</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">to_kelvin</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-variable">c</span> <span class="tok-punct">+</span> <span class="tok-number">273.15</span> <span class="tok-punct">}</span>
 
-fn convert_all(readings: &amp;[f64], convert: fn(f64) -&gt; f64) -&gt; Vec&lt;f64&gt; {
-    // &lt;- `convert` is a plain fn pointer parameter, not a generic `F: Fn(f64) -&gt; f64`
-    readings.iter().map(|&amp;c| convert(c)).collect()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">convert_all</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">f64</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">convert</span><span class="tok-punct">:</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `convert` is a plain fn pointer parameter, not a generic `F: Fn(f64) -&gt; f64`</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">c</span><span class="tok-punct">|</span> <span class="tok-call-free">convert</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let fahrenheit_readings = convert_all(&amp;[0.0, 20.0, 100.0], to_fahrenheit);
+<span class="tok-keyword">let</span> <span class="tok-variable">fahrenheit_readings</span> <span class="tok-punct">=</span> <span class="tok-call-free">convert_all</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0.0</span><span class="tok-punct">,</span> <span class="tok-number">20.0</span><span class="tok-punct">,</span> <span class="tok-number">100.0</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">to_fahrenheit</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because a <code>fn</code> pointer parameter isn't generic,
@@ -1153,13 +1153,13 @@ CPU's vector-table ABI rather than by API taste.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[link_section = ".vector_table.reset"]
-#[used]
-static RESET_HANDLER: fn() -&gt; ! = reset; // &lt;- `fn() -&gt; !`: fixed-size, no captured environment, placed at a fixed address
+        <pre><code class="rust-hl"><span class="tok-attribute">#[link_section = &quot;.vector_table.reset&quot;]</span>
+<span class="tok-attribute">#[used]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">RESET_HANDLER</span><span class="tok-punct">:</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">=</span> <span class="tok-variable">reset</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `fn() -&gt; !`: fixed-size, no captured environment, placed at a fixed address</span>
 
-fn reset() -&gt; ! {
-    loop {}
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">reset</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1178,21 +1178,21 @@ fn reset() -&gt; ! {
 directly by hardware, so every entry must be a plain, fixed-size <code>fn()</code>
 pointer — never a closure, since a closure's size and layout can vary and
 aren't part of the vector-table ABI the silicon expects.</p>
-<pre><code class="rust">#[link_section = ".vector_table.exceptions"]
-#[used]
-static EXCEPTIONS: [fn(); 2] = [
-    // &lt;- an array of bare `fn()` pointers: exactly what the hardware vector table's layout requires
-    nmi_handler,
-    hard_fault_handler,
-];
+<pre><code class="rust-hl"><span class="tok-attribute">#[link_section = &quot;.vector_table.exceptions&quot;]</span>
+<span class="tok-attribute">#[used]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">EXCEPTIONS</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-comment tok-anno">// &lt;- an array of bare `fn()` pointers: exactly what the hardware vector table's layout requires</span>
+    <span class="tok-variable">nmi_handler</span><span class="tok-punct">,</span>
+    <span class="tok-variable">hard_fault_handler</span><span class="tok-punct">,</span>
+<span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-fn nmi_handler() {
-    loop {}
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">nmi_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn hard_fault_handler() {
-    loop {}
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">hard_fault_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the vector table's address and layout are dictated by
@@ -1213,17 +1213,17 @@ builds vector tables from exactly this shape.</p>
 at boot and never needs surrounding context is typed as a plain <code>fn()</code>
 pointer field, keeping the peripheral driver itself free of any generic
 parameter or heap allocation.</p>
-<pre><code class="rust">struct TimerConfig {
-    on_tick: fn(), // &lt;- fn pointer: fixed ABI, no capture, matches what the timer peripheral's ISR table expects
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">TimerConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">on_tick</span><span class="tok-punct">:</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- fn pointer: fixed ABI, no capture, matches what the timer peripheral's ISR table expects</span>
+<span class="tok-punct">}</span>
 
-fn default_tick_handler() {
-    // increment a tick counter
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">default_tick_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// increment a tick counter</span>
+<span class="tok-punct">}</span>
 
-fn configure_timer() -&gt; TimerConfig {
-    TimerConfig { on_tick: default_tick_handler }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure_timer</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">TimerConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-type">TimerConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">on_tick</span><span class="tok-punct">:</span> <span class="tok-variable">default_tick_handler</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a non-capturing handler set once at startup has nothing

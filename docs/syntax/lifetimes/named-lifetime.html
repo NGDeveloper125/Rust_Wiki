@@ -1024,13 +1024,13 @@ code sticks to short conventional names like <code>'a</code>, <code>'b</code>, o
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring a lifetime parameter on a struct</h3>
-            <pre><code class="rust">struct Excerpt&lt;'a&gt; {
-    text: &amp;'a str, // &lt;- `'a` here is the same lifetime declared on the struct
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Excerpt</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `'a` here is the same lifetime declared on the struct</span>
+<span class="tok-punct">}</span>
 
-let novel = String::from("Call me Ishmael. Some years ago...");
-let excerpt = Excerpt { text: &amp;novel[0..17] };
-println!("{}", excerpt.text);
+<span class="tok-keyword">let</span> <span class="tok-variable">novel</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;Call me Ishmael. Some years ago...&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">excerpt</span> <span class="tok-punct">=</span> <span class="tok-type">Excerpt</span> <span class="tok-punct">{</span> <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-variable">novel</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">17</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">excerpt</span><span class="tok-punct">.</span><span class="tok-field">text</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1039,20 +1039,20 @@ println!("{}", excerpt.text);
             <p>A type that stores a borrowed slice, rather than owning its data, has to
 name a lifetime parameter so the compiler can tie the struct's own validity
 to whatever it was built from.</p>
-<pre><code class="rust">struct LogViewer&lt;'a&gt; {
-    // &lt;- `'a` declared here, in the struct's generic parameter list
-    entries: &amp;'a [String],
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">LogViewer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `'a` declared here, in the struct's generic parameter list</span>
+    <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;'a&gt; LogViewer&lt;'a&gt; {
-    fn latest(&amp;self) -&gt; Option&lt;&amp;'a str&gt; {
-        self.entries.last().map(String::as_str)
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-type">LogViewer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">latest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">entries</span><span class="tok-punct">.</span><span class="tok-call-method">last</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-variable">as_str</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let history = vec!["startup ok".to_string(), "connected".to_string()];
-let viewer = LogViewer { entries: &amp;history }; // &lt;- the borrow's lifetime becomes `'a` for this `viewer`
-println!("{:?}", viewer.latest());
+<span class="tok-keyword">let</span> <span class="tok-variable">history</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;startup ok&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;connected&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">viewer</span> <span class="tok-punct">=</span> <span class="tok-type">LogViewer</span> <span class="tok-punct">{</span> <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-variable">history</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the borrow's lifetime becomes `'a` for this `viewer`</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{:?}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">viewer</span><span class="tok-punct">.</span><span class="tok-call-method">latest</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>A struct holding a reference must name a lifetime
 parameter tying the struct's own validity to the data it borrows from, so
@@ -1068,21 +1068,21 @@ covers this as the reason reference-holding structs need <code>'a</code> at all.
 fallback needs an explicit outlives bound so the compiler knows the
 fallback's longer-lived reference can stand in wherever the shorter-lived
 one is expected.</p>
-<pre><code class="rust">fn resolve_setting&lt;'p, 'f: 'p&gt;(
-    // &lt;- `'f: 'p` declares `'f` outlives `'p`, so a `&amp;'f str` can be returned as `&amp;'p str`
-    preferred: Option&lt;&amp;'p str&gt;,
-    fallback: &amp;'f str,
-) -&gt; &amp;'p str {
-    preferred.unwrap_or(fallback)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">resolve_setting</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'p</span><span class="tok-punct">,</span> <span class="tok-lifetime">'f</span><span class="tok-punct">:</span> <span class="tok-lifetime">'p</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span>
+    <span class="tok-comment tok-anno">// &lt;- `'f: 'p` declares `'f` outlives `'p`, so a `&amp;'f str` can be returned as `&amp;'p str`</span>
+    <span class="tok-variable">preferred</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'p</span> <span class="tok-type">str</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">fallback</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'f</span> <span class="tok-type">str</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'p</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">preferred</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-variable">fallback</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let global_default = String::from("utf-8");
-let result;
-{
-    let session_override = String::from("utf-16");
-    result = resolve_setting(Some(&amp;session_override), &amp;global_default);
-    println!("{result}");
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">global_default</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;utf-8&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">result</span><span class="tok-punct">;</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">session_override</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;utf-16&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-call-free">resolve_setting</span><span class="tok-punct">(</span><span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">session_override</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">global_default</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{result}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without the <code>'f: 'p</code> bound, the compiler has no reason to
 believe a <code>&amp;'f str</code> is valid anywhere a <code>&amp;'p str</code> is expected — the
@@ -1097,24 +1097,24 @@ declared lifetime parameters.</p>
 out of both the outer and inner loop at once — a loop label, written with
 the same <code>'ident</code> sigil as a lifetime but meaning something wholly
 different, is the direct way to do it.</p>
-<pre><code class="rust">let bins: Vec&lt;Vec&lt;&amp;str&gt;&gt; = vec![
-    vec!["screws", "bolts"],
-    vec!["nails", "washers"],
-];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">bins</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span>
+    <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;screws&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;bolts&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;nails&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;washers&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let mut found = None;
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">found</span> <span class="tok-punct">=</span> <span class="tok-field">None</span><span class="tok-punct">;</span>
 
-'outer: for (row, shelf) in bins.iter().enumerate() {
-    // &lt;- `'outer` here is a loop label, not a lifetime — same sigil, unrelated meaning
-    for (col, item) in shelf.iter().enumerate() {
-        if *item == "washers" {
-            found = Some((row, col));
-            break 'outer; // &lt;- exits both loops at once, not just the inner one
-        }
-    }
-}
+<span class="tok-lifetime">'outer</span><span class="tok-punct">:</span> <span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">row</span><span class="tok-punct">,</span> <span class="tok-variable">shelf</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">bins</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">enumerate</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `'outer` here is a loop label, not a lifetime — same sigil, unrelated meaning</span>
+    <span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">col</span><span class="tok-punct">,</span> <span class="tok-variable">item</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">shelf</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">enumerate</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-punct">*</span><span class="tok-variable">item</span> <span class="tok-punct">==</span> <span class="tok-string">&quot;washers&quot;</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">found</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">row</span><span class="tok-punct">,</span> <span class="tok-variable">col</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">break</span> <span class="tok-lifetime">'outer</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits both loops at once, not just the inner one</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-println!("{found:?}");
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{found:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>An unlabeled <code>break</code> only ever exits the innermost loop —
 the <a href="https://doc.rust-lang.org/reference/expressions/loop-expr.html#labelled-block-expressions">Rust Reference's labelled block/loop section</a>
@@ -1158,44 +1158,44 @@ a bus for a responding device.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Borrowing a shared SPI bus in a sensor driver</h3>
-            <pre><code class="rust">struct Bme280&lt;'a, SPI&gt; {
-    spi: &amp;'a mut SPI, // &lt;- `'a` ties this driver's validity to the borrowed bus, not to a bus it owns outright
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Bme280</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">,</span> <span class="tok-constant">SPI</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-keyword">mut</span> <span class="tok-constant">SPI</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `'a` ties this driver's validity to the borrowed bus, not to a bus it owns outright</span>
+<span class="tok-punct">}</span>
 
-impl&lt;'a, SPI&gt; Bme280&lt;'a, SPI&gt;
-where
-    SPI: embedded_hal::spi::SpiBus,
-{
-    fn new(spi: &amp;'a mut SPI) -&gt; Self {
-        Bme280 { spi }
-    }
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">,</span> <span class="tok-constant">SPI</span><span class="tok-punct">&gt;</span> <span class="tok-type">Bme280</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">,</span> <span class="tok-constant">SPI</span><span class="tok-punct">&gt;</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-constant">SPI</span><span class="tok-punct">:</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">SpiBus</span><span class="tok-punct">,</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-keyword">mut</span> <span class="tok-constant">SPI</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Bme280</span> <span class="tok-punct">{</span> <span class="tok-variable">spi</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn read_temperature(&amp;mut self) -&gt; Result&lt;f32, SPI::Error&gt; {
-        let mut buf = [0u8; 4];
-        self.spi.read(&amp;mut buf)?;
-        Ok(f32::from_bits(u32::from_le_bytes(buf)))
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_temperature</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f32</span><span class="tok-punct">,</span> <span class="tok-constant">SPI</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">spi</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-module">f32</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits</span><span class="tok-punct">(</span><span class="tok-module">u32</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_le_bytes</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Scanning an I2C bus for a device address with a loop label</h3>
-            <pre><code class="rust">fn find_device_address(bus: &amp;mut impl embedded_hal::i2c::I2c) -&gt; Option&lt;u8&gt; {
-    let mut found = None;
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">find_device_address</span><span class="tok-punct">(</span><span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">found</span> <span class="tok-punct">=</span> <span class="tok-field">None</span><span class="tok-punct">;</span>
 
-    'scan: for candidate in 0x08..=0x77 {
-        // &lt;- `'scan` is a loop label, the same `'ident` sigil as a lifetime but an unrelated meaning
-        for _attempt in 0..3 {
-            if bus.write(candidate, &amp;[]).is_ok() {
-                found = Some(candidate);
-                break 'scan; // &lt;- exits both loops at once, not just the retry loop
-            }
-        }
-    }
+    <span class="tok-lifetime">'scan</span><span class="tok-punct">:</span> <span class="tok-keyword">for</span> <span class="tok-variable">candidate</span> <span class="tok-keyword">in</span> <span class="tok-number">0x08</span><span class="tok-punct">..=</span><span class="tok-number">0x77</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `'scan` is a loop label, the same `'ident` sigil as a lifetime but an unrelated meaning</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">_attempt</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">if</span> <span class="tok-variable">bus</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-variable">candidate</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+                <span class="tok-variable">found</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">candidate</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+                <span class="tok-keyword">break</span> <span class="tok-lifetime">'scan</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits both loops at once, not just the retry loop</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    found
-}
+    <span class="tok-variable">found</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

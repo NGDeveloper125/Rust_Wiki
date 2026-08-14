@@ -1019,17 +1019,17 @@ call has erased which concrete call site is calling through it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reporting the caller's location from a panic</h3>
-            <pre><code class="rust">#[track_caller] // &lt;- makes Location::caller() below report the CALLER's line, not this one
-fn require_positive(value: i32) {
-    if value &lt;= 0 {
-        let loc = std::panic::Location::caller();
-        panic!("value must be positive, got {value} at {loc}");
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[track_caller]</span> <span class="tok-comment tok-anno">// &lt;- makes Location::caller() below report the CALLER's line, not this one</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">require_positive</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">value</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">loc</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">panic</span><span class="tok-punct">::</span><span class="tok-type">Location</span><span class="tok-punct">::</span><span class="tok-call-assoc">caller</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;value must be positive, got {value} at {loc}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    require_positive(-1); // the panic message reports THIS line, not the one inside require_positive
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">require_positive</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// the panic message reports THIS line, not the one inside require_positive</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1040,17 +1040,17 @@ a port number and panics on an invalid one; marking it <code>#[track_caller]</co
 makes every panic point at the call site that passed the bad value,
 mirroring exactly how <code>Option::unwrap</code> reports the caller's line instead
 of its own.</p>
-<pre><code class="rust">#[track_caller] // &lt;- panics from inside this function report the CALLER's source location
-fn require_valid_port(port: u32) -&gt; u16 {
-    u16::try_from(port).unwrap_or_else(|_| {
-        panic!("port {port} is out of range for u16") // reports the call site below, not this line
-    })
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[track_caller]</span> <span class="tok-comment tok-anno">// &lt;- panics from inside this function report the CALLER's source location</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">require_valid_port</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">try_from</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or_else</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;port {port} is out of range for u16&quot;</span><span class="tok-punct">)</span> <span class="tok-comment">// reports the call site below, not this line</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    let port = require_valid_port(70_000); // &lt;- the panic message points here
-    println!("listening on {port}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">port</span> <span class="tok-punct">=</span> <span class="tok-call-free">require_valid_port</span><span class="tok-punct">(</span><span class="tok-number">70_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the panic message points here</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;listening on {port}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without <code>#[track_caller]</code>, every misconfigured call
 anywhere in a large codebase would report the same unhelpful location —
@@ -1068,20 +1068,20 @@ to application code.</p>
             <p>A custom test-assertion helper used across a test suite should report a
 failed assertion at the line inside the <em>test</em> that called it, not at the
 line inside the shared helper function every test calls into.</p>
-<pre><code class="rust">#[track_caller] // &lt;- a failed assertion here reports the calling test's line, not this function's
-fn assert_within_tolerance(actual: f64, expected: f64, tolerance: f64) {
-    let diff = (actual - expected).abs();
-    assert!(
-        diff &lt;= tolerance,
-        "expected {expected} +/- {tolerance}, got {actual}"
-    );
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[track_caller]</span> <span class="tok-comment tok-anno">// &lt;- a failed assertion here reports the calling test's line, not this function's</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">assert_within_tolerance</span><span class="tok-punct">(</span><span class="tok-variable">actual</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">expected</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">tolerance</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">diff</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">actual</span> <span class="tok-punct">-</span> <span class="tok-variable">expected</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">abs</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span>
+        <span class="tok-variable">diff</span> <span class="tok-punct">&lt;=</span> <span class="tok-variable">tolerance</span><span class="tok-punct">,</span>
+        <span class="tok-string">&quot;expected {expected} +/- {tolerance}, got {actual}&quot;</span>
+    <span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[test]
-fn sensor_reading_matches_calibration() {
-    let reading = 21.4;
-    assert_within_tolerance(reading, 21.5, 0.05); // &lt;- failure reports THIS line
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sensor_reading_matches_calibration</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">reading</span> <span class="tok-punct">=</span> <span class="tok-number">21.4</span><span class="tok-punct">;</span>
+    <span class="tok-call-free">assert_within_tolerance</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">,</span> <span class="tok-number">21.5</span><span class="tok-punct">,</span> <span class="tok-number">0.05</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- failure reports THIS line</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>assert!</code> itself is <code>#[track_caller]</code>, so without
 marking <code>assert_within_tolerance</code> the same way, a failure would report
@@ -1124,19 +1124,19 @@ convenience among several.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reporting the caller's location from a HAL validation panic</h3>
-            <pre><code class="rust">#[track_caller] // &lt;- panics from inside this function report the CALLER's source location
-fn require_valid_channel(channel: u8) -&gt; u8 {
-    if channel &gt;= 8 {
-        panic!("ADC channel {channel} out of range (0..=7)");
-    }
-    channel
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[track_caller]</span> <span class="tok-comment tok-anno">// &lt;- panics from inside this function report the CALLER's source location</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">require_valid_channel</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">channel</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">8</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;ADC channel {channel} out of range (0..=7)&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">channel</span>
+<span class="tok-punct">}</span>
 
-fn read_adc(channel: u8) -&gt; u16 {
-    let channel = require_valid_channel(channel); // &lt;- an out-of-range call here is what gets reported
-    // ... trigger a conversion on `channel` and return the raw sample
-    0
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_adc</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">channel</span> <span class="tok-punct">=</span> <span class="tok-call-free">require_valid_channel</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- an out-of-range call here is what gets reported</span>
+    <span class="tok-comment">// ... trigger a conversion on `channel` and return the raw sample</span>
+    <span class="tok-number">0</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without <code>#[track_caller]</code>, every misconfigured call
 across a firmware crate would report the same unhelpful line inside

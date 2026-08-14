@@ -1001,16 +1001,16 @@ for the compile-time side.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait Greet {
-    fn greet(&amp;self) -&gt; String;
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Greet</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Cat;
-impl Greet for Cat { // &lt;- Cat implements the Greet trait
-    fn greet(&amp;self) -&gt; String { "meow".into() }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Cat</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Greet</span> <span class="tok-keyword">for</span> <span class="tok-type">Cat</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- Cat implements the Greet trait</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;meow&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-println!("{}", Cat.greet());
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Cat</span><span class="tok-punct">.</span><span class="tok-call-method">greet</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1028,19 +1028,19 @@ println!("{}", Cat.greet());
             <p>A domain type gains broad interoperability by implementing a standard
 trait like <code>Display</code>, rather than a bespoke method — any code already
 written against <code>Display</code> accepts it for free.</p>
-<pre><code class="rust">struct Temperature { celsius: f64 }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Temperature</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 
-impl std::fmt::Display for Temperature { // &lt;- implementing a trait, not a one-off to_string() method
-    fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter) -&gt; std::fmt::Result {
-        write!(f, "{:.1}°C", self.celsius)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">Temperature</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- implementing a trait, not a one-off to_string() method</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;{:.1}°C&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">celsius</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn log(value: &amp;impl std::fmt::Display) { // &lt;- accepts anything implementing Display
-    println!("reading: {value}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">impl</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Display</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- accepts anything implementing Display</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading: {value}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-log(&amp;Temperature { celsius: 21.5 });
+<span class="tok-call-free">log</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Temperature</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-number">21.5</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> eagerly implementing common standard traits lets a type
@@ -1060,20 +1060,20 @@ codifies this.</p>
             <p>Shipping a trait as a library's extension point, instead of a concrete
 struct, is a deliberate design choice — callers implement the trait for
 their own types instead of being locked into the crate's.</p>
-<pre><code class="rust">pub trait Storage { // &lt;- the crate's extension point is a trait, not a fixed struct
-    fn get(&amp;self, key: &amp;str) -&gt; Option&lt;String&gt;;
-    fn set(&amp;mut self, key: &amp;str, value: String);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">trait</span> <span class="tok-type-def">Storage</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the crate's extension point is a trait, not a fixed struct</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-pub struct Cache&lt;S: Storage&gt; {
-    backend: S,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Cache</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">Storage</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">backend</span><span class="tok-punct">:</span> <span class="tok-generic-param">S</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;S: Storage&gt; Cache&lt;S&gt; {
-    pub fn refresh(&amp;mut self, key: &amp;str, value: String) {
-        self.backend.set(key, value);
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">Storage</span><span class="tok-punct">&gt;</span> <span class="tok-type">Cache</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">refresh</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">backend</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping the trait narrow (two methods, nothing about how
@@ -1092,25 +1092,25 @@ for the broader case around designing traits as stable extension points.</p>
             <p>Defining a trait around a dependency — even one with a single real
 implementation — opens the door to a test-only stand-in, without any
 conditional compilation inside the production code path.</p>
-<pre><code class="rust">trait Clock {
-    fn now(&amp;self) -&gt; u64;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Clock</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">now</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct SystemClock;
-impl Clock for SystemClock {
-    fn now(&amp;self) -&gt; u64 { /* reads the real system time */ 1_700_000_000 }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SystemClock</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Clock</span> <span class="tok-keyword">for</span> <span class="tok-type">SystemClock</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">now</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span> <span class="tok-comment">/* reads the real system time */</span> <span class="tok-number">1_700_000_000</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct FixedClock(u64); // &lt;- test-only implementation of the same trait
-impl Clock for FixedClock {
-    fn now(&amp;self) -&gt; u64 { self.0 }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">FixedClock</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- test-only implementation of the same trait</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Clock</span> <span class="tok-keyword">for</span> <span class="tok-type">FixedClock</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">now</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn is_expired(clock: &amp;impl Clock, expiry: u64) -&gt; bool {
-    clock.now() &gt; expiry
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_expired</span><span class="tok-punct">(</span><span class="tok-variable">clock</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">impl</span> <span class="tok-type">Clock</span><span class="tok-punct">,</span> <span class="tok-variable">expiry</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">clock</span><span class="tok-punct">.</span><span class="tok-call-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">expiry</span>
+<span class="tok-punct">}</span>
 
-assert!(is_expired(&amp;FixedClock(2_000_000_000), 1_000_000_000)); // no real clock involved
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">is_expired</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-field">FixedClock</span><span class="tok-punct">(</span><span class="tok-number">2_000_000_000</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1_000_000_000</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// no real clock involved</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> depending on the trait rather than <code>SystemClock</code> directly
@@ -1157,20 +1157,20 @@ decoupling for free, resolved entirely at compile time.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait OutputPin {
-    type Error;
-    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt;;
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct GpioPin5; // a concrete pin type, as a vendor's HAL crate would define it
+<span class="tok-keyword">struct</span> <span class="tok-type-def">GpioPin5</span><span class="tok-punct">;</span> <span class="tok-comment">// a concrete pin type, as a vendor's HAL crate would define it</span>
 
-impl OutputPin for GpioPin5 { // &lt;- the vendor HAL implements the shared trait for its own pin type
-    type Error = core::convert::Infallible;
-    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt; {
-        // write to the peripheral's GPIO register here
-        Ok(())
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">OutputPin</span> <span class="tok-keyword">for</span> <span class="tok-type">GpioPin5</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the vendor HAL implements the shared trait for its own pin type</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">convert</span><span class="tok-punct">::</span><span class="tok-type">Infallible</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// write to the peripheral's GPIO register here</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1189,20 +1189,20 @@ impl OutputPin for GpioPin5 { // &lt;- the vendor HAL implements the shared trai
 <code>embedded-hal</code>-based driver crate simply by implementing the shared <code>I2c</code>
 trait for its own bus type — no coordination with any driver author
 required.</p>
-<pre><code class="rust">trait I2c {
-    type Error;
-    fn write(&amp;mut self, addr: u8, bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt;;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">I2c</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Bus1; // the vendor's concrete I2C peripheral handle
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Bus1</span><span class="tok-punct">;</span> <span class="tok-comment">// the vendor's concrete I2C peripheral handle</span>
 
-impl I2c for Bus1 { // &lt;- one impl unlocks every driver crate written against I2c
-    type Error = core::convert::Infallible;
-    fn write(&amp;mut self, addr: u8, bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt; {
-        let _ = (addr, bytes); // send over the real peripheral here
-        Ok(())
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">I2c</span> <span class="tok-keyword">for</span> <span class="tok-type">Bus1</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one impl unlocks every driver crate written against I2c</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">convert</span><span class="tok-punct">::</span><span class="tok-type">Infallible</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-variable">bytes</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// send over the real peripheral here</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the HAL author and every driver author never need to
@@ -1221,15 +1221,15 @@ instead of a shared concrete bus type.</p>
 implementing the <code>embedded-hal</code> trait it needs," not a specific vendor's
 concrete peripheral type — otherwise the driver silently becomes
 single-vendor.</p>
-<pre><code class="rust">pub struct TemperatureSensor&lt;I2C&gt; { // &lt;- generic over the trait, not any one vendor's I2C type
-    bus: I2C,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic over the trait, not any one vendor's I2C type</span>
+    <span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-constant">I2C</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;I2C: I2c&gt; TemperatureSensor&lt;I2C&gt; {
-    pub fn new(bus: I2C) -&gt; Self {
-        TemperatureSensor { bus }
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">:</span> <span class="tok-trait">I2c</span><span class="tok-punct">&gt;</span> <span class="tok-type">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-constant">I2C</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">TemperatureSensor</span> <span class="tok-punct">{</span> <span class="tok-variable">bus</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a driver crate that names a concrete vendor type in its
@@ -1248,17 +1248,17 @@ whose HAL implements <code>I2c</code>.</p>
 same trait with an in-memory stand-in lets the driver's parsing/decoding
 logic run in a regular host-side test, with no real bus and no target
 hardware attached.</p>
-<pre><code class="rust">struct MockBus { canned_reply: Vec&lt;u8&gt; }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">MockBus</span> <span class="tok-punct">{</span> <span class="tok-variable">canned_reply</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">}</span>
 
-impl I2c for MockBus {
-    type Error = core::convert::Infallible;
-    fn write(&amp;mut self, _addr: u8, _bytes: &amp;[u8]) -&gt; Result&lt;(), Self::Error&gt; {
-        Ok(())
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">I2c</span> <span class="tok-keyword">for</span> <span class="tok-type">MockBus</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">convert</span><span class="tok-punct">::</span><span class="tok-type">Infallible</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">_addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">_bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// TemperatureSensor::new(MockBus { canned_reply: vec![0x1a, 0x02] }) exercises
-// the driver's own logic without ever touching real hardware
+<span class="tok-comment">// TemperatureSensor::new(MockBus { canned_reply: vec![0x1a, 0x02] }) exercises</span>
+<span class="tok-comment">// the driver's own logic without ever touching real hardware</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> this is precisely the role the <code>embedded-hal-mock</code> crate

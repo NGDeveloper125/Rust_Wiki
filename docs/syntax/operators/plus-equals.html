@@ -991,8 +991,8 @@ must be a mutable place — <code>x</code> must be declared <code>let mut x</cod
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Adding to a mutable binding in place</h3>
-            <pre><code class="rust">let mut x = 5;
-x += 1; // &lt;- `+=` adds the right operand into `x` in place
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+<span class="tok-variable">x</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `+=` adds the right operand into `x` in place</span>
 </code></pre>
 <p><strong>Restriction:</strong> the left operand must be a mutable place — <code>x</code> has to be
 declared with <code>let mut x</code>, or this won't compile.</p>
@@ -1003,20 +1003,20 @@ declared with <code>let mut x</code>, or this won't compile.</p>
             <p>An account balance is a natural home for <code>+=</code> — the balance is a field
 mutated in place each time a deposit posts, rather than a whole new
 <code>Account</code> being constructed per transaction.</p>
-<pre><code class="rust">struct Account {
-    balance: i64, // cents
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Account</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">balance</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span> <span class="tok-comment">// cents</span>
+<span class="tok-punct">}</span>
 
-impl Account {
-    fn deposit(&amp;mut self, cents: i64) {
-        self.balance += cents; // &lt;- `+=` mutates the field in place
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Account</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">deposit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">balance</span> <span class="tok-punct">+=</span> <span class="tok-variable">cents</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `+=` mutates the field in place</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut checking = Account { balance: 10_000 };
-checking.deposit(2_500);
-checking.deposit(750);
-assert_eq!(checking.balance, 13_250);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">checking</span> <span class="tok-punct">=</span> <span class="tok-type">Account</span> <span class="tok-punct">{</span> <span class="tok-variable">balance</span><span class="tok-punct">:</span> <span class="tok-number">10_000</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">checking</span><span class="tok-punct">.</span><span class="tok-call-method">deposit</span><span class="tok-punct">(</span><span class="tok-number">2_500</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">checking</span><span class="tok-punct">.</span><span class="tok-call-method">deposit</span><span class="tok-punct">(</span><span class="tok-number">750</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">checking</span><span class="tok-punct">.</span><span class="tok-field">balance</span><span class="tok-punct">,</span> <span class="tok-number">13_250</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>A <code>&amp;mut self</code> method that uses <code>+=</code> on its own field
 keeps the mutation local and auditable — the alternative of returning a
@@ -1031,16 +1031,16 @@ syntax itself is covered in <a href="https://doc.rust-lang.org/book/ch05-03-meth
 <code>+=</code>; it's worth contrasting with re-binding a fresh <code>let total = ...</code> on
 every loop pass, which doesn't compile without <code>mut</code> and wouldn't express
 "the same total, growing" as directly even if it did.</p>
-<pre><code class="rust">let orders = [1200, 450, 899, 3000]; // cents
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">orders</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1200</span><span class="tok-punct">,</span> <span class="tok-number">450</span><span class="tok-punct">,</span> <span class="tok-number">899</span><span class="tok-punct">,</span> <span class="tok-number">3000</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment">// cents</span>
 
-let mut total = 0; // &lt;- `mut` binding `+=` will mutate
-for cents in orders {
-    total += cents; // &lt;- `+=` folds each order into the running total
-}
-assert_eq!(total, 5549);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `mut` binding `+=` will mutate</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">cents</span> <span class="tok-keyword">in</span> <span class="tok-variable">orders</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">total</span> <span class="tok-punct">+=</span> <span class="tok-variable">cents</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `+=` folds each order into the running total</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">,</span> <span class="tok-number">5549</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Equivalent, more idiomatic for a one-shot fold:
-let total: i32 = orders.iter().sum();
+<span class="tok-comment">// Equivalent, more idiomatic for a one-shot fold:</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span> <span class="tok-punct">=</span> <span class="tok-variable">orders</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>The explicit <code>for</code> loop with <code>+=</code> is the clearest form
 when the accumulation is interleaved with other per-item work; when
@@ -1080,25 +1080,25 @@ that's where a silent wrap would otherwise go unnoticed indefinitely.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Using `+=` for a bounded per-cycle accumulator</h3>
-            <pre><code class="rust">fn average_adc_reading(samples: &amp;[u16; 8]) -&gt; u16 {
-    let mut sum: u32 = 0;
-    for &amp;s in samples {
-        sum += s as u32; // &lt;- `+=` is fine here: 8 u16 samples can never overflow a u32 accumulator
-    }
-    (sum / samples.len() as u32) as u16
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">average_adc_reading</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">;</span> <span class="tok-number">8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sum</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-punct">&amp;</span><span class="tok-variable">s</span> <span class="tok-keyword">in</span> <span class="tok-variable">samples</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">sum</span> <span class="tok-punct">+=</span> <span class="tok-variable">s</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `+=` is fine here: 8 u16 samples can never overflow a u32 accumulator</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-punct">(</span><span class="tok-variable">sum</span> <span class="tok-punct">/</span> <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u16</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Guarding a long-lived event counter instead of bare `+=`</h3>
-            <pre><code class="rust">struct EventCounter(u32);
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">EventCounter</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl EventCounter {
-    fn record(&amp;mut self) {
-        self.0 = self.0.wrapping_add(1); // explicit wrapping stands in for a bare `+=` that would wrap unnoticed anyway
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">EventCounter</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">record</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// explicit wrapping stands in for a bare `+=` that would wrap unnoticed anyway</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

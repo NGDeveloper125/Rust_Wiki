@@ -1003,8 +1003,8 @@ version number into itself without hand-maintaining it in two places.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reading a crate's version and an optional build tag</h3>
-            <pre><code class="rust">const VERSION: &amp;str = env!("CARGO_PKG_VERSION");          // &lt;- fails the build if this var is somehow unset
-const BUILD_TAG: Option&lt;&amp;str&gt; = option_env!("BUILD_TAG"); // &lt;- None if unset, instead of failing the build
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">VERSION</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-macro">env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;CARGO_PKG_VERSION&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>          <span class="tok-comment tok-anno">// &lt;- fails the build if this var is somehow unset</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">BUILD_TAG</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">option_env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;BUILD_TAG&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- None if unset, instead of failing the build</span>
 </code></pre>
 
           </div>
@@ -1013,18 +1013,18 @@ const BUILD_TAG: Option&lt;&amp;str&gt; = option_env!("BUILD_TAG"); // &lt;- Non
             <p>A CLI tool's <code>--version</code> flag prints the crate's own version, embedded at
 compile time from <code>Cargo.toml</code> rather than hand-maintained as a separate
 string literal.</p>
-<pre><code class="rust">const VERSION: &amp;str = env!("CARGO_PKG_VERSION"); // &lt;- read from Cargo.toml's [package] version at compile time
-const NAME: &amp;str = env!("CARGO_PKG_NAME");
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">VERSION</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-macro">env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;CARGO_PKG_VERSION&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- read from Cargo.toml's [package] version at compile time</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">NAME</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-macro">env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;CARGO_PKG_NAME&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn print_version() {
-    println!("{NAME} {VERSION}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">print_version</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{NAME} {VERSION}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn handle_args(args: &amp;[String]) {
-    if args.iter().any(|arg| arg == "--version") {
-        print_version();
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">handle_args</span><span class="tok-punct">(</span><span class="tok-variable">args</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">args</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">any</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">arg</span><span class="tok-punct">|</span> <span class="tok-variable">arg</span> <span class="tok-punct">==</span> <span class="tok-string">&quot;--version&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-call-free">print_version</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Sourcing the version string from <code>CARGO_PKG_VERSION</code>
 instead of a separately hand-written constant means <code>Cargo.toml</code>'s
@@ -1039,14 +1039,14 @@ their own metadata.</p>
             <p>A build optionally embeds a license key at compile time via a build-time
 environment variable; when it's absent, the binary falls back to a
 "trial mode" rather than failing to compile.</p>
-<pre><code class="rust">const LICENSE_KEY: Option&lt;&amp;str&gt; = option_env!("APP_LICENSE_KEY"); // &lt;- None if the var wasn't set when this was built
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">LICENSE_KEY</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">option_env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;APP_LICENSE_KEY&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- None if the var wasn't set when this was built</span>
 
-fn license_status() -&gt; &amp;'static str {
-    match LICENSE_KEY {
-        Some(_) =&gt; "licensed",
-        None =&gt; "trial mode", // &lt;- graceful fallback instead of a failed build
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">license_status</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-constant">LICENSE_KEY</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;licensed&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;trial mode&quot;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- graceful fallback instead of a failed build</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/std/macro.option_env.html">std docs</a> draw the
@@ -1090,23 +1090,23 @@ block of generated register-definition source that gets spliced in with
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reporting firmware version and build provenance at boot</h3>
-            <pre><code class="rust">const FW_VERSION: &amp;str = env!("CARGO_PKG_VERSION");      // &lt;- baked in at compile time from Cargo.toml
-const GIT_HASH: Option&lt;&amp;str&gt; = option_env!("GIT_HASH");  // &lt;- None unless the build pipeline set this env var
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">FW_VERSION</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-macro">env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;CARGO_PKG_VERSION&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>      <span class="tok-comment tok-anno">// &lt;- baked in at compile time from Cargo.toml</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">GIT_HASH</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">option_env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;GIT_HASH&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment tok-anno">// &lt;- None unless the build pipeline set this env var</span>
 
-fn report_boot_info() {
-    match GIT_HASH {
-        Some(hash) =&gt; defmt::info!("firmware {} ({})", FW_VERSION, hash),
-        None =&gt; defmt::info!("firmware {} (dev build)", FW_VERSION),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">report_boot_info</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-constant">GIT_HASH</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">hash</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;firmware {} ({})&quot;</span><span class="tok-punct">,</span> <span class="tok-constant">FW_VERSION</span><span class="tok-punct">,</span> <span class="tok-variable">hash</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;firmware {} (dev build)&quot;</span><span class="tok-punct">,</span> <span class="tok-constant">FW_VERSION</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Locating a build-script-generated file by path</h3>
-            <pre><code class="rust">// A build.rs script writes a generated register-address table under OUT_DIR;
-// the crate locates it at compile time via env!, then splices it in with include!.
-include!(concat!(env!("OUT_DIR"), "/generated_registers.rs")); // &lt;- env! resolved at compile time, not at flash time
+            <pre><code class="rust-hl"><span class="tok-comment">// A build.rs script writes a generated register-address table under OUT_DIR;</span>
+<span class="tok-comment">// the crate locates it at compile time via env!, then splices it in with include!.</span>
+<span class="tok-macro">include!</span><span class="tok-punct">(</span><span class="tok-macro">concat!</span><span class="tok-punct">(</span><span class="tok-macro">env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;OUT_DIR&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;/generated_registers.rs&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- env! resolved at compile time, not at flash time</span>
 </code></pre>
 
           </div>

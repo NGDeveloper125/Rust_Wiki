@@ -991,17 +991,17 @@ providing conflicting blanket impls for the same trait.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait Describe {
-    fn describe(&amp;self) -&gt; String;
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Describe</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-impl&lt;T: std::fmt::Display&gt; Describe for T { // &lt;- one impl covers every Display type at once
-    fn describe(&amp;self) -&gt; String {
-        format!("value: {self}")
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Display</span><span class="tok-punct">&gt;</span> <span class="tok-trait">Describe</span> <span class="tok-keyword">for</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one impl covers every Display type at once</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;value: {self}&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-println!("{}", 5.describe());
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">.</span><span class="tok-call-method">describe</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><strong>Restriction:</strong> only the crate that defines <code>Describe</code> may write this
 blanket impl — the orphan rule forbids a downstream crate from
@@ -1022,17 +1022,17 @@ blanket-implementing someone else's trait for someone else's types.</p>
             <p>A blanket impl can add a convenience method to every type satisfying a
 bound at once, instead of asking each type to opt in individually —
 useful when the behavior follows purely from the bound itself.</p>
-<pre><code class="rust">trait Clamp {
-    fn clamp_to(self, lo: Self, hi: Self) -&gt; Self;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Clamp</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">clamp_to</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">lo</span><span class="tok-punct">:</span> <span class="tok-keyword">Self</span><span class="tok-punct">,</span> <span class="tok-variable">hi</span><span class="tok-punct">:</span> <span class="tok-keyword">Self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-impl&lt;T: PartialOrd&gt; Clamp for T { // &lt;- one impl covers every PartialOrd type at once
-    fn clamp_to(self, lo: Self, hi: Self) -&gt; Self {
-        if self &lt; lo { lo } else if self &gt; hi { hi } else { self }
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">PartialOrd</span><span class="tok-punct">&gt;</span> <span class="tok-trait">Clamp</span> <span class="tok-keyword">for</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one impl covers every PartialOrd type at once</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">clamp_to</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">lo</span><span class="tok-punct">:</span> <span class="tok-keyword">Self</span><span class="tok-punct">,</span> <span class="tok-variable">hi</span><span class="tok-punct">:</span> <span class="tok-keyword">Self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">self</span> <span class="tok-punct">&lt;</span> <span class="tok-variable">lo</span> <span class="tok-punct">{</span> <span class="tok-variable">lo</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-keyword">if</span> <span class="tok-keyword">self</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">hi</span> <span class="tok-punct">{</span> <span class="tok-variable">hi</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-keyword">self</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let level = 42.clamp_to(0, 100); // works for i32, f64, or any other PartialOrd type
+<span class="tok-keyword">let</span> <span class="tok-variable">level</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">.</span><span class="tok-call-method">clamp_to</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// works for i32, f64, or any other PartialOrd type</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> this only works because <code>PartialOrd</code> is a
@@ -1073,21 +1073,21 @@ foreign types.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait OutputPin {
-    fn set_high(&amp;mut self);
-    fn set_low(&amp;mut self);
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-trait PulseExt {
-    fn pulse(&amp;mut self);
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">PulseExt</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pulse</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-impl&lt;P: OutputPin&gt; PulseExt for P { // &lt;- one impl covers every OutputPin type at once
-    fn pulse(&amp;mut self) {
-        self.set_high();
-        self.set_low();
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span> <span class="tok-trait">PulseExt</span> <span class="tok-keyword">for</span> <span class="tok-generic-param">P</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one impl covers every OutputPin type at once</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pulse</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1105,29 +1105,29 @@ impl&lt;P: OutputPin&gt; PulseExt for P { // &lt;- one impl covers every OutputP
             <p>A helper crate wants to give every <code>embedded-hal</code>-compatible GPIO pin a
 <code>pulse</code> convenience method without asking each vendor's HAL to implement
 a new trait one type at a time.</p>
-<pre><code class="rust">trait OutputPin {
-    fn set_high(&amp;mut self);
-    fn set_low(&amp;mut self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-trait PulseExt: OutputPin {
-    fn pulse_n(&amp;mut self, times: u8) { // &lt;- default body: only needs OutputPin's two primitives
-        for _ in 0..times {
-            self.set_high();
-            self.set_low();
-        }
-    }
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">PulseExt</span><span class="tok-punct">:</span> <span class="tok-type">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pulse_n</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">times</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- default body: only needs OutputPin's two primitives</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-variable">times</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl&lt;P: OutputPin&gt; PulseExt for P {} // &lt;- blanket impl: every OutputPin implementer gets pulse_n for free
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span> <span class="tok-trait">PulseExt</span> <span class="tok-keyword">for</span> <span class="tok-generic-param">P</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- blanket impl: every OutputPin implementer gets pulse_n for free</span>
 
-struct Gpio7;
-impl OutputPin for Gpio7 {
-    fn set_high(&amp;mut self) {}
-    fn set_low(&amp;mut self) {}
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Gpio7</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">OutputPin</span> <span class="tok-keyword">for</span> <span class="tok-type">Gpio7</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-Gpio7.pulse_n(3);
+<span class="tok-type">Gpio7</span><span class="tok-punct">.</span><span class="tok-call-method">pulse_n</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the blanket impl covers the open-ended set of pin types
@@ -1147,24 +1147,24 @@ rather than the hardware contract.</p>
             <p>A crate offering ergonomics on top of <code>embedded-hal</code> traits must define
 its own extension trait to blanket-impl, rather than attempting to
 blanket-impl <code>embedded-hal</code>'s own traits for foreign pin types.</p>
-<pre><code class="rust">// AVOID: blanket-impling a foreign trait for a foreign bound — the orphan
-// rule forbids this outright, so it doesn't compile:
-// impl&lt;P: SomeVendorsPinTrait&gt; embedded_hal::digital::OutputPin for P { ... }
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: blanket-impling a foreign trait for a foreign bound — the orphan</span>
+<span class="tok-comment">// rule forbids this outright, so it doesn't compile:</span>
+<span class="tok-comment">// impl&lt;P: SomeVendorsPinTrait&gt; embedded_hal::digital::OutputPin for P { ... }</span>
 
-// PREFER: define a new local trait and blanket-impl that instead
-trait DebouncedRead {
-    fn read_debounced(&amp;self) -&gt; bool;
-}
+<span class="tok-comment">// PREFER: define a new local trait and blanket-impl that instead</span>
+<span class="tok-keyword">trait</span> <span class="tok-type-def">DebouncedRead</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_debounced</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-trait InputPin {
-    fn is_high(&amp;self) -&gt; bool;
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">InputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">is_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-impl&lt;P: InputPin&gt; DebouncedRead for P { // &lt;- local trait, blanket-implemented: orphan rule is satisfied
-    fn read_debounced(&amp;self) -&gt; bool {
-        self.is_high() // a real impl would sample more than once
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">InputPin</span><span class="tok-punct">&gt;</span> <span class="tok-trait">DebouncedRead</span> <span class="tok-keyword">for</span> <span class="tok-generic-param">P</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- local trait, blanket-implemented: orphan rule is satisfied</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_debounced</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">is_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment">// a real impl would sample more than once</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the orphan rule requires the crate writing a blanket

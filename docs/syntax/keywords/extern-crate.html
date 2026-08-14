@@ -1012,11 +1012,11 @@ only the crate-declaration form, <code>extern crate</code>.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Opting a no_std crate into alloc</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-extern crate alloc; // &lt;- still required today: opts a `#![no_std]` crate into the `alloc` crate
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- still required today: opts a `#![no_std]` crate into the `alloc` crate</span>
 
-use alloc::vec::Vec;
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1025,20 +1025,20 @@ use alloc::vec::Vec;
             <p>A <code>#![no_std]</code> library crate offers a <code>Vec</code>-returning public function, so
 it needs <code>alloc</code> explicitly linked before it can use <code>alloc::vec::Vec</code> at
 all.</p>
-<pre><code class="rust">#![no_std]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-extern crate alloc; // &lt;- opts this crate into `alloc`; not automatic even in modern editions
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- opts this crate into `alloc`; not automatic even in modern editions</span>
 
-use alloc::vec::Vec;
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-pub fn duplicate_last(values: &amp;[u32]) -&gt; Vec&lt;u32&gt; { // &lt;- public API returning an `alloc` type
-    let mut out = Vec::new();
-    out.extend_from_slice(values);
-    if let Some(&amp;last) = values.last() {
-        out.push(last);
-    }
-    out
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">duplicate_last</span><span class="tok-punct">(</span><span class="tok-variable">values</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u32</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- public API returning an `alloc` type</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">out</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">out</span><span class="tok-punct">.</span><span class="tok-call-method">extend_from_slice</span><span class="tok-punct">(</span><span class="tok-variable">values</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">last</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">values</span><span class="tok-punct">.</span><span class="tok-call-method">last</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">out</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">last</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">out</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>alloc</code> sits between <code>core</code> (always available,
 allocation-free) and <code>std</code> (requires an OS), so a <code>#![no_std]</code> crate that
@@ -1091,32 +1091,32 @@ very often is in firmware.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Opting into `alloc` alongside a global allocator</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-extern crate alloc; // &lt;- still required: opts this `#![no_std]` crate into the `alloc` crate
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- still required: opts this `#![no_std]` crate into the `alloc` crate</span>
 
-use alloc::vec::Vec;
-use embedded_alloc::Heap;
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">embedded_alloc</span><span class="tok-punct">::</span><span class="tok-type">Heap</span><span class="tok-punct">;</span>
 
-#[global_allocator]
-static HEAP: Heap = Heap::empty(); // &lt;- required alongside `extern crate alloc;`: alloc supplies types, not memory
+<span class="tok-attribute">#[global_allocator]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">HEAP</span><span class="tok-punct">:</span> <span class="tok-type">Heap</span> <span class="tok-punct">=</span> <span class="tok-type">Heap</span><span class="tok-punct">::</span><span class="tok-call-assoc">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- required alongside `extern crate alloc;`: alloc supplies types, not memory</span>
 
-fn collect_samples(readings: &amp;[u16]) -&gt; Vec&lt;u32&gt; {
-    readings.iter().map(|&amp;r| r as u32).collect() // &lt;- `Vec` only usable because both lines above are present
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">collect_samples</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `Vec` only usable because both lines above are present</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">The `heapless` substitute — no `extern crate alloc;`, no global allocator</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use heapless::Vec; // &lt;- fixed-capacity Vec: no `extern crate alloc;` and no `#[global_allocator]` needed
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed-capacity Vec: no `extern crate alloc;` and no `#[global_allocator]` needed</span>
 
-fn collect_samples(readings: &amp;[u16]) -&gt; Vec&lt;u32, 32&gt; { // &lt;- capacity fixed at compile time via the const generic
-    readings.iter().map(|&amp;r| r as u32).collect()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">collect_samples</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- capacity fixed at compile time via the const generic</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

@@ -1015,14 +1015,14 @@ composable failure type instead of an opaque message.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn parse_reading(raw: &amp;str) -&gt; Result&lt;f64, std::num::ParseFloatError&gt; { // &lt;- explicit "maybe failed" return type
-    raw.trim().parse()
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_reading</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseFloatError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- explicit &quot;maybe failed&quot; return type</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-match parse_reading("21.5") {
-    Ok(value) =&gt; println!("reading: {value}"),
-    Err(e) =&gt; println!("invalid reading: {e}"),
-}
+<span class="tok-keyword">match</span> <span class="tok-call-free">parse_reading</span><span class="tok-punct">(</span><span class="tok-string">&quot;21.5&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading: {value}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid reading: {e}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1040,22 +1040,22 @@ match parse_reading("21.5") {
             <p>A sensor driver's raw reading can fail to parse; the caller turns that
 low-level error into a domain-specific one with <code>map_err</code> rather than
 exposing <code>ParseFloatError</code> to its own callers.</p>
-<pre><code class="rust">#[derive(Debug)]
-struct SensorError(String);
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorError</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn read_temperature(raw: &amp;str) -&gt; Result&lt;f64, SensorError&gt; {
-    raw.trim()
-        .parse::&lt;f64&gt;()
-        .map_err(|e| SensorError(format!("bad reading {raw:?}: {e}"))) // &lt;- Result::map_err adapts the error type
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_temperature</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">e</span><span class="tok-punct">|</span> <span class="tok-field">SensorError</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;bad reading {raw:?}: {e}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- Result::map_err adapts the error type</span>
+<span class="tok-punct">}</span>
 
-fn average(raws: &amp;[&amp;str]) -&gt; Result&lt;f64, SensorError&gt; {
-    let mut total = 0.0;
-    for raw in raws {
-        total += read_temperature(raw)?;
-    }
-    Ok(total / raws.len() as f64)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">average</span><span class="tok-punct">(</span><span class="tok-variable">raws</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-number">0.0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">raw</span> <span class="tok-keyword">in</span> <span class="tok-variable">raws</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">total</span> <span class="tok-punct">+=</span> <span class="tok-call-free">read_temperature</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">total</span> <span class="tok-punct">/</span> <span class="tok-variable">raws</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> converting a lower-level error into the caller's own
@@ -1074,27 +1074,27 @@ and the API Guidelines both recommend at library boundaries.</p>
             <p>Constructing an <code>Order</code> should be impossible with an invalid quantity, so
 the constructor returns <code>Result&lt;Order, OrderError&gt;</code> instead of silently
 clamping or panicking.</p>
-<pre><code class="rust">#[derive(Debug, PartialEq)]
-enum OrderError {
-    ZeroQuantity,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, PartialEq)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">OrderError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">ZeroQuantity</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-struct Order {
-    sku: String,
-    quantity: u32,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">sku</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Order {
-    fn new(sku: &amp;str, quantity: u32) -&gt; Result&lt;Order, OrderError&gt; { // &lt;- fallible constructor: invalid orders can't exist
-        if quantity == 0 {
-            return Err(OrderError::ZeroQuantity);
-        }
-        Ok(Order { sku: sku.to_string(), quantity })
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">sku</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Order</span><span class="tok-punct">,</span> <span class="tok-type-return">OrderError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- fallible constructor: invalid orders can't exist</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">quantity</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">OrderError</span><span class="tok-punct">::</span><span class="tok-field">ZeroQuantity</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">sku</span><span class="tok-punct">:</span> <span class="tok-variable">sku</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">quantity</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let result = Order::new("SKU-1", 0);
-assert!(matches!(result, Err(OrderError::ZeroQuantity))); // &lt;- Result&lt;Order, OrderError&gt; makes failure explicit
+<span class="tok-keyword">let</span> <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-string">&quot;SKU-1&quot;</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">result</span><span class="tok-punct">,</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">OrderError</span><span class="tok-punct">::</span><span class="tok-field">ZeroQuantity</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Result&lt;Order, OrderError&gt; makes failure explicit</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>Result</code> from the constructor makes "quantity
@@ -1112,22 +1112,22 @@ instead of a comment, applying the parse-don't-validate idiom from
             <h3 class="scenario-title">Testing</h3>
             <p>A unit test checks that invalid input produces the expected <code>Err</code>
 variant, not just that the function "didn't crash."</p>
-<pre><code class="rust">fn divide_evenly(total: u32, parts: u32) -&gt; Result&lt;u32, String&gt; {
-    if parts == 0 {
-        return Err("cannot divide by zero parts".to_string());
-    }
-    if total % parts != 0 {
-        return Err(format!("{total} does not divide evenly into {parts} parts"));
-    }
-    Ok(total / parts)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">divide_evenly</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">parts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">parts</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;cannot divide by zero parts&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">total</span> <span class="tok-punct">%</span> <span class="tok-variable">parts</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{total} does not divide evenly into {parts} parts&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">total</span> <span class="tok-punct">/</span> <span class="tok-variable">parts</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[test]
-fn rejects_uneven_split() {
-    let outcome = divide_evenly(10, 3); // &lt;- Result lets the test assert on *why* it failed
-    assert!(outcome.is_err());
-    assert_eq!(outcome.unwrap_err(), "10 does not divide evenly into 3 parts");
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_uneven_split</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">outcome</span> <span class="tok-punct">=</span> <span class="tok-call-free">divide_evenly</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Result lets the test assert on *why* it failed</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">outcome</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">outcome</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;10 does not divide evenly into 3 parts&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> asserting on the specific <code>Err</code> payload, not just that
@@ -1170,13 +1170,13 @@ peripheral.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use embedded_hal::i2c::I2c;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">;</span>
 
-fn read_register&lt;I: I2c&gt;(i2c: &amp;mut I, addr: u8, reg: u8) -&gt; Result&lt;u8, I::Error&gt; { // &lt;- explicit "may fail" return type
-    let mut buf = [0u8; 1];
-    i2c.write_read(addr, &amp;[reg], &amp;mut buf)?;
-    Ok(buf[0])
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_register</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">I</span><span class="tok-punct">:</span> <span class="tok-trait">I2c</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">I</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">reg</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">I</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- explicit &quot;may fail&quot; return type</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write_read</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-variable">reg</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1195,24 +1195,24 @@ fn read_register&lt;I: I2c&gt;(i2c: &amp;mut I, addr: u8, reg: u8) -&gt; Result&
 type with <code>map_err</code>, then an averaging function propagates that same error
 across three chained reads with <code>?</code> instead of unwrapping past a bus
 fault.</p>
-<pre><code class="rust">use embedded_hal::spi::SpiDevice;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">SpiDevice</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-struct SensorError;
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorError</span><span class="tok-punct">;</span>
 
-fn read_raw(spi: &amp;mut impl SpiDevice, cmd: u8) -&gt; Result&lt;u16, SensorError&gt; {
-    let mut buf = [0u8; 2];
-    spi.transfer(&amp;mut buf, &amp;[cmd]).map_err(|_| SensorError)?; // &lt;- Result::map_err adapts the low-level SPI error
-    Ok(u16::from_be_bytes(buf))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">SpiDevice</span><span class="tok-punct">,</span> <span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">spi</span><span class="tok-punct">.</span><span class="tok-call-method">transfer</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buf</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-variable">cmd</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">SensorError</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Result::map_err adapts the low-level SPI error</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_be_bytes</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn average_of_three(spi: &amp;mut impl SpiDevice, cmd: u8) -&gt; Result&lt;u32, SensorError&gt; {
-    let mut total: u32 = 0;
-    for _ in 0..3 {
-        total += read_raw(spi, cmd)? as u32; // &lt;- propagates instead of unwrapping past a bus fault
-    }
-    Ok(total / 3)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">average_of_three</span><span class="tok-punct">(</span><span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">SpiDevice</span><span class="tok-punct">,</span> <span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">total</span> <span class="tok-punct">+=</span> <span class="tok-call-free">read_raw</span><span class="tok-punct">(</span><span class="tok-variable">spi</span><span class="tok-punct">,</span> <span class="tok-variable">cmd</span><span class="tok-punct">)</span><span class="tok-punct">?</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- propagates instead of unwrapping past a bus fault</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">total</span> <span class="tok-punct">/</span> <span class="tok-number">3</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> propagating the <code>Result</code> instead of swallowing it with
@@ -1231,18 +1231,18 @@ transaction.</p>
             <p>Writing a duty-cycle percentage to a PWM peripheral rejects an
 out-of-range value up front, returning <code>Result</code> instead of silently
 clamping it to something the caller never asked for.</p>
-<pre><code class="rust">#[derive(Debug, PartialEq)]
-struct OutOfRange;
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, PartialEq)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">OutOfRange</span><span class="tok-punct">;</span>
 
-fn set_duty_cycle(percent: u8) -&gt; Result&lt;(), OutOfRange&gt; {
-    if percent &gt; 100 {
-        return Err(OutOfRange);
-    }
-    // ... write `percent` into the timer's compare register
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_duty_cycle</span><span class="tok-punct">(</span><span class="tok-variable">percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">OutOfRange</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">percent</span> <span class="tok-punct">&gt;</span> <span class="tok-number">100</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">OutOfRange</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-comment">// ... write `percent` into the timer's compare register</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(set_duty_cycle(150), Err(OutOfRange));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">set_duty_cycle</span><span class="tok-punct">(</span><span class="tok-number">150</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">OutOfRange</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> rejecting the bad value explicitly, rather than clamping

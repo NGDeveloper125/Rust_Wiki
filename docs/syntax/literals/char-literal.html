@@ -992,7 +992,7 @@ equivalent (<code>b'H'</code>).</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Producing a full Unicode char</h3>
-            <pre><code class="rust">let grade: char = 'A'; // &lt;- char literal: produces a `char`, a full Unicode scalar value
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">grade</span><span class="tok-punct">:</span> <span class="tok-type">char</span> <span class="tok-punct">=</span> <span class="tok-string">'A'</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- char literal: produces a `char`, a full Unicode scalar value</span>
 </code></pre>
 <p>A char literal must contain exactly one Unicode scalar
 value — <code>'ab'</code> is a compile error, and lone surrogate-pair halves are
@@ -1003,22 +1003,22 @@ never valid scalar values.</p>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>A small hand-written tokenizer matches individual characters directly,
 including as inclusive range-pattern bounds.</p>
-<pre><code class="rust">enum Token {
-    Plus,
-    Minus,
-    Number(char),
-    Whitespace,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Token</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Plus</span><span class="tok-punct">,</span>
+    <span class="tok-type">Minus</span><span class="tok-punct">,</span>
+    <span class="tok-field">Number</span><span class="tok-punct">(</span><span class="tok-type">char</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-type">Whitespace</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn classify(c: char) -&gt; Token {
-    match c {
-        '+' =&gt; Token::Plus,             // &lt;- char literal: matched directly as a pattern
-        '-' =&gt; Token::Minus,            // &lt;- char literal: matched directly as a pattern
-        '0'..='9' =&gt; Token::Number(c),  // &lt;- char literals as inclusive range-pattern bounds
-        ' ' | '\t' =&gt; Token::Whitespace,
-        _ =&gt; panic!("unexpected character {c:?}"),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">classify</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-punct">:</span> <span class="tok-type">char</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Token</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">c</span> <span class="tok-punct">{</span>
+        <span class="tok-string">'+'</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Token</span><span class="tok-punct">::</span><span class="tok-field">Plus</span><span class="tok-punct">,</span>             <span class="tok-comment tok-anno">// &lt;- char literal: matched directly as a pattern</span>
+        <span class="tok-string">'-'</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Token</span><span class="tok-punct">::</span><span class="tok-field">Minus</span><span class="tok-punct">,</span>            <span class="tok-comment tok-anno">// &lt;- char literal: matched directly as a pattern</span>
+        <span class="tok-string">'0'</span><span class="tok-punct">..=</span><span class="tok-string">'9'</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Token</span><span class="tok-punct">::</span><span class="tok-field">Number</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-punct">)</span><span class="tok-punct">,</span>  <span class="tok-comment tok-anno">// &lt;- char literals as inclusive range-pattern bounds</span>
+        <span class="tok-string">' '</span> <span class="tok-punct">|</span> <span class="tok-string">'\t'</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Token</span><span class="tok-punct">::</span><span class="tok-field">Whitespace</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;unexpected character {c:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Matching <code>char</code> literals directly, including as range
 bounds, is exactly the form a small tokenizer needs, and the compiler
@@ -1031,15 +1031,15 @@ enforces exhaustiveness over the match — a guarantee spelled out in the
             <p>A <code>char</code> is a decoded Unicode scalar value, not a byte — iterating text
 <code>char</code>-by-char avoids the panics that raw byte indexing risks on
 multi-byte characters.</p>
-<pre><code class="rust">let word = "café";
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">word</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;café&quot;</span><span class="tok-punct">;</span>
 
-// PREFER: iterate by char, not by byte, when the text may contain non-ASCII
-let first_char: char = word.chars().next().unwrap(); // &lt;- char, not a byte: always a full Unicode scalar value
-assert_eq!(first_char, 'c');
+<span class="tok-comment">// PREFER: iterate by char, not by byte, when the text may contain non-ASCII</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">first_char</span><span class="tok-punct">:</span> <span class="tok-type">char</span> <span class="tok-punct">=</span> <span class="tok-variable">word</span><span class="tok-punct">.</span><span class="tok-call-method">chars</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- char, not a byte: always a full Unicode scalar value</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">first_char</span><span class="tok-punct">,</span> <span class="tok-string">'c'</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let len_chars = word.chars().count(); // 4 chars
-let len_bytes = word.len();           // 5 bytes -- 'é' is 2 bytes in UTF-8
-assert_ne!(len_chars, len_bytes);
+<span class="tok-keyword">let</span> <span class="tok-variable">len_chars</span> <span class="tok-punct">=</span> <span class="tok-variable">word</span><span class="tok-punct">.</span><span class="tok-call-method">chars</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">count</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// 4 chars</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">len_bytes</span> <span class="tok-punct">=</span> <span class="tok-variable">word</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>           <span class="tok-comment">// 5 bytes -- 'é' is 2 bytes in UTF-8</span>
+<span class="tok-macro">assert_ne!</span><span class="tok-punct">(</span><span class="tok-variable">len_chars</span><span class="tok-punct">,</span> <span class="tok-variable">len_bytes</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>A <code>char</code> is always a full Unicode scalar value, so
 <code>.chars()</code> is the safe way to walk text that might contain multi-byte
@@ -1080,14 +1080,14 @@ usually the more natural fit than decoding to <code>char</code> at all.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Matching a single command byte from a UART receive buffer</h3>
-            <pre><code class="rust">fn handle_command(byte: u8) -&gt; &amp;'static str {
-    match byte as char {
-        'r' =&gt; "reset requested",       // &lt;- char literal: matched after casting an incoming UART byte to `char`
-        's' =&gt; "status requested",
-        '\r' | '\n' =&gt; "end of line",
-        _ =&gt; "unknown command",
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">handle_command</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">byte</span> <span class="tok-keyword">as</span> <span class="tok-type">char</span> <span class="tok-punct">{</span>
+        <span class="tok-string">'r'</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;reset requested&quot;</span><span class="tok-punct">,</span>       <span class="tok-comment tok-anno">// &lt;- char literal: matched after casting an incoming UART byte to `char`</span>
+        <span class="tok-string">'s'</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;status requested&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-string">'\r'</span> <span class="tok-punct">|</span> <span class="tok-string">'\n'</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;end of line&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;unknown command&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

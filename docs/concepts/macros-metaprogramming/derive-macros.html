@@ -1017,40 +1017,40 @@ crate directly.</p>
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
         <p>The derive macro's definition, in its own <code>proc-macro = true</code> crate:</p>
-<pre><code class="rust">use proc_macro::TokenStream;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">proc_macro</span><span class="tok-punct">::</span><span class="tok-type">TokenStream</span><span class="tok-punct">;</span>
 
-#[proc_macro_derive(Describe)] // &lt;- registers this function as the implementation of `#[derive(Describe)]`
-pub fn derive_describe(input: TokenStream) -&gt; TokenStream {
-    let source = input.to_string();
-    let name = source
-        .split_whitespace()
-        .skip_while(|&amp;word| word != "struct" &amp;&amp; word != "enum")
-        .nth(1)
-        .expect("derive input is always a struct or enum")
-        .to_string(); // a real implementation parses this properly with `syn` instead
+<span class="tok-attribute">#[proc_macro_derive(Describe)]</span> <span class="tok-comment tok-anno">// &lt;- registers this function as the implementation of `#[derive(Describe)]`</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">derive_describe</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">TokenStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">TokenStream</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">source</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">source</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">split_whitespace</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">skip_while</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">word</span><span class="tok-punct">|</span> <span class="tok-variable">word</span> <span class="tok-punct">!=</span> <span class="tok-string">&quot;struct&quot;</span> <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">word</span> <span class="tok-punct">!=</span> <span class="tok-string">&quot;enum&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">nth</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;derive input is always a struct or enum&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// a real implementation parses this properly with `syn` instead</span>
 
-    format!("impl Describe for {name} {{ fn describe() -&gt; &amp;'static str {{ \"{name}\" }} }}")
-        .parse()
-        .unwrap()
-}
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;impl Describe for {name} {{ fn describe() -&gt; &amp;'static str {{ \&quot;{name}\&quot; }} }}&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>and the consuming crate, which depends on it and defines the trait the
 derive is generating an impl for:</p>
-<pre><code class="rust">// Cargo.toml: describe_macros = { path = "../describe_macros" }
-use describe_macros::Describe;
+<pre><code class="rust-hl"><span class="tok-comment">// Cargo.toml: describe_macros = { path = &quot;../describe_macros&quot; }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">describe_macros</span><span class="tok-punct">::</span><span class="tok-type">Describe</span><span class="tok-punct">;</span>
 
-trait Describe {
-    fn describe() -&gt; &amp;'static str;
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">Describe</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[derive(Describe)] // &lt;- expands to `impl Describe for SensorReading { ... }` at compile time
-struct SensorReading {
-    celsius: f64,
-}
+<span class="tok-attribute">#[derive(Describe)]</span> <span class="tok-comment tok-anno">// &lt;- expands to `impl Describe for SensorReading { ... }` at compile time</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    println!("{}", SensorReading::describe());
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-type">SensorReading</span><span class="tok-punct">::</span><span class="tok-call-assoc">describe</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>derive_describe</code> cannot live in the same crate as the
 <code>#[derive(Describe)]</code> call above it — a <code>proc-macro = true</code> crate can
@@ -1072,18 +1072,18 @@ only export macros, never ordinary items alongside them.</p>
 derive macro: it inspects a struct's fields at compile time and
 generates the exact (de)serialization code a human would otherwise
 hand-write field by field.</p>
-<pre><code class="rust">// [dependencies] serde = { version = "1", features = ["derive"] }, serde_json = "1"
-use serde::{Deserialize, Serialize};
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] serde = { version = &quot;1&quot;, features = [&quot;derive&quot;] }, serde_json = &quot;1&quot;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[derive(Serialize, Deserialize)] // &lt;- serde's derive macro expands into full Serialize/Deserialize impls
-struct SensorReading {
-    id: u32,
-    celsius: f64,
-}
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span> <span class="tok-comment tok-anno">// &lt;- serde's derive macro expands into full Serialize/Deserialize impls</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn to_json(reading: &amp;SensorReading) -&gt; String {
-    serde_json::to_string(reading).unwrap()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">to_json</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorReading</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the derive inspects the struct's actual field names
@@ -1103,27 +1103,27 @@ derive macro over writing <code>Serialize</code>/<code>Deserialize</code> impls 
 pairing the trait with its derive macro under the same name and
 re-exporting both from one crate, so users never see the internal
 proc-macro crate.</p>
-<pre><code class="rust">// describe-macros/Cargo.toml
-// [lib]
-// proc-macro = true
+<pre><code class="rust-hl"><span class="tok-comment">// describe-macros/Cargo.toml</span>
+<span class="tok-comment">// [lib]</span>
+<span class="tok-comment">// proc-macro = true</span>
 
-// describe/Cargo.toml
-// [dependencies]
-// describe-macros = { path = "../describe-macros", version = "0.1" }
+<span class="tok-comment">// describe/Cargo.toml</span>
+<span class="tok-comment">// [dependencies]</span>
+<span class="tok-comment">// describe-macros = { path = &quot;../describe-macros&quot;, version = &quot;0.1&quot; }</span>
 
-// describe/src/lib.rs
-pub trait Describe {
-    fn describe() -&gt; &amp;'static str;
-}
-pub use describe_macros::Describe; // &lt;- re-exports the derive macro under the same name as the trait
+<span class="tok-comment">// describe/src/lib.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">trait</span> <span class="tok-type-def">Describe</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">describe_macros</span><span class="tok-punct">::</span><span class="tok-type">Describe</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- re-exports the derive macro under the same name as the trait</span>
 
-// downstream crate
-use describe::Describe;
+<span class="tok-comment">// downstream crate</span>
+<span class="tok-keyword">use</span> <span class="tok-module">describe</span><span class="tok-punct">::</span><span class="tok-type">Describe</span><span class="tok-punct">;</span>
 
-#[derive(Describe)] // &lt;- users see one dependency and one name, never the internal macro crate
-struct SensorReading {
-    celsius: f64,
-}
+<span class="tok-attribute">#[derive(Describe)]</span> <span class="tok-comment tok-anno">// &lt;- users see one dependency and one name, never the internal macro crate</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a trait and its derive macro occupy different
@@ -1167,19 +1167,19 @@ wire-format code that itself never allocates. In both cases the derive
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std]
+        <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use defmt::Format;
+<span class="tok-keyword">use</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-type">Format</span><span class="tok-punct">;</span>
 
-#[derive(Format)] // &lt;- proc-macro derive; runs on the host, generates a no_std-compatible impl
-struct SensorReading {
-    id: u8,
-    celsius: f32,
-}
+<span class="tok-attribute">#[derive(Format)]</span> <span class="tok-comment tok-anno">// &lt;- proc-macro derive; runs on the host, generates a no_std-compatible impl</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn log_reading(reading: &amp;SensorReading) {
-    defmt::info!("reading: {}", reading); // &lt;- uses the generated Format impl, no core::fmt::Display involved
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorReading</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- uses the generated Format impl, no core::fmt::Display involved</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1198,15 +1198,15 @@ fn log_reading(reading: &amp;SensorReading) {
 pulling in <code>core::fmt</code>'s heavier formatting machinery; deriving
 <code>defmt::Format</code> gives it that for free, the same way <code>#[derive(Debug)]</code>
 would in a hosted crate.</p>
-<pre><code class="rust">#[derive(defmt::Format)] // &lt;- generates a no_std, wire-efficient Format impl, not a core::fmt one
-pub enum SensorError {
-    NotResponding,
-    OutOfRange { celsius: f32 },
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(defmt::Format)]</span> <span class="tok-comment tok-anno">// &lt;- generates a no_std, wire-efficient Format impl, not a core::fmt one</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">NotResponding</span><span class="tok-punct">,</span>
+    <span class="tok-type">OutOfRange</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f32</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn report(err: &amp;SensorError) {
-    defmt::warn!("sensor error: {}", err); // &lt;- consumes the derived impl directly
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">report</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorError</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">warn!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor error: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">err</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- consumes the derived impl directly</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a hand-written <code>core::fmt::Display</code> impl still routes
@@ -1226,18 +1226,18 @@ the derive gives a HAL's error types for free.</p>
             <p>A sensor packet transmitted over a wire link needs a compact,
 allocation-free encoding; deriving serde's <code>Serialize</code>/<code>Deserialize</code> and
 encoding through <code>postcard</code> gives that without needing <code>alloc</code> at all.</p>
-<pre><code class="rust">// [dependencies] serde = { version = "1", default-features = false, features = ["derive"] }, postcard = "1"
-use serde::{Deserialize, Serialize};
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] serde = { version = &quot;1&quot;, default-features = false, features = [&quot;derive&quot;] }, postcard = &quot;1&quot;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[derive(Serialize, Deserialize)] // &lt;- serde's derive; the generated code itself never allocates
-struct SensorPacket {
-    id: u8,
-    celsius: f32,
-}
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span> <span class="tok-comment tok-anno">// &lt;- serde's derive; the generated code itself never allocates</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorPacket</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn encode(packet: &amp;SensorPacket) -&gt; postcard::Result&lt;heapless::Vec&lt;u8, 32&gt;&gt; {
-    postcard::to_vec(packet) // &lt;- postcard serializes into a fixed-capacity buffer, no heap involved
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">encode</span><span class="tok-punct">(</span><span class="tok-variable">packet</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorPacket</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">postcard</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">postcard</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_vec</span><span class="tok-punct">(</span><span class="tok-variable">packet</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- postcard serializes into a fixed-capacity buffer, no heap involved</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> serde's derive itself makes no allocation decisions —

@@ -1006,23 +1006,23 @@ helper functions without contributing spurious test binaries.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// src/lib.rs
-pub struct Order {
-    pub total_cents: u32,
-}
+        <pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-pub fn apply_discount(order: &amp;Order, percent_off: u8) -&gt; u32 { // &lt;- part of the crate's public API
-    order.total_cents - (order.total_cents * percent_off as u32 / 100)
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply_discount</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Order</span><span class="tok-punct">,</span> <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- part of the crate's public API</span>
+    <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">total_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">total_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// tests/discount.rs — compiled as its own crate, linked against the library
-use order_lib::{Order, apply_discount};
+<span class="tok-comment">// tests/discount.rs — compiled as its own crate, linked against the library</span>
+<span class="tok-keyword">use</span> <span class="tok-module">order_lib</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Order</span><span class="tok-punct">,</span> <span class="tok-variable">apply_discount</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[test]
-fn discount_reduces_total() {
-    let order = Order { total_cents: 2000 };
-    assert_eq!(apply_discount(&amp;order, 25), 1500);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">discount_reduces_total</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">2000</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">apply_discount</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">order</span><span class="tok-punct">,</span> <span class="tok-number">25</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1500</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1041,30 +1041,30 @@ fn discount_reduces_total() {
 sequence checks the <em>workflow</em> a real caller would perform, not just each
 function in isolation — the thing a collection of unit tests, each
 mocking away the next step, cannot catch.</p>
-<pre><code class="rust">// src/lib.rs
-pub struct Cart { pub subtotal_cents: u32 }
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Cart</span> <span class="tok-punct">{</span> <span class="tok-keyword">pub</span> <span class="tok-variable">subtotal_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span>
 
-pub fn new_cart(subtotal_cents: u32) -&gt; Cart {
-    Cart { subtotal_cents }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new_cart</span><span class="tok-punct">(</span><span class="tok-variable">subtotal_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Cart</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Cart</span> <span class="tok-punct">{</span> <span class="tok-variable">subtotal_cents</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-pub fn apply_coupon(cart: Cart, percent_off: u8) -&gt; Cart {
-    Cart { subtotal_cents: cart.subtotal_cents - (cart.subtotal_cents * percent_off as u32 / 100) }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply_coupon</span><span class="tok-punct">(</span><span class="tok-variable">cart</span><span class="tok-punct">:</span> <span class="tok-type">Cart</span><span class="tok-punct">,</span> <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Cart</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Cart</span> <span class="tok-punct">{</span> <span class="tok-variable">subtotal_cents</span><span class="tok-punct">:</span> <span class="tok-variable">cart</span><span class="tok-punct">.</span><span class="tok-field">subtotal_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">cart</span><span class="tok-punct">.</span><span class="tok-field">subtotal_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-pub fn total_with_tax(cart: &amp;Cart, tax_percent: u8) -&gt; u32 {
-    cart.subtotal_cents + (cart.subtotal_cents * tax_percent as u32 / 100)
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">total_with_tax</span><span class="tok-punct">(</span><span class="tok-variable">cart</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Cart</span><span class="tok-punct">,</span> <span class="tok-variable">tax_percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cart</span><span class="tok-punct">.</span><span class="tok-field">subtotal_cents</span> <span class="tok-punct">+</span> <span class="tok-punct">(</span><span class="tok-variable">cart</span><span class="tok-punct">.</span><span class="tok-field">subtotal_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">tax_percent</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// tests/checkout_flow.rs
-use shop::{new_cart, apply_coupon, total_with_tax};
+<span class="tok-comment">// tests/checkout_flow.rs</span>
+<span class="tok-keyword">use</span> <span class="tok-module">shop</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">new_cart</span><span class="tok-punct">,</span> <span class="tok-variable">apply_coupon</span><span class="tok-punct">,</span> <span class="tok-variable">total_with_tax</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[test] // &lt;- exercises the public workflow end to end, not one function at a time
-fn checkout_applies_coupon_then_tax() {
-    let cart = new_cart(10_000);
-    let cart = apply_coupon(cart, 10);
-    assert_eq!(total_with_tax(&amp;cart, 8), 9_720);
-}
+<span class="tok-attribute">#[test]</span> <span class="tok-comment tok-anno">// &lt;- exercises the public workflow end to end, not one function at a time</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">checkout_applies_coupon_then_tax</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">cart</span> <span class="tok-punct">=</span> <span class="tok-call-free">new_cart</span><span class="tok-punct">(</span><span class="tok-number">10_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">cart</span> <span class="tok-punct">=</span> <span class="tok-call-free">apply_coupon</span><span class="tok-punct">(</span><span class="tok-variable">cart</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">total_with_tax</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">cart</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">9_720</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> chaining real public calls together is what actually
@@ -1083,22 +1083,22 @@ other code that uses that library."</p>
             <p>Because an integration test only sees what's <code>pub</code>, it's also the most
 honest place to check that a crate's <em>public</em> error type actually reports
 failures the way its documentation promises.</p>
-<pre><code class="rust">// src/lib.rs
-#[derive(Debug, PartialEq)]
-pub struct ConfigError(pub String);
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-attribute">#[derive(Debug, PartialEq)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">ConfigError</span><span class="tok-punct">(</span><span class="tok-keyword">pub</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-pub fn parse_timeout_seconds(raw: &amp;str) -&gt; Result&lt;u32, ConfigError&gt; {
-    raw.parse().map_err(|_| ConfigError(format!("invalid timeout: {raw:?}")))
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_timeout_seconds</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-field">ConfigError</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid timeout: {raw:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// tests/config_parsing.rs
-use app_config::{parse_timeout_seconds, ConfigError};
+<span class="tok-comment">// tests/config_parsing.rs</span>
+<span class="tok-keyword">use</span> <span class="tok-module">app_config</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_timeout_seconds</span><span class="tok-punct">,</span> <span class="tok-type">ConfigError</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[test]
-fn rejects_non_numeric_timeout() {
-    let result = parse_timeout_seconds("soon");
-    assert_eq!(result, Err(ConfigError("invalid timeout: \"soon\"".into())));
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_non_numeric_timeout</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_timeout_seconds</span><span class="tok-punct">(</span><span class="tok-string">&quot;soon&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">result</span><span class="tok-punct">,</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-field">ConfigError</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid timeout: \&quot;soon\&quot;&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> this only compiles and passes if <code>ConfigError</code> and its
@@ -1120,20 +1120,20 @@ surface.</p>
 time anyone calls its public functions the way an outside crate would —
 awkward call sites at that point are a signal to reshape the API before
 it ships, not after.</p>
-<pre><code class="rust">// tests/common/mod.rs — shared setup, not itself a test file
-pub fn sample_order() -&gt; order_lib::Order {
-    order_lib::Order { total_cents: 4599 }
-}
+<pre><code class="rust-hl"><span class="tok-comment">// tests/common/mod.rs — shared setup, not itself a test file</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">sample_order</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">order_lib</span><span class="tok-punct">::</span><span class="tok-type-return">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-module">order_lib</span><span class="tok-punct">::</span><span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">4599</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// tests/pricing.rs
-mod common;
-use order_lib::apply_discount;
+<span class="tok-comment">// tests/pricing.rs</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">common</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">order_lib</span><span class="tok-punct">::</span><span class="tok-variable">apply_discount</span><span class="tok-punct">;</span>
 
-#[test]
-fn applies_discount_to_a_sample_order() { // &lt;- calling the crate exactly like an external user would
-    let order = common::sample_order();
-    assert_eq!(apply_discount(&amp;order, 10), 4139);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">applies_discount_to_a_sample_order</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- calling the crate exactly like an external user would</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-module">common</span><span class="tok-punct">::</span><span class="tok-call-assoc">sample_order</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">apply_discount</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">order</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">4139</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an integration test is, in effect, the crate's first
@@ -1175,23 +1175,23 @@ each test's pass/fail back over RTT.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// src/lib.rs
-#![no_std]
+        <pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-attribute">#![no_std]</span>
 
-pub struct Frame { pub id: u8, pub payload: u8 }
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Frame</span> <span class="tok-punct">{</span> <span class="tok-keyword">pub</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-keyword">pub</span> <span class="tok-variable">payload</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span>
 
-pub fn encode_frame(frame: &amp;Frame) -&gt; [u8; 2] { // &lt;- part of the crate's public API, no hardware touched
-    [frame.id, frame.payload]
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">encode_frame</span><span class="tok-punct">(</span><span class="tok-variable">frame</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Frame</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type-return">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- part of the crate's public API, no hardware touched</span>
+    <span class="tok-punct">[</span><span class="tok-variable">frame</span><span class="tok-punct">.</span><span class="tok-field">id</span><span class="tok-punct">,</span> <span class="tok-variable">frame</span><span class="tok-punct">.</span><span class="tok-field">payload</span><span class="tok-punct">]</span>
+<span class="tok-punct">}</span>
 
-// tests/encode.rs — an ordinary host-run integration test; no target hardware needed
-use protocol::{Frame, encode_frame};
+<span class="tok-comment">// tests/encode.rs — an ordinary host-run integration test; no target hardware needed</span>
+<span class="tok-keyword">use</span> <span class="tok-module">protocol</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Frame</span><span class="tok-punct">,</span> <span class="tok-variable">encode_frame</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[test]
-fn encodes_id_and_payload_in_order() {
-    let frame = Frame { id: 7, payload: 42 };
-    assert_eq!(encode_frame(&amp;frame), [7, 42]);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">encodes_id_and_payload_in_order</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">frame</span> <span class="tok-punct">=</span> <span class="tok-type">Frame</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-variable">payload</span><span class="tok-punct">:</span> <span class="tok-number">42</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">encode_frame</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">frame</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1210,24 +1210,24 @@ fn encodes_id_and_payload_in_order() {
 test lives in the ordinary <code>tests/</code> directory and runs on the host —
 exactly the workflow <a href="../../syntax/attributes/test-attribute.html"><code>#[test]</code></a>'s
 Embedded Rust Notes describe for hardware-independent code in general.</p>
-<pre><code class="rust">// src/lib.rs
-#![no_std]
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-attribute">#![no_std]</span>
 
-pub struct Reading { pub channel: u8, pub millivolts: u16 }
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Reading</span> <span class="tok-punct">{</span> <span class="tok-keyword">pub</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-keyword">pub</span> <span class="tok-variable">millivolts</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">}</span>
 
-pub fn to_wire_bytes(reading: &amp;Reading) -&gt; [u8; 3] {
-    let mv = reading.millivolts.to_be_bytes();
-    [reading.channel, mv[0], mv[1]]
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">to_wire_bytes</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Reading</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type-return">u8</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">mv</span> <span class="tok-punct">=</span> <span class="tok-variable">reading</span><span class="tok-punct">.</span><span class="tok-field">millivolts</span><span class="tok-punct">.</span><span class="tok-call-method">to_be_bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">[</span><span class="tok-variable">reading</span><span class="tok-punct">.</span><span class="tok-field">channel</span><span class="tok-punct">,</span> <span class="tok-variable">mv</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">mv</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">]</span>
+<span class="tok-punct">}</span>
 
-// tests/wire_format.rs
-use sensor_proto::{Reading, to_wire_bytes};
+<span class="tok-comment">// tests/wire_format.rs</span>
+<span class="tok-keyword">use</span> <span class="tok-module">sensor_proto</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Reading</span><span class="tok-punct">,</span> <span class="tok-variable">to_wire_bytes</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[test] // &lt;- ordinary host-run integration test: `tests/` still applies for hardware-independent APIs
-fn encodes_channel_and_millivolts() {
-    let reading = Reading { channel: 2, millivolts: 3300 };
-    assert_eq!(to_wire_bytes(&amp;reading), [2, 0x0C, 0xE4]);
-}
+<span class="tok-attribute">#[test]</span> <span class="tok-comment tok-anno">// &lt;- ordinary host-run integration test: `tests/` still applies for hardware-independent APIs</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">encodes_channel_and_millivolts</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">reading</span> <span class="tok-punct">=</span> <span class="tok-type">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-variable">millivolts</span><span class="tok-punct">:</span> <span class="tok-number">3300</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">to_wire_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">reading</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">0x0C</span><span class="tok-punct">,</span> <span class="tok-number">0xE4</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> nothing about <code>to_wire_bytes</code> depends on real silicon,
@@ -1247,20 +1247,20 @@ is often the first time anyone calls it the way a real firmware would —
 but for a driver that only behaves correctly against actual silicon, that
 first call has to happen on real hardware, through <code>embedded-test</code>'s
 harness rather than <code>tests/</code>.</p>
-<pre><code class="rust">#![no_std]
-#![no_main]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-#[embedded_test::tests] // &lt;- on-target integration test: flashed and run via a debug probe, not `tests/`
-mod tests {
-    use my_hal::TemperatureSensor;
+<span class="tok-attribute">#[embedded_test::tests]</span> <span class="tok-comment tok-anno">// &lt;- on-target integration test: flashed and run via a debug probe, not `tests/`</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">my_hal</span><span class="tok-punct">::</span><span class="tok-type">TemperatureSensor</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn sensor_reports_a_plausible_reading() {
-        let mut sensor = TemperatureSensor::init().expect("sensor init failed"); // &lt;- exercises the public API end to end, on real hardware
-        let celsius = sensor.read().expect("read failed");
-        assert!((-40.0..125.0).contains(&amp;celsius));
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">sensor_reports_a_plausible_reading</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sensor</span> <span class="tok-punct">=</span> <span class="tok-type">TemperatureSensor</span><span class="tok-punct">::</span><span class="tok-call-assoc">init</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor init failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exercises the public API end to end, on real hardware</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">celsius</span> <span class="tok-punct">=</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;read failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">40.0</span><span class="tok-punct">..</span><span class="tok-number">125.0</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">celsius</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>TemperatureSensor::init</code>/<code>read</code> only behave correctly

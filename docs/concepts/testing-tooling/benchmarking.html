@@ -996,16 +996,16 @@ on the number.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::time::Instant;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Instant</span><span class="tok-punct">;</span>
 
-fn sum_of_squares(n: u64) -&gt; u64 {
-    (1..=n).map(|x| x * x).sum()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sum_of_squares</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-variable">n</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">x</span><span class="tok-punct">|</span> <span class="tok-variable">x</span> <span class="tok-punct">*</span> <span class="tok-variable">x</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let start = Instant::now(); // &lt;- starts the measurement
-let total = sum_of_squares(1_000_000);
-let elapsed = start.elapsed(); // &lt;- duration since `start`
-println!("total={total}, took {elapsed:?}");
+<span class="tok-keyword">let</span> <span class="tok-variable">start</span> <span class="tok-punct">=</span> <span class="tok-type">Instant</span><span class="tok-punct">::</span><span class="tok-call-assoc">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- starts the measurement</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-call-free">sum_of_squares</span><span class="tok-punct">(</span><span class="tok-number">1_000_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">elapsed</span> <span class="tok-punct">=</span> <span class="tok-variable">start</span><span class="tok-punct">.</span><span class="tok-call-method">elapsed</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- duration since `start`</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;total={total}, took {elapsed:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1024,31 +1024,31 @@ println!("total={total}, took {elapsed:?}");
 iterator chain against a manual accumulator — with simple timing is
 enough to sanity-check that a rewrite is actually faster before reaching
 for a full benchmark harness.</p>
-<pre><code class="rust">use std::time::Instant;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Instant</span><span class="tok-punct">;</span>
 
-fn sum_iterator(values: &amp;[f64]) -&gt; f64 {
-    values.iter().sum() // &lt;- candidate A
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sum_iterator</span><span class="tok-punct">(</span><span class="tok-variable">values</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">f64</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">values</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- candidate A</span>
+<span class="tok-punct">}</span>
 
-fn sum_manual_loop(values: &amp;[f64]) -&gt; f64 {
-    let mut total = 0.0;
-    for &amp;v in values { // &lt;- candidate B
-        total += v;
-    }
-    total
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sum_manual_loop</span><span class="tok-punct">(</span><span class="tok-variable">values</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">f64</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-number">0.0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-punct">&amp;</span><span class="tok-variable">v</span> <span class="tok-keyword">in</span> <span class="tok-variable">values</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- candidate B</span>
+        <span class="tok-variable">total</span> <span class="tok-punct">+=</span> <span class="tok-variable">v</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">total</span>
+<span class="tok-punct">}</span>
 
-let readings: Vec&lt;f64&gt; = (0..1_000_000).map(|i| i as f64 * 0.5).collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">1_000_000</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">i</span><span class="tok-punct">|</span> <span class="tok-variable">i</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span> <span class="tok-punct">*</span> <span class="tok-number">0.5</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let start = Instant::now();
-let a = sum_iterator(&amp;readings);
-println!("iterator: {:?}", start.elapsed()); // &lt;- rough, single-sample timing
+<span class="tok-keyword">let</span> <span class="tok-variable">start</span> <span class="tok-punct">=</span> <span class="tok-type">Instant</span><span class="tok-punct">::</span><span class="tok-call-assoc">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-call-free">sum_iterator</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">readings</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;iterator: {:?}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">start</span><span class="tok-punct">.</span><span class="tok-call-method">elapsed</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- rough, single-sample timing</span>
 
-let start = Instant::now();
-let b = sum_manual_loop(&amp;readings);
-println!("manual loop: {:?}", start.elapsed());
+<span class="tok-keyword">let</span> <span class="tok-variable">start</span> <span class="tok-punct">=</span> <span class="tok-type">Instant</span><span class="tok-punct">::</span><span class="tok-call-assoc">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-call-free">sum_manual_loop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">readings</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;manual loop: {:?}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">start</span><span class="tok-punct">.</span><span class="tok-call-method">elapsed</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(a, b);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the <a href="https://doc.rust-lang.org/std/time/struct.Instant.html">Rust standard library docs</a>
@@ -1071,17 +1071,17 @@ parallel to <code>tests/</code> — but what harness runs there differs sharply
 between nightly's built-in <code>#[bench]</code> and the stable-friendly <code>criterion</code>
 crate, and being upfront about that split matters more here than in most
 other scenarios.</p>
-<pre><code class="rust">// benches/sum_bench.rs — nightly only; requires `#![feature(test)]` and the
-// unstable `test` crate. Shown for reference: this does NOT compile on stable.
-#![feature(test)]
-extern crate test;
-use test::Bencher;
-use my_crate::sum_of_squares;
+<pre><code class="rust-hl"><span class="tok-comment">// benches/sum_bench.rs — nightly only; requires `#![feature(test)]` and the</span>
+<span class="tok-comment">// unstable `test` crate. Shown for reference: this does NOT compile on stable.</span>
+<span class="tok-attribute">#![feature(test)]</span>
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">test</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">test</span><span class="tok-punct">::</span><span class="tok-type">Bencher</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">my_crate</span><span class="tok-punct">::</span><span class="tok-variable">sum_of_squares</span><span class="tok-punct">;</span>
 
-#[bench] // &lt;- the unstable, nightly-only benchmark harness
-fn bench_sum_of_squares(b: &amp;mut Bencher) {
-    b.iter(|| sum_of_squares(1_000));
-}
+<span class="tok-attribute">#[bench]</span> <span class="tok-comment tok-anno">// &lt;- the unstable, nightly-only benchmark harness</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_sum_of_squares</span><span class="tok-punct">(</span><span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Bencher</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">b</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-call-free">sum_of_squares</span><span class="tok-punct">(</span><span class="tok-number">1_000</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because <code>#[bench]</code> never stabilized, real projects
@@ -1131,18 +1131,18 @@ firmware: real time on the real chip.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use cortex_m::peripheral::DWT;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">cortex_m</span><span class="tok-punct">::</span><span class="tok-module">peripheral</span><span class="tok-punct">::</span><span class="tok-constant">DWT</span><span class="tok-punct">;</span>
 
-fn sum_of_squares(n: u32) -&gt; u32 {
-    (1..=n).map(|x| x * x).sum()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sum_of_squares</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-variable">n</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">x</span><span class="tok-punct">|</span> <span class="tok-variable">x</span> <span class="tok-punct">*</span> <span class="tok-variable">x</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn measure(dwt: &amp;mut DWT) {
-    let start = dwt.cyccnt.read(); // &lt;- on-target cycle count before
-    let total = sum_of_squares(1_000);
-    let elapsed_cycles = dwt.cyccnt.read().wrapping_sub(start); // &lt;- exact cycles spent on the target CPU
-    defmt::info!("total={}, took {} cycles", total, elapsed_cycles);
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">measure</span><span class="tok-punct">(</span><span class="tok-variable">dwt</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">DWT</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">start</span> <span class="tok-punct">=</span> <span class="tok-variable">dwt</span><span class="tok-punct">.</span><span class="tok-field">cyccnt</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- on-target cycle count before</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-call-free">sum_of_squares</span><span class="tok-punct">(</span><span class="tok-number">1_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">elapsed_cycles</span> <span class="tok-punct">=</span> <span class="tok-variable">dwt</span><span class="tok-punct">.</span><span class="tok-field">cyccnt</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_sub</span><span class="tok-punct">(</span><span class="tok-variable">start</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exact cycles spent on the target CPU</span>
+    <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;total={}, took {} cycles&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">total</span><span class="tok-punct">,</span> <span class="tok-variable">elapsed_cycles</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1160,32 +1160,32 @@ fn measure(dwt: &amp;mut DWT) {
             <p>Comparing two candidate implementations of a hot numeric routine only
 means something for a firmware's actual performance budget if the timing
 comes from the target chip itself, not the development host.</p>
-<pre><code class="rust">use cortex_m::peripheral::DWT;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">cortex_m</span><span class="tok-punct">::</span><span class="tok-module">peripheral</span><span class="tok-punct">::</span><span class="tok-constant">DWT</span><span class="tok-punct">;</span>
 
-fn sum_iterator(values: &amp;[i32]) -&gt; i32 {
-    values.iter().sum() // &lt;- candidate A
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sum_iterator</span><span class="tok-punct">(</span><span class="tok-variable">values</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">values</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- candidate A</span>
+<span class="tok-punct">}</span>
 
-fn sum_manual_loop(values: &amp;[i32]) -&gt; i32 {
-    let mut total = 0;
-    for &amp;v in values { // &lt;- candidate B
-        total += v;
-    }
-    total
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sum_manual_loop</span><span class="tok-punct">(</span><span class="tok-variable">values</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-punct">&amp;</span><span class="tok-variable">v</span> <span class="tok-keyword">in</span> <span class="tok-variable">values</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- candidate B</span>
+        <span class="tok-variable">total</span> <span class="tok-punct">+=</span> <span class="tok-variable">v</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">total</span>
+<span class="tok-punct">}</span>
 
-fn compare(dwt: &amp;mut DWT, readings: &amp;[i32]) {
-    let start = dwt.cyccnt.read();
-    let a = sum_iterator(readings);
-    let cycles_a = dwt.cyccnt.read().wrapping_sub(start); // &lt;- on-target cycle count, candidate A
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">compare</span><span class="tok-punct">(</span><span class="tok-variable">dwt</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">DWT</span><span class="tok-punct">,</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">start</span> <span class="tok-punct">=</span> <span class="tok-variable">dwt</span><span class="tok-punct">.</span><span class="tok-field">cyccnt</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-call-free">sum_iterator</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">cycles_a</span> <span class="tok-punct">=</span> <span class="tok-variable">dwt</span><span class="tok-punct">.</span><span class="tok-field">cyccnt</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_sub</span><span class="tok-punct">(</span><span class="tok-variable">start</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- on-target cycle count, candidate A</span>
 
-    let start = dwt.cyccnt.read();
-    let b = sum_manual_loop(readings);
-    let cycles_b = dwt.cyccnt.read().wrapping_sub(start); // &lt;- on-target cycle count, candidate B
+    <span class="tok-keyword">let</span> <span class="tok-variable">start</span> <span class="tok-punct">=</span> <span class="tok-variable">dwt</span><span class="tok-punct">.</span><span class="tok-field">cyccnt</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-call-free">sum_manual_loop</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">cycles_b</span> <span class="tok-punct">=</span> <span class="tok-variable">dwt</span><span class="tok-punct">.</span><span class="tok-field">cyccnt</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_sub</span><span class="tok-punct">(</span><span class="tok-variable">start</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- on-target cycle count, candidate B</span>
 
-    defmt::assert_eq!(a, b);
-    defmt::info!("iterator: {} cycles, manual loop: {} cycles", cycles_a, cycles_b);
-}
+    <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;iterator: {} cycles, manual loop: {} cycles&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">cycles_a</span><span class="tok-punct">,</span> <span class="tok-variable">cycles_b</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the two candidates can rank differently on the target's
@@ -1206,14 +1206,14 @@ measured with the <code>DWT</code> cycle counter on real hardware, not with
 external, ground-truth clock — end-to-end latency from an interrupt
 firing to a response being ready, say — which a cycle counter inside the
 same chip can't independently confirm.</p>
-<pre><code class="rust">use embedded_hal::digital::OutputPin;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-type">OutputPin</span><span class="tok-punct">;</span>
 
-fn handle_sensor_interrupt(trigger_pin: &amp;mut impl OutputPin, adc_sample: impl FnOnce() -&gt; u16) -&gt; u16 {
-    trigger_pin.set_high().ok(); // &lt;- pulse starts: visible on a logic analyzer/oscilloscope
-    let sample = adc_sample();
-    trigger_pin.set_low().ok(); // &lt;- pulse ends: the width between edges is the measured duration
-    sample
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">handle_sensor_interrupt</span><span class="tok-punct">(</span><span class="tok-variable">trigger_pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">OutputPin</span><span class="tok-punct">,</span> <span class="tok-variable">adc_sample</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-field">FnOnce</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">trigger_pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- pulse starts: visible on a logic analyzer/oscilloscope</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">sample</span> <span class="tok-punct">=</span> <span class="tok-call-free">adc_sample</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">trigger_pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- pulse ends: the width between edges is the measured duration</span>
+    <span class="tok-variable">sample</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> toggling a spare GPIO pin around the code under test

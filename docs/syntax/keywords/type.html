@@ -1013,12 +1013,12 @@ concept pages; this page covers only the two declaration grammars.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Type alias vs. associated type syntax</h3>
-            <pre><code class="rust">type Kilometers = f64; // &lt;- alias form: `=` and `;`, no trait involved
+            <pre><code class="rust-hl"><span class="tok-keyword">type</span> <span class="tok-type-def">Kilometers</span> <span class="tok-punct">=</span> <span class="tok-type">f64</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- alias form: `=` and `;`, no trait involved</span>
 
-trait Container {
-    type Item; // &lt;- associated-type form: no `=`, just a name inside a trait
-    fn get(&amp;self) -&gt; Self::Item;
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">Container</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Item</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- associated-type form: no `=`, just a name inside a trait</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Item</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1027,14 +1027,14 @@ trait Container {
             <p>A crate's own <code>Result</code> alias, generic over just the success type, keeps
 every fallible function's signature from having to spell out the
 concrete error type by hand.</p>
-<pre><code class="rust">#[derive(Debug)]
-pub struct ConfigError(String);
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">ConfigError</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-pub type Result&lt;T&gt; = std::result::Result&lt;T, ConfigError&gt;; // &lt;- `type` here is a plain alias, generic over T
+<span class="tok-keyword">pub</span> <span class="tok-keyword">type</span> <span class="tok-type-def">Result</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">result</span><span class="tok-punct">::</span><span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-type">ConfigError</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `type` here is a plain alias, generic over T</span>
 
-pub fn load_port(raw: &amp;str) -&gt; Result&lt;u16&gt; { // &lt;- reads far better than Result&lt;u16, ConfigError&gt; repeated everywhere
-    raw.parse().map_err(|_| ConfigError("invalid port".into()))
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">load_port</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- reads far better than Result&lt;u16, ConfigError&gt; repeated everywhere</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-field">ConfigError</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid port&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>This is one of the most common uses of the alias form
 of <code>type</code> in real crates — every public fallible function shares one
@@ -1050,18 +1050,18 @@ for <code>std::io::Result&lt;T&gt;</code>.</p>
 implementer declares that type as an associated type with <code>type</code>, rather
 than as a generic parameter the caller would otherwise have to specify at
 every call site.</p>
-<pre><code class="rust">trait Parser {
-    type Output; // &lt;- `type` with no `=`: each implementer must fill this in exactly once
-    fn parse(&amp;self, input: &amp;str) -&gt; Self::Output;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Parser</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Output</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `type` with no `=`: each implementer must fill this in exactly once</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Output</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct IntParser;
-impl Parser for IntParser {
-    type Output = i32; // &lt;- `type` with `=`, inside the impl: binds Output to i32 for this implementer
-    fn parse(&amp;self, input: &amp;str) -&gt; i32 {
-        input.parse().unwrap_or(0)
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">IntParser</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Parser</span> <span class="tok-keyword">for</span> <span class="tok-type">IntParser</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Output</span> <span class="tok-punct">=</span> <span class="tok-type">i32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `type` with `=`, inside the impl: binds Output to i32 for this implementer</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Writing <code>Self::Output</code> in the trait's signature instead
 of a second generic parameter keeps <code>fn parse(&amp;self, input: &amp;str) -&gt; Self::Output</code> free of a type parameter that was never the caller's to
@@ -1097,15 +1097,15 @@ signature out at every use site.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Aliasing a verbose HAL-generic driver type</h3>
-            <pre><code class="rust">type Display = Ssd1306&lt;SpiInterface&lt;Spi1, Pa5&lt;Output&gt;&gt;, DisplaySize128x64, BufferedGraphicsMode&gt;;
-// &lt;- `type` alias: one short name standing in for the fully-parameterized driver type
+            <pre><code class="rust-hl"><span class="tok-keyword">type</span> <span class="tok-type-def">Display</span> <span class="tok-punct">=</span> <span class="tok-type">Ssd1306</span><span class="tok-punct">&lt;</span><span class="tok-type">SpiInterface</span><span class="tok-punct">&lt;</span><span class="tok-type">Spi1</span><span class="tok-punct">,</span> <span class="tok-type">Pa5</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">DisplaySize128x64</span><span class="tok-punct">,</span> <span class="tok-type">BufferedGraphicsMode</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- `type` alias: one short name standing in for the fully-parameterized driver type</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Aliasing a chip-specific peripheral type</h3>
-            <pre><code class="rust">type Led = stm32f4xx_hal::gpio::Pin&lt;'B', 7, stm32f4xx_hal::gpio::Output&gt;;
-// &lt;- `type` alias: names this board's specific LED pin without repeating the full generic path everywhere
+            <pre><code class="rust-hl"><span class="tok-keyword">type</span> <span class="tok-type-def">Led</span> <span class="tok-punct">=</span> <span class="tok-module">stm32f4xx_hal</span><span class="tok-punct">::</span><span class="tok-module">gpio</span><span class="tok-punct">::</span><span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-string">'B'</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-module">stm32f4xx_hal</span><span class="tok-punct">::</span><span class="tok-module">gpio</span><span class="tok-punct">::</span><span class="tok-type">Output</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- `type` alias: names this board's specific LED pin without repeating the full generic path everywhere</span>
 </code></pre>
 
           </div>

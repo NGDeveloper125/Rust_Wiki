@@ -1002,7 +1002,7 @@ implicitly immutable — <code>const mut</code> does not exist.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring a compile-time constant</h3>
-            <pre><code class="rust">const MAX_POINTS: u32 = 100_000; // &lt;- `const` declares a compile-time constant
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">MAX_POINTS</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">100_000</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `const` declares a compile-time constant</span>
 </code></pre>
 
           </div>
@@ -1012,12 +1012,12 @@ implicitly immutable — <code>const mut</code> does not exist.</p>
 kind of arithmetic <code>const</code> is for — it's computed once, at compile time,
 instead of being recomputed (or hand-typed as a literal) wherever it's
 needed.</p>
-<pre><code class="rust">const MAX_RETRY_COUNT: u8 = 5;
-const BUFFER_CAPACITY: usize = 64 * 4; // &lt;- `const` requires a value computable entirely at compile time
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">MAX_RETRY_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">BUFFER_CAPACITY</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">64</span> <span class="tok-punct">*</span> <span class="tok-number">4</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `const` requires a value computable entirely at compile time</span>
 
-fn should_retry(attempt: u8) -&gt; bool {
-    attempt &lt; MAX_RETRY_COUNT
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">should_retry</span><span class="tok-punct">(</span><span class="tok-variable">attempt</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">attempt</span> <span class="tok-punct">&lt;</span> <span class="tok-constant">MAX_RETRY_COUNT</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The initializer expression runs through the compiler's
 const evaluator rather than at runtime, so <code>BUFFER_CAPACITY</code> costs nothing
@@ -1032,14 +1032,14 @@ exactly what makes this guarantee possible.</p>
             <p>A library that wants callers to know its default timeout, and to be able
 to reference it by name instead of a magic number, exposes the value as a
 public <code>const</code>.</p>
-<pre><code class="rust">/// Default timeout applied when a caller doesn't specify one.
-pub const DEFAULT_TIMEOUT_SECS: u64 = 30; // &lt;- `const`, public, SCREAMING_SNAKE_CASE per convention
+<pre><code class="rust-hl"><span class="tok-comment">/// Default timeout applied when a caller doesn't specify one.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">const</span> <span class="tok-constant">DEFAULT_TIMEOUT_SECS</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">=</span> <span class="tok-number">30</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `const`, public, SCREAMING_SNAKE_CASE per convention</span>
 
-pub fn connect_with_default_timeout() {
-    connect(DEFAULT_TIMEOUT_SECS)
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">connect_with_default_timeout</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">connect</span><span class="tok-punct">(</span><span class="tok-constant">DEFAULT_TIMEOUT_SECS</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn connect(_timeout_secs: u64) {}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">connect</span><span class="tok-punct">(</span><span class="tok-variable">_timeout_secs</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 <p><code>SCREAMING_SNAKE_CASE</code> for constants is codified in the
 <a href="https://rust-lang.github.io/api-guidelines/naming.html#casing-conforms-to-rfc-430-c-case">API Guidelines' casing conventions</a>,
@@ -1101,26 +1101,26 @@ despite the table itself being computed at compile time by a <code>const fn</cod
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Defining register addresses and bit-field masks as compile-time constants</h3>
-            <pre><code class="rust">const GPIOA_BASE: u32 = 0x4001_0800; // &lt;- `const`: inlined at every use site, no storage of its own
-const ODR_OFFSET: u32 = 0x14;
-const PIN5_MASK: u32 = 1 &lt;&lt; 5;
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_0800</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `const`: inlined at every use site, no storage of its own</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">ODR_OFFSET</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x14</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">PIN5_MASK</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
 
-fn set_pa5() {
-    let odr = (GPIOA_BASE + ODR_OFFSET) as *mut u32;
-    unsafe { odr.write_volatile(odr.read_volatile() | PIN5_MASK) } // &lt;- both consts inlined directly here
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pa5</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">odr</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-constant">GPIOA_BASE</span> <span class="tok-punct">+</span> <span class="tok-constant">ODR_OFFSET</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">odr</span><span class="tok-punct">.</span><span class="tok-call-method">write_volatile</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">.</span><span class="tok-call-method">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">|</span> <span class="tok-constant">PIN5_MASK</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- both consts inlined directly here</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Sizing a fixed sample buffer at compile time</h3>
-            <pre><code class="rust">const SAMPLE_RATE_HZ: u32 = 8_000;
-const WINDOW_MS: u32 = 100;
-const BUFFER_LEN: usize = (SAMPLE_RATE_HZ * WINDOW_MS / 1000) as usize; // &lt;- `const`: computed entirely at compile time
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">SAMPLE_RATE_HZ</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">8_000</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">WINDOW_MS</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">100</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">BUFFER_LEN</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-constant">SAMPLE_RATE_HZ</span> <span class="tok-punct">*</span> <span class="tok-constant">WINDOW_MS</span> <span class="tok-punct">/</span> <span class="tok-number">1000</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `const`: computed entirely at compile time</span>
 
-fn window_sum(samples: &amp;[u16; BUFFER_LEN]) -&gt; u32 {
-    samples.iter().map(|&amp;s| s as u32).sum()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">window_sum</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">;</span> <span class="tok-constant">BUFFER_LEN</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">s</span><span class="tok-punct">|</span> <span class="tok-variable">s</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

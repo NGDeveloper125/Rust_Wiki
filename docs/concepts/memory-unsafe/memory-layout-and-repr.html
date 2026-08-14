@@ -1018,14 +1018,14 @@ completely different order than the reader expects.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[repr(C)] // &lt;- requests a stable, C-compatible layout instead of the default repr(Rust)
-struct Point {
-    x: f32,
-    y: f32,
-}
+        <pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span> <span class="tok-comment tok-anno">// &lt;- requests a stable, C-compatible layout instead of the default repr(Rust)</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Point</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let p = Point { x: 1.0, y: 2.0 };
-println!("{} {}", p.x, p.y);
+<span class="tok-keyword">let</span> <span class="tok-variable">p</span> <span class="tok-punct">=</span> <span class="tok-type">Point</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-number">1.0</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-number">2.0</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">p</span><span class="tok-punct">.</span><span class="tok-field">x</span><span class="tok-punct">,</span> <span class="tok-variable">p</span><span class="tok-punct">.</span><span class="tok-field">y</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1043,25 +1043,25 @@ println!("{} {}", p.x, p.y);
             <p>A struct shared between Rust and a C sensor-calibration library must have
 a layout both languages agree on — the default <code>repr(Rust)</code> layout gives
 no such guarantee, even if the fields look identical to the C struct.</p>
-<pre><code class="rust">#[repr(C)] // &lt;- required: matches the C struct's field order and padding exactly
-pub struct CalibrationData {
-    offset: f32,
-    scale: f32,
-    channel: u8,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span> <span class="tok-comment tok-anno">// &lt;- required: matches the C struct's field order and padding exactly</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">CalibrationData</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">scale</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-unsafe extern "C" {
-    fn apply_calibration(data: *const CalibrationData); // &lt;- the C side expects repr(C) layout
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply_calibration</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">CalibrationData</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the C side expects repr(C) layout</span>
+<span class="tok-punct">}</span>
 
-pub fn apply(data: &amp;CalibrationData) {
-    unsafe {
-        // SAFETY: `data` is a valid, live reference for the duration of
-        // this call, and `CalibrationData` is `repr(C)`, matching the
-        // layout the C function's header declares.
-        apply_calibration(data); // &lt;- FFI call relies on CalibrationData's layout matching C's
-    }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CalibrationData</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: `data` is a valid, live reference for the duration of</span>
+        <span class="tok-comment">// this call, and `CalibrationData` is `repr(C)`, matching the</span>
+        <span class="tok-comment">// layout the C function's header declares.</span>
+        <span class="tok-call-free">apply_calibration</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- FFI call relies on CalibrationData's layout matching C's</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without <code>#[repr(C)]</code>, the compiler is free to reorder
@@ -1082,21 +1082,21 @@ because <code>repr(Rust)</code> makes no such promise.</p>
 integer where individual bits carry meaning — <code>#[repr(u8)]</code> on a
 field-less enum pins the discriminant to the exact width the register
 uses, instead of leaving it to the compiler.</p>
-<pre><code class="rust">#[repr(u8)] // &lt;- fixes the discriminant to a single byte, matching the register's width
-enum LinkStatus {
-    Down = 0,
-    Negotiating = 1,
-    Up = 2,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(u8)]</span> <span class="tok-comment tok-anno">// &lt;- fixes the discriminant to a single byte, matching the register's width</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">LinkStatus</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Down</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">,</span>
+    <span class="tok-type">Negotiating</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">,</span>
+    <span class="tok-type">Up</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn status_from_register(byte: u8) -&gt; Option&lt;LinkStatus&gt; {
-    match byte {
-        0 =&gt; Some(LinkStatus::Down),
-        1 =&gt; Some(LinkStatus::Negotiating),
-        2 =&gt; Some(LinkStatus::Up),
-        _ =&gt; None,
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">status_from_register</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">LinkStatus</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">byte</span> <span class="tok-punct">{</span>
+        <span class="tok-number">0</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">LinkStatus</span><span class="tok-punct">::</span><span class="tok-field">Down</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-number">1</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">LinkStatus</span><span class="tok-punct">::</span><span class="tok-field">Negotiating</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-number">2</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">LinkStatus</span><span class="tok-punct">::</span><span class="tok-field">Up</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">None</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without an explicit <code>repr</code>, the compiler chooses
@@ -1117,12 +1117,12 @@ discriminant to a known integer type.</p>
 nothing at runtime — <code>#[repr(transparent)]</code> guarantees the wrapper has
 identical layout to its inner field, so it's free to pass across an ABI
 boundary as if the wrapper didn't exist.</p>
-<pre><code class="rust">#[repr(transparent)] // &lt;- guarantees identical layout to the wrapped u32, not just "probably fine"
-pub struct SensorId(u32);
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(transparent)]</span> <span class="tok-comment tok-anno">// &lt;- guarantees identical layout to the wrapped u32, not just &quot;probably fine&quot;</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">SensorId</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-unsafe extern "C" {
-    fn lookup_sensor(id: SensorId) -&gt; i32; // &lt;- SensorId is layout-compatible with a plain u32 here
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">lookup_sensor</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">SensorId</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- SensorId is layout-compatible with a plain u32 here</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>#[repr(transparent)]</code> is the one guarantee that makes a
@@ -1178,14 +1178,14 @@ looks wrong in isolation.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[repr(C)] // &lt;- mandatory: pins field order/offsets to the datasheet's memory map
-pub struct GpioBlock {
-    moder: u32,  // offset 0x00
-    otyper: u32, // offset 0x04
-    idr: u32,    // offset 0x08
-}
+        <pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span> <span class="tok-comment tok-anno">// &lt;- mandatory: pins field order/offsets to the datasheet's memory map</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">GpioBlock</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">moder</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>  <span class="tok-comment">// offset 0x00</span>
+    <span class="tok-variable">otyper</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-comment">// offset 0x04</span>
+    <span class="tok-variable">idr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>    <span class="tok-comment">// offset 0x08</span>
+<span class="tok-punct">}</span>
 
-const GPIOA: *mut GpioBlock = 0x4002_0000 as *mut GpioBlock;
+<span class="tok-keyword">const</span> <span class="tok-constant">GPIOA</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">GpioBlock</span> <span class="tok-punct">=</span> <span class="tok-number">0x4002_0000</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">GpioBlock</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1204,25 +1204,25 @@ const GPIOA: *mut GpioBlock = 0x4002_0000 as *mut GpioBlock;
 register block; the struct's layout is the load-bearing contract the
 whole driver depends on, so it's declared once and never touched by
 callers directly.</p>
-<pre><code class="rust">#[repr(C)] // &lt;- field order/offsets must match the UART's datasheet layout exactly
-pub struct UartRegisters {
-    sr: u32,  // status register, offset 0x00
-    dr: u32,  // data register, offset 0x04
-    brr: u32, // baud rate register, offset 0x08
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span> <span class="tok-comment tok-anno">// &lt;- field order/offsets must match the UART's datasheet layout exactly</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">UartRegisters</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">sr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>  <span class="tok-comment">// status register, offset 0x00</span>
+    <span class="tok-variable">dr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>  <span class="tok-comment">// data register, offset 0x04</span>
+    <span class="tok-variable">brr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-comment">// baud rate register, offset 0x08</span>
+<span class="tok-punct">}</span>
 
-pub struct Uart {
-    regs: *mut UartRegisters,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Uart</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">regs</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">UartRegisters</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Uart {
-    pub fn is_data_ready(&amp;self) -&gt; bool {
-        unsafe {
-            // SAFETY: `regs` points at a real, always-mapped UART block.
-            (core::ptr::read_volatile(&amp;raw const (*self.regs).sr) &amp; 0x1) != 0
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Uart</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">is_data_ready</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: `regs` points at a real, always-mapped UART block.</span>
+            <span class="tok-punct">(</span><span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">raw</span> <span class="tok-keyword">const</span> <span class="tok-punct">(</span><span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">regs</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">sr</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0x1</span><span class="tok-punct">)</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> every method on <code>Uart</code> trusts that <code>sr</code>/<code>dr</code>/<code>brr</code> sit
@@ -1243,12 +1243,12 @@ register.</p>
 words between two real registers — and a register-block struct has to
 model the gap explicitly or every field after it lands at the wrong
 offset.</p>
-<pre><code class="rust">#[repr(C)]
-pub struct AdcRegisters {
-    cr: u32,          // offset 0x00: control register
-    _reserved: u32,   // &lt;- offset 0x04 is reserved on this chip; must still occupy the slot
-    dr: u32,          // offset 0x08: data register — wrong offset entirely without the gap above
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">AdcRegisters</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>          <span class="tok-comment">// offset 0x00: control register</span>
+    <span class="tok-variable">_reserved</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>   <span class="tok-comment tok-anno">// &lt;- offset 0x04 is reserved on this chip; must still occupy the slot</span>
+    <span class="tok-variable">dr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>          <span class="tok-comment">// offset 0x08: data register — wrong offset entirely without the gap above</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>#[repr(C)]</code> only guarantees C-style padding for

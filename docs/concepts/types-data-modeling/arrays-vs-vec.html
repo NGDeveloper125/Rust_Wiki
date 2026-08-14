@@ -998,10 +998,10 @@ storage, conventionally take <code>&amp;[T]</code> rather than committing to eit
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let arr: [i32; 3] = [1, 2, 3];   // &lt;- fixed length baked into the type, stack-allocated
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">arr</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- fixed length baked into the type, stack-allocated</span>
 
-let mut v: Vec&lt;i32&gt; = vec![1, 2, 3];
-v.push(4);                        // &lt;- Vec can grow at runtime; arr's length can never change
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">v</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                        <span class="tok-comment tok-anno">// &lt;- Vec can grow at runtime; arr's length can never change</span>
 </code></pre>
 <p><strong>Restriction:</strong> an array's length is part of its type and fixed at
 compile time — it cannot grow or shrink, and a length only known at
@@ -1023,12 +1023,12 @@ all, which is exactly when <code>Vec</code> is required instead.</p>
             <p>Reach for an array the moment a collection's length is a fixed fact of
 the domain; reach for <code>Vec</code> the moment it depends on anything decided at
 runtime.</p>
-<pre><code class="rust">let rgb: [u8; 3] = [255, 87, 34]; // &lt;- length is always exactly 3: no heap allocation, can't grow
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">rgb</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">255</span><span class="tok-punct">,</span> <span class="tok-number">87</span><span class="tok-punct">,</span> <span class="tok-number">34</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- length is always exactly 3: no heap allocation, can't grow</span>
 
-let mut samples: Vec&lt;f64&gt; = Vec::new(); // &lt;- length isn't known ahead of time
-for reading in [21.5, 22.0, 21.8] {     // stand-in for readings arriving one at a time
-    samples.push(reading); // &lt;- Vec can grow; an array's length could never change like this
-}
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- length isn't known ahead of time</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">reading</span> <span class="tok-keyword">in</span> <span class="tok-punct">[</span><span class="tok-number">21.5</span><span class="tok-punct">,</span> <span class="tok-number">22.0</span><span class="tok-punct">,</span> <span class="tok-number">21.8</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>     <span class="tok-comment">// stand-in for readings arriving one at a time</span>
+    <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Vec can grow; an array's length could never change like this</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Vec</code> is the right default for the "length depends on
@@ -1045,16 +1045,16 @@ compile-time constant, like a color's three fixed channels.</p>
             <p>Whether a function signature takes <code>[T; N]</code> or <code>&amp;[T]</code>/<code>Vec&lt;T&gt;</code> should
 reflect whether the length is a real, fixed contract of the domain or
 something the caller determines.</p>
-<pre><code class="rust">fn checksum(bytes: [u8; 4]) -&gt; u8 { // &lt;- fixed-size array: caller must supply exactly 4 bytes
-    bytes.iter().fold(0, |acc, b| acc ^ b)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">checksum</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- fixed-size array: caller must supply exactly 4 bytes</span>
+    <span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">acc</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">acc</span> <span class="tok-punct">^</span> <span class="tok-variable">b</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn checksum_stream(bytes: &amp;[u8]) -&gt; u8 { // &lt;- slice: any length, decided by the caller at runtime
-    bytes.iter().fold(0, |acc, b| acc ^ b)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">checksum_stream</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- slice: any length, decided by the caller at runtime</span>
+    <span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">acc</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">acc</span> <span class="tok-punct">^</span> <span class="tok-variable">b</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-checksum([0x1, 0x2, 0x3, 0x4]);
-checksum_stream(&amp;vec![0x1, 0x2, 0x3, 0x4, 0x5]);
+<span class="tok-call-free">checksum</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">0x1</span><span class="tok-punct">,</span> <span class="tok-number">0x2</span><span class="tok-punct">,</span> <span class="tok-number">0x3</span><span class="tok-punct">,</span> <span class="tok-number">0x4</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-call-free">checksum_stream</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0x1</span><span class="tok-punct">,</span> <span class="tok-number">0x2</span><span class="tok-punct">,</span> <span class="tok-number">0x3</span><span class="tok-punct">,</span> <span class="tok-number">0x4</span><span class="tok-punct">,</span> <span class="tok-number">0x5</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> if a protocol genuinely fixes the length — a 4-byte
@@ -1104,13 +1104,13 @@ count is bounded but genuinely variable at runtime.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let calibration: [i16; 3] = [12, -4, 7]; // &lt;- fixed 3-axis offset, no allocator, no heapless dependency
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">calibration</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">12</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed 3-axis offset, no allocator, no heapless dependency</span>
 
-fn apply_offset(raw: [i16; 3], offset: [i16; 3]) -&gt; [i16; 3] {
-    [raw[0] + offset[0], raw[1] + offset[1], raw[2] + offset[2]]
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">apply_offset</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type-return">i16</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">[</span><span class="tok-variable">raw</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span> <span class="tok-punct">+</span> <span class="tok-variable">offset</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">raw</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span> <span class="tok-punct">+</span> <span class="tok-variable">offset</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">raw</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">+</span> <span class="tok-variable">offset</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">]</span>
+<span class="tok-punct">}</span>
 
-let corrected = apply_offset([100, 200, -50], calibration);
+<span class="tok-keyword">let</span> <span class="tok-variable">corrected</span> <span class="tok-punct">=</span> <span class="tok-call-free">apply_offset</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">50</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">calibration</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1128,13 +1128,13 @@ let corrected = apply_offset([100, 200, -50], calibration);
             <p>A calibration table with a fixed, datasheet-defined number of channels
 should be an array; a log of readings collected until a buffer fills, one
 at a time, is the case <code>heapless::Vec</code> is actually for.</p>
-<pre><code class="rust">let channel_gains: [f32; 4] = [1.02, 0.98, 1.00, 1.01]; // &lt;- always exactly 4 channels: no heap, no bookkeeping
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">channel_gains</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">f32</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1.02</span><span class="tok-punct">,</span> <span class="tok-number">0.98</span><span class="tok-punct">,</span> <span class="tok-number">1.00</span><span class="tok-punct">,</span> <span class="tok-number">1.01</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- always exactly 4 channels: no heap, no bookkeeping</span>
 
-use heapless::Vec;
-let mut recent: Vec&lt;f32, 16&gt; = Vec::new(); // &lt;- fixed capacity, but a runtime length that grows as readings arrive
-for reading in [21.5, 22.0, 21.8] {
-    recent.push(reading).ok(); // &lt;- Err once the buffer is full, handled explicitly instead of reallocating
-}
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">recent</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f32</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed capacity, but a runtime length that grows as readings arrive</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">reading</span> <span class="tok-keyword">in</span> <span class="tok-punct">[</span><span class="tok-number">21.5</span><span class="tok-punct">,</span> <span class="tok-number">22.0</span><span class="tok-punct">,</span> <span class="tok-number">21.8</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">recent</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Err once the buffer is full, handled explicitly instead of reallocating</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the channel count is a hardware fact that never
@@ -1156,18 +1156,18 @@ tradeoff in more depth.</p>
 so with <code>[u8; N]</code> in its signature; a function reading a variable-length
 frame up to a known maximum should take <code>&amp;mut [u8]</code> and return how much
 of it was actually filled.</p>
-<pre><code class="rust">fn read_device_id(bytes: [u8; 2]) -&gt; u16 { // &lt;- protocol always sends exactly 2 bytes: no allocator needed
-    u16::from_be_bytes(bytes)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">read_device_id</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- protocol always sends exactly 2 bytes: no allocator needed</span>
+    <span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_be_bytes</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn read_frame(buf: &amp;mut [u8]) -&gt; usize { // &lt;- caller's buffer, any backing storage, any length up to buf.len()
-    buf[0] = 0xAA;
-    1 // number of bytes actually written
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_frame</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- caller's buffer, any backing storage, any length up to buf.len()</span>
+    <span class="tok-variable">buf</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-number">0xAA</span><span class="tok-punct">;</span>
+    <span class="tok-number">1</span> <span class="tok-comment">// number of bytes actually written</span>
+<span class="tok-punct">}</span>
 
-let id = read_device_id([0x01, 0x2C]);
-let mut frame = [0u8; 32]; // stack-allocated, no heap
-let written = read_frame(&amp;mut frame);
+<span class="tok-keyword">let</span> <span class="tok-variable">id</span> <span class="tok-punct">=</span> <span class="tok-call-free">read_device_id</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">0x01</span><span class="tok-punct">,</span> <span class="tok-number">0x2C</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">frame</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">32</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment">// stack-allocated, no heap</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">written</span> <span class="tok-punct">=</span> <span class="tok-call-free">read_frame</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">frame</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a fixed-size array in the signature turns a

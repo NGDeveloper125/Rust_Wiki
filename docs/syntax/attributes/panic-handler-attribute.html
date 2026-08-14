@@ -1021,14 +1021,14 @@ handler, not a replacement for it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Defining a minimal panic handler in a #![no_std] binary</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use core::panic::PanicInfo;
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">panic</span><span class="tok-punct">::</span><span class="tok-type">PanicInfo</span><span class="tok-punct">;</span>
 
-#[panic_handler] // &lt;- required: the one function called whenever this no_std binary panics
-fn panic(_info: &amp;PanicInfo) -&gt; ! {
-    loop {} // halt here forever; a debugger can inspect state at this point
-}
+<span class="tok-attribute">#[panic_handler]</span> <span class="tok-comment tok-anno">// &lt;- required: the one function called whenever this no_std binary panics</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">panic</span><span class="tok-punct">(</span><span class="tok-variable">_info</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">PanicInfo</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// halt here forever; a debugger can inspect state at this point</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1038,24 +1038,24 @@ fn panic(_info: &amp;PanicInfo) -&gt; ! {
 all — the minimal, universally-applicable choice is to loop forever,
 leaving the processor halted in a known, debuggable state rather than
 attempting anything more elaborate that could itself fail.</p>
-<pre><code class="rust">#![no_std]
-#![no_main]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use core::panic::PanicInfo;
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">panic</span><span class="tok-punct">::</span><span class="tok-type">PanicInfo</span><span class="tok-punct">;</span>
 
-#[panic_handler] // &lt;- the only panic handler allowed in the final linked binary
-fn panic(info: &amp;PanicInfo) -&gt; ! {
-    // In a real project a HAL crate would log `info` over a debug UART
-    // or blink an LED pattern before halting; a bare minimal handler
-    // simply stops execution in a known state.
-    let _ = info;
-    loop {}
-}
+<span class="tok-attribute">#[panic_handler]</span> <span class="tok-comment tok-anno">// &lt;- the only panic handler allowed in the final linked binary</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">panic</span><span class="tok-punct">(</span><span class="tok-variable">info</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">PanicInfo</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// In a real project a HAL crate would log `info` over a debug UART</span>
+    <span class="tok-comment">// or blink an LED pattern before halting; a bare minimal handler</span>
+    <span class="tok-comment">// simply stops execution in a known state.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">info</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[unsafe(no_mangle)]
-pub extern "C" fn _start() -&gt; ! {
-    loop {}
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">_start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#![no_std]</code> removes <code>std</code>'s built-in panic handler
 along with everything else <code>std</code> provides, so the crate must supply its
@@ -1073,19 +1073,19 @@ reviewed choice rather than an ad hoc one per crate.</p>
 halted — the panic handler triggers a hardware reset instead of looping,
 so a transient fault recovers on its own instead of requiring a manual
 power cycle.</p>
-<pre><code class="rust">#![no_std]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use core::panic::PanicInfo;
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">panic</span><span class="tok-punct">::</span><span class="tok-type">PanicInfo</span><span class="tok-punct">;</span>
 
-#[panic_handler] // &lt;- recovery strategy lives entirely inside this one function
-fn panic(_info: &amp;PanicInfo) -&gt; ! {
-    // stand-in for a hardware-specific reset, e.g. cortex_m::peripheral::SCB::sys_reset()
-    reset_device();
-}
+<span class="tok-attribute">#[panic_handler]</span> <span class="tok-comment tok-anno">// &lt;- recovery strategy lives entirely inside this one function</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">panic</span><span class="tok-punct">(</span><span class="tok-variable">_info</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">PanicInfo</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// stand-in for a hardware-specific reset, e.g. cortex_m::peripheral::SCB::sys_reset()</span>
+    <span class="tok-call-free">reset_device</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn reset_device() -&gt; ! {
-    loop {} // placeholder: a real target calls its reset intrinsic here instead
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">reset_device</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// placeholder: a real target calls its reset intrinsic here instead</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Because exactly one <code>#[panic_handler]</code> exists for the
 whole binary, the crate's chosen recovery policy — halt for
@@ -1145,48 +1145,48 @@ the linker's requirement.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Selecting a handler crate purely for its side effect</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use panic_probe as _; // &lt;- imported only so its #[panic_handler] gets linked in
-use defmt_rtt as _;   // &lt;- transport panic-probe's formatted output rides over
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_probe</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- imported only so its #[panic_handler] gets linked in</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">defmt_rtt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- transport panic-probe's formatted output rides over</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    loop {}
-}
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Keeping exactly one handler across build profiles</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-// Cargo.toml selects exactly one of these via mutually exclusive features,
-// so exactly one #[panic_handler] is ever compiled into a given build:
-//
-//   [dependencies]
-//   panic-halt  = { version = "0.2", optional = true }
-//   panic-probe = { version = "0.3", optional = true, features = ["print-defmt"] }
-//
-//   [features]
-//   release-halt = ["panic-halt"]
-//   debug-probe  = ["panic-probe"]
+<span class="tok-comment">// Cargo.toml selects exactly one of these via mutually exclusive features,</span>
+<span class="tok-comment">// so exactly one #[panic_handler] is ever compiled into a given build:</span>
+<span class="tok-comment">//</span>
+<span class="tok-comment">//   [dependencies]</span>
+<span class="tok-comment">//   panic-halt  = { version = &quot;0.2&quot;, optional = true }</span>
+<span class="tok-comment">//   panic-probe = { version = &quot;0.3&quot;, optional = true, features = [&quot;print-defmt&quot;] }</span>
+<span class="tok-comment">//</span>
+<span class="tok-comment">//   [features]</span>
+<span class="tok-comment">//   release-halt = [&quot;panic-halt&quot;]</span>
+<span class="tok-comment">//   debug-probe  = [&quot;panic-probe&quot;]</span>
 
-#[cfg(feature = "release-halt")]
-use panic_halt as _;
+<span class="tok-attribute">#[cfg(feature = &quot;release-halt&quot;)]</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-#[cfg(feature = "debug-probe")]
-use panic_probe as _;
+<span class="tok-attribute">#[cfg(feature = &quot;debug-probe&quot;)]</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_probe</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    loop {}
-}
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Feature-gating the <code>use</code> this way makes the one-handler-per-binary rule
 a build-time guarantee rather than something discovered as a duplicate-

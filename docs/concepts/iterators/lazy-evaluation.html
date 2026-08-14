@@ -1001,12 +1001,12 @@ much of the sequence to actually pay for.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let numbers = 1..; // an infinite range
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">numbers</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">..</span><span class="tok-punct">;</span> <span class="tok-comment">// an infinite range</span>
 
-let doubled = numbers.map(|n| n * 2); // &lt;- map builds a pipeline here; nothing has been computed yet
+<span class="tok-keyword">let</span> <span class="tok-variable">doubled</span> <span class="tok-punct">=</span> <span class="tok-variable">numbers</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">n</span><span class="tok-punct">|</span> <span class="tok-variable">n</span> <span class="tok-punct">*</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- map builds a pipeline here; nothing has been computed yet</span>
 
-let first_three: Vec&lt;i32&gt; = doubled.take(3).collect(); // work only happens here, when collect pulls values
-assert_eq!(first_three, vec![2, 4, 6]);
+<span class="tok-keyword">let</span> <span class="tok-variable">first_three</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">doubled</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// work only happens here, when collect pulls values</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">first_three</span><span class="tok-punct">,</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1024,13 +1024,13 @@ assert_eq!(first_three, vec![2, 4, 6]);
             <p>Searching a huge stream of generated reading ids for the first one past
 a threshold only needs to compute as far as the first match — laziness
 means the rest is never touched.</p>
-<pre><code class="rust">let reading_ids = (1..=1_000_000).map(|n| n * 10); // &lt;- a lazy pipeline over a million ids; nothing has been computed yet
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">reading_ids</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">1_000_000</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">n</span><span class="tok-punct">|</span> <span class="tok-variable">n</span> <span class="tok-punct">*</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a lazy pipeline over a million ids; nothing has been computed yet</span>
 
-let first_over_threshold = reading_ids
-    .filter(|&amp;id| id &gt; 500_000)
-    .next(); // &lt;- only pulls values until the first match, stopping early
+<span class="tok-keyword">let</span> <span class="tok-variable">first_over_threshold</span> <span class="tok-punct">=</span> <span class="tok-variable">reading_ids</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">id</span><span class="tok-punct">|</span> <span class="tok-variable">id</span> <span class="tok-punct">&gt;</span> <span class="tok-number">500_000</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- only pulls values until the first match, stopping early</span>
 
-assert_eq!(first_over_threshold, Some(500_010));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">first_over_threshold</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">500_010</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because <code>map</code> and <code>filter</code> are lazy, <code>.next()</code> stops
@@ -1050,20 +1050,20 @@ reason.</p>
             <p>A method that reports which sensor readings crossed a threshold doesn't
 need to build a <code>Vec</code> of all of them if the caller only wants the first —
 returning a lazy iterator lets the caller decide.</p>
-<pre><code class="rust">struct SensorLog {
-    readings: Vec&lt;f64&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorLog</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl SensorLog {
-    pub fn above_threshold(&amp;self, threshold: f64) -&gt; impl Iterator&lt;Item = f64&gt; + '_ {
-        // &lt;- returns a lazy iterator; the caller decides how much to actually consume
-        self.readings.iter().copied().filter(move |&amp;r| r &gt; threshold)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">SensorLog</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">above_threshold</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">threshold</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">impl</span> <span class="tok-type-return">Iterator</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Item</span> <span class="tok-punct">=</span> <span class="tok-type-return">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'_</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- returns a lazy iterator; the caller decides how much to actually consume</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">threshold</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let log = SensorLog { readings: vec![68.1, 72.4, 75.0, 69.9] };
-let spike = log.above_threshold(70.0).next();
-assert_eq!(spike, Some(72.4));
+<span class="tok-keyword">let</span> <span class="tok-variable">log</span> <span class="tok-punct">=</span> <span class="tok-type">SensorLog</span> <span class="tok-punct">{</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">68.1</span><span class="tok-punct">,</span> <span class="tok-number">72.4</span><span class="tok-punct">,</span> <span class="tok-number">75.0</span><span class="tok-punct">,</span> <span class="tok-number">69.9</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">spike</span> <span class="tok-punct">=</span> <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">above_threshold</span><span class="tok-punct">(</span><span class="tok-number">70.0</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">spike</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">72.4</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Iterator&lt;Item = f64&gt;</code> instead of
@@ -1101,15 +1101,15 @@ values, without ever pulling more reads than requested.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let register_bank: [u16; 6] = [10, 45, 90, 200, 512, 1023];
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">register_bank</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">;</span> <span class="tok-number">6</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">10</span><span class="tok-punct">,</span> <span class="tok-number">45</span><span class="tok-punct">,</span> <span class="tok-number">90</span><span class="tok-punct">,</span> <span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-number">512</span><span class="tok-punct">,</span> <span class="tok-number">1023</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let scaled = register_bank.iter().map(|&amp;r| r / 2); // &lt;- map builds a pipeline; nothing computed yet, no allocation
+<span class="tok-keyword">let</span> <span class="tok-variable">scaled</span> <span class="tok-punct">=</span> <span class="tok-variable">register_bank</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span> <span class="tok-punct">/</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- map builds a pipeline; nothing computed yet, no allocation</span>
 
-let first_two: [u16; 2] = {
-    let mut it = scaled.take(2); // still lazy
-    [it.next().unwrap(), it.next().unwrap()] // work happens here, one value at a time
-};
-assert_eq!(first_two, [5, 22]);
+<span class="tok-keyword">let</span> <span class="tok-variable">first_two</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">it</span> <span class="tok-punct">=</span> <span class="tok-variable">scaled</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// still lazy</span>
+    <span class="tok-punct">[</span><span class="tok-variable">it</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">it</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-comment">// work happens here, one value at a time</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">first_two</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-number">22</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1128,14 +1128,14 @@ assert_eq!(first_two, [5, 22]);
 threshold only needs to look as far as the first match — laziness means
 the rest of the buffer is never touched, and nothing is ever collected
 into a <code>Vec</code> to search through.</p>
-<pre><code class="rust">let samples: [u16; 8] = [480, 495, 510, 605, 490, 500, 512, 498];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">;</span> <span class="tok-number">8</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">480</span><span class="tok-punct">,</span> <span class="tok-number">495</span><span class="tok-punct">,</span> <span class="tok-number">510</span><span class="tok-punct">,</span> <span class="tok-number">605</span><span class="tok-punct">,</span> <span class="tok-number">490</span><span class="tok-punct">,</span> <span class="tok-number">500</span><span class="tok-punct">,</span> <span class="tok-number">512</span><span class="tok-punct">,</span> <span class="tok-number">498</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let first_over_threshold = samples
-    .iter()
-    .filter(|&amp;&amp;s| s &gt; 600) // &lt;- filter is lazy: nothing evaluated until pulled
-    .next(); // &lt;- stops at the first match, ignoring the rest of the buffer
+<span class="tok-keyword">let</span> <span class="tok-variable">first_over_threshold</span> <span class="tok-punct">=</span> <span class="tok-variable">samples</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;&amp;</span><span class="tok-variable">s</span><span class="tok-punct">|</span> <span class="tok-variable">s</span> <span class="tok-punct">&gt;</span> <span class="tok-number">600</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- filter is lazy: nothing evaluated until pulled</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- stops at the first match, ignoring the rest of the buffer</span>
 
-assert_eq!(first_over_threshold, Some(&amp;605));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">first_over_threshold</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-number">605</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> stopping at the first match without ever building an
@@ -1156,20 +1156,20 @@ threshold shouldn't build a <code>heapless::Vec</code> of every match if the cal
 only wants the first — returning a lazy iterator over a borrowed fixed
 buffer lets the caller decide how much to consume, with no allocation
 forced either way.</p>
-<pre><code class="rust">struct ChannelLog {
-    readings: [i16; 4],
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">ChannelLog</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl ChannelLog {
-    fn above_threshold(&amp;self, threshold: i16) -&gt; impl Iterator&lt;Item = i16&gt; + '_ {
-        // &lt;- returns a lazy iterator borrowing `readings`; caller decides how much to consume
-        self.readings.iter().copied().filter(move |&amp;r| r &gt; threshold)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">ChannelLog</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">above_threshold</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">threshold</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">impl</span> <span class="tok-type-return">Iterator</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Item</span> <span class="tok-punct">=</span> <span class="tok-type-return">i16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'_</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- returns a lazy iterator borrowing `readings`; caller decides how much to consume</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">threshold</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let log = ChannelLog { readings: [18, 24, 30, 21] };
-let first_spike = log.above_threshold(25).next();
-assert_eq!(first_spike, Some(30));
+<span class="tok-keyword">let</span> <span class="tok-variable">log</span> <span class="tok-punct">=</span> <span class="tok-type">ChannelLog</span> <span class="tok-punct">{</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">18</span><span class="tok-punct">,</span> <span class="tok-number">24</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">,</span> <span class="tok-number">21</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">first_spike</span> <span class="tok-punct">=</span> <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">above_threshold</span><span class="tok-punct">(</span><span class="tok-number">25</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">first_spike</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Iterator&lt;Item = i16&gt;</code> instead of a

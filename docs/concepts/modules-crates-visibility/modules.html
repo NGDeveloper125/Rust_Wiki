@@ -1020,24 +1020,24 @@ side by side, to group them under a <a href="../../concepts/modules-crates-visib
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">mod inventory {                          // &lt;- a module groups related items together
-    pub struct Item {
-        pub name: String,
-        pub quantity: u32,
-    }
+        <pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">inventory</span> <span class="tok-punct">{</span>                          <span class="tok-comment tok-anno">// &lt;- a module groups related items together</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Item</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+        <span class="tok-keyword">pub</span> <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
 
-    pub fn restock(item: &amp;mut Item, amount: u32) {
-        item.quantity += amount;
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">restock</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Item</span><span class="tok-punct">,</span> <span class="tok-variable">amount</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">item</span><span class="tok-punct">.</span><span class="tok-field">quantity</span> <span class="tok-punct">+=</span> <span class="tok-variable">amount</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-use inventory::Item;                     // &lt;- brings the nested path into scope
+<span class="tok-keyword">use</span> <span class="tok-module">inventory</span><span class="tok-punct">::</span><span class="tok-type">Item</span><span class="tok-punct">;</span>                     <span class="tok-comment tok-anno">// &lt;- brings the nested path into scope</span>
 
-fn main() {
-    let mut widget = Item { name: "Widget".into(), quantity: 3 };
-    inventory::restock(&amp;mut widget, 5);   // &lt;- still reachable through its full path too
-    println!("{} x{}", widget.name, widget.quantity);
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">widget</span> <span class="tok-punct">=</span> <span class="tok-type">Item</span> <span class="tok-punct">{</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Widget&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-module">inventory</span><span class="tok-punct">::</span><span class="tok-call-assoc">restock</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">widget</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- still reachable through its full path too</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} x{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">widget</span><span class="tok-punct">.</span><span class="tok-field">name</span><span class="tok-punct">,</span> <span class="tok-variable">widget</span><span class="tok-punct">.</span><span class="tok-field">quantity</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1056,23 +1056,23 @@ fn main() {
 callers see: keeping implementation modules private and re-exporting a
 curated set of paths from the crate root lets internals move around
 freely without breaking anyone's imports.</p>
-<pre><code class="rust">// src/lib.rs
-mod parser;                  // &lt;- private module: an implementation detail
-mod render;                  // &lt;- also private
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">parser</span><span class="tok-punct">;</span>                  <span class="tok-comment tok-anno">// &lt;- private module: an implementation detail</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">render</span><span class="tok-punct">;</span>                  <span class="tok-comment tok-anno">// &lt;- also private</span>
 
-pub use parser::Parser;      // &lt;- re-export: reachable as `crate::Parser` despite `parser` being private
-pub use render::Renderer;    // &lt;- callers never need to know the internal module names
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">parser</span><span class="tok-punct">::</span><span class="tok-type">Parser</span><span class="tok-punct">;</span>      <span class="tok-comment tok-anno">// &lt;- re-export: reachable as `crate::Parser` despite `parser` being private</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">render</span><span class="tok-punct">::</span><span class="tok-type">Renderer</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- callers never need to know the internal module names</span>
 
-// src/parser.rs
-pub struct Parser {
-    // ...
-}
+<span class="tok-comment">// src/parser.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Parser</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ...</span>
+<span class="tok-punct">}</span>
 
-impl Parser {
-    pub fn new() -&gt; Self {
-        Parser {}
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Parser</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Parser</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a flat, curated set of <code>pub use</code> re-exports at the crate
@@ -1090,19 +1090,19 @@ standard practice for organizing a crate's public API, per the
             <h3 class="scenario-title">Testing</h3>
             <p>Unit tests conventionally live in a nested <code>tests</code> module in the same
 file as the code they exercise, compiled only when running <code>cargo test</code>.</p>
-<pre><code class="rust">pub fn discount_price(price_cents: u32, percent_off: u8) -&gt; u32 {
-    price_cents - (price_cents * percent_off as u32 / 100)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">discount_price</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">price_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">price_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {                  // &lt;- a nested module, compiled only for `cargo test`
-    use super::*;             // &lt;- pulls the parent module's items into scope
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>                  <span class="tok-comment tok-anno">// &lt;- a nested module, compiled only for `cargo test`</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>             <span class="tok-comment tok-anno">// &lt;- pulls the parent module's items into scope</span>
 
-    #[test]
-    fn applies_percentage_discount() {
-        assert_eq!(discount_price(1000, 25), 750);
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">applies_percentage_discount</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">discount_price</span><span class="tok-punct">(</span><span class="tok-number">1000</span><span class="tok-punct">,</span> <span class="tok-number">25</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">750</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because a child module can always see its ancestors'
@@ -1137,14 +1137,14 @@ from each of them.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// hal/src/lib.rs
-mod gpio;   // &lt;- src/gpio.rs: general-purpose I/O pins
-mod spi;    // &lt;- src/spi.rs: SPI peripheral driver
-mod i2c;    // &lt;- src/i2c.rs: I2C peripheral driver
-mod uart;   // &lt;- src/uart.rs: UART peripheral driver
+        <pre><code class="rust-hl"><span class="tok-comment">// hal/src/lib.rs</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">gpio</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- src/gpio.rs: general-purpose I/O pins</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">spi</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- src/spi.rs: SPI peripheral driver</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">i2c</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- src/i2c.rs: I2C peripheral driver</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">uart</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- src/uart.rs: UART peripheral driver</span>
 
-pub use gpio::Pin;
-pub use spi::Spi;
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">gpio</span><span class="tok-punct">::</span><span class="tok-type">Pin</span><span class="tok-punct">;</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">Spi</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1162,16 +1162,16 @@ pub use spi::Spi;
             <p>A HAL crate's peripheral modules (<code>gpio</code>, <code>spi</code>, <code>i2c</code>, <code>uart</code>) each keep
 their own register-level details private, and the crate root curates one
 flat, public set of types drawn from all of them.</p>
-<pre><code class="rust">// hal/src/lib.rs
-mod gpio;  // &lt;- private module: internal register layout stays hidden
-mod spi;
-mod i2c;
-mod uart;
+<pre><code class="rust-hl"><span class="tok-comment">// hal/src/lib.rs</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">gpio</span><span class="tok-punct">;</span>  <span class="tok-comment tok-anno">// &lt;- private module: internal register layout stays hidden</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">spi</span><span class="tok-punct">;</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">i2c</span><span class="tok-punct">;</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">uart</span><span class="tok-punct">;</span>
 
-pub use gpio::Pin;    // &lt;- curated re-export: callers use `hal::Pin`, never `hal::gpio::Pin`
-pub use spi::Spi;
-pub use i2c::I2c;
-pub use uart::Uart;
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">gpio</span><span class="tok-punct">::</span><span class="tok-type">Pin</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- curated re-export: callers use `hal::Pin`, never `hal::gpio::Pin`</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">Spi</span><span class="tok-punct">;</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">;</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">uart</span><span class="tok-punct">::</span><span class="tok-type">Uart</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> re-exporting a flat set of driver types from the crate
@@ -1192,25 +1192,25 @@ recommends generally.</p>
 protocol-encoding logic (building the byte sequence for a given
 command); splitting the pure part into its own function lets it be
 unit-tested on the host, without any real I2C bus involved.</p>
-<pre><code class="rust">// hal/src/i2c.rs
-pub fn encode_write_command(register: u8, value: u8) -&gt; [u8; 2] {  // &lt;- pure logic: no register access
-    [register, value]
-}
+<pre><code class="rust-hl"><span class="tok-comment">// hal/src/i2c.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">encode_write_command</span><span class="tok-punct">(</span><span class="tok-variable">register</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type-return">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>  <span class="tok-comment tok-anno">// &lt;- pure logic: no register access</span>
+    <span class="tok-punct">[</span><span class="tok-variable">register</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">]</span>
+<span class="tok-punct">}</span>
 
-pub fn write_register(&amp;mut self, register: u8, value: u8) {  // &lt;- touches real hardware, not unit-tested here
-    let bytes = encode_write_command(register, value);
-    // ... unsafe register/bus write using `bytes`
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_register</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">register</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>  <span class="tok-comment tok-anno">// &lt;- touches real hardware, not unit-tested here</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-call-free">encode_write_command</span><span class="tok-punct">(</span><span class="tok-variable">register</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-comment">// ... unsafe register/bus write using `bytes`</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn encodes_register_and_value_as_two_bytes() {
-        assert_eq!(encode_write_command(0x6B, 0x00), [0x6B, 0x00]);
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">encodes_register_and_value_as_two_bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">encode_write_command</span><span class="tok-punct">(</span><span class="tok-number">0x6B</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-number">0x6B</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> unit tests for a <code>#![no_std]</code> crate still compile and

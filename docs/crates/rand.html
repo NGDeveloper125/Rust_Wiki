@@ -1030,20 +1030,20 @@ your own seed, and it requires Rust 1.85.</p>
             <p>Sequence operations live in extension traits rather than on the RNG, so the
 call reads from the collection: <code>deck.shuffle(&amp;mut rng)</code>, not
 <code>rng.shuffle(&amp;mut deck)</code>.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let mut deck: Vec&lt;u8&gt; = (1..=52).collect();
-let mut rng = rand::rng();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">deck</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">52</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-deck.shuffle(&amp;mut rng);
-let hand: Vec&lt;u8&gt; = deck.drain(..5).collect();
+<span class="tok-variable">deck</span><span class="tok-punct">.</span><span class="tok-call-method">shuffle</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">rng</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">hand</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">deck</span><span class="tok-punct">.</span><span class="tok-call-method">drain</span><span class="tok-punct">(</span><span class="tok-punct">..</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(hand.len(), 5);
-assert_eq!(deck.len(), 47);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">hand</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">deck</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">47</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Or pick without removing.
-let cut = deck.choose(&amp;mut rng);
-assert!(cut.is_some());
+<span class="tok-comment">// Or pick without removing.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">cut</span> <span class="tok-punct">=</span> <span class="tok-variable">deck</span><span class="tok-punct">.</span><span class="tok-call-method">choose</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">rng</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">cut</span><span class="tok-punct">.</span><span class="tok-call-method">is_some</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> <code>shuffle</code> is an in-place Fisher–Yates, and <code>choose</code> is one
@@ -1060,19 +1060,19 @@ hand-rolled versions reach for.</p>
             <p>A bug that only appears one run in a thousand is untestable unless you can
 replay that run. Seeding the generator from a value you record turns a flaky
 failure into a fixed one.</p>
-<pre><code class="rust">use rand::prelude::*;
-use rand::rngs::StdRng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">StdRng</span><span class="tok-punct">;</span>
 
-fn simulate(seed: u64) -&gt; u32 {
-    let mut rng = StdRng::seed_from_u64(seed);
-    (0..1000).map(|_| rng.random_range(1..=6)).sum()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">simulate</span><span class="tok-punct">(</span><span class="tok-variable">seed</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-type">StdRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">seed_from_u64</span><span class="tok-punct">(</span><span class="tok-variable">seed</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">1000</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random_range</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// The same seed always gives the same run.
-assert_eq!(simulate(42), simulate(42));
+<span class="tok-comment">// The same seed always gives the same run.</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">simulate</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-call-free">simulate</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// A different seed almost certainly does not.
-assert_ne!(simulate(42), simulate(43));
+<span class="tok-comment">// A different seed almost certainly does not.</span>
+<span class="tok-macro">assert_ne!</span><span class="tok-punct">(</span><span class="tok-call-free">simulate</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-call-free">simulate</span><span class="tok-punct">(</span><span class="tok-number">43</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> the seed is the whole reproduction case — log it on failure and
@@ -1089,15 +1089,15 @@ next upgrade. Assert on properties, or pin <code>ChaCha20Rng</code>.</p>
             <h3 class="scenario-title">Sampling the same distribution many times</h3>
             <p>Building a distribution once and reusing it moves the range setup out of the
 loop, which matters when the loop is long.</p>
-<pre><code class="rust">use rand::distr::{Distribution, Uniform};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">distr</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Distribution</span><span class="tok-punct">,</span> <span class="tok-type">Uniform</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let mut rng = rand::rng();
-let latency = Uniform::new(10u32, 250).unwrap(); // &lt;- validated once
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">latency</span> <span class="tok-punct">=</span> <span class="tok-type">Uniform</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">10u32</span><span class="tok-punct">,</span> <span class="tok-number">250</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- validated once</span>
 
-let samples: Vec&lt;u32&gt; = latency.sample_iter(&amp;mut rng).take(1000).collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">latency</span><span class="tok-punct">.</span><span class="tok-call-method">sample_iter</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">rng</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-number">1000</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(samples.len(), 1000);
-assert!(samples.iter().all(|&amp;ms| (10..250).contains(&amp;ms)));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">all</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">ms</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">..</span><span class="tok-number">250</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">ms</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> <code>random_range</code> re-derives the sampling parameters on every call
@@ -1123,12 +1123,12 @@ aren't found.</p>
             <h4 class="api-sig"><code class="tok-inline">rand::random</code></h4>
             <p>One random value of any type the standard distribution covers, from the
 thread-local generator.</p>
-<pre><code class="rust">let flip: bool = rand::random();
-let byte: u8 = rand::random();
-let unit: f64 = rand::random(); // &lt;- floats land in 0.0..1.0
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">flip</span><span class="tok-punct">:</span> <span class="tok-type">bool</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">unit</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- floats land in 0.0..1.0</span>
 
-assert!((0.0..1.0).contains(&amp;unit));
-let _ = (flip, byte);
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">0.0</span><span class="tok-punct">..</span><span class="tok-number">1.0</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">unit</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">flip</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> a one-off value where you don't hold a generator. In a loop,
@@ -1139,11 +1139,11 @@ thread-local handle.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">rand::random_range</code></h4>
             <p>A value from a range, uniformly and without modulo bias.</p>
-<pre><code class="rust">let die = rand::random_range(1..=6);
-assert!((1..=6).contains(&amp;die));
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">die</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">random_range</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">die</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let index = rand::random_range(0..10usize);
-assert!(index &lt; 10);
+<span class="tok-keyword">let</span> <span class="tok-variable">index</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">random_range</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">10usize</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">index</span> <span class="tok-punct">&lt;</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> any bounded integer or float. It panics on an empty or
@@ -1155,14 +1155,14 @@ if the bounds come from input, validate them with <code>Uniform::new</code> inst
             <h4 class="api-sig"><code class="tok-inline">rand::rng</code></h4>
             <p>A handle to the thread-local generator: seeded from the OS, periodically
 reseeded, and cryptographically secure.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let mut rng = rand::rng();
-let a: u32 = rng.random();
-let b = rng.random_range(0..100);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random_range</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert!(b &lt; 100);
-let _ = a;
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">b</span> <span class="tok-punct">&lt;</span> <span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the default for anything not needing reproducibility. Bind
@@ -1179,14 +1179,14 @@ own, which is what makes it fast.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">RngExt::random</code></h4>
             <p>The generic value method behind <code>rand::random</code>, on whichever generator you hold.</p>
-<pre><code class="rust">use rand::prelude::*;
-use rand::rngs::SmallRng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">SmallRng</span><span class="tok-punct">;</span>
 
-let mut rng = SmallRng::seed_from_u64(7);
-let n: u64 = rng.random();
-let pair: (u8, bool) = rng.random(); // &lt;- tuples work too
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-type">SmallRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">seed_from_u64</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">pair</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- tuples work too</span>
 
-let _ = (n, pair);
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">,</span> <span class="tok-variable">pair</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> wherever you have a generator. The type is chosen by
@@ -1197,16 +1197,16 @@ default, because there isn't one.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">RngExt::random_bool</code></h4>
             <p>A <code>bool</code> that is true with the given probability.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let mut rng = rand::rng();
-let mut heads = 0;
-for _ in 0..1000 {
-    if rng.random_bool(0.5) {
-        heads += 1;
-    }
-}
-assert!((300..700).contains(&amp;heads)); // &lt;- overwhelmingly likely
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">heads</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">1000</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random_bool</span><span class="tok-punct">(</span><span class="tok-number">0.5</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">heads</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">300</span><span class="tok-punct">..</span><span class="tok-number">700</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">heads</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- overwhelmingly likely</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> modelling a chance of something happening — packet loss, a
@@ -1217,13 +1217,13 @@ the odds are naturally a fraction.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">RngExt::fill</code></h4>
             <p>Fills a slice with random values in one call.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let mut key = [0u8; 32];
-rand::rng().fill(&amp;mut key);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">key</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">32</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fill</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">key</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(key.len(), 32);
-assert!(key.iter().any(|&amp;b| b != 0)); // &lt;- practically certain
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">any</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">b</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- practically certain</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> generating a buffer of bytes — a nonce, a salt, a test
@@ -1235,13 +1235,13 @@ a crypto crate's own key generation over rolling it from raw bytes.</p>
             <h4 class="api-sig"><code class="tok-inline">Rng</code> (the core trait)</h4>
             <p>The low-level trait from <code>rand_core</code> that every generator implements:
 <code>next_u32</code>, <code>next_u64</code>, <code>fill_bytes</code>. <code>RngExt</code> is built on it.</p>
-<pre><code class="rust">use rand::Rng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-type">Rng</span><span class="tok-punct">;</span>
 
-let mut rng = rand::rng();
-let raw: u32 = rng.next_u32();
-let wide: u64 = rng.next_u64();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">next_u32</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">wide</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">next_u64</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let _ = (raw, wide);
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">,</span> <span class="tok-variable">wide</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> implementing a generator, or writing a function generic over
@@ -1253,17 +1253,17 @@ methods, which handle ranges and types for you.</p>
             <h4 class="api-sig"><code class="tok-inline">CryptoRng</code></h4>
             <p>The marker trait asserting a generator is cryptographically secure. It has no
 methods; it exists to be a bound.</p>
-<pre><code class="rust">use rand::{CryptoRng, RngExt};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">CryptoRng</span><span class="tok-punct">,</span> <span class="tok-type">RngExt</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-// Won't accept SmallRng: the compiler enforces the security decision.
-fn new_token&lt;R: CryptoRng + RngExt&gt;(rng: &amp;mut R) -&gt; [u8; 16] {
-    let mut token = [0u8; 16];
-    rng.fill(&amp;mut token);
-    token
-}
+<span class="tok-comment">// Won't accept SmallRng: the compiler enforces the security decision.</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">new_token</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">R</span><span class="tok-punct">:</span> <span class="tok-trait">CryptoRng</span> <span class="tok-punct">+</span> <span class="tok-type">RngExt</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">rng</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">R</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type-return">u8</span><span class="tok-punct">;</span> <span class="tok-number">16</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">token</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">16</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">fill</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">token</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">token</span>
+<span class="tok-punct">}</span>
 
-let token = new_token(&amp;mut rand::rng());
-assert_eq!(token.len(), 16);
+<span class="tok-keyword">let</span> <span class="tok-variable">token</span> <span class="tok-punct">=</span> <span class="tok-call-free">new_token</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">token</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> as a bound on every function that generates a secret. This
@@ -1281,13 +1281,13 @@ someone who doesn't know what the bytes are for.</p>
             <h4 class="api-sig"><code class="tok-inline">rngs::ThreadRng</code></h4>
             <p>The thread-local generator returned by <code>rand::rng()</code>. Secure, automatically
 seeded, and reseeded as it goes.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-fn roll(rng: &amp;mut ThreadRng) -&gt; u32 {
-    rng.random_range(1..=20)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">roll</span><span class="tok-punct">(</span><span class="tok-variable">rng</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">ThreadRng</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random_range</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">20</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-assert!((1..=20).contains(&amp;roll(&amp;mut rand::rng())));
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-call-free">roll</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the default. Name the type only when storing or passing the
@@ -1297,14 +1297,14 @@ generator; otherwise <code>rand::rng()</code> at the call site reads better.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">rngs::StdRng</code></h4>
             <p>A seedable cryptographically secure generator — currently ChaCha12.</p>
-<pre><code class="rust">use rand::prelude::*;
-use rand::rngs::StdRng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">StdRng</span><span class="tok-punct">;</span>
 
-let mut rng = StdRng::seed_from_u64(2026);
-let first: u32 = rng.random();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-type">StdRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">seed_from_u64</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">first</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let mut again = StdRng::seed_from_u64(2026);
-assert_eq!(first, again.random::&lt;u32&gt;()); // &lt;- same seed, same stream
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">again</span> <span class="tok-punct">=</span> <span class="tok-type">StdRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">seed_from_u64</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">first</span><span class="tok-punct">,</span> <span class="tok-variable">again</span><span class="tok-punct">.</span><span class="tok-field">random</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same seed, same stream</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you need both reproducibility and security — seeded
@@ -1316,13 +1316,13 @@ values against it.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">rngs::SmallRng</code></h4>
             <p>The fast, small, <strong>non-cryptographic</strong> generator.</p>
-<pre><code class="rust">use rand::prelude::*;
-use rand::rngs::SmallRng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">SmallRng</span><span class="tok-punct">;</span>
 
-let mut rng = SmallRng::seed_from_u64(1);
-let noise: Vec&lt;f32&gt; = (0..8).map(|_| rng.random()).collect();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-type">SmallRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">seed_from_u64</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">noise</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">8</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(noise.len(), 8);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">noise</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> high-volume, non-secret randomness — particle effects,
@@ -1336,20 +1336,20 @@ predicting; its state is recoverable from its output.</p>
             <p>Reads straight from the operating system's entropy source on every call, with no
 userspace state. Asking the OS can fail, so it implements the <em>fallible</em>
 <code>TryRng</code> rather than <code>Rng</code> — its methods return <code>Result</code>.</p>
-<pre><code class="rust">use rand::rand_core::{TryRng, UnwrapErr};
-use rand::rngs::SysRng;
-use rand::RngExt;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rand_core</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">TryRng</span><span class="tok-punct">,</span> <span class="tok-type">UnwrapErr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">SysRng</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-type">RngExt</span><span class="tok-punct">;</span>
 
-let mut seed = [0u8; 32];
-SysRng.try_fill_bytes(&amp;mut seed).expect("no OS entropy");
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">seed</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">32</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-type">SysRng</span><span class="tok-punct">.</span><span class="tok-call-method">try_fill_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">seed</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;no OS entropy&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// UnwrapErr adapts it to the infallible Rng, panicking on failure,
-// which is what lets it be used where an Rng is expected.
-let mut rng = UnwrapErr(SysRng);
-let n: u32 = rng.random();
+<span class="tok-comment">// UnwrapErr adapts it to the infallible Rng, panicking on failure,</span>
+<span class="tok-comment">// which is what lets it be used where an Rng is expected.</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-field">UnwrapErr</span><span class="tok-punct">(</span><span class="tok-type">SysRng</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(seed.len(), 32);
-let _ = n;
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">seed</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">n</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> seeding another generator, or the rare case where you want no
@@ -1368,14 +1368,14 @@ weaker source.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">SeedableRng::seed_from_u64</code></h4>
             <p>Builds a generator from a single integer, spreading it across the full seed.</p>
-<pre><code class="rust">use rand::prelude::*;
-use rand::rngs::StdRng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">StdRng</span><span class="tok-punct">;</span>
 
-let seed = 12345u64;
-let mut rng = StdRng::seed_from_u64(seed);
-let value: u16 = rng.random();
+<span class="tok-keyword">let</span> <span class="tok-variable">seed</span> <span class="tok-punct">=</span> <span class="tok-number">12345u64</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-type">StdRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">seed_from_u64</span><span class="tok-punct">(</span><span class="tok-variable">seed</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let _ = value; // reproducible for this seed and this rand version
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">;</span> <span class="tok-comment">// reproducible for this seed and this rand version</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> tests, simulations, and anywhere the seed is something you
@@ -1386,14 +1386,14 @@ generated from one is only as strong as the number you picked.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">SeedableRng::from_seed</code></h4>
             <p>Takes the generator's full seed type — 32 bytes for <code>StdRng</code>.</p>
-<pre><code class="rust">use rand::prelude::*;
-use rand::rngs::StdRng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">StdRng</span><span class="tok-punct">;</span>
 
-let seed = [7u8; 32];
-let mut rng = StdRng::from_seed(seed);
-let value: u32 = rng.random();
+<span class="tok-keyword">let</span> <span class="tok-variable">seed</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">7u8</span><span class="tok-punct">;</span> <span class="tok-number">32</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-type">StdRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_seed</span><span class="tok-punct">(</span><span class="tok-variable">seed</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">rng</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let _ = value;
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when the seed comes from somewhere real — a key derivation,
@@ -1403,14 +1403,14 @@ a recorded fixture, a network peer — and you need every bit of it to count.</p
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">SeedableRng::from_rng</code></h4>
             <p>Seeds one generator from another.</p>
-<pre><code class="rust">use rand::prelude::*;
-use rand::rngs::SmallRng;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">rngs</span><span class="tok-punct">::</span><span class="tok-type">SmallRng</span><span class="tok-punct">;</span>
 
-// A fast per-task generator, seeded securely once.
-let mut fast = SmallRng::from_rng(&amp;mut rand::rng());
-let n: u32 = fast.random();
+<span class="tok-comment">// A fast per-task generator, seeded securely once.</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">fast</span> <span class="tok-punct">=</span> <span class="tok-type">SmallRng</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_rng</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">fast</span><span class="tok-punct">.</span><span class="tok-call-method">random</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let _ = n;
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">n</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> giving each thread or task its own fast generator without
@@ -1427,13 +1427,13 @@ generators.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">IndexedRandom::choose</code></h4>
             <p>One uniformly chosen element, or <code>None</code> when empty.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let colours = ["red", "amber", "green"];
-let picked = colours.choose(&amp;mut rand::rng()).unwrap();
+<span class="tok-keyword">let</span> <span class="tok-variable">colours</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-string">&quot;red&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;amber&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;green&quot;</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">picked</span> <span class="tok-punct">=</span> <span class="tok-variable">colours</span><span class="tok-punct">.</span><span class="tok-call-method">choose</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert!(colours.contains(picked));
-assert!(Vec::&lt;u8&gt;::new().choose(&amp;mut rand::rng()).is_none());
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">colours</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-variable">picked</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">choose</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_none</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> picking from a slice, <code>Vec</code> or array. Use <code>choose_mut</code> when
@@ -1444,16 +1444,16 @@ have an iterator.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">IndexedRandom::choose_multiple</code></h4>
             <p>Several distinct elements — sampling without replacement.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let pool: Vec&lt;u32&gt; = (0..50).collect();
-let sample: Vec&lt;_&gt; = pool.choose_multiple(&amp;mut rand::rng(), 6).copied().collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">pool</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">50</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sample</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">pool</span><span class="tok-punct">.</span><span class="tok-call-method">choose_multiple</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(sample.len(), 6);
-let mut sorted = sample.clone();
-sorted.sort_unstable();
-sorted.dedup();
-assert_eq!(sorted.len(), 6); // &lt;- no repeats
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sorted</span> <span class="tok-punct">=</span> <span class="tok-variable">sample</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sorted</span><span class="tok-punct">.</span><span class="tok-call-method">sort_unstable</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sorted</span><span class="tok-punct">.</span><span class="tok-call-method">dedup</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">sorted</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- no repeats</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> lottery draws, test subsets, picking N of M. Calling
@@ -1464,12 +1464,12 @@ assert_eq!(sorted.len(), 6); // &lt;- no repeats
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">IndexedRandom::choose_weighted</code></h4>
             <p>A pick where each element carries a weight.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let loot = [("common", 80), ("rare", 15), ("legendary", 5)];
-let drop = loot.choose_weighted(&amp;mut rand::rng(), |item| item.1).unwrap();
+<span class="tok-keyword">let</span> <span class="tok-variable">loot</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;common&quot;</span><span class="tok-punct">,</span> <span class="tok-number">80</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;rare&quot;</span><span class="tok-punct">,</span> <span class="tok-number">15</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;legendary&quot;</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">drop</span> <span class="tok-punct">=</span> <span class="tok-variable">loot</span><span class="tok-punct">.</span><span class="tok-call-method">choose_weighted</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">item</span><span class="tok-punct">|</span> <span class="tok-variable">item</span><span class="tok-punct">.</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert!(loot.contains(drop));
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">loot</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-variable">drop</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> drop tables, weighted routing, anything where outcomes
@@ -1481,15 +1481,15 @@ sample the same weights repeatedly.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">SliceRandom::shuffle</code></h4>
             <p>Shuffles in place, uniformly.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let mut order: Vec&lt;u32&gt; = (0..10).collect();
-order.shuffle(&amp;mut rand::rng());
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-call-method">shuffle</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(order.len(), 10);
-let mut sorted = order.clone();
-sorted.sort_unstable();
-assert_eq!(sorted, (0..10).collect::&lt;Vec&lt;_&gt;&gt;()); // &lt;- same elements
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sorted</span> <span class="tok-punct">=</span> <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sorted</span><span class="tok-punct">.</span><span class="tok-call-method">sort_unstable</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">sorted</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">collect</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same elements</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> randomising order — a playlist, test execution, a deck.
@@ -1500,12 +1500,12 @@ collection is large.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">IteratorRandom::choose</code></h4>
             <p>Picks from an iterator in one pass, without collecting it first.</p>
-<pre><code class="rust">use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let evens = (0..1000).filter(|n| n % 2 == 0);
-let picked = evens.choose(&amp;mut rand::rng()).unwrap();
+<span class="tok-keyword">let</span> <span class="tok-variable">evens</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">1000</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">n</span><span class="tok-punct">|</span> <span class="tok-variable">n</span> <span class="tok-punct">%</span> <span class="tok-number">2</span> <span class="tok-punct">==</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">picked</span> <span class="tok-punct">=</span> <span class="tok-variable">evens</span><span class="tok-punct">.</span><span class="tok-call-method">choose</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(picked % 2, 0);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">picked</span> <span class="tok-punct">%</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when the sequence is lazy, filtered, or too big to hold —
@@ -1522,14 +1522,14 @@ reservoir sampling, so memory stays constant. If you already have a slice,
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Uniform</code></h4>
             <p>A reusable, pre-validated uniform range.</p>
-<pre><code class="rust">use rand::distr::Uniform;
-use rand::prelude::*;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">distr</span><span class="tok-punct">::</span><span class="tok-type">Uniform</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-let mut rng = rand::rng();
-let percent = Uniform::new_inclusive(0u8, 100).unwrap();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">percent</span> <span class="tok-punct">=</span> <span class="tok-type">Uniform</span><span class="tok-punct">::</span><span class="tok-call-assoc">new_inclusive</span><span class="tok-punct">(</span><span class="tok-number">0u8</span><span class="tok-punct">,</span> <span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let readings: Vec&lt;u8&gt; = (0..5).map(|_| percent.sample(&amp;mut rng)).collect();
-assert!(readings.iter().all(|&amp;p| p &lt;= 100));
+<span class="tok-keyword">let</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-variable">percent</span><span class="tok-punct">.</span><span class="tok-call-method">sample</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">rng</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">all</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">p</span><span class="tok-punct">|</span> <span class="tok-variable">p</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> sampling one range many times, or when the bounds are
@@ -1540,16 +1540,16 @@ panics. <code>new_inclusive</code> includes the upper bound.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Distribution::sample_iter</code></h4>
             <p>Turns a distribution into an iterator of samples.</p>
-<pre><code class="rust">use rand::distr::{Distribution, Uniform};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">distr</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Distribution</span><span class="tok-punct">,</span> <span class="tok-type">Uniform</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let rolls: Vec&lt;u8&gt; = Uniform::new_inclusive(1u8, 6)
-    .unwrap()
-    .sample_iter(rand::rng())
-    .take(10)
-    .collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">rolls</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Uniform</span><span class="tok-punct">::</span><span class="tok-call-assoc">new_inclusive</span><span class="tok-punct">(</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">sample_iter</span><span class="tok-punct">(</span><span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(rolls.len(), 10);
-assert!(rolls.iter().all(|&amp;r| (1..=6).contains(&amp;r)));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rolls</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">rolls</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">all</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">..=</span><span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> generating a batch, where it composes with the rest of the
@@ -1560,12 +1560,12 @@ pass <code>&amp;mut rng</code> to keep using it afterwards.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Alphanumeric</code></h4>
             <p>Samples ASCII letters and digits, with a helper for building a <code>String</code>.</p>
-<pre><code class="rust">use rand::distr::{Alphanumeric, SampleString};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">distr</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Alphanumeric</span><span class="tok-punct">,</span> <span class="tok-type">SampleString</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let id = Alphanumeric.sample_string(&amp;mut rand::rng(), 12);
+<span class="tok-keyword">let</span> <span class="tok-variable">id</span> <span class="tok-punct">=</span> <span class="tok-type">Alphanumeric</span><span class="tok-punct">.</span><span class="tok-call-method">sample_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">12</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(id.len(), 12);
-assert!(id.chars().all(|c| c.is_ascii_alphanumeric()));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">12</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">.</span><span class="tok-call-method">chars</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">all</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">c</span><span class="tok-punct">|</span> <span class="tok-variable">c</span><span class="tok-punct">.</span><span class="tok-call-method">is_ascii_alphanumeric</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> human-readable identifiers — test fixtures, temporary
@@ -1577,13 +1577,13 @@ a standard format.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Bernoulli</code></h4>
             <p>A reusable weighted coin.</p>
-<pre><code class="rust">use rand::distr::{Bernoulli, Distribution};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-module">distr</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Bernoulli</span><span class="tok-punct">,</span> <span class="tok-type">Distribution</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let mut rng = rand::rng();
-let lossy = Bernoulli::new(0.1).unwrap(); // &lt;- 10% of the time
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rng</span> <span class="tok-punct">=</span> <span class="tok-module">rand</span><span class="tok-punct">::</span><span class="tok-call-assoc">rng</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">lossy</span> <span class="tok-punct">=</span> <span class="tok-type">Bernoulli</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0.1</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- 10% of the time</span>
 
-let dropped = (0..100).filter(|_| lossy.sample(&amp;mut rng)).count();
-assert!(dropped &lt; 40); // &lt;- overwhelmingly likely
+<span class="tok-keyword">let</span> <span class="tok-variable">dropped</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-variable">lossy</span><span class="tok-punct">.</span><span class="tok-call-method">sample</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">rng</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">count</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">dropped</span> <span class="tok-punct">&lt;</span> <span class="tok-number">40</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- overwhelmingly likely</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> a fixed probability sampled repeatedly — simulated packet

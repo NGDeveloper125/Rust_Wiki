@@ -1012,13 +1012,13 @@ data instead.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::thread;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let handle = thread::spawn(|| { // &lt;- spawns a new OS thread running this closure
-    println!("hello from a spawned thread");
-});
+<span class="tok-keyword">let</span> <span class="tok-variable">handle</span> <span class="tok-punct">=</span> <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- spawns a new OS thread running this closure</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello from a spawned thread&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-handle.join().unwrap(); // blocks until the spawned thread finishes
+<span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// blocks until the spawned thread finishes</span>
 </code></pre>
 
       </section>
@@ -1037,21 +1037,21 @@ handle.join().unwrap(); // blocks until the spawned thread finishes
 several worker threads, joining them all before reporting completion —
 <code>thread::spawn</code> for the parallel work, <code>thread::scope</code> so the workers can
 borrow the shared file list without needing to own or clone it.</p>
-<pre><code class="rust">use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-fn resize_all(paths: &amp;[String]) {
-    thread::scope(|scope| { // &lt;- scoped threads may borrow `paths` because scope() blocks until they finish
-        for chunk in paths.chunks(paths.len().div_ceil(4).max(1)) {
-            scope.spawn(move || { // &lt;- each worker thread processes its slice in parallel
-                for path in chunk {
-                    println!("resizing {path}");
-                }
-            });
-        }
-    }); // &lt;- all worker threads are joined automatically here
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">resize_all</span><span class="tok-punct">(</span><span class="tok-variable">paths</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">scope</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">scope</span><span class="tok-punct">|</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- scoped threads may borrow `paths` because scope() blocks until they finish</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">chunk</span> <span class="tok-keyword">in</span> <span class="tok-variable">paths</span><span class="tok-punct">.</span><span class="tok-call-method">chunks</span><span class="tok-punct">(</span><span class="tok-variable">paths</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">div_ceil</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">max</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">scope</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- each worker thread processes its slice in parallel</span>
+                <span class="tok-keyword">for</span> <span class="tok-variable">path</span> <span class="tok-keyword">in</span> <span class="tok-variable">chunk</span> <span class="tok-punct">{</span>
+                    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;resizing {path}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+                <span class="tok-punct">}</span>
+            <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- all worker threads are joined automatically here</span>
+<span class="tok-punct">}</span>
 
-resize_all(&amp;["a.png".to_string(), "b.png".to_string(), "c.png".to_string()]);
+<span class="tok-call-free">resize_all</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-string">&quot;a.png&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;b.png&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;c.png&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>thread::scope</code> lets threads borrow stack data instead of
@@ -1072,24 +1072,24 @@ both recommend scoped threads whenever the parent can afford to wait.</p>
 must move an owned handle into each spawned closure — <code>thread::spawn</code>'s
 <code>'static</code> requirement means the counter can't just be borrowed, it has to
 be an owned, cloneable, thread-safe handle.</p>
-<pre><code class="rust">use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Arc</span><span class="tok-punct">,</span> <span class="tok-module">atomic</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">AtomicU64</span><span class="tok-punct">,</span> <span class="tok-type">Ordering</span><span class="tok-punct">}</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let jobs_completed = Arc::new(AtomicU64::new(0));
-let mut handles = Vec::new();
+<span class="tok-keyword">let</span> <span class="tok-variable">jobs_completed</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">AtomicU64</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">handles</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-for worker_id in 0..4 {
-    let jobs_completed = Arc::clone(&amp;jobs_completed); // &lt;- owned handle moved into the thread, not borrowed
-    handles.push(thread::spawn(move || {
-        // ... process this worker's share of jobs ...
-        jobs_completed.fetch_add(1, Ordering::Relaxed);
-        println!("worker {worker_id} done");
-    }));
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">worker_id</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">4</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">jobs_completed</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">jobs_completed</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- owned handle moved into the thread, not borrowed</span>
+    <span class="tok-variable">handles</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... process this worker's share of jobs ...</span>
+        <span class="tok-variable">jobs_completed</span><span class="tok-punct">.</span><span class="tok-call-method">fetch_add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-type">Ordering</span><span class="tok-punct">::</span><span class="tok-field">Relaxed</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;worker {worker_id} done&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-for handle in handles {
-    handle.join().unwrap();
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">handle</span> <span class="tok-keyword">in</span> <span class="tok-variable">handles</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>thread::spawn</code> requires <code>'static</code> captures because a
@@ -1109,20 +1109,20 @@ covers this <code>Arc</code>-per-thread pattern directly.</p>
             <p>A producer thread reading sensor input can hand each reading off to a
 dedicated processing thread through a channel, rather than both threads
 touching a shared buffer directly.</p>
-<pre><code class="rust">use std::sync::mpsc;
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-variable">mpsc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let (tx, rx) = mpsc::channel();
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">tx</span><span class="tok-punct">,</span> <span class="tok-variable">rx</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-call-assoc">channel</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-thread::spawn(move || { // &lt;- producer thread owns tx, sends readings as they arrive
-    for reading in [21.4, 21.6, 22.0] {
-        tx.send(reading).unwrap();
-    }
-});
+<span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- producer thread owns tx, sends readings as they arrive</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">reading</span> <span class="tok-keyword">in</span> <span class="tok-punct">[</span><span class="tok-number">21.4</span><span class="tok-punct">,</span> <span class="tok-number">21.6</span><span class="tok-punct">,</span> <span class="tok-number">22.0</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">tx</span><span class="tok-punct">.</span><span class="tok-call-method">send</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-for reading in rx { // main thread receives each reading in order
-    println!("sensor reading: {reading}");
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">reading</span> <span class="tok-keyword">in</span> <span class="tok-variable">rx</span> <span class="tok-punct">{</span> <span class="tok-comment">// main thread receives each reading in order</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor reading: {reading}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> letting the channel carry ownership of each message means

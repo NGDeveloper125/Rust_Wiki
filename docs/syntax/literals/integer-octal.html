@@ -990,7 +990,7 @@ misinterpreted as octal.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Assigning a file permission mode</h3>
-            <pre><code class="rust">let mode = 0o644; // &lt;- `0o` prefix marks a base-8 (octal) integer literal
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">mode</span> <span class="tok-punct">=</span> <span class="tok-number">0o644</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `0o` prefix marks a base-8 (octal) integer literal</span>
 </code></pre>
 <p><strong>Restriction:</strong> only <em>digits</em> <code>0</code>–<code>7</code> may appear after the <code>0o</code> prefix —
 <code>0o8</code> is a compile error (underscores and a type suffix like <code>0o644_u16</code>
@@ -1001,13 +1001,13 @@ are still allowed).</p>
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>Unix-style file permission bits are conventionally written and read in
 octal, since each digit maps exactly onto one <code>rwx</code> triplet.</p>
-<pre><code class="rust">let mode: u32 = 0o755; // &lt;- octal literal: owner rwx, group rx, other rx — matches `ls -l` directly
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">mode</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0o755</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- octal literal: owner rwx, group rx, other rx — matches `ls -l` directly</span>
 
-let owner_bits = (mode &gt;&gt; 6) &amp; 0o7;
-let group_bits = (mode &gt;&gt; 3) &amp; 0o7;
-let other_bits = mode &amp; 0o7;
+<span class="tok-keyword">let</span> <span class="tok-variable">owner_bits</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">mode</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-number">6</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0o7</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">group_bits</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">mode</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-number">3</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0o7</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">other_bits</span> <span class="tok-punct">=</span> <span class="tok-variable">mode</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0o7</span><span class="tok-punct">;</span>
 
-assert_eq!((owner_bits, group_bits, other_bits), (0o7, 0o5, 0o5));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">owner_bits</span><span class="tok-punct">,</span> <span class="tok-variable">group_bits</span><span class="tok-punct">,</span> <span class="tok-variable">other_bits</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">0o7</span><span class="tok-punct">,</span> <span class="tok-number">0o5</span><span class="tok-punct">,</span> <span class="tok-number">0o5</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Unix permission tooling (<code>chmod 755</code>, <code>ls -l</code>) is itself
 built around octal because each digit is one 3-bit <code>rwx</code> group — a
@@ -1048,13 +1048,13 @@ target, octal is legal but essentially unused.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Setting sysfs GPIO export permissions on an embedded Linux board</h3>
-            <pre><code class="rust">use std::fs;
-use std::os::unix::fs::PermissionsExt;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">os</span><span class="tok-punct">::</span><span class="tok-module">unix</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-type">PermissionsExt</span><span class="tok-punct">;</span>
 
-fn set_gpio_permissions(path: &amp;str) -&gt; std::io::Result&lt;()&gt; {
-    let perms = fs::Permissions::from_mode(0o660); // &lt;- octal literal: same Unix permission convention as any hosted Linux program
-    fs::set_permissions(path, perms)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_gpio_permissions</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">perms</span> <span class="tok-punct">=</span> <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-type">Permissions</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_mode</span><span class="tok-punct">(</span><span class="tok-number">0o660</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- octal literal: same Unix permission convention as any hosted Linux program</span>
+    <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">set_permissions</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">,</span> <span class="tok-variable">perms</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

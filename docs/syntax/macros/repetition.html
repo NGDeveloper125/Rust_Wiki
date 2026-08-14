@@ -1012,13 +1012,13 @@ inside a transcriber repetition whose depth matches how it was captured.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Matching and re-emitting zero or more repetitions</h3>
-            <pre><code class="rust">macro_rules! sum_all {
-    ($($n:expr),*) =&gt; { // &lt;- `*`: matches zero or more comma-separated expressions
-        0 $(+ $n)* // &lt;- re-emits each captured $n, prefixed with `+`, once per repetition
-    };
-}
+            <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">sum_all</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">n</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">*</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `*`: matches zero or more comma-separated expressions</span>
+        <span class="tok-number">0</span> <span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">+</span> <span class="tok-punct">$</span><span class="tok-variable">n</span><span class="tok-punct">)</span><span class="tok-punct">*</span> <span class="tok-comment tok-anno">// &lt;- re-emits each captured $n, prefixed with `+`, once per repetition</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let total = sum_all!(1, 2, 3); // &lt;- expands to 0 + 1 + 2 + 3
+<span class="tok-keyword">let</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-macro">sum_all!</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands to 0 + 1 + 2 + 3</span>
 </code></pre>
 
           </div>
@@ -1027,13 +1027,13 @@ let total = sum_all!(1, 2, 3); // &lt;- expands to 0 + 1 + 2 + 3
             <p>A batch-construction macro needs to accept any number of comma-separated
 readings, including an optional trailing comma — exactly the shape std's
 own <code>vec!</code> is implemented with internally.</p>
-<pre><code class="rust">macro_rules! reading_batch {
-    ($($value:expr),* $(,)?) =&gt; { // &lt;- `*` for the list, `$(,)?` allows one optional trailing comma
-        vec![$($value),*] // &lt;- re-emits each captured value, comma-separated, into a real Vec
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">reading_batch</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">value</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">*</span> <span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">,</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `*` for the list, `$(,)?` allows one optional trailing comma</span>
+        <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">*</span><span class="tok-punct">]</span> <span class="tok-comment tok-anno">// &lt;- re-emits each captured value, comma-separated, into a real Vec</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let batch = reading_batch!(21.4, 19.8, 23.1,); // &lt;- trailing comma accepted thanks to the `?` repetition
+<span class="tok-keyword">let</span> <span class="tok-variable">batch</span> <span class="tok-punct">=</span> <span class="tok-macro">reading_batch!</span><span class="tok-punct">(</span><span class="tok-number">21.4</span><span class="tok-punct">,</span> <span class="tok-number">19.8</span><span class="tok-punct">,</span> <span class="tok-number">23.1</span><span class="tok-punct">,</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- trailing comma accepted thanks to the `?` repetition</span>
 </code></pre>
 <p>std's own <code>vec!</code> macro is implemented with this exact
 <code>$($x:expr),* $(,)?</code> shape, which is why both <code>vec![1, 2, 3]</code> and
@@ -1077,22 +1077,22 @@ chip's register API from its hardware description file.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Generating GPIO pin accessor functions</h3>
-            <pre><code class="rust">macro_rules! gpio_pins {
-    ($($name:ident =&gt; $bit:expr),* $(,)?) =&gt; { // &lt;- `*` over pin definitions, trailing comma tolerated
-        $(
-            fn $name(gpio_odr: &amp;mut u32) { // &lt;- re-emits one function per repetition
-                *gpio_odr |= 1 &lt;&lt; $bit;
-            }
-        )*
-    };
-}
+            <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">gpio_pins</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">$</span><span class="tok-variable">bit</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">*</span> <span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">,</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `*` over pin definitions, trailing comma tolerated</span>
+        <span class="tok-punct">$</span><span class="tok-punct">(</span>
+            <span class="tok-keyword">fn</span> <span class="tok-punct">$</span><span class="tok-call-free">name</span><span class="tok-punct">(</span><span class="tok-variable">gpio_odr</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- re-emits one function per repetition</span>
+                <span class="tok-punct">*</span><span class="tok-variable">gpio_odr</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-punct">$</span><span class="tok-variable">bit</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">)</span><span class="tok-punct">*</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-gpio_pins! {
-    set_pa5 =&gt; 5,
-    set_pa6 =&gt; 6,
-    set_pa7 =&gt; 7,
-}
-// &lt;- expands to three separate functions, set_pa5/set_pa6/set_pa7, one per repetition
+<span class="tok-macro">gpio_pins!</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">set_pa5</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">5</span><span class="tok-punct">,</span>
+    <span class="tok-variable">set_pa6</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">6</span><span class="tok-punct">,</span>
+    <span class="tok-variable">set_pa7</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">7</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+<span class="tok-comment tok-anno">// &lt;- expands to three separate functions, set_pa5/set_pa6/set_pa7, one per repetition</span>
 </code></pre>
 
           </div>
@@ -1101,21 +1101,21 @@ gpio_pins! {
             <p>A driver needs a <code>read_status</code> function for each of several identical
 UART instances sitting at different base addresses — exactly the "one
 nearly identical accessor per instance" case repetition exists for.</p>
-<pre><code class="rust">macro_rules! uart_status_readers {
-    ($($fn_name:ident @ $base:expr),* $(,)?) =&gt; {
-        $(
-            fn $fn_name() -&gt; u32 {
-                unsafe { core::ptr::read_volatile(($base + 0x00) as *const u32) } // &lt;- status register at offset 0x00
-            }
-        )*
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">uart_status_readers</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">fn_name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span> <span class="tok-punct">@</span> <span class="tok-punct">$</span><span class="tok-variable">base</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">*</span> <span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">,</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">$</span><span class="tok-punct">(</span>
+            <span class="tok-keyword">fn</span> <span class="tok-punct">$</span><span class="tok-call-free">fn_name</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">base</span> <span class="tok-punct">+</span> <span class="tok-number">0x00</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- status register at offset 0x00</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">)</span><span class="tok-punct">*</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-uart_status_readers! {
-    uart1_status @ 0x4001_3800,
-    uart2_status @ 0x4000_4400,
-    uart3_status @ 0x4000_4800,
-}
+<span class="tok-macro">uart_status_readers!</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">uart1_status</span> <span class="tok-punct">@</span> <span class="tok-number">0x4001_3800</span><span class="tok-punct">,</span>
+    <span class="tok-variable">uart2_status</span> <span class="tok-punct">@</span> <span class="tok-number">0x4000_4400</span><span class="tok-punct">,</span>
+    <span class="tok-variable">uart3_status</span> <span class="tok-punct">@</span> <span class="tok-number">0x4000_4800</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

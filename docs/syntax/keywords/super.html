@@ -1001,13 +1001,13 @@ a style note, not a hard rule.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reaching a parent module's function with `super::`</h3>
-            <pre><code class="rust">fn shared_helper() -&gt; u32 { 7 }
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">shared_helper</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-number">7</span> <span class="tok-punct">}</span>
 
-mod util {
-    pub fn double() -&gt; u32 {
-        super::shared_helper() * 2 // &lt;- `super::` reaches the parent module's item
-    }
-}
+<span class="tok-keyword">mod</span> <span class="tok-variable">util</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">double</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-call-assoc">shared_helper</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-number">2</span> <span class="tok-comment tok-anno">// &lt;- `super::` reaches the parent module's item</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1016,18 +1016,18 @@ mod util {
             <p>A <code>discounts</code> submodule reaches a private helper defined in its parent
 <code>pricing</code> module via <code>super::</code>, without that helper ever needing to be
 made <code>pub</code>.</p>
-<pre><code class="rust">pub mod pricing {
-    fn base_shipping_cents() -&gt; u32 { // private: reachable from `pricing` and its descendants
-        499
-    }
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">pricing</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">base_shipping_cents</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-comment">// private: reachable from `pricing` and its descendants</span>
+        <span class="tok-number">499</span>
+    <span class="tok-punct">}</span>
 
-    pub mod discounts {
-        pub fn free_shipping_threshold_cents() -&gt; u32 {
-            super::base_shipping_cents() * 20
-            // &lt;- `super::` reaches `pricing`, the parent module
-        }
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">discounts</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">free_shipping_threshold_cents</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-call-assoc">base_shipping_cents</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-number">20</span>
+            <span class="tok-comment tok-anno">// &lt;- `super::` reaches `pricing`, the parent module</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Because <code>discounts</code> is a descendant of <code>pricing</code>, it
 already has access to <code>pricing</code>'s private items — see
@@ -1062,17 +1062,17 @@ submodule.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reaching a peripheral-access crate re-export from a driver submodule</h3>
-            <pre><code class="rust">pub use stm32f4xx_hal::pac; // &lt;- re-exported once, near the crate root
+            <pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">stm32f4xx_hal</span><span class="tok-punct">::</span><span class="tok-variable">pac</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- re-exported once, near the crate root</span>
 
-mod drivers {
-    pub mod gpio {
-        pub fn configure() {
-            let peripherals = super::super::pac::Peripherals::take().unwrap();
-            // &lt;- `super::super::` climbs from `drivers::gpio` back up to the crate root's `pac` re-export
-            let _ = peripherals;
-        }
-    }
-}
+<span class="tok-keyword">mod</span> <span class="tok-variable">drivers</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">gpio</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">configure</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">peripherals</span> <span class="tok-punct">=</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-comment tok-anno">// &lt;- `super::super::` climbs from `drivers::gpio` back up to the crate root's `pac` re-export</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">peripherals</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

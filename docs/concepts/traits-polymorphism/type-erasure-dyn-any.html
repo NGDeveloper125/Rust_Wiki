@@ -988,15 +988,15 @@ unless the dynamism is genuinely inherent to the problem.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::any::Any;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">any</span><span class="tok-punct">::</span><span class="tok-type">Any</span><span class="tok-punct">;</span>
 
-fn describe(value: &amp;dyn Any) {
-    if let Some(n) = value.downcast_ref::&lt;i32&gt;() { // &lt;- runtime check + recovered concrete type
-        println!("an i32: {n}");
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Any</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-field">downcast_ref</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- runtime check + recovered concrete type</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;an i32: {n}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-describe(&amp;42);
+<span class="tok-call-free">describe</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1015,22 +1015,22 @@ describe(&amp;42);
 a generic function or an enum would express the same design without
 giving up static type checking — but a genuinely dynamic case, like a
 plugin registry keyed by type, is a legitimate use.</p>
-<pre><code class="rust">use std::any::{Any, TypeId};
-use std::collections::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">any</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-type">TypeId</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-struct PluginRegistry {
-    plugins: HashMap&lt;TypeId, Box&lt;dyn Any&gt;&gt;, // &lt;- narrow, deliberate use: keys aren't known until runtime
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PluginRegistry</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">plugins</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">TypeId</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Any</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- narrow, deliberate use: keys aren't known until runtime</span>
+<span class="tok-punct">}</span>
 
-impl PluginRegistry {
-    fn insert&lt;T: Any&gt;(&amp;mut self, plugin: T) {
-        self.plugins.insert(TypeId::of::&lt;T&gt;(), Box::new(plugin));
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">PluginRegistry</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">insert</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Any</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">plugin</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">plugins</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-type">TypeId</span><span class="tok-punct">::</span><span class="tok-module">of</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">plugin</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    fn get&lt;T: Any&gt;(&amp;self) -&gt; Option&lt;&amp;T&gt; {
-        self.plugins.get(&amp;TypeId::of::&lt;T&gt;())?.downcast_ref::&lt;T&gt;() // &lt;- runtime check recovers the concrete type
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Any</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">plugins</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">TypeId</span><span class="tok-punct">::</span><span class="tok-module">of</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">.</span><span class="tok-field">downcast_ref</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- runtime check recovers the concrete type</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Why this way:</strong> every other trait/generic bound in this page's own
 Explanation is checked at compile time; <code>Any</code> gives that up, so it earns
@@ -1080,15 +1080,15 @@ usually a sign an enum or a generic bound was available and simpler.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use core::any::Any;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">any</span><span class="tok-punct">::</span><span class="tok-type">Any</span><span class="tok-punct">;</span>
 
-fn describe(value: &amp;dyn Any) {
-    if let Some(n) = value.downcast_ref::&lt;u16&gt;() { // &lt;- runtime check, no heap involved
-        let _raw_adc_reading = n;
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Any</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-field">downcast_ref</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- runtime check, no heap involved</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_raw_adc_reading</span> <span class="tok-punct">=</span> <span class="tok-variable">n</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-describe(&amp;512u16);
+<span class="tok-call-free">describe</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-number">512u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1108,24 +1108,24 @@ handlers registered at startup, looked up by type — a genuinely dynamic
 case, but a narrow one; most embedded designs reach for a fixed enum of
 known commands instead, and should, unless the handler set truly isn't
 fixed at compile time.</p>
-<pre><code class="rust">use core::any::{Any, TypeId};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">any</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-type">TypeId</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct HandlerSlot {
-    type_id: TypeId,
-    handler: &amp;'static dyn Any, // &lt;- erased, but heap-free: a 'static reference, not Box&lt;dyn Any&gt;
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">HandlerSlot</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">type_id</span><span class="tok-punct">:</span> <span class="tok-type">TypeId</span><span class="tok-punct">,</span>
+    <span class="tok-variable">handler</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-keyword">dyn</span> <span class="tok-trait">Any</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- erased, but heap-free: a 'static reference, not Box&lt;dyn Any&gt;</span>
+<span class="tok-punct">}</span>
 
-struct HandlerTable {
-    slots: [Option&lt;HandlerSlot&gt;; 4], // fixed capacity, no allocator needed
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">HandlerTable</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">slots</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">HandlerSlot</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment">// fixed capacity, no allocator needed</span>
+<span class="tok-punct">}</span>
 
-impl HandlerTable {
-    fn get&lt;T: Any&gt;(&amp;self) -&gt; Option&lt;&amp;T&gt; {
-        self.slots.iter().flatten()
-            .find(|slot| slot.type_id == TypeId::of::&lt;T&gt;())
-            .and_then(|slot| slot.handler.downcast_ref::&lt;T&gt;()) // &lt;- runtime check recovers the concrete type
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">HandlerTable</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Any</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">slots</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">flatten</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+            <span class="tok-punct">.</span><span class="tok-call-method">find</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">slot</span><span class="tok-punct">|</span> <span class="tok-variable">slot</span><span class="tok-punct">.</span><span class="tok-field">type_id</span> <span class="tok-punct">==</span> <span class="tok-type">TypeId</span><span class="tok-punct">::</span><span class="tok-module">of</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+            <span class="tok-punct">.</span><span class="tok-call-method">and_then</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">slot</span><span class="tok-punct">|</span> <span class="tok-variable">slot</span><span class="tok-punct">.</span><span class="tok-field">handler</span><span class="tok-punct">.</span><span class="tok-field">downcast_ref</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- runtime check recovers the concrete type</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a fixed-size array in place of a heap-allocated map

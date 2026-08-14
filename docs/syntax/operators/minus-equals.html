@@ -989,8 +989,8 @@ non-assigning operator).</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Subtracting a value from a variable in place</h3>
-            <pre><code class="rust">let mut x = 10;
-x -= 3; // &lt;- subtracts 3 from `x` in place
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">10</span><span class="tok-punct">;</span>
+<span class="tok-variable">x</span> <span class="tok-punct">-=</span> <span class="tok-number">3</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- subtracts 3 from `x` in place</span>
 </code></pre>
 <p><strong>Restriction:</strong> the left-hand side must be a mutable binding
 (<code>let mut</code>) — <code>-=</code> assigns in place.</p>
@@ -1000,17 +1000,17 @@ x -= 3; // &lt;- subtracts 3 from `x` in place
             <h3 class="scenario-title">Modifying an existing object</h3>
             <p>Decrementing an account balance through a <code>&amp;mut</code> reference is a typical
 use of <code>-=</code> — validate first, then update the field in place.</p>
-<pre><code class="rust">struct Account {
-    balance: i64, // cents
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Account</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">balance</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span> <span class="tok-comment">// cents</span>
+<span class="tok-punct">}</span>
 
-fn withdraw(account: &amp;mut Account, cents: i64) -&gt; Result&lt;(), &amp;'static str&gt; {
-    if cents &gt; account.balance {
-        return Err("insufficient funds");
-    }
-    account.balance -= cents; // &lt;- subtracts `cents` from the balance in place
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">withdraw</span><span class="tok-punct">(</span><span class="tok-variable">account</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Account</span><span class="tok-punct">,</span> <span class="tok-variable">cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">cents</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">account</span><span class="tok-punct">.</span><span class="tok-field">balance</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;insufficient funds&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">account</span><span class="tok-punct">.</span><span class="tok-field">balance</span> <span class="tok-punct">-=</span> <span class="tok-variable">cents</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- subtracts `cents` from the balance in place</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Checking the invariant (<code>cents &gt; balance</code>) before the
 <code>-=</code> keeps the balance from ever going negative, and updating in place
@@ -1048,33 +1048,33 @@ to fail loudly the way a debug build would.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Decrementing a countdown timer without an unchecked underflow</h3>
-            <pre><code class="rust">struct Watchdog {
-    remaining: u16,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Watchdog</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">remaining</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Watchdog {
-    fn tick(&amp;mut self) -&gt; bool {
-        if self.remaining == 0 {
-            return false; // guard first: `-=` on 0 here would panic (debug) or wrap (release)
-        }
-        self.remaining -= 1; // &lt;- `-=` decrements in place, now safe from underflow
-        true
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Watchdog</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">tick</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">remaining</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-number">false</span><span class="tok-punct">;</span> <span class="tok-comment">// guard first: `-=` on 0 here would panic (debug) or wrap (release)</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">remaining</span> <span class="tok-punct">-=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `-=` decrements in place, now safe from underflow</span>
+        <span class="tok-number">true</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Draining a charge counter with a saturating alternative</h3>
-            <pre><code class="rust">struct Battery {
-    milliamp_hours: u32,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Battery</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">milliamp_hours</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Battery {
-    fn drain(&amp;mut self, used: u32) {
-        self.milliamp_hours = self.milliamp_hours.saturating_sub(used); // stands in for `-=`, floors at 0 instead of wrapping
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Battery</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drain</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">used</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">milliamp_hours</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">milliamp_hours</span><span class="tok-punct">.</span><span class="tok-call-method">saturating_sub</span><span class="tok-punct">(</span><span class="tok-variable">used</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// stands in for `-=`, floors at 0 instead of wrapping</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

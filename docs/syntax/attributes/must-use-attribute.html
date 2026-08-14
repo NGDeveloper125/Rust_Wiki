@@ -1011,15 +1011,15 @@ itself.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Warning when a computed result is silently discarded</h3>
-            <pre><code class="rust">#[must_use] // &lt;- warns if the caller doesn't do anything with the returned value
-fn discount_applied(price_cents: u32, percent_off: u8) -&gt; u32 {
-    price_cents - (price_cents * percent_off as u32 / 100)
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[must_use]</span> <span class="tok-comment tok-anno">// &lt;- warns if the caller doesn't do anything with the returned value</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">discount_applied</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">price_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">price_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    let final_price = discount_applied(1000, 10); // used: no warning
-    println!("{final_price}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">final_price</span> <span class="tok-punct">=</span> <span class="tok-call-free">discount_applied</span><span class="tok-punct">(</span><span class="tok-number">1000</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// used: no warning</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{final_price}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1029,29 +1029,29 @@ fn main() {
 caller calls one and discards the result instead of continuing the chain,
 that call had no effect at all, which is exactly the kind of silent bug
 <code>#[must_use]</code> is meant to catch.</p>
-<pre><code class="rust">#[must_use = "builder methods return a new builder; the original is not modified"] // &lt;- custom message
-pub struct RequestBuilder {
-    timeout_ms: u32,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[must_use = &quot;builder methods return a new builder; the original is not modified&quot;]</span> <span class="tok-comment tok-anno">// &lt;- custom message</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RequestBuilder</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RequestBuilder {
-    pub fn new() -&gt; Self {
-        RequestBuilder { timeout_ms: 1000 }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">RequestBuilder</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RequestBuilder</span> <span class="tok-punct">{</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-number">1000</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn timeout_ms(mut self, timeout_ms: u32) -&gt; Self {
-        self.timeout_ms = timeout_ms;
-        self
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">timeout_ms</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">timeout_ms</span> <span class="tok-punct">=</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn build_request() -&gt; RequestBuilder {
-    // AVOID: this call's return value is discarded — timeout_ms(5000) had no effect at all
-    // RequestBuilder::new().timeout_ms(5000);
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_request</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">RequestBuilder</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// AVOID: this call's return value is discarded — timeout_ms(5000) had no effect at all</span>
+    <span class="tok-comment">// RequestBuilder::new().timeout_ms(5000);</span>
 
-    // PREFER: the chain's final value is the one that's actually used
-    RequestBuilder::new().timeout_ms(5000)
-}
+    <span class="tok-comment">// PREFER: the chain's final value is the one that's actually used</span>
+    <span class="tok-type">RequestBuilder</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">timeout_ms</span><span class="tok-punct">(</span><span class="tok-number">5000</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#[must_use]</code> on the type means every method that
 returns <code>RequestBuilder</code> — not just <code>new</code>, every chained setter too — is
@@ -1069,14 +1069,14 @@ on <code>Result</code> and iterator adapters.</p>
 <code>#[must_use]</code> do its job — deliberately discarding one specific,
 known-safe-to-ignore call still needs an explicit <code>let _ = ...</code> rather
 than restructuring the function to avoid the warning.</p>
-<pre><code class="rust">fn write_audit_log(message: &amp;str) -&gt; Result&lt;(), std::io::Error&gt; {
-    println!("audit: {message}");
-    Ok(())
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">write_audit_log</span><span class="tok-punct">(</span><span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;audit: {message}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn shut_down() {
-    let _ = write_audit_log("shutting down"); // &lt;- deliberate: a failed audit log shouldn't block shutdown
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">shut_down</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-call-free">write_audit_log</span><span class="tok-punct">(</span><span class="tok-string">&quot;shutting down&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- deliberate: a failed audit log shouldn't block shutdown</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>let _ = ...</code> is Clippy's documented way to intentionally
 silence the
@@ -1118,42 +1118,42 @@ bug found later on a bench with a logic analyzer.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Warning when an I2C transaction's Result is silently dropped</h3>
-            <pre><code class="rust">struct I2cError;
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">I2cError</span><span class="tok-punct">;</span>
 
-struct I2cBus;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">I2cBus</span><span class="tok-punct">;</span>
 
-impl I2cBus {
-    fn write(&amp;mut self, _addr: u8, _bytes: &amp;[u8]) -&gt; Result&lt;(), I2cError&gt; {
-        // ... transmit bytes over the bus
-        Ok(())
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">I2cBus</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">_addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">_bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">I2cError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... transmit bytes over the bus</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[must_use] // &lt;- warns if the caller doesn't check whether the transaction succeeded
-fn write_register(i2c: &amp;mut I2cBus, addr: u8, reg: u8, value: u8) -&gt; Result&lt;(), I2cError&gt; {
-    i2c.write(addr, &amp;[reg, value])
-}
+<span class="tok-attribute">#[must_use]</span> <span class="tok-comment tok-anno">// &lt;- warns if the caller doesn't check whether the transaction succeeded</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">write_register</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">I2cBus</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">reg</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">I2cError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-variable">reg</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn configure_sensor(i2c: &amp;mut I2cBus) {
-    // AVOID: write_register(i2c, 0x68, 0x6B, 0x00); — a failed write here goes unnoticed
-    write_register(i2c, 0x68, 0x6B, 0x00).ok(); // &lt;- explicit: acknowledged, not silently ignored
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure_sensor</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">I2cBus</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// AVOID: write_register(i2c, 0x68, 0x6B, 0x00); — a failed write here goes unnoticed</span>
+    <span class="tok-call-free">write_register</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">,</span> <span class="tok-number">0x68</span><span class="tok-punct">,</span> <span class="tok-number">0x6B</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- explicit: acknowledged, not silently ignored</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Propagating a failed sensor read instead of discarding it</h3>
-            <pre><code class="rust">struct SensorError;
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorError</span><span class="tok-punct">;</span>
 
-fn read_temperature_raw(i2c: &amp;mut I2cBus) -&gt; Result&lt;u16, SensorError&gt; {
-    let _ = i2c; // a real implementation reads two bytes back over the bus here
-    Ok(0x0140)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_temperature_raw</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">I2cBus</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">i2c</span><span class="tok-punct">;</span> <span class="tok-comment">// a real implementation reads two bytes back over the bus here</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-number">0x0140</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn read_temperature_celsius(i2c: &amp;mut I2cBus) -&gt; Result&lt;f32, SensorError&gt; {
-    let raw = read_temperature_raw(i2c)?; // &lt;- `Result` is `#[must_use]` in `core`; `?` uses it, doesn't drop it
-    Ok(raw as f32 * 0.0625)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_temperature_celsius</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">I2cBus</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f32</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-call-free">read_temperature_raw</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `Result` is `#[must_use]` in `core`; `?` uses it, doesn't drop it</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">raw</span> <span class="tok-keyword">as</span> <span class="tok-type">f32</span> <span class="tok-punct">*</span> <span class="tok-number">0.0625</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

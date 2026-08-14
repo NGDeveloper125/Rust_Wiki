@@ -1005,13 +1005,13 @@ override.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Selecting a platform-specific file with #[cfg] and #[path]</h3>
-            <pre><code class="rust">#[cfg(target_os = "windows")]
-#[path = "backend_windows.rs"]  // &lt;- overrides the default `backend.rs` lookup
-mod backend;
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cfg(target_os = &quot;windows&quot;)]</span>
+<span class="tok-attribute">#[path = &quot;backend_windows.rs&quot;]</span>  <span class="tok-comment tok-anno">// &lt;- overrides the default `backend.rs` lookup</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">backend</span><span class="tok-punct">;</span>
 
-#[cfg(not(target_os = "windows"))]
-#[path = "backend_unix.rs"]     // &lt;- same module name, a different file on other platforms
-mod backend;
+<span class="tok-attribute">#[cfg(not(target_os = &quot;windows&quot;))]</span>
+<span class="tok-attribute">#[path = &quot;backend_unix.rs&quot;]</span>     <span class="tok-comment tok-anno">// &lt;- same module name, a different file on other platforms</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">backend</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1022,26 +1022,26 @@ code, but the actual implementation file differs per target OS —
 <code>#[path]</code> points <code>mod backend;</code> at whichever file matches the platform
 being compiled for, so callers see one stable module regardless of
 platform.</p>
-<pre><code class="rust">// src/lib.rs
-#[cfg(windows)]
-#[path = "backend/windows.rs"] // &lt;- overrides `backend.rs`/`backend/mod.rs`; only compiled on Windows
-mod backend;
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-attribute">#[cfg(windows)]</span>
+<span class="tok-attribute">#[path = &quot;backend/windows.rs&quot;]</span> <span class="tok-comment tok-anno">// &lt;- overrides `backend.rs`/`backend/mod.rs`; only compiled on Windows</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">backend</span><span class="tok-punct">;</span>
 
-#[cfg(not(windows))]
-#[path = "backend/unix.rs"]    // &lt;- same module name, routed to a different file elsewhere
-mod backend;
+<span class="tok-attribute">#[cfg(not(windows))]</span>
+<span class="tok-attribute">#[path = &quot;backend/unix.rs&quot;]</span>    <span class="tok-comment tok-anno">// &lt;- same module name, routed to a different file elsewhere</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">backend</span><span class="tok-punct">;</span>
 
-pub use backend::current_user_home; // one stable public path regardless of which file was loaded
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">backend</span><span class="tok-punct">::</span><span class="tok-variable">current_user_home</span><span class="tok-punct">;</span> <span class="tok-comment">// one stable public path regardless of which file was loaded</span>
 
-// src/backend/windows.rs
-pub fn current_user_home() -&gt; String {
-    std::env::var("USERPROFILE").unwrap_or_default()
-}
+<span class="tok-comment">// src/backend/windows.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">current_user_home</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">env</span><span class="tok-punct">::</span><span class="tok-call-assoc">var</span><span class="tok-punct">(</span><span class="tok-string">&quot;USERPROFILE&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or_default</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// src/backend/unix.rs
-pub fn current_user_home() -&gt; String {
-    std::env::var("HOME").unwrap_or_default()
-}
+<span class="tok-comment">// src/backend/unix.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">current_user_home</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">env</span><span class="tok-punct">::</span><span class="tok-call-assoc">var</span><span class="tok-punct">(</span><span class="tok-string">&quot;HOME&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or_default</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Pairing <code>#[path]</code> with <code>#[cfg(...)]</code> keeps one logical
 <code>backend</code> module name across platforms while routing to a genuinely
@@ -1082,22 +1082,22 @@ module tree, or a separate crate, per supported chip.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Selecting a chip-specific peripheral map by Cargo feature</h3>
-            <pre><code class="rust">// src/lib.rs
-#[cfg(feature = "stm32f405")]
-#[path = "chip/stm32f405.rs"] // &lt;- routes the shared `chip` module to this variant's register map
-mod chip;
+            <pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-attribute">#[cfg(feature = &quot;stm32f405&quot;)]</span>
+<span class="tok-attribute">#[path = &quot;chip/stm32f405.rs&quot;]</span> <span class="tok-comment tok-anno">// &lt;- routes the shared `chip` module to this variant's register map</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">chip</span><span class="tok-punct">;</span>
 
-#[cfg(feature = "stm32f411")]
-#[path = "chip/stm32f411.rs"] // &lt;- same module name, a different generated file for this variant
-mod chip;
+<span class="tok-attribute">#[cfg(feature = &quot;stm32f411&quot;)]</span>
+<span class="tok-attribute">#[path = &quot;chip/stm32f411.rs&quot;]</span> <span class="tok-comment tok-anno">// &lt;- same module name, a different generated file for this variant</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">chip</span><span class="tok-punct">;</span>
 
-pub use chip::GPIOA_BASE; // one stable path regardless of which chip feature is enabled
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">chip</span><span class="tok-punct">::</span><span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">;</span> <span class="tok-comment">// one stable path regardless of which chip feature is enabled</span>
 
-// src/chip/stm32f405.rs
-pub const GPIOA_BASE: u32 = 0x4002_0000;
+<span class="tok-comment">// src/chip/stm32f405.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4002_0000</span><span class="tok-punct">;</span>
 
-// src/chip/stm32f411.rs
-pub const GPIOA_BASE: u32 = 0x4002_0000; // may legitimately differ per part in a real HAL
+<span class="tok-comment">// src/chip/stm32f411.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4002_0000</span><span class="tok-punct">;</span> <span class="tok-comment">// may legitimately differ per part in a real HAL</span>
 </code></pre>
 <p>This is the same override behavior as the classic Windows/Unix example,
 just keyed on a chip-variant Cargo feature instead of a target OS —

@@ -991,12 +991,12 @@ specialized version by hand yourself).</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn largest&lt;T: PartialOrd&gt;(a: T, b: T) -&gt; T {
-    if a &gt; b { a } else { b }
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">largest</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">PartialOrd</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">a</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">b</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-variable">b</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-largest(1, 2);         // &lt;- compiler generates a largest::&lt;i32&gt; copy
-largest("a", "b");     // &lt;- ...and a separate largest::&lt;&amp;str&gt; copy, chosen at compile time
+<span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>         <span class="tok-comment tok-anno">// &lt;- compiler generates a largest::&lt;i32&gt; copy</span>
+<span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-string">&quot;a&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;b&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>     <span class="tok-comment tok-anno">// &lt;- ...and a separate largest::&lt;&amp;str&gt; copy, chosen at compile time</span>
 </code></pre>
 
       </section>
@@ -1014,12 +1014,12 @@ largest("a", "b");     // &lt;- ...and a separate largest::&lt;&amp;str&gt; copy
             <p>A generic function called with a small, known set of concrete types is a
 good candidate for static dispatch — each call site gets its own
 specialized, inlinable copy with no vtable indirection.</p>
-<pre><code class="rust">fn largest&lt;T: PartialOrd&gt;(a: T, b: T) -&gt; T { // &lt;- generic: monomorphized per concrete type used
-    if a &gt; b { a } else { b }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">largest</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">PartialOrd</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic: monomorphized per concrete type used</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">a</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">b</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-variable">b</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-largest(3, 7);       // compiler emits a largest::&lt;i32&gt; copy
-largest(3.5, 2.1);   // ...and a separate largest::&lt;f64&gt; copy, both resolved at compile time
+<span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">;</span>       <span class="tok-comment">// compiler emits a largest::&lt;i32&gt; copy</span>
+<span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-number">3.5</span><span class="tok-punct">,</span> <span class="tok-number">2.1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>   <span class="tok-comment">// ...and a separate largest::&lt;f64&gt; copy, both resolved at compile time</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> static dispatch trades binary size for speed — no
@@ -1081,13 +1081,13 @@ code size.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait OutputPin {
-    fn set_high(&amp;mut self);
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn turn_on&lt;P: OutputPin&gt;(pin: &amp;mut P) { // &lt;- generic: monomorphized per concrete pin type used
-    pin.set_high();
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">turn_on</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic: monomorphized per concrete pin type used</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1106,23 +1106,23 @@ fn turn_on&lt;P: OutputPin&gt;(pin: &amp;mut P) { // &lt;- generic: monomorphize
 types in a given firmware image is a strong candidate for static
 dispatch — the compiler can often inline the call chain down to a single
 register write, with the trait boundary costing nothing at runtime.</p>
-<pre><code class="rust">trait OutputPin {
-    fn set_high(&amp;mut self);
-    fn set_low(&amp;mut self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Pa0; // this board's only status LED pin
-impl OutputPin for Pa0 {
-    fn set_high(&amp;mut self) { /* single volatile register write */ }
-    fn set_low(&amp;mut self) { /* single volatile register write */ }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pa0</span><span class="tok-punct">;</span> <span class="tok-comment">// this board's only status LED pin</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">OutputPin</span> <span class="tok-keyword">for</span> <span class="tok-type">Pa0</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* single volatile register write */</span> <span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* single volatile register write */</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P) { // &lt;- monomorphized for Pa0 alone in this firmware image
-    pin.set_high();
-    pin.set_low();
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- monomorphized for Pa0 alone in this firmware image</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-blink(&amp;mut Pa0);
+<span class="tok-call-free">blink</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Pa0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> with a single concrete <code>P</code> used at the only call site,
@@ -1146,19 +1146,19 @@ distinct concrete types it actually gets instantiated with across a
 firmware image, since each one is a full compiled copy — instantiating
 the same generic driver logic across a dozen peripheral instances can
 turn a small function into a real line item in the flash budget.</p>
-<pre><code class="rust">trait OutputPin {
-    fn set_high(&amp;mut self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn set_all&lt;P: OutputPin, const N: usize&gt;(pins: &amp;mut [P; N]) { // &lt;- one copy per concrete P actually used
-    for pin in pins {
-        pin.set_high();
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_all</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">,</span> <span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pins</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">[</span><span class="tok-generic-param">P</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one copy per concrete P actually used</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">pin</span> <span class="tok-keyword">in</span> <span class="tok-variable">pins</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// Called with five distinct pin types across board init compiles to
-// five separate copies of set_all — each individually optimal, but each
-// occupying its own flash space, unlike a single shared dyn-based version.
+<span class="tok-comment">// Called with five distinct pin types across board init compiles to</span>
+<span class="tok-comment">// five separate copies of set_all — each individually optimal, but each</span>
+<span class="tok-comment">// occupying its own flash space, unlike a single shared dyn-based version.</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the code-size side of monomorphization is the

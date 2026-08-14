@@ -1036,10 +1036,10 @@ can be passed around without knowing the pointee's own size.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Propagating a parse error out of a function</h3>
-            <pre><code class="rust">fn parse_port(raw: &amp;str) -&gt; Result&lt;u16, std::num::ParseIntError&gt; {
-    let port: u16 = raw.trim().parse()?; // &lt;- unwraps to u16 on Ok, returns Err early otherwise
-    Ok(port)
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_port</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- unwraps to u16 on Ok, returns Err early otherwise</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>?</code> is only legal here because <code>parse_port</code> returns
 <code>Result</code>; moving the same line into a function returning <code>()</code> is a
@@ -1052,22 +1052,22 @@ compile error, not a warning — see Explanation above.</p>
 the file might be missing, or its contents might not parse — and <code>?</code>
 handles both without a <code>match</code> at either step, but only because the
 function's return type is <code>Result</code>-shaped throughout.</p>
-<pre><code class="rust">use std::fs;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
 
-fn load_calibration_offset(path: &amp;str) -&gt; Result&lt;f64, Box&lt;dyn std::error::Error&gt;&gt; {
-    let contents = fs::read_to_string(path)?; // &lt;- legal: enclosing fn returns Result
-    let offset: f64 = contents.trim().parse()?; // &lt;- same fn, same Result family, so `?` applies again
-    Ok(offset)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">load_calibration_offset</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">,</span> <span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">std</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-type-return">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">contents</span> <span class="tok-punct">=</span> <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- legal: enclosing fn returns Result</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">=</span> <span class="tok-variable">contents</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same fn, same Result family, so `?` applies again</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// AVOID: `?` cannot appear in a fn whose return type isn't Result/Option-shaped —
-// this fails to compile with "the `?` operator can only be used in a function
-// that returns `Result` or `Option`":
-//
-// fn log_calibration_offset(path: &amp;str) {
-//     let contents = fs::read_to_string(path)?;
-//     println!("offset file: {contents}");
-// }
+<span class="tok-comment">// AVOID: `?` cannot appear in a fn whose return type isn't Result/Option-shaped —</span>
+<span class="tok-comment">// this fails to compile with &quot;the `?` operator can only be used in a function</span>
+<span class="tok-comment">// that returns `Result` or `Option`&quot;:</span>
+<span class="tok-comment">//</span>
+<span class="tok-comment">// fn log_calibration_offset(path: &amp;str) {</span>
+<span class="tok-comment">//     let contents = fs::read_to_string(path)?;</span>
+<span class="tok-comment">//     println!(&quot;offset file: {contents}&quot;);</span>
+<span class="tok-comment">// }</span>
 </code></pre>
 <p><code>?</code>'s legality is a purely syntactic property of the
 enclosing function's declared return type, not of any particular branch
@@ -1083,32 +1083,32 @@ around the call is not.</p>
 callers to hand it an already-<code>Sized</code> value — bounding its parameter with
 <code>?Sized</code> lets it take a bare <code>str</code> or a <code>dyn</code> trait object behind a
 reference, not just references to ordinarily-sized types.</p>
-<pre><code class="rust">use std::fmt::Display;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Display</span><span class="tok-punct">;</span>
 
-fn log_reading&lt;T: ?Sized + Display&gt;(label: &amp;T) {
-    // &lt;- `?Sized` relaxes the implicit `Sized` bound; without it, the call below wouldn't compile
-    println!("reading: {label}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-punct">?</span><span class="tok-type">Sized</span> <span class="tok-punct">+</span> <span class="tok-type">Display</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">label</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `?Sized` relaxes the implicit `Sized` bound; without it, the call below wouldn't compile</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading: {label}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-log_reading("sensor-07"); // T = str, unsized
-log_reading(&amp;42.5);       // T = f64, ordinarily sized — ?Sized still permits this too
+<span class="tok-call-free">log_reading</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor-07&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// T = str, unsized</span>
+<span class="tok-call-free">log_reading</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-number">42.5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>       <span class="tok-comment">// T = f64, ordinarily sized — ?Sized still permits this too</span>
 
-trait Sensor {
-    fn read(&amp;self) -&gt; f64;
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Thermometer;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Thermometer</span><span class="tok-punct">;</span>
 
-impl Sensor for Thermometer {
-    fn read(&amp;self) -&gt; f64 { 21.5 }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Thermometer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-number">21.5</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn describe&lt;T: ?Sized + Sensor&gt;(sensor: &amp;T) -&gt; f64 { // &lt;- also accepts `dyn Sensor`, which is unsized
-    sensor.read()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-punct">?</span><span class="tok-type">Sized</span> <span class="tok-punct">+</span> <span class="tok-type">Sensor</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- also accepts `dyn Sensor`, which is unsized</span>
+    <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let boxed: Box&lt;dyn Sensor&gt; = Box::new(Thermometer);
-describe(&amp;*boxed);
+<span class="tok-keyword">let</span> <span class="tok-variable">boxed</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Sensor</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Thermometer</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-call-free">describe</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">*</span><span class="tok-variable">boxed</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Leaving the implicit <code>Sized</code> bound in place would
 reject both <code>log_reading("sensor-07")</code> and <code>describe(&amp;*boxed)</code> at the
@@ -1154,31 +1154,31 @@ as it would through any hosted <code>Result</code> type.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Propagating I2C transaction errors through a custom no_std error type</h3>
-            <pre><code class="rust">use embedded_hal::i2c::{I2c, Error as I2cErrorTrait};
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-type">Error</span> <span class="tok-keyword">as</span> <span class="tok-type">I2cErrorTrait</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-enum SensorError {
-    Bus,
-    UnexpectedId(u8),
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Bus</span><span class="tok-punct">,</span>
+    <span class="tok-field">UnexpectedId</span><span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;E: I2cErrorTrait&gt; From&lt;E&gt; for SensorError {
-    fn from(_error: E) -&gt; Self {
-        SensorError::Bus // &lt;- collapses any bus-level error into one variant
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">E</span><span class="tok-punct">:</span> <span class="tok-trait">I2cErrorTrait</span><span class="tok-punct">&gt;</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">E</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">_error</span><span class="tok-punct">:</span> <span class="tok-generic-param">E</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">Bus</span> <span class="tok-comment tok-anno">// &lt;- collapses any bus-level error into one variant</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-const WHO_AM_I_REG: u8 = 0x0F;
-const EXPECTED_ID: u8 = 0x68;
+<span class="tok-keyword">const</span> <span class="tok-constant">WHO_AM_I_REG</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0x0F</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">EXPECTED_ID</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0x68</span><span class="tok-punct">;</span>
 
-fn read_who_am_i(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u8, SensorError&gt; {
-    let mut buf = [0u8; 1];
-    i2c.write_read(addr, &amp;[WHO_AM_I_REG], &amp;mut buf)?; // &lt;- `?` converts any I2C error into SensorError via the impl above
-    if buf[0] != EXPECTED_ID {
-        return Err(SensorError::UnexpectedId(buf[0]));
-    }
-    Ok(buf[0])
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_who_am_i</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write_read</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-constant">WHO_AM_I_REG</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` converts any I2C error into SensorError via the impl above</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">buf</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span> <span class="tok-punct">!=</span> <span class="tok-constant">EXPECTED_ID</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">UnexpectedId</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

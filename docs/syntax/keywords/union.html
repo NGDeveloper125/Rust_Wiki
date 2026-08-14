@@ -1014,14 +1014,14 @@ shapes" behavior with safe reads.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Writing and reading a union field</h3>
-            <pre><code class="rust">#[repr(C)]
-union RegisterValue {
-    as_u32: u32,
-    as_bytes: [u8; 4],
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">union</span> <span class="tok-type-def">RegisterValue</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">as_u32</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">as_bytes</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let value = RegisterValue { as_u32: 0x1234_5678 }; // &lt;- writing a field is safe
-let bytes = unsafe { value.as_bytes }; // &lt;- `union` reads require `unsafe`: the compiler can't verify which field is live
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">RegisterValue</span> <span class="tok-punct">{</span> <span class="tok-variable">as_u32</span><span class="tok-punct">:</span> <span class="tok-number">0x1234_5678</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- writing a field is safe</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-field">as_bytes</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `union` reads require `unsafe`: the compiler can't verify which field is live</span>
 </code></pre>
 
           </div>
@@ -1031,24 +1031,24 @@ let bytes = unsafe { value.as_bytes }; // &lt;- `union` reads require `unsafe`: 
 telling callers which member is active; the Rust binding mirrors both the
 union's layout and the manual discipline of only reading the field the
 tag says is valid.</p>
-<pre><code class="rust">#[repr(C)]
-union SensorPayload { // &lt;- `union`: both fields share the same memory
-    analog_mv: u16,
-    digital_state: bool,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">union</span> <span class="tok-type-def">SensorPayload</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `union`: both fields share the same memory</span>
+    <span class="tok-variable">analog_mv</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">digital_state</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-#[repr(C)]
-struct SensorReading {
-    kind: u8, // 0 = analog, 1 = digital -- the tag the C header defines
-    payload: SensorPayload,
-}
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">kind</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-comment">// 0 = analog, 1 = digital -- the tag the C header defines</span>
+    <span class="tok-variable">payload</span><span class="tok-punct">:</span> <span class="tok-type">SensorPayload</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn describe(reading: &amp;SensorReading) -&gt; String {
-    match reading.kind {
-        0 =&gt; format!("{} mV", unsafe { reading.payload.analog_mv }), // &lt;- unsafe: trusts `kind` to be accurate
-        _ =&gt; format!("digital: {}", unsafe { reading.payload.digital_state }),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorReading</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">reading</span><span class="tok-punct">.</span><span class="tok-field">kind</span> <span class="tok-punct">{</span>
+        <span class="tok-number">0</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} mV&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">reading</span><span class="tok-punct">.</span><span class="tok-field">payload</span><span class="tok-punct">.</span><span class="tok-field">analog_mv</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- unsafe: trusts `kind` to be accurate</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;digital: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">reading</span><span class="tok-punct">.</span><span class="tok-field">payload</span><span class="tok-punct">.</span><span class="tok-field">digital_state</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Because a <code>union</code> carries no discriminant of its own,
 every read is only as safe as the external tag it's paired with is
@@ -1094,22 +1094,22 @@ misreading a harmless byte pattern sitting in RAM.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Overlaying a raw register value with its bitfield view</h3>
-            <pre><code class="rust">#[repr(C)]
-union ControlRegister { // &lt;- `union`: both fields describe the exact same 4 bytes of hardware register
-    raw: u32,
-    bits: ControlBits,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">union</span> <span class="tok-type-def">ControlRegister</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `union`: both fields describe the exact same 4 bytes of hardware register</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">bits</span><span class="tok-punct">:</span> <span class="tok-type">ControlBits</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct ControlBits {
-    enable: bool,
-    mode: u8,
-}
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-attribute">#[derive(Clone, Copy)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ControlBits</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">enable</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+    <span class="tok-variable">mode</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let reg = ControlRegister { raw: 0x0000_0001 }; // &lt;- writing the whole `raw` field is safe
-let bits = unsafe { reg.bits }; // &lt;- `union` reads require `unsafe`: reinterpreting raw register bits as a bitfield struct
-println!("{}", bits.enable);
+<span class="tok-keyword">let</span> <span class="tok-variable">reg</span> <span class="tok-punct">=</span> <span class="tok-type">ControlRegister</span> <span class="tok-punct">{</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-number">0x0000_0001</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- writing the whole `raw` field is safe</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">bits</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">reg</span><span class="tok-punct">.</span><span class="tok-field">bits</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `union` reads require `unsafe`: reinterpreting raw register bits as a bitfield struct</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">bits</span><span class="tok-punct">.</span><span class="tok-field">enable</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>

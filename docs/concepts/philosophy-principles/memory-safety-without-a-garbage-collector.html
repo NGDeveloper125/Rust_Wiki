@@ -1038,15 +1038,15 @@ leaving nothing behind in the compiled binary.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn make_reading() -&gt; i32 { // &lt;- returns an owned value: nothing here can outlive its data
-    let raw = 5;
-    raw
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">make_reading</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- returns an owned value: nothing here can outlive its data</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+    <span class="tok-variable">raw</span>
+<span class="tok-punct">}</span>
 
-// fn dangling() -&gt; &amp;'static i32 {
-//     let raw = 5;
-//     &amp;raw // would fail to compile: `raw` is dropped here, so this reference would dangle
-// }
+<span class="tok-comment">// fn dangling() -&gt; &amp;'static i32 {</span>
+<span class="tok-comment">//     let raw = 5;</span>
+<span class="tok-comment">//     &amp;raw // would fail to compile: `raw` is dropped here, so this reference would dangle</span>
+<span class="tok-comment">// }</span>
 </code></pre>
 
       </section>
@@ -1065,18 +1065,18 @@ leaving nothing behind in the compiled binary.</p>
 cleaned up no matter how the job exits — tying the cleanup to a value's
 scope means it happens deterministically, the instant the owner goes out
 of scope, rather than "eventually, whenever a collector gets to it."</p>
-<pre><code class="rust">struct TempWorkspace { path: std::path::PathBuf }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">TempWorkspace</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">path</span><span class="tok-punct">::</span><span class="tok-type">PathBuf</span> <span class="tok-punct">}</span>
 
-impl Drop for TempWorkspace {
-    fn drop(&amp;mut self) { // &lt;- runs synchronously the moment the owner's scope ends
-        let _ = std::fs::remove_dir_all(&amp;self.path);
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">TempWorkspace</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- runs synchronously the moment the owner's scope ends</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">remove_dir_all</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">path</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn run_batch_job() {
-    let workspace = TempWorkspace { path: "build/tmp-job".into() };
-    // ... write intermediate files under workspace.path ...
-} // &lt;- workspace.drop() runs here, before this function returns — no GC pause, no finalizer queue
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">run_batch_job</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">workspace</span> <span class="tok-punct">=</span> <span class="tok-type">TempWorkspace</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-string">&quot;build/tmp-job&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-comment">// ... write intermediate files under workspace.path ...</span>
+<span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- workspace.drop() runs here, before this function returns — no GC pause, no finalizer queue</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1096,14 +1096,14 @@ runs at a precise, known point.</p>
             <p>A large in-memory frame buffer needs to live on the heap rather than the
 stack, and be reclaimed the instant it's no longer needed — <code>Box</code> gives
 both without any tracing pass over the heap to find and free it.</p>
-<pre><code class="rust">struct FrameBuffer { pixels: [u8; 1_920 * 1_080 * 4] } // &lt;- large: kept off the stack entirely
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">FrameBuffer</span> <span class="tok-punct">{</span> <span class="tok-variable">pixels</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">1_920</span> <span class="tok-punct">*</span> <span class="tok-number">1_080</span> <span class="tok-punct">*</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- large: kept off the stack entirely</span>
 
-fn capture_frame() -&gt; Box&lt;FrameBuffer&gt; {
-    Box::new(FrameBuffer { pixels: [0; 1_920 * 1_080 * 4] }) // &lt;- one heap allocation, one deterministic owner
-} // &lt;- freed the instant its Box is dropped: no GC scan needed to reclaim the ~8 MB
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">capture_frame</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-type-return">FrameBuffer</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">FrameBuffer</span> <span class="tok-punct">{</span> <span class="tok-variable">pixels</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">1_920</span> <span class="tok-punct">*</span> <span class="tok-number">1_080</span> <span class="tok-punct">*</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- one heap allocation, one deterministic owner</span>
+<span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- freed the instant its Box is dropped: no GC scan needed to reclaim the ~8 MB</span>
 
-let frame = capture_frame();
-println!("captured {} bytes", frame.pixels.len());
+<span class="tok-keyword">let</span> <span class="tok-variable">frame</span> <span class="tok-punct">=</span> <span class="tok-call-free">capture_frame</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;captured {} bytes&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">frame</span><span class="tok-punct">.</span><span class="tok-field">pixels</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1173,17 +1173,17 @@ program the way it effectively is in C.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Reading { millivolts: u16 } // stack-allocated: no heap, no allocator, involved at all
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">millivolts</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">}</span> <span class="tok-comment">// stack-allocated: no heap, no allocator, involved at all</span>
 
-fn read_adc(raw_register_value: u16) -&gt; Reading { // &lt;- returns an owned value: nothing here can outlive its data
-    Reading { millivolts: raw_register_value }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_adc</span><span class="tok-punct">(</span><span class="tok-variable">raw_register_value</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Reading</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- returns an owned value: nothing here can outlive its data</span>
+    <span class="tok-type">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">millivolts</span><span class="tok-punct">:</span> <span class="tok-variable">raw_register_value</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// fn dangling_reading() -&gt; &amp;'static Reading {
-//     let reading = read_adc(0x2A0);
-//     &amp;reading // would fail to compile: `reading` is dropped here — same guarantee as the classic example,
-//              // proven with zero heap allocation and zero runtime bookkeeping involved
-// }
+<span class="tok-comment">// fn dangling_reading() -&gt; &amp;'static Reading {</span>
+<span class="tok-comment">//     let reading = read_adc(0x2A0);</span>
+<span class="tok-comment">//     &amp;reading // would fail to compile: `reading` is dropped here — same guarantee as the classic example,</span>
+<span class="tok-comment">//              // proven with zero heap allocation and zero runtime bookkeeping involved</span>
+<span class="tok-comment">// }</span>
 </code></pre>
 
       </section>
@@ -1203,20 +1203,20 @@ the DMA channel must be disabled the instant the transfer's owner goes
 out of scope — tying the channel's lifetime to a guard value's <code>Drop</code>
 turns "remember to disable DMA before freeing the buffer" from a
 hand-followed rule into something the compiler enforces.</p>
-<pre><code class="rust">struct DmaTransfer&lt;'buf&gt; { channel: u8, buffer: &amp;'buf mut [u8] }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">DmaTransfer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'buf</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">buffer</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'buf</span> <span class="tok-keyword">mut</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span> <span class="tok-punct">}</span>
 
-impl&lt;'buf&gt; Drop for DmaTransfer&lt;'buf&gt; {
-    fn drop(&amp;mut self) { // &lt;- runs synchronously the instant the owner's scope ends, no GC pause to wait for
-        disable_dma_channel(self.channel);
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'buf</span><span class="tok-punct">&gt;</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">DmaTransfer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'buf</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- runs synchronously the instant the owner's scope ends, no GC pause to wait for</span>
+        <span class="tok-call-free">disable_dma_channel</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">channel</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn receive_frame(buffer: &amp;mut [u8]) {
-    let _transfer = DmaTransfer { channel: 1, buffer }; // &lt;- borrows `buffer` for exactly as long as the transfer lives
-    // ... wait for the transfer-complete interrupt ...
-} // &lt;- _transfer.drop() runs here: DMA is disabled before `buffer` could ever be reused or freed
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">receive_frame</span><span class="tok-punct">(</span><span class="tok-variable">buffer</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_transfer</span> <span class="tok-punct">=</span> <span class="tok-type">DmaTransfer</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">buffer</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- borrows `buffer` for exactly as long as the transfer lives</span>
+    <span class="tok-comment">// ... wait for the transfer-complete interrupt ...</span>
+<span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- _transfer.drop() runs here: DMA is disabled before `buffer` could ever be reused or freed</span>
 
-fn disable_dma_channel(_channel: u8) {}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">disable_dma_channel</span><span class="tok-punct">(</span><span class="tok-variable">_channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the classic
@@ -1239,16 +1239,16 @@ firmware vulnerabilities in hand-written C.</p>
 on a target with no heap at all — reaching for <code>Box</code>/<code>Vec</code> isn't just
 unidiomatic here, it may not compile without an <code>alloc</code> crate and a
 <code>#[global_allocator]</code> most <code>#![no_std]</code> firmware never sets up.</p>
-<pre><code class="rust">use heapless::Vec; // fixed-capacity, allocation-free substitute for std's Vec
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span> <span class="tok-comment">// fixed-capacity, allocation-free substitute for std's Vec</span>
 
-fn collect_samples(adc_read: impl Fn() -&gt; i16) -&gt; Vec&lt;i16, 16&gt; { // &lt;- capacity 16 is part of the type, no heap involved
-    let mut samples = Vec::new();
-    for _ in 0..16 {
-        // AVOID: samples.push(adc_read()) unchecked — panics/aborts if a caller ever changes the loop bound
-        let _ = samples.push(adc_read()); // PREFER: push returns Result, capacity enforced at compile-time-known size
-    }
-    samples
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">collect_samples</span><span class="tok-punct">(</span><span class="tok-variable">adc_read</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">i16</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- capacity 16 is part of the type, no heap involved</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">samples</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">16</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// AVOID: samples.push(adc_read()) unchecked — panics/aborts if a caller ever changes the loop bound</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-call-free">adc_read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// PREFER: push returns Result, capacity enforced at compile-time-known size</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">samples</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <a href="https://docs.rs/heapless/"><code>heapless</code></a> gives the same

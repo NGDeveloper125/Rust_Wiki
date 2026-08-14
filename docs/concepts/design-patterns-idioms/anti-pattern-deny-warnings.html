@@ -1009,16 +1009,16 @@ compiles with.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// A curated, explicit deny list instead of the open-ended `warnings` group:
-#![deny(unused_must_use)] // &lt;- PREFER: names exactly the lint(s) this crate wants to be a hard error
+        <pre><code class="rust-hl"><span class="tok-comment">// A curated, explicit deny list instead of the open-ended `warnings` group:</span>
+<span class="tok-attribute">#![deny(unused_must_use)]</span> <span class="tok-comment tok-anno">// &lt;- PREFER: names exactly the lint(s) this crate wants to be a hard error</span>
 
-fn parse_count(input: &amp;str) -&gt; Result&lt;u32, std::num::ParseIntError&gt; {
-    input.trim().parse()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_count</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    let _ = parse_count("42"); // handling the Result explicitly satisfies unused_must_use
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_count</span><span class="tok-punct">(</span><span class="tok-string">&quot;42&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// handling the Result explicitly satisfies unused_must_use</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1036,17 +1036,17 @@ fn main() {
             <p>A library wants a genuinely warning-free build enforced, without that
 guarantee turning into a broken build for every downstream user the day
 a new compiler release adds a lint the crate has never seen before.</p>
-<pre><code class="rust">// AVOID: any future lint the compiler or Clippy adds becomes an immediate hard error for every consumer
-// #![deny(warnings)]
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: any future lint the compiler or Clippy adds becomes an immediate hard error for every consumer</span>
+<span class="tok-comment">// #![deny(warnings)]</span>
 
-// PREFER: an explicit, curated list — new lints from a future toolchain don't silently break the build
-#![deny(unused_must_use, unused_imports)]
-#![warn(missing_docs)] // &lt;- a lint the project tracks but isn't ready to make a hard error yet
+<span class="tok-comment">// PREFER: an explicit, curated list — new lints from a future toolchain don't silently break the build</span>
+<span class="tok-attribute">#![deny(unused_must_use, unused_imports)]</span>
+<span class="tok-attribute">#![warn(missing_docs)]</span> <span class="tok-comment tok-anno">// &lt;- a lint the project tracks but isn't ready to make a hard error yet</span>
 
-/// Parses a port number from a configuration string.
-pub fn parse_port(input: &amp;str) -&gt; Result&lt;u16, std::num::ParseIntError&gt; {
-    input.trim().parse()
-}
+<span class="tok-comment">/// Parses a port number from a configuration string.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_port</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>#![deny(warnings)]</code> denies the entire, ever-growing
@@ -1091,12 +1091,12 @@ an unrelated, possibly security-relevant patch across a device fleet.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std]
-#![deny(unused_must_use)] // &lt;- PREFER: a named lint, not the whole `warnings` group
+        <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![deny(unused_must_use)]</span> <span class="tok-comment tok-anno">// &lt;- PREFER: a named lint, not the whole `warnings` group</span>
 
-fn read_register(addr: *const u32) -&gt; u32 {
-    unsafe { core::ptr::read_volatile(addr) }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_register</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1115,18 +1115,18 @@ fn read_register(addr: *const u32) -&gt; u32 {
 support reasons; the team wants a warning-free build enforced without
 that guarantee turning into "the fleet's build breaks the day someone
 upgrades <code>rustc</code>."</p>
-<pre><code class="rust">// AVOID: a future toolchain's new lint becomes a hard build failure for every device image
-// #![deny(warnings)]
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: a future toolchain's new lint becomes a hard build failure for every device image</span>
+<span class="tok-comment">// #![deny(warnings)]</span>
 
-// PREFER: an explicit, curated list that only grows when the team opts in
-#![no_std]
-#![deny(unused_must_use, unsafe_op_in_unsafe_fn)]
-#![warn(missing_docs)]
+<span class="tok-comment">// PREFER: an explicit, curated list that only grows when the team opts in</span>
+<span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![deny(unused_must_use, unsafe_op_in_unsafe_fn)]</span>
+<span class="tok-attribute">#![warn(missing_docs)]</span>
 
-/// Reads the sensor's status register.
-pub fn status(addr: *const u32) -&gt; u32 {
-    unsafe { core::ptr::read_volatile(addr) } // &lt;- unsafe_op_in_unsafe_fn keeps SAFETY reasoning explicit even inside `unsafe fn`
-}
+<span class="tok-comment">/// Reads the sensor's status register.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">status</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- unsafe_op_in_unsafe_fn keeps SAFETY reasoning explicit even inside `unsafe fn`</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a curated <code>deny</code> list means a toolchain upgrade needed

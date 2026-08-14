@@ -989,7 +989,7 @@ representation and contain literal backslashes.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Representing a firmware path for FFI</h3>
-            <pre><code class="rust">let path: &amp;std::ffi::CStr = cr"C:\firmware\boot"; // &lt;- `cr"..."`: raw (no escapes) C string (&amp;CStr)
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">cr</span><span class="tok-string">&quot;C:\firmware\boot&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `cr&quot;...&quot;`: raw (no escapes) C string (&amp;CStr)</span>
 </code></pre>
 <p><strong>Restriction:</strong> the content still cannot contain an embedded NUL byte,
 and matching <code>#</code> delimiters (<code>cr#"..."#</code>) are required if the text
@@ -1001,14 +1001,14 @@ itself contains a <code>"</code>.</p>
             <p>A path handed to a C API needs both nul-termination and, often, literal
 backslashes — <code>cr"..."</code> prepares that value without pretending to make
 the FFI call itself.</p>
-<pre><code class="rust">use std::ffi::CStr;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-type">CStr</span><span class="tok-punct">;</span>
 
-// A firmware image path for a C loader that expects a nul-terminated C string.
-const FIRMWARE_PATH: &amp;CStr = cr"C:\firmware\images\boot.bin"; // &lt;- raw c-string literal: no escapes AND nul-terminated
+<span class="tok-comment">// A firmware image path for a C loader that expects a nul-terminated C string.</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">FIRMWARE_PATH</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">cr</span><span class="tok-string">&quot;C:\firmware\images\boot.bin&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- raw c-string literal: no escapes AND nul-terminated</span>
 
-fn firmware_path() -&gt; &amp;'static CStr {
-    FIRMWARE_PATH // ready to pass across an FFI boundary -- the call itself is out of scope here
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">firmware_path</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">CStr</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">FIRMWARE_PATH</span> <span class="tok-comment">// ready to pass across an FFI boundary -- the call itself is out of scope here</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Combining raw and C-string semantics avoids the double
 burden of escaping every backslash <em>and</em> manually appending a nul
@@ -1046,17 +1046,17 @@ terminator.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Passing a firmware image path to a vendor C flashing SDK</h3>
-            <pre><code class="rust">use core::ffi::{c_char, CStr};
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-type">CStr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-unsafe extern "C" {
-    fn vendor_flash_load_image(path: *const c_char) -&gt; i32;
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">vendor_flash_load_image</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-const IMAGE_PATH: &amp;CStr = cr"C:\firmware\images\app.bin"; // &lt;- `cr"..."`: raw (no escapes) + nul-terminated, ready for FFI
+<span class="tok-keyword">const</span> <span class="tok-constant">IMAGE_PATH</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">cr</span><span class="tok-string">&quot;C:\firmware\images\app.bin&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `cr&quot;...&quot;`: raw (no escapes) + nul-terminated, ready for FFI</span>
 
-fn flash_image() -&gt; i32 {
-    unsafe { vendor_flash_load_image(IMAGE_PATH.as_ptr()) }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">flash_image</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-call-free">vendor_flash_load_image</span><span class="tok-punct">(</span><span class="tok-constant">IMAGE_PATH</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

@@ -8,59 +8,19 @@
 use std::io;
 use std::path::Path;
 
+use crate::highlight::rust_to_html;
 use crate::model::Page;
+use crate::palette::{Slot, SLOTS};
 use crate::nav::{render_sidebar, TopNav};
 use crate::render::{abs_url, href_from, shell, shell_with_page_class, Head};
 
 /// `docs/more/*.html` — one directory below the site root.
 const DEPTH: usize = 1;
 
-/// One syntax role and the colour reserved for it.
-///
-/// `class` is both the CSS slug and the name shown in the list. It is prefixed
-/// `cm-` on the page rather than reusing the live highlighter's `tok-` classes:
-/// the palette is still being tuned, and the map must be able to show it
-/// without repainting every code block on the site.
-pub struct Slot {
-    pub class: &'static str,
-    /// Shown as the row's tooltip.
-    pub covers: &'static str,
-    pub dark: &'static str,
-    pub light: &'static str,
-}
-
-/// Ordered by hue rather than alphabetically or by role, so neighbouring rows
-/// are neighbouring colours and the palette can be read as a whole.
-pub const SLOTS: &[Slot] = &[
-    Slot { class: "string",        covers: "string, char, byte, raw",                 dark: "#E26F32", light: "#C23B24" },
-    Slot { class: "call-free",     covers: "bare foo()",                              dark: "#D9A98A", light: "#D9A98A" },
-    Slot { class: "call-assoc",    covers: "Type::new()",                             dark: "#F5A55A", light: "#F5A55A" },
-    Slot { class: "keyword",       covers: "fn let const mut self impl pub &hellip;", dark: "#FFB700", light: "#FA0000" },
-    Slot { class: "constant",      covers: "const / static names",                    dark: "#E5D9A8", light: "#C29B00" },
-    Slot { class: "lifetime",      covers: "'a, 'static, labels",                     dark: "#F2DB69", light: "#FD4EDD" },
-    Slot { class: "call-method",   covers: "x.foo()",                                 dark: "#FFEA00", light: "#7004C8" },
-    Slot { class: "punct",         covers: "operators, :: -> ?",                      dark: "#FBF42D", light: "#180070" },
-    Slot { class: "module",        covers: "std, collections",                        dark: "#C8D373", light: "#AA261D" },
-    Slot { class: "type-return",   covers: "any type after ->",                       dark: "#8CF584", light: "#04CD08" },
-    Slot { class: "type-def",      covers: "the name at struct/enum/trait/type X",    dark: "#1FFF9E", light: "#1189DF" },
-    Slot { class: "variable",      covers: "every binding, param, closure param",     dark: "#85FDFF", light: "#06C3C6" },
-    Slot { class: "type",          covers: "struct, enum, primitive, alias — at use", dark: "#00DDFA", light: "#2B6B73" },
-    Slot { class: "field",         covers: "field def, x.field, .0, enum variants",   dark: "#A8E2FF", light: "#8280FF" },
-    Slot { class: "generic-param", covers: "T, E, const generics",                    dark: "#A9D6F5", light: "#C89797" },
-    Slot { class: "trait",         covers: "trait names",                             dark: "#0084FF", light: "#019D59" },
-    Slot { class: "fn-def",        covers: "the name at fn X(&hellip;), all kinds",   dark: "#B899FF", light: "#9966A9" },
-    Slot { class: "macro",         covers: "println!, vec!",                          dark: "#D972EE", light: "#D972EE" },
-    Slot { class: "attribute",     covers: "#[derive(&hellip;)]",                     dark: "#FED6FF", light: "#752F00" },
-    Slot { class: "number",        covers: "int, float, bool",                        dark: "#A17297", light: "#0939C8" },
-    Slot { class: "comment",       covers: "all comments",                            dark: "#FFFFFF", light: "#156C04" },
-];
-
-/// The snippet under the list: every slot exercised at least once.
-///
-/// Pre-highlighted, so it carries no `class="rust"` — that class is the live
-/// highlighter's hook, and it would rewrite the markup and throw these spans
-/// away. See the test at the bottom of this file.
-const SPECIMEN: &str = include_str!("langcolormap-specimen.html");
+/// The snippet under the list, as Rust source. It is painted by the same
+/// highlighter that paints every other code block on the site, so the map
+/// cannot show colours the rest of the site does not actually use.
+const SPECIMEN_SRC: &str = include_str!("../templates/langcolormap-specimen.rs");
 
 /// The panel a preview is painted on, per theme. The colours only mean anything
 /// against the background they were chosen for, so the preview carries its own
@@ -83,7 +43,7 @@ fn palette_style() -> String {
     let block = |pick: fn(&Slot) -> &'static str, panel: &Panel| {
         let slots = SLOTS
             .iter()
-            .map(|s| format!("--cm-{}:{};", s.class, pick(s)))
+            .map(|s| format!("--t-{}:{};", s.class, pick(s)))
             .collect::<Vec<_>>()
             .join("");
         format!(
@@ -129,8 +89,8 @@ fn render_slot_list() -> String {
         .map(|s| {
             format!(
                 r#"<div class="cmap-row" title="{covers}">
-            <span class="cmap-chip" style="background:var(--cm-{class})"></span>
-            <span class="cmap-name cm-{class}">{class}</span>
+            <span class="cmap-chip" style="background:var(--t-{class})"></span>
+            <span class="cmap-name tok-{class}">{class}</span>
             <span class="cmap-hex"><span class="cmap-hex-dark">{dark}</span><span class="cmap-hex-light">{light}</span></span>
           </div>"#,
                 class = s.class,
@@ -203,7 +163,7 @@ fn render_colormap(pages: &[Page]) -> String {
 "#,
         palette = palette_style(),
         list = render_slot_list(),
-        specimen = SPECIMEN,
+        specimen = rust_to_html(SPECIMEN_SRC),
         toggle_js = PREVIEW_TOGGLE_JS,
     );
 
@@ -300,28 +260,36 @@ mod tests {
     #[test]
     fn the_specimen_exercises_every_slot() {
         // The page claims every colour appears at least once below the list.
-        // A slot that never shows up would make that claim false, and would
-        // leave a colour on the page that the reader can never see in context.
+        // Because the snippet is painted by the real highlighter, this also
+        // proves the highlighter can actually reach every role it has a colour
+        // for — a slot no rule ever assigns would fail here.
+        let painted = rust_to_html(SPECIMEN_SRC);
         for s in SLOTS {
-            let marker = format!("class=\"cm-{}\"", s.class);
-            let with_extra = format!("class=\"cm-{} ", s.class);
+            let marker = format!("class=\"tok-{}\"", s.class);
+            let with_extra = format!("class=\"tok-{} ", s.class);
             assert!(
-                SPECIMEN.contains(&marker) || SPECIMEN.contains(&with_extra),
-                "slot `{}` never appears in the specimen",
+                painted.contains(&marker) || painted.contains(&with_extra),
+                "slot `{}` never appears in the painted specimen",
                 s.class
             );
         }
     }
 
     #[test]
-    fn the_specimen_is_not_re_highlighted() {
-        // site.js rewrites the innerHTML of every `code.rust` it finds. If that
-        // class reached the specimen, the client would throw away the spans
-        // this page exists to show.
-        assert!(
-            !SPECIMEN.contains("\"rust\""),
-            "specimen carries the live highlighter's class and would be rewritten"
-        );
+    fn the_preview_overrides_every_slot() {
+        // The preview repaints its subtree by redefining the site's slot
+        // variables. One left out would silently fall through to the site
+        // theme, so the toggle would lie about that colour.
+        let css = palette_style();
+        for s in SLOTS {
+            let decl = format!("--t-{}:", s.class);
+            assert_eq!(
+                css.matches(&decl).count(),
+                2,
+                "slot `{}` is not overridden in both preview themes",
+                s.class
+            );
+        }
     }
 
     #[test]

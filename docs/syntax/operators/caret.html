@@ -989,7 +989,7 @@
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Computing a bitwise XOR</h3>
-            <pre><code class="rust">let x = 0b1100 ^ 0b1010; // &lt;- bitwise XOR: bits that differ become 1
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">0b1100</span> <span class="tok-punct">^</span> <span class="tok-number">0b1010</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- bitwise XOR: bits that differ become 1</span>
 </code></pre>
 
           </div>
@@ -998,13 +998,13 @@
             <p>XOR-ing a byte into a running accumulator, then XOR-ing the same byte in
 again later, cancels out — the property that makes <code>^</code> a cheap building
 block for lightweight checksums.</p>
-<pre><code class="rust">fn checksum(bytes: &amp;[u8]) -&gt; u8 {
-    bytes.iter().fold(0u8, |acc, &amp;b| acc ^ b) // &lt;- `^` folds each byte into a running XOR
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">checksum</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-number">0u8</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">acc</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">acc</span> <span class="tok-punct">^</span> <span class="tok-variable">b</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `^` folds each byte into a running XOR</span>
+<span class="tok-punct">}</span>
 
-let packet = [0x3A, 0x7F, 0x01, 0xEE];
-let check = checksum(&amp;packet);
-println!("checksum: {check:#04x}");
+<span class="tok-keyword">let</span> <span class="tok-variable">packet</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0x3A</span><span class="tok-punct">,</span> <span class="tok-number">0x7F</span><span class="tok-punct">,</span> <span class="tok-number">0x01</span><span class="tok-punct">,</span> <span class="tok-number">0xEE</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">check</span> <span class="tok-punct">=</span> <span class="tok-call-free">checksum</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">packet</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;checksum: {check:#04x}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>XOR is mathematically self-cancelling (<code>x ^ y ^ y == x</code>), and that property is exactly why <code>^</code> (rather than <code>&amp;</code>/<code>|</code>) — the
 operator behind the <a href="https://doc.rust-lang.org/std/ops/trait.BitXor.html"><code>BitXor</code></a>
@@ -1043,25 +1043,25 @@ table.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Computing a toggled register value without mutating the original</h3>
-            <pre><code class="rust">const LED_PIN: u32 = 1 &lt;&lt; 5;
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">LED_PIN</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
 
-fn toggled_odr(current_odr: u32) -&gt; u32 {
-    current_odr ^ LED_PIN // &lt;- `^` produces a new value with only the LED bit flipped
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">toggled_odr</span><span class="tok-punct">(</span><span class="tok-variable">current_odr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">current_odr</span> <span class="tok-punct">^</span> <span class="tok-constant">LED_PIN</span> <span class="tok-comment tok-anno">// &lt;- `^` produces a new value with only the LED bit flipped</span>
+<span class="tok-punct">}</span>
 
-let odr = 0b0010_0000;
-assert_eq!(toggled_odr(odr), 0);
+<span class="tok-keyword">let</span> <span class="tok-variable">odr</span> <span class="tok-punct">=</span> <span class="tok-number">0b0010_0000</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">toggled_odr</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Checksumming a UART frame</h3>
-            <pre><code class="rust">fn frame_checksum(payload: &amp;[u8]) -&gt; u8 {
-    payload.iter().fold(0u8, |acc, &amp;b| acc ^ b) // &lt;- `^` folds the frame into a single check byte
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">frame_checksum</span><span class="tok-punct">(</span><span class="tok-variable">payload</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">payload</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-number">0u8</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">acc</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">acc</span> <span class="tok-punct">^</span> <span class="tok-variable">b</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `^` folds the frame into a single check byte</span>
+<span class="tok-punct">}</span>
 
-let frame = [0x02, 0xA4, 0x00, 0x7F]; // start byte, address, command, data
-let checksum = frame_checksum(&amp;frame);
+<span class="tok-keyword">let</span> <span class="tok-variable">frame</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0x02</span><span class="tok-punct">,</span> <span class="tok-number">0xA4</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">,</span> <span class="tok-number">0x7F</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment">// start byte, address, command, data</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">checksum</span> <span class="tok-punct">=</span> <span class="tok-call-free">frame_checksum</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">frame</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>

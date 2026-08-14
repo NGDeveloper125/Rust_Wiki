@@ -1015,12 +1015,12 @@ at the top of a thread — see Embedded Rust Notes below.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn nth_element(values: &amp;[i32], index: usize) -&gt; i32 {
-    values[index] // &lt;- panics with an unrecoverable error if `index` is out of bounds
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">nth_element</span><span class="tok-punct">(</span><span class="tok-variable">values</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">index</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">values</span><span class="tok-punct">[</span><span class="tok-variable">index</span><span class="tok-punct">]</span> <span class="tok-comment tok-anno">// &lt;- panics with an unrecoverable error if `index` is out of bounds</span>
+<span class="tok-punct">}</span>
 
-let scores = [10, 20, 30];
-let first = nth_element(&amp;scores, 0);
+<span class="tok-keyword">let</span> <span class="tok-variable">scores</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">10</span><span class="tok-punct">,</span> <span class="tok-number">20</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">first</span> <span class="tok-punct">=</span> <span class="tok-call-free">nth_element</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">scores</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1038,16 +1038,16 @@ let first = nth_element(&amp;scores, 0);
             <p>A <code>should_panic</code> test documents and locks in that calling a function
 with an out-of-range index is expected to panic, not silently return a
 wrong value.</p>
-<pre><code class="rust">fn nth_reading(readings: &amp;[f64], index: usize) -&gt; f64 {
-    readings[index] // &lt;- indexing panics on out-of-bounds access
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">nth_reading</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">f64</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">index</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">[</span><span class="tok-variable">index</span><span class="tok-punct">]</span> <span class="tok-comment tok-anno">// &lt;- indexing panics on out-of-bounds access</span>
+<span class="tok-punct">}</span>
 
-#[test]
-#[should_panic(expected = "index out of bounds")] // &lt;- asserts the panic happens, with a matching message
-fn rejects_out_of_range_index() {
-    let readings = [21.5, 22.0];
-    nth_reading(&amp;readings, 5);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-attribute">#[should_panic(expected = &quot;index out of bounds&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- asserts the panic happens, with a matching message</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_out_of_range_index</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">21.5</span><span class="tok-punct">,</span> <span class="tok-number">22.0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-call-free">nth_reading</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">readings</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>should_panic</code> with <code>expected</code> pins down both that a
@@ -1069,24 +1069,24 @@ gets a checked alternative that returns <code>Option</code>, while the panicking
 form is reserved for callers who documented that they already know the
 index is valid — and the difference is written into the docs, not left
 implicit.</p>
-<pre><code class="rust">struct Buffer {
-    samples: Vec&lt;f64&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Buffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Buffer {
-    /// Panics if `index &gt;= self.samples.len()`; the caller is expected
-    /// to have checked `len()` first — this is a contract violation, not
-    /// a recoverable condition.
-    fn sample(&amp;self, index: usize) -&gt; f64 {
-        self.samples[index] // &lt;- panics: violating a documented precondition is a bug, not a Result-worthy failure
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Buffer</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// Panics if `index &gt;= self.samples.len()`; the caller is expected</span>
+    <span class="tok-comment">/// to have checked `len()` first — this is a contract violation, not</span>
+    <span class="tok-comment">/// a recoverable condition.</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">sample</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">index</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">samples</span><span class="tok-punct">[</span><span class="tok-variable">index</span><span class="tok-punct">]</span> <span class="tok-comment tok-anno">// &lt;- panics: violating a documented precondition is a bug, not a Result-worthy failure</span>
+    <span class="tok-punct">}</span>
 
-    /// Never panics: an out-of-range index is a normal, expected outcome
-    /// for a caller that doesn't know `len()` in advance.
-    fn get_sample(&amp;self, index: usize) -&gt; Option&lt;f64&gt; {
-        self.samples.get(index).copied()
-    }
-}
+    <span class="tok-comment">/// Never panics: an out-of-range index is a normal, expected outcome</span>
+    <span class="tok-comment">/// for a caller that doesn't know `len()` in advance.</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get_sample</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">index</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">samples</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-variable">index</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the API Guidelines'
@@ -1107,19 +1107,19 @@ with indexing versus <code>get</code>, gives callers the choice.</p>
             <p>An internal invariant — a percentage field must stay within <code>0..=100</code> —
 is enforced with <code>debug_assert!</code> so violations are caught hard in
 development builds, without paying the cost in release builds.</p>
-<pre><code class="rust">struct Discount {
-    percent_off: u8,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Discount</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Discount {
-    fn new(percent_off: u8) -&gt; Self {
-        debug_assert!(percent_off &lt;= 100, "percent_off must be 0..=100, got {percent_off}");
-        // &lt;- panics in debug builds on a broken invariant; compiled out of release builds
-        Discount { percent_off }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Discount</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">debug_assert!</span><span class="tok-punct">(</span><span class="tok-variable">percent_off</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-string">&quot;percent_off must be 0..=100, got {percent_off}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-comment tok-anno">// &lt;- panics in debug builds on a broken invariant; compiled out of release builds</span>
+        <span class="tok-type">Discount</span> <span class="tok-punct">{</span> <span class="tok-variable">percent_off</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let discount = Discount::new(15);
+<span class="tok-keyword">let</span> <span class="tok-variable">discount</span> <span class="tok-punct">=</span> <span class="tok-type">Discount</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">15</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>debug_assert!</code> is for catching programmer errors
@@ -1171,20 +1171,20 @@ applies with even less of a safety net beneath it.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std]
-#![no_main]
+        <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use panic_halt as _; // &lt;- the #[panic_handler] this build runs; see panic! (syntax page) for handler choices
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the #[panic_handler] this build runs; see panic! (syntax page) for handler choices</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    let valve_percent: u8 = 150;
-    if valve_percent &gt; 100 {
-        panic!("valve position {valve_percent}% exceeds 100%"); // &lt;- broken precondition: no OS underneath to catch an unwind
-    }
-    loop {}
-}
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">valve_percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">150</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">valve_percent</span> <span class="tok-punct">&gt;</span> <span class="tok-number">100</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;valve position {valve_percent}% exceeds 100%&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- broken precondition: no OS underneath to catch an unwind</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1204,28 +1204,28 @@ that has already checked bounds against a known frame size, and a checked
 <code>Option</code>-returning one for everything else — the same split as the
 classic page's <code>Buffer</code>, but with a higher cost attached to guessing wrong
 about which one applies.</p>
-<pre><code class="rust">struct SampleBuffer {
-    samples: [i16; 32],
-    len: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SampleBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">32</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl SampleBuffer {
-    /// Panics if `index &gt;= self.len`; only call this after checking `len()` —
-    /// on this target `panic = "abort"`, so this halts/resets the device.
-    fn sample(&amp;self, index: usize) -&gt; i16 {
-        assert!(index &lt; self.len, "index {index} out of bounds for len {}", self.len);
-        self.samples[index] // &lt;- indexing panics on out-of-bounds, same as the classic page's Buffer example
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">SampleBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// Panics if `index &gt;= self.len`; only call this after checking `len()` —</span>
+    <span class="tok-comment">/// on this target `panic = &quot;abort&quot;`, so this halts/resets the device.</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">sample</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">index</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">index</span> <span class="tok-punct">&lt;</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">,</span> <span class="tok-string">&quot;index {index} out of bounds for len {}&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">samples</span><span class="tok-punct">[</span><span class="tok-variable">index</span><span class="tok-punct">]</span> <span class="tok-comment tok-anno">// &lt;- indexing panics on out-of-bounds, same as the classic page's Buffer example</span>
+    <span class="tok-punct">}</span>
 
-    /// Never panics: returns None for an out-of-range index instead.
-    fn get_sample(&amp;self, index: usize) -&gt; Option&lt;i16&gt; {
-        if index &lt; self.len {
-            Some(self.samples[index])
-        } else {
-            None
-        }
-    }
-}
+    <span class="tok-comment">/// Never panics: returns None for an out-of-range index instead.</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get_sample</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">index</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">i16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">index</span> <span class="tok-punct">&lt;</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">samples</span><span class="tok-punct">[</span><span class="tok-variable">index</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+            <span class="tok-field">None</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> offering both forms keeps the abort-on-panic cost — a
@@ -1247,17 +1247,17 @@ rather than <code>assert!</code>, the same idiom as the classic page — but on 
 target with kilobytes of flash rather than gigabytes of disk, the cost of
 compiling the check and its formatted message into every release binary is
 a concrete, not merely theoretical, reason to reach for it.</p>
-<pre><code class="rust">struct PwmChannel {
-    duty_percent: u8,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">PwmChannel</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">duty_percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl PwmChannel {
-    fn new(duty_percent: u8) -&gt; Self {
-        debug_assert!(duty_percent &lt;= 100, "duty_percent must be 0..=100, got {duty_percent}");
-        // &lt;- compiled out of release builds: no message-formatting code bloats the release binary's flash image
-        PwmChannel { duty_percent }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">PwmChannel</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">duty_percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">debug_assert!</span><span class="tok-punct">(</span><span class="tok-variable">duty_percent</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-string">&quot;duty_percent must be 0..=100, got {duty_percent}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-comment tok-anno">// &lt;- compiled out of release builds: no message-formatting code bloats the release binary's flash image</span>
+        <span class="tok-type">PwmChannel</span> <span class="tok-punct">{</span> <span class="tok-variable">duty_percent</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>debug_assert!</code> keeps the check and its formatted message

@@ -1025,12 +1025,12 @@ unused in a local variable simply never runs its body.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring an `async fn` and an `async move` block</h3>
-            <pre><code class="rust">async fn fetch_status() -&gt; bool { // &lt;- `async fn`: calling it returns a Future; the body doesn't run yet
-    true
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">fetch_status</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `async fn`: calling it returns a Future; the body doesn't run yet</span>
+    <span class="tok-number">true</span>
+<span class="tok-punct">}</span>
 
-let flag = true;
-let check_flag = async move { flag }; // &lt;- `async move` block: owns `flag` instead of borrowing it
+<span class="tok-keyword">let</span> <span class="tok-variable">flag</span> <span class="tok-punct">=</span> <span class="tok-number">true</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">check_flag</span> <span class="tok-punct">=</span> <span class="tok-keyword">async</span> <span class="tok-keyword">move</span> <span class="tok-punct">{</span> <span class="tok-variable">flag</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `async move` block: owns `flag` instead of borrowing it</span>
 </code></pre>
 
           </div>
@@ -1041,28 +1041,28 @@ the network call itself and a separate <code>async move</code> block to pair a
 per-device label with that call before handing the whole thing to
 <code>tokio::spawn</code> — the <code>move</code> is what lets the label and id outlive the
 loop iteration that created them.</p>
-<pre><code class="rust">// [dependencies] tokio = { version = "1", features = ["full"] }
-async fn fetch_uptime_seconds(device_id: u32) -&gt; u64 { // &lt;- `async fn`: returns a Future when called
-    device_id as u64 * 100
-}
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">fetch_uptime_seconds</span><span class="tok-punct">(</span><span class="tok-variable">device_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `async fn`: returns a Future when called</span>
+    <span class="tok-variable">device_id</span> <span class="tok-keyword">as</span> <span class="tok-type">u64</span> <span class="tok-punct">*</span> <span class="tok-number">100</span>
+<span class="tok-punct">}</span>
 
-#[tokio::main]
-async fn main() {
-    let mut tasks = Vec::new();
+<span class="tok-attribute">#[tokio::main]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">tasks</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    for device_id in 0..3 {
-        let label = format!("device-{device_id}");
-        tasks.push(tokio::spawn(async move { // &lt;- `async move`: block takes ownership of `label` and `device_id`
-            let uptime = fetch_uptime_seconds(device_id).await;
-            (label, uptime)
-        }));
-    }
+    <span class="tok-keyword">for</span> <span class="tok-variable">device_id</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">label</span> <span class="tok-punct">=</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;device-{device_id}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">tasks</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">async</span> <span class="tok-keyword">move</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `async move`: block takes ownership of `label` and `device_id`</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">uptime</span> <span class="tok-punct">=</span> <span class="tok-call-free">fetch_uptime_seconds</span><span class="tok-punct">(</span><span class="tok-variable">device_id</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span>
+            <span class="tok-punct">(</span><span class="tok-variable">label</span><span class="tok-punct">,</span> <span class="tok-variable">uptime</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    for task in tasks {
-        let (label, uptime) = task.await.unwrap();
-        println!("{label}: {uptime}s");
-    }
-}
+    <span class="tok-keyword">for</span> <span class="tok-variable">task</span> <span class="tok-keyword">in</span> <span class="tok-variable">tasks</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">label</span><span class="tok-punct">,</span> <span class="tok-variable">uptime</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">task</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{label}: {uptime}s&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>tokio::spawn</code> requires its future to be <code>'static</code>, so
 any block capturing local variables like <code>label</code> must use <code>async move</code> to
@@ -1112,21 +1112,21 @@ Explanation above — only the runtime driving it has changed.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring an embassy task with `async fn`</h3>
-            <pre><code class="rust">use embassy_executor::Spawner;
-use embassy_time::{Duration, Timer};
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embassy_executor</span><span class="tok-punct">::</span><span class="tok-type">Spawner</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">embassy_time</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Duration</span><span class="tok-punct">,</span> <span class="tok-type">Timer</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[embassy_executor::task]
-async fn blink_led() { // &lt;- `async fn`: same grammar as hosted Rust, spawned onto embassy's executor instead of tokio's
-    loop {
-        // ... toggle a GPIO pin here
-        Timer::after(Duration::from_millis(500)).await;
-    }
-}
+<span class="tok-attribute">#[embassy_executor::task]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">blink_led</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `async fn`: same grammar as hosted Rust, spawned onto embassy's executor instead of tokio's</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... toggle a GPIO pin here</span>
+        <span class="tok-type">Timer</span><span class="tok-punct">::</span><span class="tok-call-assoc">after</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">500</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[embassy_executor::main]
-async fn main(spawner: Spawner) { // &lt;- embassy's entry point, in place of #[tokio::main]
-    spawner.spawn(blink_led()).unwrap();
-}
+<span class="tok-attribute">#[embassy_executor::main]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-variable">spawner</span><span class="tok-punct">:</span> <span class="tok-type">Spawner</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- embassy's entry point, in place of #[tokio::main]</span>
+    <span class="tok-variable">spawner</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">blink_led</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>spawner.spawn(...)</code> is embassy's substitute for
 <code>tokio::spawn</code> — both hand an <code>async fn</code>'s produced future to an

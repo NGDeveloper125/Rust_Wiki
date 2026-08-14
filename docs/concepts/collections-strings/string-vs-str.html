@@ -1010,11 +1010,11 @@ the <code>String</code> that would otherwise need to borrow it.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let name: &amp;str = "Priya";      // &lt;- borrowed view into a string literal baked into the binary
-let mut greeting = String::from("Hello, "); // &lt;- owned, growable buffer
-greeting.push_str(name); // &lt;- &amp;str borrowed here, its bytes copied into greeting's buffer
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;Priya&quot;</span><span class="tok-punct">;</span>      <span class="tok-comment tok-anno">// &lt;- borrowed view into a string literal baked into the binary</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">greeting</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;Hello, &quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- owned, growable buffer</span>
+<span class="tok-variable">greeting</span><span class="tok-punct">.</span><span class="tok-call-method">push_str</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- &amp;str borrowed here, its bytes copied into greeting's buffer</span>
 
-println!("{greeting}"); // Hello, Priya
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{greeting}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// Hello, Priya</span>
 </code></pre>
 <p><strong>Restriction:</strong> slicing a <code>String</code>/<code>&amp;str</code> at a byte index that isn't a
 character boundary (<code>&amp;greeting[0..1]</code> when the first character is
@@ -1036,15 +1036,15 @@ character.</p>
             <p>A function that only reads text should accept <code>&amp;str</code>, never <code>&amp;String</code>
 — the narrower borrowed type accepts a <code>String</code>, a literal, or any
 substring of either, while <code>&amp;String</code> only accepts an actual <code>String</code>.</p>
-<pre><code class="rust">fn greet(name: &amp;str) -&gt; String { // &lt;- &amp;str: accepts a String, a literal, or a substring, all for free
-    format!("Hello, {name}!")
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- &amp;str: accepts a String, a literal, or a substring, all for free</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;Hello, {name}!&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let owned = String::from("Priya");
-let literal = "Sam";
+<span class="tok-keyword">let</span> <span class="tok-variable">owned</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;Priya&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">literal</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;Sam&quot;</span><span class="tok-punct">;</span>
 
-println!("{}", greet(&amp;owned));   // &amp;String derefs to &amp;str automatically
-println!("{}", greet(literal));  // already a &amp;str
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">greet</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">owned</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>   <span class="tok-comment">// &amp;String derefs to &amp;str automatically</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">greet</span><span class="tok-punct">(</span><span class="tok-variable">literal</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment">// already a &amp;str</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the API Guidelines'
@@ -1064,18 +1064,18 @@ nothing and accepts strictly more callers.</p>
 time, or from a loop — calls for an owned, growable <code>String</code>, since a
 <code>&amp;str</code> can't be extended in place; reading it back afterward can go
 straight through a <code>&amp;str</code> view.</p>
-<pre><code class="rust">let items = ["order #42", "order #17", "order #90"];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">items</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-string">&quot;order #42&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;order #17&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;order #90&quot;</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let mut summary = String::new(); // &lt;- owned buffer that will be grown in the loop below
-for (i, item) in items.iter().enumerate() {
-    if i &gt; 0 {
-        summary.push_str(", "); // &lt;- &amp;str literal borrowed and appended into summary's buffer
-    }
-    summary.push_str(item);
-}
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">summary</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- owned buffer that will be grown in the loop below</span>
+<span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">i</span><span class="tok-punct">,</span> <span class="tok-variable">item</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">items</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">enumerate</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">i</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">summary</span><span class="tok-punct">.</span><span class="tok-call-method">push_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;, &quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- &amp;str literal borrowed and appended into summary's buffer</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">summary</span><span class="tok-punct">.</span><span class="tok-call-method">push_str</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let preview: &amp;str = &amp;summary[..9]; // &lt;- borrowed view into the finished String, no copy
-println!("{preview}...");
+<span class="tok-keyword">let</span> <span class="tok-variable">preview</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">summary</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-number">9</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- borrowed view into the finished String, no copy</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{preview}...&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1095,12 +1095,12 @@ to read the result.</p>
 widens a function to take either one, plus any other type that can cheaply
 produce a <code>&amp;str</code> view of itself, without an explicit conversion at the
 call site.</p>
-<pre><code class="rust">fn log_event(message: impl AsRef&lt;str&gt;) { // &lt;- accepts &amp;str, String, or anything else AsRef&lt;str&gt;
-    println!("[event] {}", message.as_ref());
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">log_event</span><span class="tok-punct">(</span><span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">AsRef</span><span class="tok-punct">&lt;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- accepts &amp;str, String, or anything else AsRef&lt;str&gt;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[event] {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">message</span><span class="tok-punct">.</span><span class="tok-call-method">as_ref</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-log_event("order placed");                 // &amp;str
-log_event(String::from("order shipped"));  // String, borrowed via AsRef for the call
+<span class="tok-call-free">log_event</span><span class="tok-punct">(</span><span class="tok-string">&quot;order placed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                 <span class="tok-comment">// &amp;str</span>
+<span class="tok-call-free">log_event</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;order shipped&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment">// String, borrowed via AsRef for the call</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the API Guidelines'
@@ -1147,15 +1147,15 @@ allocator, <code>String</code> with one)?</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use core::fmt::Write as _;
-use heapless::String;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">;</span>
 
-const DEVICE_NAME: &amp;str = "sensor-07"; // &lt;- &amp;'static str: baked into the binary, no heap involved
+<span class="tok-keyword">const</span> <span class="tok-constant">DEVICE_NAME</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;sensor-07&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- &amp;'static str: baked into the binary, no heap involved</span>
 
-let mut status: String&lt;32&gt; = String::new(); // &lt;- owned, growable-within-32-bytes buffer, no allocator
-write!(status, "{DEVICE_NAME} ready").unwrap();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">&lt;</span><span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- owned, growable-within-32-bytes buffer, no allocator</span>
+<span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">,</span> <span class="tok-string">&quot;{DEVICE_NAME} ready&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let view: &amp;str = &amp;status; // &lt;- borrows the heapless::String, same as &amp;String deref to &amp;str
+<span class="tok-keyword">let</span> <span class="tok-variable">view</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">status</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- borrows the heapless::String, same as &amp;String deref to &amp;str</span>
 </code></pre>
 
       </section>
@@ -1175,16 +1175,16 @@ anything that only reads text — holds unchanged here: a function
 written against <code>&amp;str</code> accepts a <code>&amp;'static str</code> literal or a borrow of a
 <code>heapless::String&lt;N&gt;</code> equally, since <code>heapless::String&lt;N&gt;</code> also derefs
 to <code>&amp;str</code>.</p>
-<pre><code class="rust">fn log_event(message: &amp;str) { // &lt;- &amp;str: accepts a &amp;'static str literal or a &amp;heapless::String&lt;N&gt; alike
-    // ... hand `message`'s bytes to a UART/logging peripheral
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">log_event</span><span class="tok-punct">(</span><span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- &amp;str: accepts a &amp;'static str literal or a &amp;heapless::String&lt;N&gt; alike</span>
+    <span class="tok-comment">// ... hand `message`'s bytes to a UART/logging peripheral</span>
+<span class="tok-punct">}</span>
 
-const READY: &amp;str = "device ready"; // &lt;- &amp;'static str, no heap
-let mut status: heapless::String&lt;32&gt; = heapless::String::new();
-core::fmt::Write::write_str(&amp;mut status, "calibrating").unwrap();
+<span class="tok-keyword">const</span> <span class="tok-constant">READY</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;device ready&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- &amp;'static str, no heap</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">&lt;</span><span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_str</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">status</span><span class="tok-punct">,</span> <span class="tok-string">&quot;calibrating&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-log_event(READY);   // &amp;'static str
-log_event(&amp;status); // heapless::String&lt;32&gt; derefs to &amp;str, same call site
+<span class="tok-call-free">log_event</span><span class="tok-punct">(</span><span class="tok-constant">READY</span><span class="tok-punct">)</span><span class="tok-punct">;</span>   <span class="tok-comment">// &amp;'static str</span>
+<span class="tok-call-free">log_event</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">status</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// heapless::String&lt;32&gt; derefs to &amp;str, same call site</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the API Guidelines' preference for the narrowest
@@ -1203,14 +1203,14 @@ never has to know or care.</p>
 error count, an uptime counter — needs owned, mutable storage the same
 way the classic page's log-building example does; on a target with no
 heap, that owned storage is a <code>heapless::String&lt;N&gt;</code> instead of <code>String</code>.</p>
-<pre><code class="rust">use core::fmt::Write as _;
-use heapless::String;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">;</span>
 
-fn build_status(errors: u8, uptime_s: u32) -&gt; String&lt;64&gt; {
-    let mut line: String&lt;64&gt; = String::new(); // &lt;- fixed 64-byte capacity, no heap
-    write!(line, "errors={errors} uptime={uptime_s}s").unwrap(); // &lt;- fails only if the text would exceed 64 bytes
-    line
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_status</span><span class="tok-punct">(</span><span class="tok-variable">errors</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">uptime_s</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">&lt;</span><span class="tok-number">64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">line</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">&lt;</span><span class="tok-number">64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed 64-byte capacity, no heap</span>
+    <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">line</span><span class="tok-punct">,</span> <span class="tok-string">&quot;errors={errors} uptime={uptime_s}s&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fails only if the text would exceed 64 bytes</span>
+    <span class="tok-variable">line</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the capacity bound has to live somewhere once there's

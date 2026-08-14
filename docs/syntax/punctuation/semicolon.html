@@ -996,13 +996,13 @@ statement-terminator role.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Controlling whether a block returns a value</h3>
-            <pre><code class="rust">fn increment(x: i32) -&gt; i32 {
-    x + 1 // &lt;- no `;`: this expression IS the function's return value
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">increment</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">x</span> <span class="tok-punct">+</span> <span class="tok-number">1</span> <span class="tok-comment tok-anno">// &lt;- no `;`: this expression IS the function's return value</span>
+<span class="tok-punct">}</span>
 
-fn increment_wrong(x: i32) -&gt; i32 {
-    x + 1; // &lt;- `;` turns this into a statement; the block now returns `()`
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">increment_wrong</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">x</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `;` turns this into a statement; the block now returns `()`</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>increment_wrong</code> above fails to compile — its body
 evaluates to <code>()</code>, which doesn't match the declared <code>-&gt; i32</code> return type.</p>
@@ -1014,23 +1014,23 @@ evaluates to <code>()</code>, which doesn't match the declared <code>-&gt; i32</
 final, successful value must not have one — mixing this up inside a
 <code>?</code>-chain is exactly the "silently returns <code>()</code>" trap the Explanation
 above describes, and it's easy to hit in a longer function.</p>
-<pre><code class="rust">struct Config { raw: String }
-enum ConfigError { Empty, Io(std::io::Error) }
-impl From&lt;std::io::Error&gt; for ConfigError {
-    fn from(e: std::io::Error) -&gt; Self { ConfigError::Io(e) }
-}
-fn parse_config(text: &amp;str) -&gt; Result&lt;Config, ConfigError&gt; {
-    Ok(Config { raw: text.to_string() })
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">ConfigError</span> <span class="tok-punct">{</span> <span class="tok-type">Empty</span><span class="tok-punct">,</span> <span class="tok-field">Io</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">ConfigError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-type">ConfigError</span><span class="tok-punct">::</span><span class="tok-field">Io</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_config</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Config</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-variable">text</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn load_config(path: &amp;str) -&gt; Result&lt;Config, ConfigError&gt; {
-    let text = std::fs::read_to_string(path)?; // &lt;- `;` ends this statement
-    if text.is_empty() {
-        return Err(ConfigError::Empty); // &lt;- `;` ends this early-return statement
-    }
-    // AVOID: a trailing `;` here would make the fn return () instead of Result&lt;Config, _&gt;
-    parse_config(&amp;text) // PREFER: no `;` — this expression IS the fn's return value
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">load_config</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Config</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">text</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `;` ends this statement</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">text</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">ConfigError</span><span class="tok-punct">::</span><span class="tok-field">Empty</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `;` ends this early-return statement</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-comment">// AVOID: a trailing `;` here would make the fn return () instead of Result&lt;Config, _&gt;</span>
+    <span class="tok-call-free">parse_config</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">text</span><span class="tok-punct">)</span> <span class="tok-comment">// PREFER: no `;` — this expression IS the fn's return value</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The compiler catches this mistake as a type mismatch
 (<code>expected Result&lt;Config, ConfigError&gt;, found ()</code>) pointing at the
@@ -1044,8 +1044,8 @@ whether it needs a <code>;</code>.</p>
             <p>Inside <code>[Type; N]</code> and <code>[value; N]</code>, <code>;</code> separates a type/value from a
 compile-time length — a completely different grammatical role from
 statement-termination, disambiguated purely by appearing inside <code>[ ]</code>.</p>
-<pre><code class="rust">let buffer: [u8; 4] = [0; 4]; // &lt;- both `;` here belong to array syntax, not statements
-//           ^ type; length      ^ value; repeat count
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">buffer</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- both `;` here belong to array syntax, not statements</span>
+<span class="tok-comment">//           ^ type; length      ^ value; repeat count</span>
 </code></pre>
 <p><code>[0; 4]</code> avoids writing out <code>[0, 0, 0, 0]</code> by hand and,
 unlike a <code>Vec</code>, the length is part of the type itself — see
@@ -1082,22 +1082,22 @@ fixed-size array is usually the <em>only</em> buffer available without a heap.</
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A `#[no_mangle] extern &quot;C&quot;` entry point</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-#[no_mangle]
-pub extern "C" fn _start() -&gt; ! {
-    init_hardware(); // &lt;- `;` ends this statement
-    loop {} // &lt;- no `;` needed: `loop {}` never produces a value to return anyway
-}
+<span class="tok-attribute">#[no_mangle]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">_start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">init_hardware</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `;` ends this statement</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- no `;` needed: `loop {}` never produces a value to return anyway</span>
+<span class="tok-punct">}</span>
 
-fn init_hardware() {}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init_hardware</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Sizing a fixed DMA buffer with array syntax</h3>
-            <pre><code class="rust">static mut DMA_BUFFER: [u8; 256] = [0; 256]; // &lt;- both `;` here belong to array syntax, not statements
+            <pre><code class="rust-hl"><span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">DMA_BUFFER</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">256</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">256</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- both `;` here belong to array syntax, not statements</span>
 </code></pre>
 
           </div>

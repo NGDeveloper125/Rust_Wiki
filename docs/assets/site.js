@@ -324,42 +324,10 @@
     if (e.key === '/' && document.activeElement !== input) { e.preventDefault(); input.focus(); }
   });
 
-  /* ---------- LIGHTWEIGHT RUST SYNTAX HIGHLIGHTER ---------- */
-  var KW = new Set(['as','async','await','break','const','continue','crate','dyn','else','enum','extern','false','fn','for','if','impl','in','let','loop','match','mod','move','mut','pub','ref','return','self','static','struct','super','trait','true','type','unsafe','use','where','while']);
-  function hl(code) {
-    var re = /(\/\/[^\n]*)|("(?:\\.|[^"\\])*")|('(?:\\.|[^'\\])')|(\b\d[\d_]*(?:\.\d+)?(?:f32|f64|u8|u16|u32|u64|usize|i8|i16|i32|i64|isize)?\b)|([A-Za-z_][A-Za-z0-9_]*!)|([A-Za-z_][A-Za-z0-9_]*)/g;
-    var out = '', last = 0, m;
-    function e(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    while ((m = re.exec(code))) {
-      out += e(code.slice(last, m.index));
-      last = re.lastIndex;
-      // `// <-` is the site-wide convention for "read this line". Tag those
-      // comments so CSS can lift them out of the muted comment colour every
-      // other comment shares. textContent arrives already entity-decoded, so
-      // the literal `<-` is what reaches this test.
-      if (m[1]) {
-        var anno = /^\/\/\s*<-/.test(m[1]) ? ' tok-anno' : '';
-        out += '<span class="tok-comment' + anno + '">' + e(m[1]) + '</span>';
-      }
-      else if (m[2]) out += '<span class="tok-string">' + e(m[2]) + '</span>';
-      else if (m[3]) out += '<span class="tok-string">' + e(m[3]) + '</span>';
-      else if (m[4]) out += '<span class="tok-number">' + e(m[4]) + '</span>';
-      else if (m[5]) out += '<span class="tok-macro">' + e(m[5]) + '</span>';
-      else {
-        var w = m[6];
-        if (KW.has(w)) out += '<span class="tok-keyword">' + e(w) + '</span>';
-        else if (/^[A-Z]/.test(w) || w === 'Self') out += '<span class="tok-type">' + e(w) + '</span>';
-        else if (code[re.lastIndex] === '(') out += '<span class="tok-macro">' + e(w) + '</span>';
-        else out += e(w);
-      }
-    }
-    out += e(code.slice(last));
-    return out;
-  }
-  document.querySelectorAll('code.rust').forEach(function (el) {
-    // el.textContent already has entities decoded by the browser
-    el.innerHTML = hl(el.textContent);
-  });
+  /* Rust code is highlighted at build time by the generator (highlight.rs),
+     which can tell a method call from an associated one and a declaration from
+     a use — distinctions a regex in here cannot make. Nothing client-side may
+     touch those spans. */
 
   /* ---------- CARD INDEXES: search, sort, likes ---------- */
   // The Articles and Crates index pages each render a grid of cards, plus a

@@ -1003,17 +1003,17 @@ a plugin API — becomes visible on its own.</p>
         <h2 class="section-title">Basic usage example</h2>
         <p>This example shows a crate's manifest alongside its entire <code>lib.rs</code>, to
 make the size of its public surface visible at a glance.</p>
-<pre><code class="rust"># shop-pricing/Cargo.toml — a small, focused crate: only pricing logic, no HTTP/DB/CLI code
-[package]
-name = "shop-pricing"
-version = "0.1.0"
+<pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-variable">shop</span><span class="tok-punct">-</span><span class="tok-variable">pricing</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span> <span class="tok-punct">—</span> <span class="tok-variable">a</span> <span class="tok-variable">small</span><span class="tok-punct">,</span> <span class="tok-variable">focused</span> <span class="tok-keyword">crate</span><span class="tok-punct">:</span> <span class="tok-variable">only</span> <span class="tok-variable">pricing</span> <span class="tok-variable">logic</span><span class="tok-punct">,</span> <span class="tok-variable">no</span> <span class="tok-constant">HTTP</span><span class="tok-punct">/</span><span class="tok-constant">DB</span><span class="tok-punct">/</span><span class="tok-constant">CLI</span> <span class="tok-variable">code</span>
+<span class="tok-punct">[</span><span class="tok-variable">package</span><span class="tok-punct">]</span>
+<span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;shop-pricing&quot;</span>
+<span class="tok-variable">version</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.1.0&quot;</span>
 
-[dependencies]
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
 
-# shop-pricing/src/lib.rs
-pub fn discount_price(price_cents: u32, percent_off: u8) -&gt; u32 { // &lt;- the crate's entire public surface: one focused concern
-    price_cents - (price_cents * percent_off as u32 / 100)
-}
+<span class="tok-punct">#</span> <span class="tok-variable">shop</span><span class="tok-punct">-</span><span class="tok-variable">pricing</span><span class="tok-punct">/</span><span class="tok-variable">src</span><span class="tok-punct">/</span><span class="tok-variable">lib</span><span class="tok-punct">.</span><span class="tok-field">rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">discount_price</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the crate's entire public surface: one focused concern</span>
+    <span class="tok-variable">price_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">price_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1033,18 +1033,18 @@ database access, and pricing logic; splitting the pricing logic into its
 own crate the moment a second binary — a nightly batch repricing job —
 needs it avoids either duplicating the function or pulling in the whole
 web server as a dependency.</p>
-<pre><code class="rust"># shop-api/Cargo.toml — the web server, now just orchestration
-[dependencies]
-shop-pricing = { path = "../shop-pricing" } # &lt;- depends on the small, focused crate instead of duplicating its logic
+<pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-variable">shop</span><span class="tok-punct">-</span><span class="tok-variable">api</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span> <span class="tok-punct">—</span> <span class="tok-variable">the</span> <span class="tok-variable">web</span> <span class="tok-variable">server</span><span class="tok-punct">,</span> <span class="tok-variable">now</span> <span class="tok-variable">just</span> <span class="tok-variable">orchestration</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">shop</span><span class="tok-punct">-</span><span class="tok-variable">pricing</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../shop-pricing&quot;</span> <span class="tok-punct">}</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">depends</span> <span class="tok-variable">on</span> <span class="tok-variable">the</span> <span class="tok-variable">small</span><span class="tok-punct">,</span> <span class="tok-variable">focused</span> <span class="tok-keyword">crate</span> <span class="tok-variable">instead</span> <span class="tok-variable">of</span> <span class="tok-variable">duplicating</span> <span class="tok-variable">its</span> <span class="tok-variable">logic</span>
 
-# shop-repricing-job/Cargo.toml — a separate nightly batch binary
-[dependencies]
-shop-pricing = { path = "../shop-pricing" } # &lt;- same small crate, reused without pulling in the whole web server
+<span class="tok-punct">#</span> <span class="tok-variable">shop</span><span class="tok-punct">-</span><span class="tok-variable">repricing</span><span class="tok-punct">-</span><span class="tok-variable">job</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span> <span class="tok-punct">—</span> <span class="tok-variable">a</span> <span class="tok-variable">separate</span> <span class="tok-variable">nightly</span> <span class="tok-variable">batch</span> <span class="tok-variable">binary</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">shop</span><span class="tok-punct">-</span><span class="tok-variable">pricing</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../shop-pricing&quot;</span> <span class="tok-punct">}</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">same</span> <span class="tok-variable">small</span> <span class="tok-keyword">crate</span><span class="tok-punct">,</span> <span class="tok-variable">reused</span> <span class="tok-variable">without</span> <span class="tok-variable">pulling</span> <span class="tok-keyword">in</span> <span class="tok-variable">the</span> <span class="tok-variable">whole</span> <span class="tok-variable">web</span> <span class="tok-variable">server</span>
 
-# shop-pricing/src/lib.rs
-pub fn discount_price(price_cents: u32, percent_off: u8) -&gt; u32 {
-    price_cents - (price_cents * percent_off as u32 / 100)
-}
+<span class="tok-punct">#</span> <span class="tok-variable">shop</span><span class="tok-punct">-</span><span class="tok-variable">pricing</span><span class="tok-punct">/</span><span class="tok-variable">src</span><span class="tok-punct">/</span><span class="tok-variable">lib</span><span class="tok-punct">.</span><span class="tok-field">rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">discount_price</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">price_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">price_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping the pricing logic in its own crate means
@@ -1093,19 +1093,19 @@ doesn't.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust"># sensor-crc/Cargo.toml — a small, no_std-compatible crate: one focused concern, easy to audit
-[package]
-name = "sensor-crc"
-version = "0.1.0"
+        <pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-variable">sensor</span><span class="tok-punct">-</span><span class="tok-variable">crc</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span> <span class="tok-punct">—</span> <span class="tok-variable">a</span> <span class="tok-variable">small</span><span class="tok-punct">,</span> <span class="tok-variable">no_std</span><span class="tok-punct">-</span><span class="tok-variable">compatible</span> <span class="tok-keyword">crate</span><span class="tok-punct">:</span> <span class="tok-variable">one</span> <span class="tok-variable">focused</span> <span class="tok-variable">concern</span><span class="tok-punct">,</span> <span class="tok-variable">easy</span> <span class="tok-variable">to</span> <span class="tok-variable">audit</span>
+<span class="tok-punct">[</span><span class="tok-variable">package</span><span class="tok-punct">]</span>
+<span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;sensor-crc&quot;</span>
+<span class="tok-variable">version</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.1.0&quot;</span>
 
-[dependencies]
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
 
-# sensor-crc/src/lib.rs
-#![no_std]
+<span class="tok-punct">#</span> <span class="tok-variable">sensor</span><span class="tok-punct">-</span><span class="tok-variable">crc</span><span class="tok-punct">/</span><span class="tok-variable">src</span><span class="tok-punct">/</span><span class="tok-variable">lib</span><span class="tok-punct">.</span><span class="tok-field">rs</span>
+<span class="tok-attribute">#![no_std]</span>
 
-pub fn checksum(data: &amp;[u8]) -&gt; u8 { // &lt;- the crate's entire public surface: no std, no allocator, easy to verify
-    data.iter().fold(0u8, |acc, &amp;b| acc.wrapping_add(b))
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">checksum</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the crate's entire public surface: no std, no allocator, easy to verify</span>
+    <span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-number">0u8</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">acc</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">acc</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1125,26 +1125,26 @@ microcontroller, but the application binary that logs its readings to a
 file during development needs <code>std</code>; splitting the two into separate
 crates keeps the driver's <code>no_std</code> guarantee auditable on its own,
 instead of buried inside one crate that mixes both.</p>
-<pre><code class="rust"># sensor-driver/Cargo.toml — small and no_std-only; nothing here can accidentally pull in std
-[package]
-name = "sensor-driver"
+<pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-variable">sensor</span><span class="tok-punct">-</span><span class="tok-variable">driver</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span> <span class="tok-punct">—</span> <span class="tok-variable">small</span> <span class="tok-variable">and</span> <span class="tok-variable">no_std</span><span class="tok-punct">-</span><span class="tok-variable">only</span><span class="tok-punct">;</span> <span class="tok-variable">nothing</span> <span class="tok-variable">here</span> <span class="tok-variable">can</span> <span class="tok-variable">accidentally</span> <span class="tok-variable">pull</span> <span class="tok-keyword">in</span> <span class="tok-variable">std</span>
+<span class="tok-punct">[</span><span class="tok-variable">package</span><span class="tok-punct">]</span>
+<span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;sensor-driver&quot;</span>
 
-[dependencies]
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
 
-# sensor-driver/src/lib.rs
-#![no_std]
+<span class="tok-punct">#</span> <span class="tok-variable">sensor</span><span class="tok-punct">-</span><span class="tok-variable">driver</span><span class="tok-punct">/</span><span class="tok-variable">src</span><span class="tok-punct">/</span><span class="tok-variable">lib</span><span class="tok-punct">.</span><span class="tok-field">rs</span>
+<span class="tok-attribute">#![no_std]</span>
 
-pub struct Reading {
-    pub celsius: f32,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Reading</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-pub fn read() -&gt; Reading { // &lt;- the driver's entire public surface, verifiably no_std
-    Reading { celsius: 21.5 }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Reading</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the driver's entire public surface, verifiably no_std</span>
+    <span class="tok-type">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-number">21.5</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-# host-logger/Cargo.toml — a separate std-only crate for development-time logging
-[dependencies]
-sensor-driver = { path = "../sensor-driver" } # &lt;- depends on the small no_std crate; doesn't force std on it
+<span class="tok-punct">#</span> <span class="tok-variable">host</span><span class="tok-punct">-</span><span class="tok-variable">logger</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span> <span class="tok-punct">—</span> <span class="tok-variable">a</span> <span class="tok-variable">separate</span> <span class="tok-variable">std</span><span class="tok-punct">-</span><span class="tok-variable">only</span> <span class="tok-keyword">crate</span> <span class="tok-keyword">for</span> <span class="tok-variable">development</span><span class="tok-punct">-</span><span class="tok-variable">time</span> <span class="tok-variable">logging</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">sensor</span><span class="tok-punct">-</span><span class="tok-variable">driver</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../sensor-driver&quot;</span> <span class="tok-punct">}</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">depends</span> <span class="tok-variable">on</span> <span class="tok-variable">the</span> <span class="tok-variable">small</span> <span class="tok-variable">no_std</span> <span class="tok-keyword">crate</span><span class="tok-punct">;</span> <span class="tok-variable">doesn</span><span class="tok-lifetime">'t</span> <span class="tok-variable">force</span> <span class="tok-variable">std</span> <span class="tok-variable">on</span> <span class="tok-variable">it</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping <code>sensor-driver</code> in its own crate makes "is this

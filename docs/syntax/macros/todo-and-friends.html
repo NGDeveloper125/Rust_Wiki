@@ -1012,23 +1012,23 @@ actually false — a genuine bug, not missing work.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Marking a permanently unsupported method</h3>
-            <pre><code class="rust">trait Storage {
-    fn read(&amp;self, key: &amp;str) -&gt; Option&lt;String&gt;;
-    fn delete(&amp;self, key: &amp;str);
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Storage</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">delete</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct ReadOnlyStorage;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ReadOnlyStorage</span><span class="tok-punct">;</span>
 
-impl Storage for ReadOnlyStorage {
-    fn read(&amp;self, key: &amp;str) -&gt; Option&lt;String&gt; {
-        let _ = key;
-        None
-    }
+<span class="tok-keyword">impl</span> <span class="tok-trait">Storage</span> <span class="tok-keyword">for</span> <span class="tok-type">ReadOnlyStorage</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">key</span><span class="tok-punct">;</span>
+        <span class="tok-field">None</span>
+    <span class="tok-punct">}</span>
 
-    fn delete(&amp;self, _key: &amp;str) {
-        unimplemented!("ReadOnlyStorage does not support deletion by design") // &lt;- permanent, not a stub
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">delete</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">_key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">unimplemented!</span><span class="tok-punct">(</span><span class="tok-string">&quot;ReadOnlyStorage does not support deletion by design&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- permanent, not a stub</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1038,24 +1038,24 @@ impl Storage for ReadOnlyStorage {
 still being built out — <code>todo!()</code> marks the honest gap during
 development, distinct from <code>unimplemented!()</code>, which would claim the gap
 is permanent.</p>
-<pre><code class="rust">trait Shape {
-    fn area(&amp;self) -&gt; f64;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Circle { radius: f64 }
-struct Polygon { vertices: Vec&lt;(f64, f64)&gt; } // shoelace-formula area not yet ported over
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Circle</span> <span class="tok-punct">{</span> <span class="tok-variable">radius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Polygon</span> <span class="tok-punct">{</span> <span class="tok-variable">vertices</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">}</span> <span class="tok-comment">// shoelace-formula area not yet ported over</span>
 
-impl Shape for Circle {
-    fn area(&amp;self) -&gt; f64 {
-        std::f64::consts::PI * self.radius * self.radius
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Shape</span> <span class="tok-keyword">for</span> <span class="tok-type">Circle</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+        <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">f64</span><span class="tok-punct">::</span><span class="tok-module">consts</span><span class="tok-punct">::</span><span class="tok-constant">PI</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">radius</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">radius</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Shape for Polygon {
-    fn area(&amp;self) -&gt; f64 {
-        todo!("port the shoelace-formula area calculation from the old prototype") // &lt;- work-in-progress, not permanent
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Shape</span> <span class="tok-keyword">for</span> <span class="tok-type">Polygon</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">todo!</span><span class="tok-punct">(</span><span class="tok-string">&quot;port the shoelace-formula area calculation from the old prototype&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- work-in-progress, not permanent</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><a href="https://effective-rust.com/">Effective Rust</a> treats
 <code>todo!()</code> during active development as a signal to reviewers and
@@ -1068,20 +1068,20 @@ would misleadingly suggest is a deliberate, final design choice instead.</p>
             <p>An exhaustive <code>match</code> over an order's state machine has already handled
 every real transition; the final arm exists only as a safety net the type
 system can't express, backed by <code>unreachable!()</code>.</p>
-<pre><code class="rust">enum OrderState {
-    Placed,
-    Shipped,
-    Delivered,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">OrderState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Placed</span><span class="tok-punct">,</span>
+    <span class="tok-type">Shipped</span><span class="tok-punct">,</span>
+    <span class="tok-type">Delivered</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn next_state(state: OrderState) -&gt; OrderState {
-    match state {
-        OrderState::Placed =&gt; OrderState::Shipped,
-        OrderState::Shipped =&gt; OrderState::Delivered,
-        OrderState::Delivered =&gt; unreachable!("a delivered order has no next state and should never be advanced again"),
-        // &lt;- asserts this call site never advances an already-delivered order
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">next_state</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">OrderState</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">OrderState</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">state</span> <span class="tok-punct">{</span>
+        <span class="tok-type">OrderState</span><span class="tok-punct">::</span><span class="tok-field">Placed</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">OrderState</span><span class="tok-punct">::</span><span class="tok-field">Shipped</span><span class="tok-punct">,</span>
+        <span class="tok-type">OrderState</span><span class="tok-punct">::</span><span class="tok-field">Shipped</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">OrderState</span><span class="tok-punct">::</span><span class="tok-field">Delivered</span><span class="tok-punct">,</span>
+        <span class="tok-type">OrderState</span><span class="tok-punct">::</span><span class="tok-field">Delivered</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">unreachable!</span><span class="tok-punct">(</span><span class="tok-string">&quot;a delivered order has no next state and should never be advanced again&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-comment tok-anno">// &lt;- asserts this call site never advances an already-delivered order</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>unreachable!()</code> documents an invariant enforced
 elsewhere in the program (callers are expected to check for
@@ -1125,24 +1125,24 @@ of the embedded panic handler instead of a hosted unwind.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Marking an unimplemented HAL trait method</h3>
-            <pre><code class="rust">trait Pwm {
-    fn set_duty(&amp;mut self, percent: u8);
-    fn set_dead_time(&amp;mut self, ns: u32);
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Pwm</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_duty</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_dead_time</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">ns</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct BasicTimerPwm;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BasicTimerPwm</span><span class="tok-punct">;</span>
 
-impl Pwm for BasicTimerPwm {
-    fn set_duty(&amp;mut self, percent: u8) {
-        let _ = percent;
-        // ... write to the timer's compare register
-    }
+<span class="tok-keyword">impl</span> <span class="tok-trait">Pwm</span> <span class="tok-keyword">for</span> <span class="tok-type">BasicTimerPwm</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_duty</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">percent</span><span class="tok-punct">;</span>
+        <span class="tok-comment">// ... write to the timer's compare register</span>
+    <span class="tok-punct">}</span>
 
-    fn set_dead_time(&amp;mut self, _ns: u32) {
-        unimplemented!("this timer instance has no complementary outputs, so dead-time insertion is not supported")
-        // &lt;- permanent hardware limitation, not a stub
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_dead_time</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">_ns</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">unimplemented!</span><span class="tok-punct">(</span><span class="tok-string">&quot;this timer instance has no complementary outputs, so dead-time insertion is not supported&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-comment tok-anno">// &lt;- permanent hardware limitation, not a stub</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1152,20 +1152,20 @@ impl Pwm for BasicTimerPwm {
 reachable only if the state machine's own invariants were violated
 elsewhere, so it panics via <code>unreachable!()</code> rather than continuing
 silently in a program state that shouldn't exist.</p>
-<pre><code class="rust">enum LinkState {
-    Down,
-    Negotiating,
-    Up,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">LinkState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Down</span><span class="tok-punct">,</span>
+    <span class="tok-type">Negotiating</span><span class="tok-punct">,</span>
+    <span class="tok-type">Up</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn on_link_interrupt(state: LinkState) -&gt; LinkState {
-    match state {
-        LinkState::Down =&gt; LinkState::Negotiating,
-        LinkState::Negotiating =&gt; LinkState::Up,
-        LinkState::Up =&gt; unreachable!("link-up interrupt fired again while already up"),
-        // &lt;- see panic! for what actually runs here on bare metal: the #[panic_handler]
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">on_link_interrupt</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">LinkState</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">LinkState</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">state</span> <span class="tok-punct">{</span>
+        <span class="tok-type">LinkState</span><span class="tok-punct">::</span><span class="tok-field">Down</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">LinkState</span><span class="tok-punct">::</span><span class="tok-field">Negotiating</span><span class="tok-punct">,</span>
+        <span class="tok-type">LinkState</span><span class="tok-punct">::</span><span class="tok-field">Negotiating</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">LinkState</span><span class="tok-punct">::</span><span class="tok-field">Up</span><span class="tok-punct">,</span>
+        <span class="tok-type">LinkState</span><span class="tok-punct">::</span><span class="tok-field">Up</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">unreachable!</span><span class="tok-punct">(</span><span class="tok-string">&quot;link-up interrupt fired again while already up&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-comment tok-anno">// &lt;- see panic! for what actually runs here on bare metal: the #[panic_handler]</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

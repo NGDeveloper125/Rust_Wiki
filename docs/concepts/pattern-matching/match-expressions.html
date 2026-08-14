@@ -1014,21 +1014,21 @@ shape being matched.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">enum TrafficLight {
-    Red,
-    Yellow,
-    Green,
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">TrafficLight</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Red</span><span class="tok-punct">,</span>
+    <span class="tok-type">Yellow</span><span class="tok-punct">,</span>
+    <span class="tok-type">Green</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let light = TrafficLight::Yellow;
+<span class="tok-keyword">let</span> <span class="tok-variable">light</span> <span class="tok-punct">=</span> <span class="tok-type">TrafficLight</span><span class="tok-punct">::</span><span class="tok-field">Yellow</span><span class="tok-punct">;</span>
 
-let instruction = match light { // &lt;- a match expression: the whole thing evaluates to a value
-    TrafficLight::Red =&gt; "stop",
-    TrafficLight::Yellow =&gt; "slow down",
-    TrafficLight::Green =&gt; "go",
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">instruction</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-variable">light</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- a match expression: the whole thing evaluates to a value</span>
+    <span class="tok-type">TrafficLight</span><span class="tok-punct">::</span><span class="tok-field">Red</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;stop&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-type">TrafficLight</span><span class="tok-punct">::</span><span class="tok-field">Yellow</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;slow down&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-type">TrafficLight</span><span class="tok-punct">::</span><span class="tok-field">Green</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;go&quot;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-println!("{instruction}");
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{instruction}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1046,21 +1046,21 @@ println!("{instruction}");
             <p>A network client's session moves through a handful of distinct states,
 and a status line needs to describe whichever one it's currently in —
 exactly the kind of branching-on-structure <code>match</code> is built for.</p>
-<pre><code class="rust">enum SessionState {
-    Disconnected,
-    Connecting { attempt: u32 },
-    Connected { session_id: String },
-    Closing { reason: String },
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">SessionState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Disconnected</span><span class="tok-punct">,</span>
+    <span class="tok-type">Connecting</span> <span class="tok-punct">{</span> <span class="tok-variable">attempt</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Connected</span> <span class="tok-punct">{</span> <span class="tok-variable">session_id</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Closing</span> <span class="tok-punct">{</span> <span class="tok-variable">reason</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn status_line(state: &amp;SessionState) -&gt; String {
-    match state { // &lt;- exhaustive: every SessionState variant must appear below
-        SessionState::Disconnected =&gt; "disconnected".to_string(),
-        SessionState::Connecting { attempt } =&gt; format!("connecting (attempt {attempt})"),
-        SessionState::Connected { session_id } =&gt; format!("connected as {session_id}"),
-        SessionState::Closing { reason } =&gt; format!("closing: {reason}"),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">status_line</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SessionState</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">state</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- exhaustive: every SessionState variant must appear below</span>
+        <span class="tok-type">SessionState</span><span class="tok-punct">::</span><span class="tok-field">Disconnected</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;disconnected&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-type">SessionState</span><span class="tok-punct">::</span><span class="tok-field">Connecting</span> <span class="tok-punct">{</span> <span class="tok-variable">attempt</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;connecting (attempt {attempt})&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-type">SessionState</span><span class="tok-punct">::</span><span class="tok-field">Connected</span> <span class="tok-punct">{</span> <span class="tok-variable">session_id</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;connected as {session_id}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-type">SessionState</span><span class="tok-punct">::</span><span class="tok-field">Closing</span> <span class="tok-punct">{</span> <span class="tok-variable">reason</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;closing: {reason}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> matching directly on the enum, rather than adding a
@@ -1080,17 +1080,17 @@ variant a value holds.</p>
             <p>Parsing a configured port number can fail, and the caller needs to react
 differently to "not a number" than to any other problem — <code>match</code> on the
 <code>Result</code> makes both outcomes explicit instead of unwrapping and hoping.</p>
-<pre><code class="rust">fn parse_port(raw: &amp;str) -&gt; u16 {
-    match raw.parse::&lt;u16&gt;() { // &lt;- matches on the Result's Ok/Err shape directly
-        Ok(port) =&gt; port,
-        Err(_) =&gt; {
-            eprintln!("invalid port {raw:?}, falling back to 8080");
-            8080
-        }
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_port</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- matches on the Result's Ok/Err shape directly</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">port</span><span class="tok-punct">,</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid port {raw:?}, falling back to 8080&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-number">8080</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let port = parse_port("not-a-number");
+<span class="tok-keyword">let</span> <span class="tok-variable">port</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_port</span><span class="tok-punct">(</span><span class="tok-string">&quot;not-a-number&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> matching <code>Ok</code>/<code>Err</code> explicitly at the point where a
@@ -1110,28 +1110,28 @@ a default" case.</p>
             <p>A vending machine's behavior differs by state, and modeling that as an
 enum with a single <code>match</code>-based transition function keeps every legal
 transition in one place instead of scattered across boolean flags.</p>
-<pre><code class="rust">enum MachineState {
-    Idle,
-    AwaitingSelection { credit_cents: u32 },
-    Dispensing { item: String },
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">MachineState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Idle</span><span class="tok-punct">,</span>
+    <span class="tok-type">AwaitingSelection</span> <span class="tok-punct">{</span> <span class="tok-variable">credit_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Dispensing</span> <span class="tok-punct">{</span> <span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-enum Event {
-    CoinInserted(u32),
-    ItemSelected(String),
-    DispenseComplete,
-}
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Event</span> <span class="tok-punct">{</span>
+    <span class="tok-field">CoinInserted</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">ItemSelected</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-type">DispenseComplete</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn transition(state: MachineState, event: Event) -&gt; MachineState {
-    match (state, event) { // &lt;- matching a tuple dispatches on state and event together
-        (MachineState::Idle, Event::CoinInserted(cents)) =&gt;
-            MachineState::AwaitingSelection { credit_cents: cents },
-        (MachineState::AwaitingSelection { credit_cents }, Event::ItemSelected(item)) =&gt;
-            MachineState::Dispensing { item },
-        (MachineState::Dispensing { .. }, Event::DispenseComplete) =&gt; MachineState::Idle,
-        (other, _) =&gt; other, // &lt;- ignores events that don't apply to the current state
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">transition</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">MachineState</span><span class="tok-punct">,</span> <span class="tok-variable">event</span><span class="tok-punct">:</span> <span class="tok-type">Event</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">MachineState</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">,</span> <span class="tok-variable">event</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- matching a tuple dispatches on state and event together</span>
+        <span class="tok-punct">(</span><span class="tok-type">MachineState</span><span class="tok-punct">::</span><span class="tok-field">Idle</span><span class="tok-punct">,</span> <span class="tok-type">Event</span><span class="tok-punct">::</span><span class="tok-field">CoinInserted</span><span class="tok-punct">(</span><span class="tok-variable">cents</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span>
+            <span class="tok-type">MachineState</span><span class="tok-punct">::</span><span class="tok-field">AwaitingSelection</span> <span class="tok-punct">{</span> <span class="tok-variable">credit_cents</span><span class="tok-punct">:</span> <span class="tok-variable">cents</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+        <span class="tok-punct">(</span><span class="tok-type">MachineState</span><span class="tok-punct">::</span><span class="tok-field">AwaitingSelection</span> <span class="tok-punct">{</span> <span class="tok-variable">credit_cents</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-type">Event</span><span class="tok-punct">::</span><span class="tok-field">ItemSelected</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span>
+            <span class="tok-type">MachineState</span><span class="tok-punct">::</span><span class="tok-field">Dispensing</span> <span class="tok-punct">{</span> <span class="tok-variable">item</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+        <span class="tok-punct">(</span><span class="tok-type">MachineState</span><span class="tok-punct">::</span><span class="tok-field">Dispensing</span> <span class="tok-punct">{</span> <span class="tok-punct">..</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-type">Event</span><span class="tok-punct">::</span><span class="tok-field">DispenseComplete</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">MachineState</span><span class="tok-punct">::</span><span class="tok-field">Idle</span><span class="tok-punct">,</span>
+        <span class="tok-punct">(</span><span class="tok-variable">other</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">other</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- ignores events that don't apply to the current state</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> encoding the state machine as an enum plus one
@@ -1166,21 +1166,21 @@ place, next to the states it distinguishes.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">enum PowerMode {
-    Run,
-    Sleep,
-    Standby,
-    Off,
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">PowerMode</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Run</span><span class="tok-punct">,</span>
+    <span class="tok-type">Sleep</span><span class="tok-punct">,</span>
+    <span class="tok-type">Standby</span><span class="tok-punct">,</span>
+    <span class="tok-type">Off</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn decode_power_mode(bits: u8) -&gt; PowerMode {
-    match bits &amp; 0b11 { // &lt;- the whole match evaluates to a PowerMode value
-        0b00 =&gt; PowerMode::Run,
-        0b01 =&gt; PowerMode::Sleep,
-        0b10 =&gt; PowerMode::Standby,
-        _ =&gt; PowerMode::Off,
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">decode_power_mode</span><span class="tok-punct">(</span><span class="tok-variable">bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">PowerMode</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">bits</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b11</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the whole match evaluates to a PowerMode value</span>
+        <span class="tok-number">0b00</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">PowerMode</span><span class="tok-punct">::</span><span class="tok-field">Run</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b01</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">PowerMode</span><span class="tok-punct">::</span><span class="tok-field">Sleep</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b10</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">PowerMode</span><span class="tok-punct">::</span><span class="tok-field">Standby</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">PowerMode</span><span class="tok-punct">::</span><span class="tok-field">Off</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1199,21 +1199,21 @@ fn decode_power_mode(bits: u8) -&gt; PowerMode {
 codes, and a <code>match</code> on the decoded value both identifies which fault
 occurred and picks the log message for it in one step, so the mapping
 from fault byte to meaning lives in exactly one place.</p>
-<pre><code class="rust">enum ImuFault {
-    None,
-    SelfTestFailed,
-    CommunicationTimeout,
-    FifoOverflow,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">ImuFault</span> <span class="tok-punct">{</span>
+    <span class="tok-field">None</span><span class="tok-punct">,</span>
+    <span class="tok-type">SelfTestFailed</span><span class="tok-punct">,</span>
+    <span class="tok-type">CommunicationTimeout</span><span class="tok-punct">,</span>
+    <span class="tok-type">FifoOverflow</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn log_fault(fault: &amp;ImuFault) -&gt; &amp;'static str {
-    match fault { // &lt;- exhaustive: every ImuFault variant must appear below
-        ImuFault::None =&gt; "imu ok",
-        ImuFault::SelfTestFailed =&gt; "imu self-test failed",
-        ImuFault::CommunicationTimeout =&gt; "imu bus timeout",
-        ImuFault::FifoOverflow =&gt; "imu fifo overflow",
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_fault</span><span class="tok-punct">(</span><span class="tok-variable">fault</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">ImuFault</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">fault</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- exhaustive: every ImuFault variant must appear below</span>
+        <span class="tok-type">ImuFault</span><span class="tok-punct">::</span><span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;imu ok&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-type">ImuFault</span><span class="tok-punct">::</span><span class="tok-field">SelfTestFailed</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;imu self-test failed&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-type">ImuFault</span><span class="tok-punct">::</span><span class="tok-field">CommunicationTimeout</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;imu bus timeout&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-type">ImuFault</span><span class="tok-punct">::</span><span class="tok-field">FifoOverflow</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;imu fifo overflow&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> matching directly on the fault enum keeps the fault
@@ -1234,21 +1234,21 @@ holds, and it generates the same jump-table code regardless of target.</p>
 frame; matching on the byte's upper bits dispatches to the right
 frame-kind handler in one step, with the match itself doubling as the
 protocol's decode table.</p>
-<pre><code class="rust">enum FrameKind {
-    Beacon,
-    Data,
-    Ack,
-    Unknown,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">FrameKind</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Beacon</span><span class="tok-punct">,</span>
+    <span class="tok-type">Data</span><span class="tok-punct">,</span>
+    <span class="tok-type">Ack</span><span class="tok-punct">,</span>
+    <span class="tok-type">Unknown</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn frame_kind(header: u8) -&gt; FrameKind {
-    match header &gt;&gt; 6 { // &lt;- matches the top two bits of the header byte
-        0b00 =&gt; FrameKind::Beacon,
-        0b01 =&gt; FrameKind::Data,
-        0b10 =&gt; FrameKind::Ack,
-        _ =&gt; FrameKind::Unknown,
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">frame_kind</span><span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">FrameKind</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">header</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-number">6</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- matches the top two bits of the header byte</span>
+        <span class="tok-number">0b00</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">FrameKind</span><span class="tok-punct">::</span><span class="tok-field">Beacon</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b01</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">FrameKind</span><span class="tok-punct">::</span><span class="tok-field">Data</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b10</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">FrameKind</span><span class="tok-punct">::</span><span class="tok-field">Ack</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">FrameKind</span><span class="tok-punct">::</span><span class="tok-field">Unknown</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> matching on the shifted-out bits reads as "which of

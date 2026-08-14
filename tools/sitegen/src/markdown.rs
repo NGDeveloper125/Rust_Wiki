@@ -1,13 +1,38 @@
-use pulldown_cmark::{html, Options, Parser};
+use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag, TagEnd};
 
-/// Render a markdown chunk to HTML. All code fences in this repo are plain
-/// (untagged) and always Rust, so every `<pre><code>` pulldown-cmark emits
-/// gets tagged `class="rust"` for the shared client-side highlighter.
+use crate::highlight::rust_to_html;
+
+/// Render a markdown chunk to HTML, painting every code fence with the
+/// palette as it goes.
+///
+/// All code fences in this repo are plain (untagged) and always Rust. The
+/// highlighting happens here rather than in the browser so that it survives
+/// with JavaScript off and never flashes unpainted on load; the events are
+/// intercepted rather than the finished HTML rewritten, because by then the
+/// code has already been escaped and the original text is gone.
 pub fn to_html(md: &str) -> String {
     let parser = Parser::new_ext(md, Options::empty());
+    let mut events: Vec<Event> = Vec::new();
+    let mut code: Option<String> = None;
+
+    for event in parser {
+        match event {
+            Event::Start(Tag::CodeBlock(_)) => code = Some(String::new()),
+            Event::Text(t) if code.is_some() => code.as_mut().unwrap().push_str(&t),
+            Event::End(TagEnd::CodeBlock) => {
+                let src = code.take().unwrap_or_default();
+                events.push(Event::Html(CowStr::from(format!(
+                    "<pre><code class=\"rust-hl\">{}</code></pre>\n",
+                    rust_to_html(&src)
+                ))));
+            }
+            other => events.push(other),
+        }
+    }
+
     let mut html_out = String::new();
-    html::push_html(&mut html_out, parser);
-    html_out.replace("<pre><code>", "<pre><code class=\"rust\">")
+    html::push_html(&mut html_out, events.into_iter());
+    html_out
 }
 
 /// Split a body on top-level `## Heading` lines, preserving heading order.

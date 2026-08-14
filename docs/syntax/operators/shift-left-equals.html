@@ -986,8 +986,8 @@ place, overloadable via <code>std::ops::ShlAssign</code>.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Left-shifting a value in place</h3>
-            <pre><code class="rust">let mut x = 1u8;
-x &lt;&lt;= 3; // &lt;- `&lt;&lt;=` left-shifts `x` in place
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">1u8</span><span class="tok-punct">;</span>
+<span class="tok-variable">x</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;=</span> <span class="tok-number">3</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&lt;&lt;=` left-shifts `x` in place</span>
 </code></pre>
 
           </div>
@@ -996,15 +996,15 @@ x &lt;&lt;= 3; // &lt;- `&lt;&lt;=` left-shifts `x` in place
             <p>Building up a bitmask one field at a time — shifting previously-packed
 bits further left to make room for the next field — is a natural fit for
 <code>&lt;&lt;=</code>, mutating the accumulator in place across a loop.</p>
-<pre><code class="rust">let field_widths = [3u8, 2, 4]; // bits per field, packed low to high
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">field_widths</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">3u8</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment">// bits per field, packed low to high</span>
 
-let mut mask = 0u16;
-for &amp;width in &amp;field_widths {
-    mask &lt;&lt;= width; // &lt;- `&lt;&lt;=` shifts the accumulated mask left to make room
-    mask |= (1 &lt;&lt; width) - 1; // fill the freed low bits with 1s for this field
-}
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">mask</span> <span class="tok-punct">=</span> <span class="tok-number">0u16</span><span class="tok-punct">;</span>
+<span class="tok-keyword">for</span> <span class="tok-punct">&amp;</span><span class="tok-variable">width</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">field_widths</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">mask</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;=</span> <span class="tok-variable">width</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&lt;&lt;=` shifts the accumulated mask left to make room</span>
+    <span class="tok-variable">mask</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-variable">width</span><span class="tok-punct">)</span> <span class="tok-punct">-</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment">// fill the freed low bits with 1s for this field</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(mask, 0b0001_1111_1111);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">mask</span><span class="tok-punct">,</span> <span class="tok-number">0b0001_1111_1111</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Accumulating into one <code>mut</code> binding with <code>&lt;&lt;=</code> avoids
 building and discarding an intermediate value on every iteration — the
@@ -1038,20 +1038,20 @@ now-empty low position.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Bit-banging a byte in over a software SPI line</h3>
-            <pre><code class="rust">fn read_bit_from_miso() -&gt; u32 {
-    // in real firmware this samples the MISO GPIO pin
-    1
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">read_bit_from_miso</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// in real firmware this samples the MISO GPIO pin</span>
+    <span class="tok-number">1</span>
+<span class="tok-punct">}</span>
 
-fn bitbang_receive_byte() -&gt; u8 {
-    let mut value: u8 = 0;
-    for _ in 0..8 {
-        value &lt;&lt;= 1; // &lt;- `&lt;&lt;=` makes room for the next incoming bit, MSB first
-        value |= read_bit_from_miso() as u8;
-        // toggle_clock_pin();
-    }
-    value
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bitbang_receive_byte</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">8</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">value</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&lt;&lt;=` makes room for the next incoming bit, MSB first</span>
+        <span class="tok-variable">value</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-call-free">read_bit_from_miso</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span><span class="tok-punct">;</span>
+        <span class="tok-comment">// toggle_clock_pin();</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">value</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

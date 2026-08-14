@@ -1017,16 +1017,16 @@ required, not stylistic, in these cases.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Relocating a bound to a `where` clause</h3>
-            <pre><code class="rust">fn largest&lt;T&gt;(items: &amp;[T]) -&gt; &amp;T
-where
-    T: PartialOrd, // &lt;- `where` relocates the bound out of `&lt;T: PartialOrd&gt;`
-{
-    let mut max = &amp;items[0];
-    for item in items {
-        if item &gt; max { max = item; }
-    }
-    max
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">largest</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-generic-param">T</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-type">PartialOrd</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `where` relocates the bound out of `&lt;T: PartialOrd&gt;`</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">max</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">items</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">item</span> <span class="tok-keyword">in</span> <span class="tok-variable">items</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">item</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">max</span> <span class="tok-punct">{</span> <span class="tok-variable">max</span> <span class="tok-punct">=</span> <span class="tok-variable">item</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">max</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1036,18 +1036,18 @@ where
 <em>yielded</em> type, not the iterator type itself — there's no way to write
 that bound inline in the <code>&lt;T&gt;</code> list, so <code>where</code> is required, not a style
 preference.</p>
-<pre><code class="rust">fn print_all&lt;T&gt;(items: T)
-where
-    T: IntoIterator,
-    T::Item: std::fmt::Display, // &lt;- bounding an associated type: only expressible via `where`
-{
-    for item in items {
-        println!("{item}");
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">print_all</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-type">IntoIterator</span><span class="tok-punct">,</span>
+    <span class="tok-type">T</span><span class="tok-punct">::</span><span class="tok-field">Item</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Display</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- bounding an associated type: only expressible via `where`</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">item</span> <span class="tok-keyword">in</span> <span class="tok-variable">items</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{item}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-print_all(vec![1, 2, 3]);
-print_all(["west", "east"]);
+<span class="tok-call-free">print_all</span><span class="tok-punct">(</span><span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-call-free">print_all</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;west&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;east&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>T::Item</code> names a type reachable <em>through</em> <code>T</code>, not <code>T</code>
 itself, so there's no <code>&lt;T::Item: Display&gt;</code> position to write the bound in
@@ -1062,29 +1062,29 @@ clause.</p>
             <p>A function with two type parameters, each carrying more than one bound,
 reads far better with the bounds moved to <code>where</code> than crammed into the
 angle brackets.</p>
-<pre><code class="rust">// AVOID: bounds packed into the parameter list get hard to scan
-fn merge_avoid&lt;K: std::hash::Hash + Eq + Clone, V: Clone&gt;(
-    left: &amp;std::collections::HashMap&lt;K, V&gt;,
-    right: &amp;std::collections::HashMap&lt;K, V&gt;,
-) -&gt; std::collections::HashMap&lt;K, V&gt; {
-    let mut merged = left.clone();
-    merged.extend(right.iter().map(|(k, v)| (k.clone(), v.clone())));
-    merged
-}
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: bounds packed into the parameter list get hard to scan</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">merge_avoid</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-type">Hash</span> <span class="tok-punct">+</span> <span class="tok-type">Eq</span> <span class="tok-punct">+</span> <span class="tok-type">Clone</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">:</span> <span class="tok-trait">Clone</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span>
+    <span class="tok-variable">left</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">right</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type-return">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">merged</span> <span class="tok-punct">=</span> <span class="tok-variable">left</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">merged</span><span class="tok-punct">.</span><span class="tok-call-method">extend</span><span class="tok-punct">(</span><span class="tok-variable">right</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">merged</span>
+<span class="tok-punct">}</span>
 
-// PREFER: `where` separates "what this does" from "what K and V must support"
-fn merge&lt;K, V&gt;(
-    left: &amp;std::collections::HashMap&lt;K, V&gt;,
-    right: &amp;std::collections::HashMap&lt;K, V&gt;,
-) -&gt; std::collections::HashMap&lt;K, V&gt;
-where
-    K: std::hash::Hash + Eq + Clone, // &lt;- each parameter's bounds get their own line
-    V: Clone,
-{
-    let mut merged = left.clone();
-    merged.extend(right.iter().map(|(k, v)| (k.clone(), v.clone())));
-    merged
-}
+<span class="tok-comment">// PREFER: `where` separates &quot;what this does&quot; from &quot;what K and V must support&quot;</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">merge</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span>
+    <span class="tok-variable">left</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">right</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type-return">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-generic-param">K</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-type">Hash</span> <span class="tok-punct">+</span> <span class="tok-type">Eq</span> <span class="tok-punct">+</span> <span class="tok-type">Clone</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- each parameter's bounds get their own line</span>
+    <span class="tok-generic-param">V</span><span class="tok-punct">:</span> <span class="tok-type">Clone</span><span class="tok-punct">,</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">merged</span> <span class="tok-punct">=</span> <span class="tok-variable">left</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">merged</span><span class="tok-punct">.</span><span class="tok-call-method">extend</span><span class="tok-punct">(</span><span class="tok-variable">right</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">merged</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/book/ch10-02-traits.html#clearer-trait-bounds-with-where-clauses">Rust Book</a>
@@ -1119,16 +1119,16 @@ same as in any other Rust code with an associated-type bound.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Bounding a generic driver function over embedded-hal traits</h3>
-            <pre><code class="rust">fn init_display&lt;SPI, CS&gt;(spi: &amp;mut SPI, cs: &amp;mut CS) -&gt; Result&lt;(), SPI::Error&gt;
-where
-    SPI: embedded_hal::spi::SpiBus, // &lt;- `where` bounds the bus type over the SpiBus trait
-    CS: embedded_hal::digital::OutputPin,
-{
-    cs.set_low().ok();
-    spi.write(&amp;[0xAE])?; // display-off command, as an example
-    cs.set_high().ok();
-    Ok(())
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">init_display</span><span class="tok-punct">&lt;</span><span class="tok-constant">SPI</span><span class="tok-punct">,</span> <span class="tok-constant">CS</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">spi</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">SPI</span><span class="tok-punct">,</span> <span class="tok-variable">cs</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">CS</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-constant">SPI</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-constant">SPI</span><span class="tok-punct">:</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">SpiBus</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `where` bounds the bus type over the SpiBus trait</span>
+    <span class="tok-constant">CS</span><span class="tok-punct">:</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-type">OutputPin</span><span class="tok-punct">,</span>
+<span class="tok-punct">{</span>
+    <span class="tok-variable">cs</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">spi</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0xAE</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment">// display-off command, as an example</span>
+    <span class="tok-variable">cs</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

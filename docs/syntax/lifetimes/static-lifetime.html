@@ -1021,8 +1021,8 @@ already-owned value satisfies the bound for free (see
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Binding a string literal as &amp;'static str</h3>
-            <pre><code class="rust">let name: &amp;'static str = "engine-status"; // &lt;- string literals are `&amp;'static str` automatically
-println!("{name}");
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;engine-status&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- string literals are `&amp;'static str` automatically</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{name}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1031,17 +1031,17 @@ println!("{name}");
             <p><code>thread::spawn</code>'s closure must be <code>'static</code>; moving an owned <code>String</code> into
 it satisfies that bound trivially, since owned data can't contain a
 dangling borrow of anything.</p>
-<pre><code class="rust">use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-fn start_worker(label: String) -&gt; thread::JoinHandle&lt;()&gt; {
-    thread::spawn(move || {
-        // &lt;- the closure passed to `spawn` must be `'static`; `label` is owned, so it qualifies for free
-        println!("[{label}] worker running");
-    })
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">start_worker</span><span class="tok-punct">(</span><span class="tok-variable">label</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-type-return">JoinHandle</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- the closure passed to `spawn` must be `'static`; `label` is owned, so it qualifies for free</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[{label}] worker running&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let handle = start_worker(String::from("indexer"));
-handle.join().unwrap();
+<span class="tok-keyword">let</span> <span class="tok-variable">handle</span> <span class="tok-punct">=</span> <span class="tok-call-free">start_worker</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;indexer&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>The spawned thread's lifetime isn't bounded by the
 caller's stack frame, so nothing it captures may borrow from that frame —
@@ -1057,19 +1057,19 @@ covers <code>move</code>-ing an owned value in as the standard way to satisfy
 those trait objects to be <code>'static</code> — not because a job runs forever, but
 because the scheduler can't predict how long it will hold onto any given
 job.</p>
-<pre><code class="rust">trait Job: Send {
-    fn run(&amp;self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Job</span><span class="tok-punct">:</span> <span class="tok-type">Send</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Scheduler {
-    jobs: Vec&lt;Box&lt;dyn Job + 'static&gt;&gt;, // &lt;- `'static` here means "no non-'static borrows inside," not "lives forever"
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Scheduler</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">jobs</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Job</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `'static` here means &quot;no non-'static borrows inside,&quot; not &quot;lives forever&quot;</span>
+<span class="tok-punct">}</span>
 
-impl Scheduler {
-    fn add(&amp;mut self, job: impl Job + 'static) {
-        self.jobs.push(Box::new(job));
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Scheduler</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">add</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">job</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Job</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">jobs</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>dyn Trait</code> defaults to a <code>'static</code> lifetime bound unless
 a shorter one is spelled out explicitly, which the
@@ -1083,14 +1083,14 @@ be fully owned or itself <code>'static</code>.</p>
             <p>Constants and literals baked into the binary are naturally <code>&amp;'static</code>, so
 many call sites can share the same reference without any explicit lifetime
 parameter appearing anywhere.</p>
-<pre><code class="rust">const DEFAULT_REGION: &amp;str = "us-east-1"; // &lt;- elided, but the real type is `&amp;'static str`
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">DEFAULT_REGION</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;us-east-1&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- elided, but the real type is `&amp;'static str`</span>
 
-fn region_label(region: Option&lt;&amp;'static str&gt;) -&gt; &amp;'static str {
-    region.unwrap_or(DEFAULT_REGION)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">region_label</span><span class="tok-punct">(</span><span class="tok-variable">region</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type">str</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">region</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-constant">DEFAULT_REGION</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-println!("{}", region_label(Some("eu-west-1")));
-println!("{}", region_label(None));
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">region_label</span><span class="tok-punct">(</span><span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-string">&quot;eu-west-1&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">region_label</span><span class="tok-punct">(</span><span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/std/primitive.str.html">standard library's <code>str</code> documentation</a>
@@ -1153,54 +1153,54 @@ hosted code does.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Sharing a counter between `main` and an interrupt handler</h3>
-            <pre><code class="rust">use core::cell::Cell;
-use critical_section::Mutex;
-use stm32f4xx_hal::pac::interrupt;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">Cell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">stm32f4xx_hal</span><span class="tok-punct">::</span><span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-variable">interrupt</span><span class="tok-punct">;</span>
 
-static TICKS: Mutex&lt;Cell&lt;u32&gt;&gt; = Mutex::new(Cell::new(0));
-// &lt;- `'static` storage: TIM2 can fire at any point after main starts, so this can't live on main's stack
+<span class="tok-keyword">static</span> <span class="tok-constant">TICKS</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">Cell</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Cell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- `'static` storage: TIM2 can fire at any point after main starts, so this can't live on main's stack</span>
 
-#[interrupt]
-fn TIM2() {
-    critical_section::with(|cs| {
-        let cell = TICKS.borrow(cs);
-        cell.set(cell.get() + 1);
-    });
-}
+<span class="tok-attribute">#[interrupt]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">TIM2</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">cell</span> <span class="tok-punct">=</span> <span class="tok-constant">TICKS</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">cell</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-variable">cell</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn ticks() -&gt; u32 {
-    critical_section::with(|cs| TICKS.borrow(cs).get())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">ticks</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-constant">TICKS</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Declaring a global allocator</h3>
-            <pre><code class="rust">use embedded_alloc::Heap;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_alloc</span><span class="tok-punct">::</span><span class="tok-type">Heap</span><span class="tok-punct">;</span>
 
-#[global_allocator]
-static HEAP: Heap = Heap::empty(); // &lt;- must be `'static`: the allocator has to be reachable for the program's whole life
+<span class="tok-attribute">#[global_allocator]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">HEAP</span><span class="tok-punct">:</span> <span class="tok-type">Heap</span> <span class="tok-punct">=</span> <span class="tok-type">Heap</span><span class="tok-punct">::</span><span class="tok-call-assoc">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- must be `'static`: the allocator has to be reachable for the program's whole life</span>
 
-fn init_heap() {
-    use core::mem::MaybeUninit;
-    const HEAP_SIZE: usize = 1024;
-    static mut HEAP_MEM: [MaybeUninit&lt;u8&gt;; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
-    unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init_heap</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-type">MaybeUninit</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">const</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">1024</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">HEAP_MEM</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">MaybeUninit</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-type">MaybeUninit</span><span class="tok-punct">::</span><span class="tok-call-assoc">uninit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-constant">HEAP</span><span class="tok-punct">.</span><span class="tok-call-method">init</span><span class="tok-punct">(</span><span class="tok-constant">HEAP_MEM</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span><span class="tok-punct">,</span> <span class="tok-constant">HEAP_SIZE</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Splitting a heapless queue into interrupt-safe producer/consumer halves</h3>
-            <pre><code class="rust">use heapless::spsc::{Consumer, Producer, Queue};
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-module">spsc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Consumer</span><span class="tok-punct">,</span> <span class="tok-type">Producer</span><span class="tok-punct">,</span> <span class="tok-type">Queue</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-static mut READINGS: Queue&lt;u16, 8&gt; = Queue::new();
+<span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">READINGS</span><span class="tok-punct">:</span> <span class="tok-type">Queue</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Queue</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn split_queue() -&gt; (Producer&lt;'static, u16, 8&gt;, Consumer&lt;'static, u16, 8&gt;) {
-    // &lt;- `split` requires `&amp;'static mut self`: the producer/consumer halves must outlive
-    //    any interrupt that later uses them, not just this function's own call
-    unsafe { READINGS.split() }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">split_queue</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">Producer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'static</span><span class="tok-punct">,</span> <span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-type-return">Consumer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'static</span><span class="tok-punct">,</span> <span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `split` requires `&amp;'static mut self`: the producer/consumer halves must outlive</span>
+    <span class="tok-comment">//    any interrupt that later uses them, not just this function's own call</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-constant">READINGS</span><span class="tok-punct">.</span><span class="tok-call-method">split</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

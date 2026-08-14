@@ -1028,18 +1028,18 @@ final expression.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Matching on an enum's variants</h3>
-            <pre><code class="rust">enum Direction { North, South, East, West }
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Direction</span> <span class="tok-punct">{</span> <span class="tok-type">North</span><span class="tok-punct">,</span> <span class="tok-type">South</span><span class="tok-punct">,</span> <span class="tok-type">East</span><span class="tok-punct">,</span> <span class="tok-type">West</span> <span class="tok-punct">}</span>
 
-let heading = Direction::East;
+<span class="tok-keyword">let</span> <span class="tok-variable">heading</span> <span class="tok-punct">=</span> <span class="tok-type">Direction</span><span class="tok-punct">::</span><span class="tok-field">East</span><span class="tok-punct">;</span>
 
-let degrees = match heading { // &lt;- `match` picks the arm whose pattern fits
-    Direction::North =&gt; 0,
-    Direction::South =&gt; 180,
-    Direction::East =&gt; 90,
-    Direction::West =&gt; 270,
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">degrees</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-variable">heading</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `match` picks the arm whose pattern fits</span>
+    <span class="tok-type">Direction</span><span class="tok-punct">::</span><span class="tok-field">North</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">0</span><span class="tok-punct">,</span>
+    <span class="tok-type">Direction</span><span class="tok-punct">::</span><span class="tok-field">South</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">180</span><span class="tok-punct">,</span>
+    <span class="tok-type">Direction</span><span class="tok-punct">::</span><span class="tok-field">East</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">90</span><span class="tok-punct">,</span>
+    <span class="tok-type">Direction</span><span class="tok-punct">::</span><span class="tok-field">West</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">270</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-println!("{degrees}");
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{degrees}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><strong>Restriction:</strong> every possible value of the scrutinee's type must be
 covered by some arm's pattern, or this fails to compile — see
@@ -1051,23 +1051,23 @@ covered by some arm's pattern, or this fails to compile — see
             <p>A thermostat's incoming command needs to both identify its shape and, for
 the temperature-setting command, confirm the requested value is in a
 sane range while still keeping the exact number to report back.</p>
-<pre><code class="rust">enum ThermostatCommand {
-    SetTemperature(i32),
-    Boost,
-    Off,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">ThermostatCommand</span> <span class="tok-punct">{</span>
+    <span class="tok-field">SetTemperature</span><span class="tok-punct">(</span><span class="tok-type">i32</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-type">Boost</span><span class="tok-punct">,</span>
+    <span class="tok-type">Off</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn describe(cmd: &amp;ThermostatCommand) -&gt; String {
-    match cmd { // &lt;- `match` on the command enum
-        ThermostatCommand::SetTemperature(t @ 16..=30) =&gt; {
-            // &lt;- `@` binds `t` to the value while also checking the range
-            format!("setting target to {t}C")
-        }
-        ThermostatCommand::SetTemperature(t) =&gt; format!("ignoring out-of-range target {t}C"),
-        ThermostatCommand::Boost | ThermostatCommand::Off =&gt; "no target change".to_string(),
-        // &lt;- `|` lets one arm handle two variants that need identical handling
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">ThermostatCommand</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">cmd</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `match` on the command enum</span>
+        <span class="tok-type">ThermostatCommand</span><span class="tok-punct">::</span><span class="tok-field">SetTemperature</span><span class="tok-punct">(</span><span class="tok-variable">t</span> <span class="tok-punct">@</span> <span class="tok-number">16</span><span class="tok-punct">..=</span><span class="tok-number">30</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `@` binds `t` to the value while also checking the range</span>
+            <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;setting target to {t}C&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-type">ThermostatCommand</span><span class="tok-punct">::</span><span class="tok-field">SetTemperature</span><span class="tok-punct">(</span><span class="tok-variable">t</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;ignoring out-of-range target {t}C&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-type">ThermostatCommand</span><span class="tok-punct">::</span><span class="tok-field">Boost</span> <span class="tok-punct">|</span> <span class="tok-type">ThermostatCommand</span><span class="tok-punct">::</span><span class="tok-field">Off</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;no target change&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-comment tok-anno">// &lt;- `|` lets one arm handle two variants that need identical handling</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Combining <code>|</code> for variants that share behavior and <code>@</code>
 for variants that need both a shape check and the underlying value keeps
@@ -1081,16 +1081,16 @@ documents both as first-class parts of an arm's pattern, not add-on sugar.</p>
             <p>Classifying a sensor reading string needs different messages for a
 parse failure versus a suspiciously cold (but valid) reading — a guard
 distinguishes the second case from the general success case.</p>
-<pre><code class="rust">fn classify_reading(raw: &amp;str) -&gt; String {
-    match raw.trim().parse::&lt;f64&gt;() {
-        Ok(temp) if temp &lt; 0.0 =&gt; format!("reading {temp} is below freezing"),
-        // &lt;- guard: same `Ok(temp)` shape, extra condition on the value
-        Ok(temp) =&gt; format!("reading {temp} is nominal"),
-        Err(e) =&gt; format!("invalid reading {raw:?}: {e}"),
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">classify_reading</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">temp</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-variable">temp</span> <span class="tok-punct">&lt;</span> <span class="tok-number">0.0</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading {temp} is below freezing&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-comment tok-anno">// &lt;- guard: same `Ok(temp)` shape, extra condition on the value</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">temp</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading {temp} is nominal&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid reading {raw:?}: {e}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-println!("{}", classify_reading("-4.5"));
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">classify_reading</span><span class="tok-punct">(</span><span class="tok-string">&quot;-4.5&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Matching on the <code>Result</code> directly, with a guard for the
 one <code>Ok</code> sub-case that needs different handling, avoids re-parsing or a
@@ -1105,14 +1105,14 @@ already-matched pattern.</p>
             <p>Routing a delivery by distance needs every possible <code>u32</code> value handled,
 not just the bands anyone thought of in advance — the exhaustiveness
 requirement is what forces a catch-all here.</p>
-<pre><code class="rust">fn shipping_zone(distance_km: u32) -&gt; &amp;'static str {
-    match distance_km { // &lt;- exhaustive: distance_km could be any u32, so every value needs a home
-        0..=10 =&gt; "local",
-        11..=100 =&gt; "regional",
-        101..=1000 =&gt; "national",
-        _ =&gt; "international", // &lt;- required: no fixed range of literals ever covers all of u32
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">shipping_zone</span><span class="tok-punct">(</span><span class="tok-variable">distance_km</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">distance_km</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- exhaustive: distance_km could be any u32, so every value needs a home</span>
+        <span class="tok-number">0</span><span class="tok-punct">..=</span><span class="tok-number">10</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;local&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-number">11</span><span class="tok-punct">..=</span><span class="tok-number">100</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;regional&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-number">101</span><span class="tok-punct">..=</span><span class="tok-number">1000</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;national&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;international&quot;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- required: no fixed range of literals ever covers all of u32</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Because <code>0..=1000</code> doesn't come close to covering every
 <code>u32</code>, the compiler refuses to compile this without a final wildcard —
@@ -1149,26 +1149,26 @@ falling through.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Decoding a fault status register</h3>
-            <pre><code class="rust">enum Fault { None, OverCurrent, OverTemperature, UnderVoltage }
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Fault</span> <span class="tok-punct">{</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-type">OverCurrent</span><span class="tok-punct">,</span> <span class="tok-type">OverTemperature</span><span class="tok-punct">,</span> <span class="tok-type">UnderVoltage</span> <span class="tok-punct">}</span>
 
-fn decode_fault(reg: u8) -&gt; Fault {
-    match reg { // &lt;- `match` decodes the raw register value into a known set of fault states
-        0b000 =&gt; Fault::None,
-        0b001 =&gt; Fault::OverCurrent,
-        0b010 =&gt; Fault::OverTemperature,
-        0b100 =&gt; Fault::UnderVoltage,
-        _ =&gt; Fault::None, // unrecognized bit pattern; treat conservatively
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">decode_fault</span><span class="tok-punct">(</span><span class="tok-variable">reg</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Fault</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">reg</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `match` decodes the raw register value into a known set of fault states</span>
+        <span class="tok-number">0b000</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Fault</span><span class="tok-punct">::</span><span class="tok-field">None</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b001</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Fault</span><span class="tok-punct">::</span><span class="tok-field">OverCurrent</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b010</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Fault</span><span class="tok-punct">::</span><span class="tok-field">OverTemperature</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b100</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Fault</span><span class="tok-punct">::</span><span class="tok-field">UnderVoltage</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Fault</span><span class="tok-punct">::</span><span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-comment">// unrecognized bit pattern; treat conservatively</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Matching an Option from a non-blocking UART read</h3>
-            <pre><code class="rust">match uart.read() {
-    Some(byte) =&gt; process_byte(byte), // &lt;- `match` on the `Option` a non-blocking read returns
-    None =&gt; {} // nothing available this cycle
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">match</span> <span class="tok-variable">uart</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-call-free">process_byte</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `match` on the `Option` a non-blocking read returns</span>
+    <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// nothing available this cycle</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

@@ -995,7 +995,7 @@ string literal) — the constraint is "no embedded nul bytes," not
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Producing a nul-terminated C string</h3>
-            <pre><code class="rust">let name: &amp;std::ffi::CStr = c"sensor01"; // &lt;- c-string literal: produces `&amp;CStr`, nul-terminated
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">c</span><span class="tok-string">&quot;sensor01&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- c-string literal: produces `&amp;CStr`, nul-terminated</span>
 </code></pre>
 <p>The content cannot contain an embedded <code>\0</code> — a C
 string is nul-terminated, so an interior null byte is a compile error.</p>
@@ -1006,14 +1006,14 @@ string is nul-terminated, so an interior null byte is a compile error.</p>
             <p>Preparing a <code>CStr</code> constant that will eventually be handed to a C API is
 just a matter of writing the literal and holding onto it — the FFI call
 itself is a separate concern, not shown here.</p>
-<pre><code class="rust">use std::ffi::CStr;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-type">CStr</span><span class="tok-punct">;</span>
 
-// A device name a C driver expects as a nul-terminated string.
-const DEVICE_NAME: &amp;CStr = c"sensor-hub-01"; // &lt;- c-string literal: nul terminator added at compile time
+<span class="tok-comment">// A device name a C driver expects as a nul-terminated string.</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">DEVICE_NAME</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">c</span><span class="tok-string">&quot;sensor-hub-01&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- c-string literal: nul terminator added at compile time</span>
 
-fn device_name() -&gt; &amp;'static CStr {
-    DEVICE_NAME // ready to pass to a C function expecting `*const c_char` -- the call itself is out of scope here
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">device_name</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">CStr</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">DEVICE_NAME</span> <span class="tok-comment">// ready to pass to a C function expecting `*const c_char` -- the call itself is out of scope here</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>A <code>c"..."</code> literal produces its nul-terminated bytes at
 compile time, so a fixed constant like this never needs the fallible,
@@ -1051,17 +1051,17 @@ identifier string across that FFI boundary.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Naming a peripheral for a vendor C HAL call</h3>
-            <pre><code class="rust">use core::ffi::{c_char, CStr};
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-type">CStr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-unsafe extern "C" {
-    fn hal_register_peripheral(name: *const c_char) -&gt; i32;
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">hal_register_peripheral</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-const PERIPHERAL_NAME: &amp;CStr = c"uart0"; // &lt;- c-string literal: nul-terminated, ready for the C HAL's `*const c_char` parameter
+<span class="tok-keyword">const</span> <span class="tok-constant">PERIPHERAL_NAME</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">c</span><span class="tok-string">&quot;uart0&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- c-string literal: nul-terminated, ready for the C HAL's `*const c_char` parameter</span>
 
-fn register_uart() -&gt; i32 {
-    unsafe { hal_register_peripheral(PERIPHERAL_NAME.as_ptr()) }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">register_uart</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-call-free">hal_register_peripheral</span><span class="tok-punct">(</span><span class="tok-constant">PERIPHERAL_NAME</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

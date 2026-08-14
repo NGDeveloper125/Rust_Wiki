@@ -1015,9 +1015,9 @@ a statement still needs the trailing <code>;</code> (<code>println!("ready");</c
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Equivalent delimiters for a list-like macro</h3>
-            <pre><code class="rust">let a = vec!(1, 2, 3); // &lt;- legal: () instead of the conventional [] for this list-like macro
-let b = vec![1, 2, 3]; // &lt;- idiomatic form for vec!, matching array-literal syntax
-assert_eq!(a, b);      // &lt;- both invocations expand identically
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- legal: () instead of the conventional [] for this list-like macro</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- idiomatic form for vec!, matching array-literal syntax</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">;</span>      <span class="tok-comment tok-anno">// &lt;- both invocations expand identically</span>
 </code></pre>
 
           </div>
@@ -1027,15 +1027,15 @@ assert_eq!(a, b);      // &lt;- both invocations expand identically
 <code>thread_local!</code> macro, which expands into full item definitions — so, by
 convention, it's written with <code>{...}</code> and, like any other item, needs no
 trailing semicolon.</p>
-<pre><code class="rust">use std::cell::RefCell;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
 
-thread_local! { // &lt;- {} form: this macro's expansion is item(s), not a single value
-    static REQUEST_COUNT: RefCell&lt;u32&gt; = RefCell::new(0);
-} // no trailing `;` needed here, exactly like a `fn` or `impl` block
+<span class="tok-macro">thread_local!</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- {} form: this macro's expansion is item(s), not a single value</span>
+    <span class="tok-keyword">static</span> <span class="tok-constant">REQUEST_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span> <span class="tok-comment">// no trailing `;` needed here, exactly like a `fn` or `impl` block</span>
 
-fn record_request() {
-    REQUEST_COUNT.with(|count| *count.borrow_mut() += 1); // &lt;- () form: reads like a method call
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">record_request</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">REQUEST_COUNT</span><span class="tok-punct">.</span><span class="tok-call-method">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">count</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-variable">count</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- () form: reads like a method call</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The compiler would accept any of the three delimiter
 pairs here, but <code>{...}</code> is the idiomatic signal that a macro's expansion
@@ -1074,25 +1074,25 @@ are rarer in <code>no_std</code> code simply because the standard list-like macr
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Defining register flags with the {} item form</h3>
-            <pre><code class="rust">bitflags::bitflags! { // &lt;- {} form: this macro's expansion is a whole struct item, not a single value
-    struct StatusFlags: u8 {
-        const READY   = 0b0000_0001;
-        const TX_BUSY = 0b0000_0010;
-        const RX_FULL = 0b0000_0100;
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- {} form: this macro's expansion is a whole struct item, not a single value</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">StatusFlags</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">READY</span>   <span class="tok-punct">=</span> <span class="tok-number">0b0000_0001</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">TX_BUSY</span> <span class="tok-punct">=</span> <span class="tok-number">0b0000_0010</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">RX_FULL</span> <span class="tok-punct">=</span> <span class="tok-number">0b0000_0100</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Blocking on a non-blocking peripheral operation with the () form</h3>
-            <pre><code class="rust">let byte = nb::block!(serial.read()); // &lt;- () form: reads like an ordinary function call, evaluates to one value
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">byte</span> <span class="tok-punct">=</span> <span class="tok-module">nb</span><span class="tok-punct">::</span><span class="tok-macro">block!</span><span class="tok-punct">(</span><span class="tok-variable">serial</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- () form: reads like an ordinary function call, evaluates to one value</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Same interchangeability, an unconventional [] call</h3>
-            <pre><code class="rust">let ready = assert_eq![gpio.read_pin(5), true]; // &lt;- legal: [] instead of the conventional () for this expression-like macro
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">ready</span> <span class="tok-punct">=</span> <span class="tok-macro">assert_eq!</span><span class="tok-punct">[</span><span class="tok-variable">gpio</span><span class="tok-punct">.</span><span class="tok-call-method">read_pin</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">true</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- legal: [] instead of the conventional () for this expression-like macro</span>
 </code></pre>
 
           </div>

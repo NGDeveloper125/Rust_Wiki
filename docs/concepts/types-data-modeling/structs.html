@@ -994,13 +994,13 @@ hierarchies tend to accumulate over time.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Point { // &lt;- defines the struct: a new type with two named fields
-    x: f64,
-    y: f64,
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Point</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- defines the struct: a new type with two named fields</span>
+    <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let p = Point { x: 1.0, y: 2.0 }; // constructing a value of that type
-println!("{}", p.x); // fields are accessed by name
+<span class="tok-keyword">let</span> <span class="tok-variable">p</span> <span class="tok-punct">=</span> <span class="tok-type">Point</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-number">1.0</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-number">2.0</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment">// constructing a value of that type</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">p</span><span class="tok-punct">.</span><span class="tok-field">x</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// fields are accessed by name</span>
 </code></pre>
 
       </section>
@@ -1018,20 +1018,20 @@ println!("{}", p.x); // fields are accessed by name
             <p>A struct with several fields is usually built through a <code>new()</code>
 constructor rather than a raw struct literal at every call site, so
 required setup (defaults, normalization) lives in one place.</p>
-<pre><code class="rust">struct Order {
-    id: u64,
-    customer: String,
-    total_cents: u64,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">customer</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Order {
-    fn new(id: u64, customer: impl Into&lt;String&gt;, total_cents: u64) -&gt; Self {
-        // &lt;- `new` is the constructor convention: an inherent, static method
-        Order { id, customer: customer.into(), total_cents }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span> <span class="tok-variable">customer</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Into</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `new` is the constructor convention: an inherent, static method</span>
+        <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">,</span> <span class="tok-variable">customer</span><span class="tok-punct">:</span> <span class="tok-variable">customer</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let order = Order::new(1, "Alice", 4599);
+<span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Alice&quot;</span><span class="tok-punct">,</span> <span class="tok-number">4599</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the API Guidelines call this out directly as
@@ -1050,20 +1050,20 @@ struct-literal call site.</p>
             <p><code>#[derive(sqlx::FromRow)]</code> maps a query's result columns onto a struct's
 fields by name, so the type that models the domain object is also what
 the query returns — no manual <code>row.get("column")</code> calls to keep in sync.</p>
-<pre><code class="rust">// [dependencies] sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }, tokio = { version = "1", features = ["full"] }
-#[derive(sqlx::FromRow)] // &lt;- maps each returned row's columns onto this struct's fields
-struct Order {
-    id: i64,
-    customer: String,
-    total_cents: i64,
-}
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] sqlx = { version = &quot;0.8&quot;, features = [&quot;postgres&quot;, &quot;runtime-tokio&quot;] }, tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-attribute">#[derive(sqlx::FromRow)]</span> <span class="tok-comment tok-anno">// &lt;- maps each returned row's columns onto this struct's fields</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">customer</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-async fn fetch_order(pool: &amp;sqlx::PgPool, id: i64) -&gt; sqlx::Result&lt;Order&gt; {
-    sqlx::query_as::&lt;_, Order&gt;("SELECT id, customer, total_cents FROM orders WHERE id = $1")
-        .bind(id)
-        .fetch_one(pool)
-        .await
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">fetch_order</span><span class="tok-punct">(</span><span class="tok-variable">pool</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-type">PgPool</span><span class="tok-punct">,</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Order</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-module">query_as</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">,</span> <span class="tok-type">Order</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">&quot;SELECT id, customer, total_cents FROM orders WHERE id = $1&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">bind</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">fetch_one</span><span class="tok-punct">(</span><span class="tok-variable">pool</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-keyword">await</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> deriving <code>FromRow</code> on the same struct used everywhere
@@ -1082,17 +1082,17 @@ converted by hand — see
             <p>The same kind of struct that models a database row can derive
 <code>serde::Serialize</code>/<code>Deserialize</code> to move across a JSON boundary, with the
 struct's field names becoming the JSON object's keys automatically.</p>
-<pre><code class="rust">// [dependencies] serde = { version = "1", features = ["derive"] }, serde_json = "1"
-#[derive(serde::Serialize, serde::Deserialize)] // &lt;- struct fields become JSON keys automatically
-struct Order {
-    id: u64,
-    customer: String,
-    total_cents: u64,
-}
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] serde = { version = &quot;1&quot;, features = [&quot;derive&quot;] }, serde_json = &quot;1&quot;</span>
+<span class="tok-attribute">#[derive(serde::Serialize, serde::Deserialize)]</span> <span class="tok-comment tok-anno">// &lt;- struct fields become JSON keys automatically</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">customer</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let order = Order { id: 1, customer: "Alice".into(), total_cents: 4599 };
-let json = serde_json::to_string(&amp;order).unwrap();
-let parsed: Order = serde_json::from_str(&amp;json).unwrap(); // &lt;- round-trips through the same struct
+<span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">customer</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Alice&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">4599</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">json</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">order</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">parsed</span><span class="tok-punct">:</span> <span class="tok-type">Order</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">json</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- round-trips through the same struct</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> deriving on the struct definition itself keeps the wire
@@ -1143,11 +1143,11 @@ embedded-flavored fields.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct TemperatureSensor&lt;I2C&gt; {
-    i2c: I2C,                  // &lt;- the peripheral handle this driver owns
-    calibration_offset: i16,   // &lt;- state read once at startup
-    last_reading: Option&lt;f32&gt;, // &lt;- cache: avoids re-reading the bus unnecessarily
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-constant">I2C</span><span class="tok-punct">,</span>                  <span class="tok-comment tok-anno">// &lt;- the peripheral handle this driver owns</span>
+    <span class="tok-variable">calibration_offset</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">,</span>   <span class="tok-comment tok-anno">// &lt;- state read once at startup</span>
+    <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">f32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- cache: avoids re-reading the bus unnecessarily</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1165,17 +1165,17 @@ embedded-flavored fields.</p>
             <p>A driver's constructor is where the peripheral handle and any calibration
 data are gathered up once, so the rest of the driver's methods never have
 to wonder whether calibration happened yet.</p>
-<pre><code class="rust">struct TemperatureSensor&lt;I2C&gt; {
-    i2c: I2C,
-    calibration_offset: i16,
-    last_reading: Option&lt;f32&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-constant">I2C</span><span class="tok-punct">,</span>
+    <span class="tok-variable">calibration_offset</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">f32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;I2C&gt; TemperatureSensor&lt;I2C&gt; {
-    fn new(i2c: I2C, calibration_offset: i16) -&gt; Self { // &lt;- `new` gathers peripheral + calibration in one place
-        TemperatureSensor { i2c, calibration_offset, last_reading: None }
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-type">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-constant">I2C</span><span class="tok-punct">,</span> <span class="tok-variable">calibration_offset</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `new` gathers peripheral + calibration in one place</span>
+        <span class="tok-type">TemperatureSensor</span> <span class="tok-punct">{</span> <span class="tok-variable">i2c</span><span class="tok-punct">,</span> <span class="tok-variable">calibration_offset</span><span class="tok-punct">,</span> <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-field">None</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the same
@@ -1196,17 +1196,17 @@ driver by hand.</p>
 only a narrow read method, stops calling code from bypassing the driver's
 own bookkeeping (like the reading cache) by reaching into the struct
 directly.</p>
-<pre><code class="rust">pub struct TemperatureSensor&lt;I2C&gt; {
-    i2c: I2C,                  // &lt;- private: calling code can't bypass the driver's own bookkeeping
-    calibration_offset: i16,   // &lt;- private: calibration is an implementation detail
-    last_reading: Option&lt;f32&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-constant">I2C</span><span class="tok-punct">,</span>                  <span class="tok-comment tok-anno">// &lt;- private: calling code can't bypass the driver's own bookkeeping</span>
+    <span class="tok-variable">calibration_offset</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">,</span>   <span class="tok-comment tok-anno">// &lt;- private: calibration is an implementation detail</span>
+    <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">f32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;I2C&gt; TemperatureSensor&lt;I2C&gt; {
-    pub fn last_reading(&amp;self) -&gt; Option&lt;f32&gt; { // &lt;- narrow, public accessor instead of public fields
-        self.last_reading
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-type">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">last_reading</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- narrow, public accessor instead of public fields</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">last_reading</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> private fields plus narrow accessors keep the
@@ -1226,16 +1226,16 @@ encapsulation exists to prevent.</p>
 behavior — implementing <code>Drop</code> on the struct guarantees the peripheral
 gets powered down or released whenever the driver goes out of scope,
 including on an early return.</p>
-<pre><code class="rust">struct TemperatureSensor&lt;I2C&gt; {
-    i2c: I2C,
-    powered_on: bool,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-constant">I2C</span><span class="tok-punct">,</span>
+    <span class="tok-variable">powered_on</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;I2C&gt; Drop for TemperatureSensor&lt;I2C&gt; {
-    fn drop(&amp;mut self) { // &lt;- runs whenever the driver goes out of scope, including on early return
-        self.powered_on = false; // real code would issue a power-down command over `i2c` here
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">TemperatureSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">I2C</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- runs whenever the driver goes out of scope, including on early return</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">powered_on</span> <span class="tok-punct">=</span> <span class="tok-number">false</span><span class="tok-punct">;</span> <span class="tok-comment">// real code would issue a power-down command over `i2c` here</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> tying peripheral shutdown to the struct's <code>Drop</code> impl

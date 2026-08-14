@@ -1004,9 +1004,9 @@ see the <a href="../../concepts/types-data-modeling/arrays-vs-vec.html">Arrays v
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring array types, indexing, and slicing</h3>
-            <pre><code class="rust">let arr: [i32; 3] = [1, 2, 3]; // &lt;- `[i32; 3]` is the type, `[1, 2, 3]` the literal
-let first = arr[0];            // &lt;- `[0]` here is indexing
-let slice: &amp;[i32] = &amp;arr[1..3]; // &lt;- `[1..3]` here is slicing
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">arr</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `[i32; 3]` is the type, `[1, 2, 3]` the literal</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">first</span> <span class="tok-punct">=</span> <span class="tok-variable">arr</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>            <span class="tok-comment tok-anno">// &lt;- `[0]` here is indexing</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">slice</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">arr</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">..</span><span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `[1..3]` here is slicing</span>
 </code></pre>
 <p><strong>Restriction:</strong> both indexing and slicing panic at runtime if the
 index/range is out of bounds — there is no <code>Option</code>-returning <code>[]</code> form
@@ -1019,16 +1019,16 @@ index/range is out of bounds — there is no <code>Option</code>-returning <code
 right default for indices that aren't already known to be in bounds —
 <code>arr[i]</code> is best reserved for cases where an out-of-bounds index would
 itself be a bug worth crashing on.</p>
-<pre><code class="rust">let scores = [85, 92, 78];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">scores</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">85</span><span class="tok-punct">,</span> <span class="tok-number">92</span><span class="tok-punct">,</span> <span class="tok-number">78</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-// AVOID: arr[i] panics the whole program if `i` ever comes from untrusted input
-let third = scores[2];
+<span class="tok-comment">// AVOID: arr[i] panics the whole program if `i` ever comes from untrusted input</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">third</span> <span class="tok-punct">=</span> <span class="tok-variable">scores</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-// PREFER: .get(i) turns an out-of-range index into a normal Option to handle
-match scores.get(5) {
-    Some(score) =&gt; println!("{score}"),
-    None =&gt; println!("no 6th score"),
-}
+<span class="tok-comment">// PREFER: .get(i) turns an out-of-range index into a normal Option to handle</span>
+<span class="tok-keyword">match</span> <span class="tok-variable">scores</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">score</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{score}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;no 6th score&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>[]</code> indexing is appropriate when an out-of-range index
 means the program's own logic is broken (a genuine bug, worth a panic);
@@ -1043,11 +1043,11 @@ document this as the alternative specifically to avoid the panic.</p>
             <p>Slicing with <code>[ ]</code> doesn't copy — <code>&amp;arr[1..3]</code> borrows a view into the
 original array/<code>Vec</code>, so several slices of the same data can coexist
 under the normal shared-borrow rules.</p>
-<pre><code class="rust">let data = vec![10, 20, 30, 40, 50];
-let head = &amp;data[..2];  // &lt;- borrows the first two elements
-let tail = &amp;data[2..];  // &lt;- borrows the rest; both slices borrow `data` at once
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">data</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">10</span><span class="tok-punct">,</span> <span class="tok-number">20</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">,</span> <span class="tok-number">40</span><span class="tok-punct">,</span> <span class="tok-number">50</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">head</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">data</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>  <span class="tok-comment tok-anno">// &lt;- borrows the first two elements</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">tail</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">data</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">..</span><span class="tok-punct">]</span><span class="tok-punct">;</span>  <span class="tok-comment tok-anno">// &lt;- borrows the rest; both slices borrow `data` at once</span>
 
-println!("{head:?} {tail:?}"); // fine: both are read-only shared borrows
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{head:?} {tail:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// fine: both are read-only shared borrows</span>
 </code></pre>
 <p>Because a slice is just a <code>(pointer, length)</code> view, not
 an allocation, splitting data into overlapping or adjacent read-only
@@ -1081,19 +1081,19 @@ for by default.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A fixed-size buffer standing in for `Vec`</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use heapless::Vec;
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-let mut samples: Vec&lt;u16, 16&gt; = Vec::new(); // &lt;- backed by a `[u16; 16]`, not a heap allocation
-samples.push(512).ok();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- backed by a `[u16; 16]`, not a heap allocation</span>
+<span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">512</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Slicing a DMA receive buffer</h3>
-            <pre><code class="rust">let rx_buf: [u8; 64] = [0; 64];
-let header = &amp;rx_buf[..4]; // &lt;- `[..4]` slices the first 4 bytes without copying
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">rx_buf</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">header</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">rx_buf</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `[..4]` slices the first 4 bytes without copying</span>
 </code></pre>
 
           </div>

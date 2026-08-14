@@ -1015,13 +1015,13 @@ much as its functional behavior when picking a dependency.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// [dependencies] tokio = { version = "1", features = ["full"] }
+        <pre><code class="rust-hl"><span class="tok-comment">// [dependencies] tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
 
-#[tokio::main] // &lt;- generates a `fn main()` that starts the tokio runtime, then runs this async body
-async fn main() {
-    let greeting = async { "hello from an async runtime" }.await;
-    println!("{greeting}");
-}
+<span class="tok-attribute">#[tokio::main]</span> <span class="tok-comment tok-anno">// &lt;- generates a `fn main()` that starts the tokio runtime, then runs this async body</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">greeting</span> <span class="tok-punct">=</span> <span class="tok-keyword">async</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;hello from an async runtime&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{greeting}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1040,31 +1040,31 @@ async fn main() {
 plus one CPU-heavy parsing step, should let <code>tokio</code>'s multi-threaded
 executor schedule the downloads while explicitly moving the CPU-heavy work
 off onto a blocking thread so it doesn't stall the async scheduler.</p>
-<pre><code class="rust">// [dependencies] tokio = { version = "1", features = ["full"] }
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
 
-async fn download(id: u32) -&gt; Vec&lt;u8&gt; {
-    // ... network I/O awaited here ...
-    vec![0; 1024]
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">download</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ... network I/O awaited here ...</span>
+    <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">1024</span><span class="tok-punct">]</span>
+<span class="tok-punct">}</span>
 
-fn parse_blocking(data: Vec&lt;u8&gt;) -&gt; usize { // &lt;- plain, synchronous, CPU-bound work
-    data.len()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_blocking</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- plain, synchronous, CPU-bound work</span>
+    <span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[tokio::main(flavor = "multi_thread", worker_threads = 4)] // &lt;- runtime configuration: 4 executor threads
-async fn main() {
-    let mut downloads = Vec::new();
-    for id in 0..8 {
-        downloads.push(tokio::spawn(download(id))); // &lt;- runtime schedules these across its worker threads
-    }
+<span class="tok-attribute">#[tokio::main(flavor = &quot;multi_thread&quot;, worker_threads = 4)]</span> <span class="tok-comment tok-anno">// &lt;- runtime configuration: 4 executor threads</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">downloads</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">id</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">8</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">downloads</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">download</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- runtime schedules these across its worker threads</span>
+    <span class="tok-punct">}</span>
 
-    for handle in downloads {
-        let data = handle.await.unwrap();
-        // &lt;- spawn_blocking hands CPU-bound work to a dedicated thread pool, keeping async workers free
-        let size = tokio::task::spawn_blocking(move || parse_blocking(data)).await.unwrap();
-        println!("parsed {size} bytes");
-    }
-}
+    <span class="tok-keyword">for</span> <span class="tok-variable">handle</span> <span class="tok-keyword">in</span> <span class="tok-variable">downloads</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">data</span> <span class="tok-punct">=</span> <span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-comment tok-anno">// &lt;- spawn_blocking hands CPU-bound work to a dedicated thread pool, keeping async workers free</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">size</span> <span class="tok-punct">=</span> <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-module">task</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn_blocking</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-call-free">parse_blocking</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;parsed {size} bytes&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the executor's worker threads exist to keep polling
@@ -1086,19 +1086,19 @@ around.</p>
 handlers — <code>#[tokio::main]</code> is what turns the <code>Router</code> into a running
 process that accepts connections and drives each handler's future to
 completion.</p>
-<pre><code class="rust">// [dependencies] axum = "0.8", tokio = { version = "1", features = ["full"] }
-use axum::{routing::get, Router};
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] axum = &quot;0.8&quot;, tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">axum</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-module">routing</span><span class="tok-punct">::</span><span class="tok-variable">get</span><span class="tok-punct">,</span> <span class="tok-type">Router</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-async fn health() -&gt; &amp;'static str {
-    "ok"
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">health</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-string">&quot;ok&quot;</span>
+<span class="tok-punct">}</span>
 
-#[tokio::main] // &lt;- without a runtime, `app()`'s handlers would just be inert Futures, never polled
-async fn main() {
-    let app = Router::new().route("/health", get(health));
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap(); // &lt;- the runtime drives this future for the server's lifetime
-}
+<span class="tok-attribute">#[tokio::main]</span> <span class="tok-comment tok-anno">// &lt;- without a runtime, `app()`'s handlers would just be inert Futures, never polled</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">app</span> <span class="tok-punct">=</span> <span class="tok-type">Router</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">route</span><span class="tok-punct">(</span><span class="tok-string">&quot;/health&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">get</span><span class="tok-punct">(</span><span class="tok-variable">health</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">listener</span> <span class="tok-punct">=</span> <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-module">net</span><span class="tok-punct">::</span><span class="tok-type">TcpListener</span><span class="tok-punct">::</span><span class="tok-call-assoc">bind</span><span class="tok-punct">(</span><span class="tok-string">&quot;0.0.0.0:3000&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-module">axum</span><span class="tok-punct">::</span><span class="tok-call-assoc">serve</span><span class="tok-punct">(</span><span class="tok-variable">listener</span><span class="tok-punct">,</span> <span class="tok-variable">app</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the runtime drives this future for the server's lifetime</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> axum's handlers are ordinary async functions with no

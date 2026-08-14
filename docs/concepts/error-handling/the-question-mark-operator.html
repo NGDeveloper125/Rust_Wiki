@@ -1018,11 +1018,11 @@ type system still guarantees every failure is accounted for somewhere.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn read_port_from_env() -&gt; Result&lt;u16, std::num::ParseIntError&gt; {
-    let raw = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
-    let port: u16 = raw.parse()?; // &lt;- returns early with Err if parsing fails, else unwraps to u16
-    Ok(port)
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">read_port_from_env</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">env</span><span class="tok-punct">::</span><span class="tok-call-assoc">var</span><span class="tok-punct">(</span><span class="tok-string">&quot;PORT&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or_else</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-string">&quot;8080&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- returns early with Err if parsing fails, else unwraps to u16</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1041,28 +1041,28 @@ type system still guarantees every failure is accounted for somewhere.</p>
 reading the file, then parsing a field out of it — and <code>?</code> lets each
 step propagate without a <code>match</code> at every line, converting each
 underlying error into one shared <code>ConfigError</code> along the way.</p>
-<pre><code class="rust">use std::fs;
-use std::num::ParseIntError;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fs</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">ParseIntError</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-enum ConfigError {
-    Io(std::io::Error),
-    Parse(ParseIntError),
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">ConfigError</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Io</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Parse</span><span class="tok-punct">(</span><span class="tok-type">ParseIntError</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl From&lt;std::io::Error&gt; for ConfigError { // &lt;- enables `?` to convert io::Error into ConfigError automatically
-    fn from(e: std::io::Error) -&gt; Self { ConfigError::Io(e) }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">ConfigError</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- enables `?` to convert io::Error into ConfigError automatically</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-type">ConfigError</span><span class="tok-punct">::</span><span class="tok-field">Io</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl From&lt;ParseIntError&gt; for ConfigError {
-    fn from(e: ParseIntError) -&gt; Self { ConfigError::Parse(e) }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">ConfigError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-type">ParseIntError</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-type">ConfigError</span><span class="tok-punct">::</span><span class="tok-field">Parse</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn load_max_connections(path: &amp;str) -&gt; Result&lt;u32, ConfigError&gt; {
-    let contents = fs::read_to_string(path)?; // &lt;- `?`: propagate io::Error, converted into ConfigError
-    let max_connections: u32 = contents.trim().parse()?; // &lt;- `?`: propagate ParseIntError, converted too
-    Ok(max_connections)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">load_max_connections</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">contents</span> <span class="tok-punct">=</span> <span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?`: propagate io::Error, converted into ConfigError</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">contents</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?`: propagate ParseIntError, converted too</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">max_connections</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> chaining <code>?</code> across steps that fail with different
@@ -1081,25 +1081,25 @@ this is the standard shape for a multi-step fallible pipeline.</p>
             <p>Validating a signup request rejects the first missing required field it
 finds; using <code>?</code> on <code>Option::ok_or_else</code> turns "value is missing" into an
 early return, giving <code>Option</code> the same fail-fast shape <code>?</code> gives <code>Result</code>.</p>
-<pre><code class="rust">struct SignupRequest {
-    email: Option&lt;String&gt;,
-    age: Option&lt;u8&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SignupRequest</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">email</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">age</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-#[derive(Debug)]
-struct ValidationError(String);
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ValidationError</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn validate(request: &amp;SignupRequest) -&gt; Result&lt;(), ValidationError&gt; {
-    let email = request.email.as_ref()
-        .ok_or_else(|| ValidationError("email is required".into()))?; // &lt;- `?` on a converted Option: exit early if missing
-    let age = request.age
-        .ok_or_else(|| ValidationError("age is required".into()))?;
-    if age &lt; 18 {
-        return Err(ValidationError("must be 18 or older".into()));
-    }
-    println!("validated {email}, age {age}");
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">validate</span><span class="tok-punct">(</span><span class="tok-variable">request</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SignupRequest</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">ValidationError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">email</span> <span class="tok-punct">=</span> <span class="tok-variable">request</span><span class="tok-punct">.</span><span class="tok-field">email</span><span class="tok-punct">.</span><span class="tok-call-method">as_ref</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">ok_or_else</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-field">ValidationError</span><span class="tok-punct">(</span><span class="tok-string">&quot;email is required&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` on a converted Option: exit early if missing</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">age</span> <span class="tok-punct">=</span> <span class="tok-variable">request</span><span class="tok-punct">.</span><span class="tok-field">age</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">ok_or_else</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-field">ValidationError</span><span class="tok-punct">(</span><span class="tok-string">&quot;age is required&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">age</span> <span class="tok-punct">&lt;</span> <span class="tok-number">18</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-field">ValidationError</span><span class="tok-punct">(</span><span class="tok-string">&quot;must be 18 or older&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;validated {email}, age {age}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>ok_or_else</code> plus <code>?</code> lets a validation chain read as a
@@ -1118,21 +1118,21 @@ demonstrates on <code>Result</code>.</p>
             <p>A test can use <code>?</code> instead of <code>unwrap()</code> at every step, by returning
 <code>Result&lt;(), E&gt;</code> from the test function itself, so a failing step reports
 a real error instead of a bare panic message.</p>
-<pre><code class="rust">use std::num::ParseIntError;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">ParseIntError</span><span class="tok-punct">;</span>
 
-fn parse_config_line(line: &amp;str) -&gt; Result&lt;(String, i64), ParseIntError&gt; {
-    let (key, value) = line.split_once('=').expect("malformed line");
-    let parsed_value: i64 = value.trim().parse()?; // &lt;- `?` inside an ordinary function
-    Ok((key.trim().to_string(), parsed_value))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_config_line</span><span class="tok-punct">(</span><span class="tok-variable">line</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-type-return">String</span><span class="tok-punct">,</span> <span class="tok-type-return">i64</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">line</span><span class="tok-punct">.</span><span class="tok-call-method">split_once</span><span class="tok-punct">(</span><span class="tok-string">'='</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;malformed line&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">parsed_value</span><span class="tok-punct">:</span> <span class="tok-type">i64</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` inside an ordinary function</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">parsed_value</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[test]
-fn parses_retry_count() -&gt; Result&lt;(), ParseIntError&gt; { // &lt;- test fn returns Result, so `?` works here too
-    let (key, value) = parse_config_line("retries = 3")?;
-    assert_eq!(key, "retries");
-    assert_eq!(value, 3);
-    Ok(())
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parses_retry_count</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- test fn returns Result, so `?` works here too</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_config_line</span><span class="tok-punct">(</span><span class="tok-string">&quot;retries = 3&quot;</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">,</span> <span class="tok-string">&quot;retries&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>Result&lt;(), E&gt;</code> from a <code>#[test]</code> function
@@ -1153,31 +1153,31 @@ explicitly supports for <code>#[test]</code> functions.</p>
 library-specific error type; internally it uses <code>?</code> to fold together
 several fallible steps that raise different underlying error types, but
 the boundary itself only ever exposes the one.</p>
-<pre><code class="rust">use std::str::FromStr;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">str</span><span class="tok-punct">::</span><span class="tok-type">FromStr</span><span class="tok-punct">;</span>
 
-pub struct OrderId(u32);
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">OrderId</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-pub enum ParseOrderIdError {
-    Empty,
-    NotNumeric(std::num::ParseIntError),
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">ParseOrderIdError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Empty</span><span class="tok-punct">,</span>
+    <span class="tok-field">NotNumeric</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">ParseIntError</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl From&lt;std::num::ParseIntError&gt; for ParseOrderIdError {
-    fn from(e: std::num::ParseIntError) -&gt; Self { ParseOrderIdError::NotNumeric(e) }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">ParseOrderIdError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">ParseIntError</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-type">ParseOrderIdError</span><span class="tok-punct">::</span><span class="tok-field">NotNumeric</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl FromStr for OrderId {
-    type Err = ParseOrderIdError;
+<span class="tok-keyword">impl</span> <span class="tok-trait">FromStr</span> <span class="tok-keyword">for</span> <span class="tok-type">OrderId</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Err</span> <span class="tok-punct">=</span> <span class="tok-type">ParseOrderIdError</span><span class="tok-punct">;</span>
 
-    fn from_str(s: &amp;str) -&gt; Result&lt;Self, Self::Err&gt; {
-        if s.is_empty() {
-            return Err(ParseOrderIdError::Empty);
-        }
-        let id: u32 = s.parse()?; // &lt;- `?` keeps FromStr's public error type as the only one callers see
-        Ok(OrderId(id))
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from_str</span><span class="tok-punct">(</span><span class="tok-variable">s</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Err</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">ParseOrderIdError</span><span class="tok-punct">::</span><span class="tok-field">Empty</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` keeps FromStr's public error type as the only one callers see</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-field">OrderId</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> implementing <code>FromStr</code> gives callers the standard
@@ -1223,25 +1223,25 @@ success.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use embedded_hal::i2c::I2c;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-struct SensorError;
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorError</span><span class="tok-punct">;</span>
 
-fn configure(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), SensorError&gt; {
-    i2c.write(addr, &amp;[0x20, 0x01]).map_err(|_| SensorError) // &lt;- enable the sensor
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x20</span><span class="tok-punct">,</span> <span class="tok-number">0x01</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">SensorError</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- enable the sensor</span>
+<span class="tok-punct">}</span>
 
-fn read_value(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u16, SensorError&gt; {
-    let mut buf = [0u8; 2];
-    i2c.write_read(addr, &amp;[0x28], &amp;mut buf).map_err(|_| SensorError)?;
-    Ok(u16::from_be_bytes(buf))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_value</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write_read</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x28</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">SensorError</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_be_bytes</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn read_configured_value(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u16, SensorError&gt; {
-    configure(i2c, addr)?; // &lt;- exits immediately if enabling the sensor fails
-    read_value(i2c, addr)  // &lt;- last expression: its own Result is returned as-is
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_configured_value</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">configure</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits immediately if enabling the sensor fails</span>
+    <span class="tok-call-free">read_value</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">)</span>  <span class="tok-comment tok-anno">// &lt;- last expression: its own Result is returned as-is</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1260,34 +1260,34 @@ fn read_configured_value(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u16, 
 steps — waking the sensor, waiting for it to report ready, then reading
 the result — and <code>?</code> exits at the first one that fails instead of reading
 a result from a sensor that was never actually ready.</p>
-<pre><code class="rust">use embedded_hal::i2c::I2c;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-enum SensorError {
-    Bus,
-    NotReady,
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Bus</span><span class="tok-punct">,</span>
+    <span class="tok-type">NotReady</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn wake(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), SensorError&gt; {
-    i2c.write(addr, &amp;[0x10, 0x01]).map_err(|_| SensorError::Bus) // &lt;- power-on command
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">wake</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x10</span><span class="tok-punct">,</span> <span class="tok-number">0x01</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">Bus</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- power-on command</span>
+<span class="tok-punct">}</span>
 
-fn wait_ready(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), SensorError&gt; {
-    let mut status = [0u8; 1];
-    i2c.write_read(addr, &amp;[0x00], &amp;mut status).map_err(|_| SensorError::Bus)?;
-    if status[0] &amp; 0x01 == 0 {
-        return Err(SensorError::NotReady);
-    }
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">wait_ready</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">status</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write_read</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x00</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">status</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">Bus</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">status</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0x01</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">NotReady</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn read_measurement(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;u16, SensorError&gt; {
-    wake(i2c, addr)?;       // &lt;- exits here if the power-on write fails
-    wait_ready(i2c, addr)?; // &lt;- exits here if the status read fails, or the sensor isn't ready yet
-    let mut buf = [0u8; 2];
-    i2c.write_read(addr, &amp;[0x28], &amp;mut buf).map_err(|_| SensorError::Bus)?;
-    Ok(u16::from_be_bytes(buf))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_measurement</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">wake</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>       <span class="tok-comment tok-anno">// &lt;- exits here if the power-on write fails</span>
+    <span class="tok-call-free">wait_ready</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits here if the status read fails, or the sensor isn't ready yet</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write_read</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x28</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">Bus</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_be_bytes</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> each <code>?</code> stops the sequence the instant a step the rest
@@ -1308,18 +1308,18 @@ instead of file I/O.</p>
 rejects a missing field before it's used, using <code>?</code> on
 <code>Option::ok_or</code> exactly as the classic page does for a signup form — just
 with the form replaced by a byte read out of flash.</p>
-<pre><code class="rust">struct DeviceConfig&lt;'a&gt; {
-    mode_byte: Option&lt;&amp;'a u8&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">DeviceConfig</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">mode_byte</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-#[derive(Debug)]
-struct ConfigError(&amp;'static str);
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ConfigError</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type">str</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn read_mode(config: &amp;DeviceConfig) -&gt; Result&lt;u8, ConfigError&gt; {
-    let mode = config.mode_byte
-        .ok_or(ConfigError("mode byte missing from config block"))?; // &lt;- exits early if the field was never written
-    Ok(*mode)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_mode</span><span class="tok-punct">(</span><span class="tok-variable">config</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">DeviceConfig</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">mode</span> <span class="tok-punct">=</span> <span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-field">mode_byte</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">ok_or</span><span class="tok-punct">(</span><span class="tok-field">ConfigError</span><span class="tok-punct">(</span><span class="tok-string">&quot;mode byte missing from config block&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits early if the field was never written</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">*</span><span class="tok-variable">mode</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>?</code> on <code>ok_or</code>/<code>ok_or_else</code> gives <code>Option</code> the same

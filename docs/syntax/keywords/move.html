@@ -1017,11 +1017,11 @@ for <code>move</code> to apply to. It is exclusively a closure/async-block modif
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Forcing a closure to capture by value</h3>
-            <pre><code class="rust">let price = 19.99;
-let compute_total = move |quantity: u32| price * quantity as f64; // &lt;- forces `price` to be captured by value
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">price</span> <span class="tok-punct">=</span> <span class="tok-number">19.99</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">compute_total</span> <span class="tok-punct">=</span> <span class="tok-keyword">move</span> <span class="tok-punct">|</span><span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">|</span> <span class="tok-variable">price</span> <span class="tok-punct">*</span> <span class="tok-variable">quantity</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- forces `price` to be captured by value</span>
 
-println!("{}", compute_total(3));
-println!("{price}"); // still valid: f64 is Copy, so `move` copied it rather than invalidating `price`
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">compute_total</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{price}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// still valid: f64 is Copy, so `move` copied it rather than invalidating `price`</span>
 </code></pre>
 
           </div>
@@ -1030,17 +1030,17 @@ println!("{price}"); // still valid: f64 is Copy, so `move` copied it rather tha
             <p>A spawned thread's closure has to own everything it touches, since the
 thread may still be running after the function that spawned it returns —
 <code>move</code> sits directly before the closure's <code>||</code>.</p>
-<pre><code class="rust">use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let sensor_ids = vec![101, 102, 103];
+<span class="tok-keyword">let</span> <span class="tok-variable">sensor_ids</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">101</span><span class="tok-punct">,</span> <span class="tok-number">102</span><span class="tok-punct">,</span> <span class="tok-number">103</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let handle = thread::spawn(move || {
-    // &lt;- `move` forces every capture (`sensor_ids`) to be taken by value, not borrowed
-    let total: u32 = sensor_ids.iter().sum();
-    println!("total: {total}");
-});
+<span class="tok-keyword">let</span> <span class="tok-variable">handle</span> <span class="tok-punct">=</span> <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `move` forces every capture (`sensor_ids`) to be taken by value, not borrowed</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">sensor_ids</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;total: {total}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-handle.join().unwrap();
+<span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>thread::spawn</code> requires its closure to be <code>'static</code>
 because the new thread isn't bounded by the caller's stack frame, so nothing
@@ -1054,22 +1054,22 @@ covers <code>move</code> as the standard way to satisfy that bound.</p>
             <p>A producer closure needs to own both the channel's <code>Sender</code> and the data it
 sends, so that the <code>Sender</code> is dropped (and the channel closed) exactly when
 the closure finishes, independent of anything in the caller's scope.</p>
-<pre><code class="rust">use std::sync::mpsc;
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-variable">mpsc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let (tx, rx) = mpsc::channel::&lt;String&gt;();
-let orders = vec!["order-1".to_string(), "order-2".to_string()];
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">tx</span><span class="tok-punct">,</span> <span class="tok-variable">rx</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-module">channel</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">orders</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;order-1&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;order-2&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-thread::spawn(move || {
-    // &lt;- `move` takes ownership of both `tx` and `orders`, not just one of them
-    for order in orders {
-        tx.send(order).unwrap();
-    }
-}); // the closure's `tx` is dropped when it returns, which is what closes the channel
+<span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `move` takes ownership of both `tx` and `orders`, not just one of them</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">order</span> <span class="tok-keyword">in</span> <span class="tok-variable">orders</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">tx</span><span class="tok-punct">.</span><span class="tok-call-method">send</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// the closure's `tx` is dropped when it returns, which is what closes the channel</span>
 
-for received in rx {
-    println!("got: {received}");
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">received</span> <span class="tok-keyword">in</span> <span class="tok-variable">rx</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;got: {received}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Dropping every clone of the <code>Sender</code> is what signals the
 receiving end that no more messages are coming — the
@@ -1083,18 +1083,18 @@ rather than lingering in the spawning function's scope.</p>
             <p>A task handed to an async runtime can outlive the function that spawned it,
 just like a thread — <code>move</code> follows <code>async</code> for exactly the same reason it
 precedes <code>||</code> on a thread closure.</p>
-<pre><code class="rust">// [dependencies] tokio = { version = "1", features = ["full"] }
-use tokio::task;
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-variable">task</span><span class="tok-punct">;</span>
 
-async fn process_batch(order_ids: Vec&lt;u32&gt;) {
-    let handle = task::spawn(async move {
-        // &lt;- `move` follows `async`, forcing `order_ids` into the future's captured state
-        let total: u32 = order_ids.iter().sum();
-        println!("batch total: {total}");
-    });
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">process_batch</span><span class="tok-punct">(</span><span class="tok-variable">order_ids</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">handle</span> <span class="tok-punct">=</span> <span class="tok-module">task</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">async</span> <span class="tok-keyword">move</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `move` follows `async`, forcing `order_ids` into the future's captured state</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">order_ids</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;batch total: {total}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    handle.await.unwrap();
-}
+    <span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>tokio::spawn</code> requires its future to be <code>'static</code> for the
 same reason <code>thread::spawn</code> does — the
@@ -1132,28 +1132,28 @@ fires to borrow from.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Moving an owned peripheral into a critical-section closure</h3>
-            <pre><code class="rust">use critical_section::Mutex;
-use core::cell::RefCell;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
 
-static SHARED_ADC: Mutex&lt;RefCell&lt;Option&lt;Adc&gt;&gt;&gt; = Mutex::new(RefCell::new(None));
+<span class="tok-keyword">static</span> <span class="tok-constant">SHARED_ADC</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">Adc</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn init(adc: Adc) {
-    critical_section::with(move |cs| {
-        // &lt;- `move`: forces `adc` to be taken by value, since the closure stores it past this call
-        SHARED_ADC.borrow(cs).replace(Some(adc));
-    });
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init</span><span class="tok-punct">(</span><span class="tok-variable">adc</span><span class="tok-punct">:</span> <span class="tok-type">Adc</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `move`: forces `adc` to be taken by value, since the closure stores it past this call</span>
+        <span class="tok-constant">SHARED_ADC</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">replace</span><span class="tok-punct">(</span><span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">adc</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Moving a peripheral handle into a timer interrupt callback</h3>
-            <pre><code class="rust">fn schedule_blink(led: impl OutputPin + 'static, timer: &amp;mut impl PeriodicTimer) {
-    timer.on_interrupt(move || {
-        // &lt;- `move`: the closure must own `led`, since the timer callback fires long after `schedule_blink` returns
-        led.toggle().ok();
-    });
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">schedule_blink</span><span class="tok-punct">(</span><span class="tok-variable">led</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">OutputPin</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">,</span> <span class="tok-variable">timer</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">PeriodicTimer</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">timer</span><span class="tok-punct">.</span><span class="tok-call-method">on_interrupt</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `move`: the closure must own `led`, since the timer callback fires long after `schedule_blink` returns</span>
+        <span class="tok-variable">led</span><span class="tok-punct">.</span><span class="tok-call-method">toggle</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

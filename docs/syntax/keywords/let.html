@@ -1010,7 +1010,7 @@ and cannot be used where an expression is required.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Introducing a new binding</h3>
-            <pre><code class="rust">let x = 5; // &lt;- `let` introduces a new binding named `x`
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `let` introduces a new binding named `x`</span>
 </code></pre>
 
           </div>
@@ -1019,18 +1019,18 @@ and cannot be used where an expression is required.</p>
             <p>A freshly constructed value is typically bound with <code>let</code> right where it
 is created, via a <code>new</code> constructor rather than a bare struct literal at
 the call site.</p>
-<pre><code class="rust">struct Order {
-    id: u32,
-    total: f64,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Order {
-    fn new(id: u32, total: f64) -&gt; Self {
-        Order { id, total }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">,</span> <span class="tok-variable">total</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let order = Order::new(1042, 59.99); // &lt;- `let` binds the freshly constructed value to `order`
+<span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">1042</span><span class="tok-punct">,</span> <span class="tok-number">59.99</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `let` binds the freshly constructed value to `order`</span>
 </code></pre>
 <p>An inherent <code>new</code> associated function is the
 conventional constructor shape per the
@@ -1044,11 +1044,11 @@ one place.</p>
             <p>Several <code>let</code> bindings can each hold a shared reference to the same
 value at once — none of them take ownership, so the original stays
 usable too.</p>
-<pre><code class="rust">let config = String::from("production");
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;production&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let a = &amp;config; // &lt;- `let` binds a shared reference; `config` isn't moved
-let b = &amp;config; // multiple shared references can coexist
-println!("{a} {b} {config}");
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `let` binds a shared reference; `config` isn't moved</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">;</span> <span class="tok-comment">// multiple shared references can coexist</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{a} {b} {config}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Any number of <code>&amp;T</code> references can be live
 simultaneously as long as no <code>&amp;mut T</code> exists at the same time — the
@@ -1061,10 +1061,10 @@ is the canonical statement of this rule.</p>
             <p>Parsing a value that might fail and immediately propagating the error
 with <code>?</code> is one of the most common shapes a <code>let</code> binding takes in
 fallible code.</p>
-<pre><code class="rust">fn read_timeout(raw: &amp;str) -&gt; Result&lt;u64, std::num::ParseIntError&gt; {
-    let timeout = raw.trim().parse::&lt;u64&gt;()?; // &lt;- `let` binds the value `?` unwraps on success
-    Ok(timeout * 1000)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">read_timeout</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u64</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">timeout</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u64</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `let` binds the value `?` unwraps on success</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">timeout</span> <span class="tok-punct">*</span> <span class="tok-number">1000</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The <code>?</code> operator returns the <code>Err</code> variant to the
 caller immediately on failure, so by the time <code>let</code> finishes binding
@@ -1101,13 +1101,13 @@ ordinary binding form each of those builds on.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Binding a configured peripheral handle</h3>
-            <pre><code class="rust">let mut led = gpioa.pa5.into_push_pull_output(); // &lt;- `let` binds the configured pin handle, same as any other value
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">led</span> <span class="tok-punct">=</span> <span class="tok-variable">gpioa</span><span class="tok-punct">.</span><span class="tok-field">pa5</span><span class="tok-punct">.</span><span class="tok-call-method">into_push_pull_output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `let` binds the configured pin handle, same as any other value</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Binding a value produced by a fallible read</h3>
-            <pre><code class="rust">let reading = adc.read(&amp;mut channel).unwrap_or(0); // &lt;- ordinary `let` binding, no embedded-specific behavior
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">reading</span> <span class="tok-punct">=</span> <span class="tok-variable">adc</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">channel</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ordinary `let` binding, no embedded-specific behavior</span>
 </code></pre>
 
           </div>

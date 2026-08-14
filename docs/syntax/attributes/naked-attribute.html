@@ -1015,10 +1015,10 @@ language.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Writing a function with no compiler-generated prologue or epilogue</h3>
-            <pre><code class="rust">#[unsafe(naked)] // &lt;- no compiler-generated prologue/epilogue: the body is pure asm
-pub extern "C" fn identity_trampoline() {
-    core::arch::naked_asm!("ret");
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[unsafe(naked)]</span> <span class="tok-comment tok-anno">// &lt;- no compiler-generated prologue/epilogue: the body is pure asm</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">identity_trampoline</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">arch</span><span class="tok-punct">::</span><span class="tok-macro">naked_asm!</span><span class="tok-punct">(</span><span class="tok-string">&quot;ret&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1029,19 +1029,19 @@ address with no compiler-managed calling convention already in place —
 the very first instructions must save the interrupted context by hand
 before anything resembling an ordinary function call is safe, which is
 exactly what a naked trampoline provides.</p>
-<pre><code class="rust">#[unsafe(naked)] // &lt;- interrupt entry: no assumption about register state can be made yet
-pub extern "C" fn interrupt_trampoline() {
-    core::arch::naked_asm!(
-        "push {{r4-r11, lr}}",   // manually save the registers a normal prologue would have saved
-        "bl   {handler}",        // now safe to call an ordinary Rust function
-        "pop  {{r4-r11, pc}}",
-        handler = sym interrupt_handler,
-    );
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[unsafe(naked)]</span> <span class="tok-comment tok-anno">// &lt;- interrupt entry: no assumption about register state can be made yet</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">interrupt_trampoline</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">arch</span><span class="tok-punct">::</span><span class="tok-macro">naked_asm!</span><span class="tok-punct">(</span>
+        <span class="tok-string">&quot;push {{r4-r11, lr}}&quot;</span><span class="tok-punct">,</span>   <span class="tok-comment">// manually save the registers a normal prologue would have saved</span>
+        <span class="tok-string">&quot;bl   {handler}&quot;</span><span class="tok-punct">,</span>        <span class="tok-comment">// now safe to call an ordinary Rust function</span>
+        <span class="tok-string">&quot;pop  {{r4-r11, pc}}&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-variable">handler</span> <span class="tok-punct">=</span> <span class="tok-variable">sym</span> <span class="tok-variable">interrupt_handler</span><span class="tok-punct">,</span>
+    <span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-extern "C" fn interrupt_handler() {
-    // ordinary Rust code, safe to run once registers are saved
-}
+<span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">interrupt_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ordinary Rust code, safe to run once registers are saved</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>An ordinary (non-naked) function assumes the calling
 convention's register-saving contract is already in effect, which is not
@@ -1100,41 +1100,41 @@ application code sitting on top of them.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Writing a Cortex-M PendSV context-switch handler</h3>
-            <pre><code class="rust">#[unsafe(no_mangle)]
-#[unsafe(naked)] // &lt;- must control the exact register save/restore and stack-pointer swap itself
-pub extern "C" fn PendSV() {
-    core::arch::naked_asm!(
-        "mrs r0, psp",           // r0 = the interrupted task's stack pointer
-        "stmdb r0!, {{r4-r11}}", // manually save the callee-saved registers a prologue would have saved
-        "bl {switch}",           // pick the next task; returns its saved stack pointer in r0
-        "ldmia r0!, {{r4-r11}}", // restore the next task's callee-saved registers
-        "msr psp, r0",           // hand the CPU the next task's stack pointer
-        "bx lr",                 // exception return: resumes the next task exactly where it left off
-        switch = sym choose_next_task,
-    );
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-attribute">#[unsafe(naked)]</span> <span class="tok-comment tok-anno">// &lt;- must control the exact register save/restore and stack-pointer swap itself</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">PendSV</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">arch</span><span class="tok-punct">::</span><span class="tok-macro">naked_asm!</span><span class="tok-punct">(</span>
+        <span class="tok-string">&quot;mrs r0, psp&quot;</span><span class="tok-punct">,</span>           <span class="tok-comment">// r0 = the interrupted task's stack pointer</span>
+        <span class="tok-string">&quot;stmdb r0!, {{r4-r11}}&quot;</span><span class="tok-punct">,</span> <span class="tok-comment">// manually save the callee-saved registers a prologue would have saved</span>
+        <span class="tok-string">&quot;bl {switch}&quot;</span><span class="tok-punct">,</span>           <span class="tok-comment">// pick the next task; returns its saved stack pointer in r0</span>
+        <span class="tok-string">&quot;ldmia r0!, {{r4-r11}}&quot;</span><span class="tok-punct">,</span> <span class="tok-comment">// restore the next task's callee-saved registers</span>
+        <span class="tok-string">&quot;msr psp, r0&quot;</span><span class="tok-punct">,</span>           <span class="tok-comment">// hand the CPU the next task's stack pointer</span>
+        <span class="tok-string">&quot;bx lr&quot;</span><span class="tok-punct">,</span>                 <span class="tok-comment">// exception return: resumes the next task exactly where it left off</span>
+        <span class="tok-variable">switch</span> <span class="tok-punct">=</span> <span class="tok-variable">sym</span> <span class="tok-variable">choose_next_task</span><span class="tok-punct">,</span>
+    <span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-extern "C" fn choose_next_task(saved_sp: u32) -&gt; u32 {
-    saved_sp // stand-in for real scheduler logic picking the next task's stack pointer
-}
+<span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">choose_next_task</span><span class="tok-punct">(</span><span class="tok-variable">saved_sp</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">saved_sp</span> <span class="tok-comment">// stand-in for real scheduler logic picking the next task's stack pointer</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Writing a naked reset handler that sets up the stack before any Rust runs</h3>
-            <pre><code class="rust">#[unsafe(no_mangle)]
-#[unsafe(naked)] // &lt;- runs before the stack pointer or .data/.bss are guaranteed set up
-pub unsafe extern "C" fn Reset() -&gt; ! {
-    core::arch::naked_asm!(
-        "ldr sp, =_stack_start", // set the stack pointer from a linker-script symbol
-        "bl {init}",             // now safe to call ordinary Rust: a real stack exists
-        init = sym init_runtime,
-    );
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-attribute">#[unsafe(naked)]</span> <span class="tok-comment tok-anno">// &lt;- runs before the stack pointer or .data/.bss are guaranteed set up</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">Reset</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">arch</span><span class="tok-punct">::</span><span class="tok-macro">naked_asm!</span><span class="tok-punct">(</span>
+        <span class="tok-string">&quot;ldr sp, =_stack_start&quot;</span><span class="tok-punct">,</span> <span class="tok-comment">// set the stack pointer from a linker-script symbol</span>
+        <span class="tok-string">&quot;bl {init}&quot;</span><span class="tok-punct">,</span>             <span class="tok-comment">// now safe to call ordinary Rust: a real stack exists</span>
+        <span class="tok-variable">init</span> <span class="tok-punct">=</span> <span class="tok-variable">sym</span> <span class="tok-variable">init_runtime</span><span class="tok-punct">,</span>
+    <span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-extern "C" fn init_runtime() -&gt; ! {
-    loop {} // stand-in for zeroing .bss, copying .data, then calling the user's #[entry] fn
-}
+<span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">init_runtime</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// stand-in for zeroing .bss, copying .data, then calling the user's #[entry] fn</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>An ordinary function's prologue assumes a stack pointer and calling
 convention are already valid, which is precisely what hasn't happened yet

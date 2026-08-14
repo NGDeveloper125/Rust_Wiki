@@ -1001,15 +1001,15 @@ enum with a cheap default variant).</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::mem;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">mem</span><span class="tok-punct">;</span>
 
-struct Batch {
-    items: Vec&lt;u32&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Batch</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let mut batch = Batch { items: vec![1, 2, 3] };
-let taken = mem::take(&amp;mut batch.items); // &lt;- moves the Vec out, leaves an empty Vec::default() behind
-println!("{:?} {:?}", taken, batch.items); // [1, 2, 3] []
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">batch</span> <span class="tok-punct">=</span> <span class="tok-type">Batch</span> <span class="tok-punct">{</span> <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">taken</span> <span class="tok-punct">=</span> <span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">batch</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- moves the Vec out, leaves an empty Vec::default() behind</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{:?} {:?}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">taken</span><span class="tok-punct">,</span> <span class="tok-variable">batch</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// [1, 2, 3] []</span>
 </code></pre>
 
       </section>
@@ -1028,28 +1028,28 @@ println!("{:?} {:?}", taken, batch.items); // [1, 2, 3] []
 worker while leaving <code>self</code> in a valid, empty state — <code>mem::take</code> moves
 the <code>Vec</code> out without cloning it and without ever leaving the field
 uninitialized.</p>
-<pre><code class="rust">use std::mem;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">mem</span><span class="tok-punct">;</span>
 
-struct BatchQueue {
-    pending: Vec&lt;String&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BatchQueue</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pending</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl BatchQueue {
-    fn push(&amp;mut self, item: String) {
-        self.pending.push(item);
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">BatchQueue</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pending</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    fn drain(&amp;mut self) -&gt; Vec&lt;String&gt; {
-        mem::take(&amp;mut self.pending) // &lt;- moves `pending` out, replaces it with Vec::default() (empty)
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drain</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pending</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- moves `pending` out, replaces it with Vec::default() (empty)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut queue = BatchQueue { pending: Vec::new() };
-queue.push("order-1".to_string());
-queue.push("order-2".to_string());
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">queue</span> <span class="tok-punct">=</span> <span class="tok-type">BatchQueue</span> <span class="tok-punct">{</span> <span class="tok-variable">pending</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">queue</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-string">&quot;order-1&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">queue</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-string">&quot;order-2&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let batch = queue.drain(); // owns the items; queue.pending is now empty, not uninitialized
-println!("{batch:?}");
+<span class="tok-keyword">let</span> <span class="tok-variable">batch</span> <span class="tok-punct">=</span> <span class="tok-variable">queue</span><span class="tok-punct">.</span><span class="tok-call-method">drain</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// owns the items; queue.pending is now empty, not uninitialized</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{batch:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>mem::take</code> moves the <code>Vec</code> out in one step instead of
@@ -1077,23 +1077,23 @@ book documents as the idiomatic way to change or extract a value behind
             <p>Swapping the string held inside a <code>RefCell</code> for a new one, while getting
 the old string back to log it, needs to move the old value out of a
 borrowed <code>&amp;mut String</code> — exactly what <code>mem::replace</code> is for.</p>
-<pre><code class="rust">use std::cell::RefCell;
-use std::mem;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">mem</span><span class="tok-punct">;</span>
 
-struct Session {
-    last_message: RefCell&lt;String&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Session</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">last_message</span><span class="tok-punct">:</span> <span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Session {
-    fn set_message(&amp;self, new_message: String) -&gt; String {
-        let mut slot = self.last_message.borrow_mut(); // &lt;- RefMut&lt;String&gt;, derefs to &amp;mut String
-        mem::replace(&amp;mut *slot, new_message) // &lt;- swaps in `new_message`, returns the old one by value
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Session</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_message</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">new_message</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">slot</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">last_message</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- RefMut&lt;String&gt;, derefs to &amp;mut String</span>
+        <span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-call-assoc">replace</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">*</span><span class="tok-variable">slot</span><span class="tok-punct">,</span> <span class="tok-variable">new_message</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- swaps in `new_message`, returns the old one by value</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let session = Session { last_message: RefCell::new("connected".to_string()) };
-let previous = session.set_message("processing".to_string());
-println!("{previous}"); // "connected"
+<span class="tok-keyword">let</span> <span class="tok-variable">session</span> <span class="tok-punct">=</span> <span class="tok-type">Session</span> <span class="tok-punct">{</span> <span class="tok-variable">last_message</span><span class="tok-punct">:</span> <span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-string">&quot;connected&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">previous</span> <span class="tok-punct">=</span> <span class="tok-variable">session</span><span class="tok-punct">.</span><span class="tok-call-method">set_message</span><span class="tok-punct">(</span><span class="tok-string">&quot;processing&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{previous}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// &quot;connected&quot;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>RefCell::borrow_mut</code> only ever gives out a <code>&amp;mut T</code>,
@@ -1110,21 +1110,21 @@ valid replacement behind, per the
 mutable borrow and performs the <code>mem::replace</code> in one call, returning the
 old value, so the intermediate <code>RefMut</code> binding and the <code>&amp;mut *slot</code>
 reborrow both disappear.</p>
-<pre><code class="rust">use std::cell::RefCell;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
 
-struct Session {
-    last_message: RefCell&lt;String&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Session</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">last_message</span><span class="tok-punct">:</span> <span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Session {
-    fn set_message(&amp;self, new_message: String) -&gt; String {
-        self.last_message.replace(new_message) // &lt;- borrows and swaps in one step, returns the old String
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Session</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_message</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">new_message</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">last_message</span><span class="tok-punct">.</span><span class="tok-call-method">replace</span><span class="tok-punct">(</span><span class="tok-variable">new_message</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- borrows and swaps in one step, returns the old String</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let session = Session { last_message: RefCell::new("connected".to_string()) };
-let previous = session.set_message("processing".to_string());
-println!("{previous}"); // "connected"
+<span class="tok-keyword">let</span> <span class="tok-variable">session</span> <span class="tok-punct">=</span> <span class="tok-type">Session</span> <span class="tok-punct">{</span> <span class="tok-variable">last_message</span><span class="tok-punct">:</span> <span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-string">&quot;connected&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">previous</span> <span class="tok-punct">=</span> <span class="tok-variable">session</span><span class="tok-punct">.</span><span class="tok-call-method">set_message</span><span class="tok-punct">(</span><span class="tok-string">&quot;processing&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{previous}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// &quot;connected&quot;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> there is no reborrow to get wrong, and the borrow is held
@@ -1173,26 +1173,26 @@ itself: no <code>Option</code> wrapper, no clone, no allocation.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use core::mem;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-variable">mem</span><span class="tok-punct">;</span>
 
-enum SensorState {
-    Idle,
-    Sampling { started_at_ms: u32 },
-}
+<span class="tok-keyword">enum</span> <span class="tok-type-def">SensorState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Idle</span><span class="tok-punct">,</span>
+    <span class="tok-type">Sampling</span> <span class="tok-punct">{</span> <span class="tok-variable">started_at_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-struct Driver {
-    state: SensorState,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Driver</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">SensorState</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Driver {
-    fn start_sampling(&amp;mut self, now_ms: u32) {
-        // &lt;- moves the old state out, writes the new one in, no `Option` field needed
-        let _old = mem::replace(&amp;mut self.state, SensorState::Sampling { started_at_ms: now_ms });
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Driver</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">start_sampling</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">now_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- moves the old state out, writes the new one in, no `Option` field needed</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_old</span> <span class="tok-punct">=</span> <span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-call-assoc">replace</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">state</span><span class="tok-punct">,</span> <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Sampling</span> <span class="tok-punct">{</span> <span class="tok-variable">started_at_ms</span><span class="tok-punct">:</span> <span class="tok-variable">now_ms</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut driver = Driver { state: SensorState::Idle };
-driver.start_sampling(1_000);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">driver</span> <span class="tok-punct">=</span> <span class="tok-type">Driver</span> <span class="tok-punct">{</span> <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Idle</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">driver</span><span class="tok-punct">.</span><span class="tok-call-method">start_sampling</span><span class="tok-punct">(</span><span class="tok-number">1_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1212,33 +1212,33 @@ the <code>started_at_ms</code> timestamp out of the old state to compute an elap
 time — <code>mem::replace</code> moves the whole old variant out by value so its
 data can be used, with no clone and no <code>Option</code>-wrapped field anywhere in
 the struct.</p>
-<pre><code class="rust">use core::mem;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-variable">mem</span><span class="tok-punct">;</span>
 
-enum SensorState {
-    Idle,
-    Sampling { started_at_ms: u32 },
-    Done { elapsed_ms: u32, reading: i16 },
-}
+<span class="tok-keyword">enum</span> <span class="tok-type-def">SensorState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Idle</span><span class="tok-punct">,</span>
+    <span class="tok-type">Sampling</span> <span class="tok-punct">{</span> <span class="tok-variable">started_at_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Done</span> <span class="tok-punct">{</span> <span class="tok-variable">elapsed_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">i16</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-struct Driver {
-    state: SensorState,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Driver</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">SensorState</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Driver {
-    fn finish_sampling(&amp;mut self, now_ms: u32, reading: i16) {
-        let old = mem::replace(&amp;mut self.state, SensorState::Idle); // &lt;- moves the old variant out; field never sits empty
-        self.state = match old {
-            SensorState::Sampling { started_at_ms } =&gt; SensorState::Done {
-                elapsed_ms: now_ms - started_at_ms,
-                reading,
-            },
-            other =&gt; other, // no-op transition if called from the wrong state
-        };
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Driver</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">finish_sampling</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">now_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">old</span> <span class="tok-punct">=</span> <span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-call-assoc">replace</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">state</span><span class="tok-punct">,</span> <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Idle</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- moves the old variant out; field never sits empty</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">state</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-variable">old</span> <span class="tok-punct">{</span>
+            <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Sampling</span> <span class="tok-punct">{</span> <span class="tok-variable">started_at_ms</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Done</span> <span class="tok-punct">{</span>
+                <span class="tok-variable">elapsed_ms</span><span class="tok-punct">:</span> <span class="tok-variable">now_ms</span> <span class="tok-punct">-</span> <span class="tok-variable">started_at_ms</span><span class="tok-punct">,</span>
+                <span class="tok-variable">reading</span><span class="tok-punct">,</span>
+            <span class="tok-punct">}</span><span class="tok-punct">,</span>
+            <span class="tok-variable">other</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">other</span><span class="tok-punct">,</span> <span class="tok-comment">// no-op transition if called from the wrong state</span>
+        <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut driver = Driver { state: SensorState::Sampling { started_at_ms: 1_000 } };
-driver.finish_sampling(1_250, 421);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">driver</span> <span class="tok-punct">=</span> <span class="tok-type">Driver</span> <span class="tok-punct">{</span> <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Sampling</span> <span class="tok-punct">{</span> <span class="tok-variable">started_at_ms</span><span class="tok-punct">:</span> <span class="tok-number">1_000</span> <span class="tok-punct">}</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">driver</span><span class="tok-punct">.</span><span class="tok-call-method">finish_sampling</span><span class="tok-punct">(</span><span class="tok-number">1_250</span><span class="tok-punct">,</span> <span class="tok-number">421</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>mem::replace</code> gets ownership of <code>started_at_ms</code> out of

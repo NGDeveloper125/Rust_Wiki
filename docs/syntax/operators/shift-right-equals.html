@@ -986,8 +986,8 @@ place, overloadable via <code>std::ops::ShrAssign</code>.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Right-shifting a value in place</h3>
-            <pre><code class="rust">let mut x = 8u8;
-x &gt;&gt;= 3; // &lt;- `&gt;&gt;=` right-shifts `x` in place
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">8u8</span><span class="tok-punct">;</span>
+<span class="tok-variable">x</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;=</span> <span class="tok-number">3</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&gt;&gt;=` right-shifts `x` in place</span>
 </code></pre>
 
           </div>
@@ -996,15 +996,15 @@ x &gt;&gt;= 3; // &lt;- `&gt;&gt;=` right-shifts `x` in place
             <p>Unpacking a byte's fields one at a time by repeatedly consuming its
 lowest bits is a natural use of <code>&gt;&gt;=</code> — each pass shifts the next field
 into position while permanently discarding the bits already read.</p>
-<pre><code class="rust">let mut packed: u8 = 0b1011_0110; // 3 fields: 2 + 3 + 3 bits
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">packed</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0b1011_0110</span><span class="tok-punct">;</span> <span class="tok-comment">// 3 fields: 2 + 3 + 3 bits</span>
 
-let field_a = packed &amp; 0b11;
-packed &gt;&gt;= 2; // &lt;- `&gt;&gt;=` discards the consumed 2 bits, shifts the rest down
-let field_b = packed &amp; 0b111;
-packed &gt;&gt;= 3; // &lt;- `&gt;&gt;=` consumes the next field the same way
-let field_c = packed &amp; 0b111;
+<span class="tok-keyword">let</span> <span class="tok-variable">field_a</span> <span class="tok-punct">=</span> <span class="tok-variable">packed</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b11</span><span class="tok-punct">;</span>
+<span class="tok-variable">packed</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;=</span> <span class="tok-number">2</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&gt;&gt;=` discards the consumed 2 bits, shifts the rest down</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">field_b</span> <span class="tok-punct">=</span> <span class="tok-variable">packed</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b111</span><span class="tok-punct">;</span>
+<span class="tok-variable">packed</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;=</span> <span class="tok-number">3</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&gt;&gt;=` consumes the next field the same way</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">field_c</span> <span class="tok-punct">=</span> <span class="tok-variable">packed</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b111</span><span class="tok-punct">;</span>
 
-assert_eq!((field_a, field_b, field_c), (0b10, 0b101, 0b101));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">field_a</span><span class="tok-punct">,</span> <span class="tok-variable">field_b</span><span class="tok-punct">,</span> <span class="tok-variable">field_c</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">0b10</span><span class="tok-punct">,</span> <span class="tok-number">0b101</span><span class="tok-punct">,</span> <span class="tok-number">0b101</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Mutating <code>packed</code> in place with <code>&gt;&gt;=</code> as each field is
 consumed avoids tracking a separate shift-amount variable and re-deriving
@@ -1037,17 +1037,17 @@ position.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Bit-banging a byte out over a software serial line, LSB first</h3>
-            <pre><code class="rust">fn set_output_pin(_high: bool) {
-    // in real firmware this drives a GPIO pin high or low
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">set_output_pin</span><span class="tok-punct">(</span><span class="tok-variable">_high</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// in real firmware this drives a GPIO pin high or low</span>
+<span class="tok-punct">}</span>
 
-fn bitbang_send_byte(mut data: u8) {
-    for _ in 0..8 {
-        set_output_pin(data &amp; 1 != 0); // send the current low bit
-        data &gt;&gt;= 1; // &lt;- `&gt;&gt;=` discards the bit just sent, brings the next one into position
-        // toggle_clock_pin();
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bitbang_send_byte</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">8</span> <span class="tok-punct">{</span>
+        <span class="tok-call-free">set_output_pin</span><span class="tok-punct">(</span><span class="tok-variable">data</span> <span class="tok-punct">&amp;</span> <span class="tok-number">1</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// send the current low bit</span>
+        <span class="tok-variable">data</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&gt;&gt;=` discards the bit just sent, brings the next one into position</span>
+        <span class="tok-comment">// toggle_clock_pin();</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

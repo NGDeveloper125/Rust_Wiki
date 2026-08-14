@@ -1016,23 +1016,23 @@ see the crate policy note on the <a href="../../concepts/error-handling/result.h
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// [dependencies] thiserror = "2"
-use thiserror::Error;
+        <pre><code class="rust-hl"><span class="tok-comment">// [dependencies] thiserror = &quot;2&quot;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">thiserror</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-#[derive(Debug, Error)]
-enum ConfigError {
-    #[error("config file not found: {0}")]
-    NotFound(String), // &lt;- one variant per distinct failure mode
-    #[error("invalid value for `{field}`: {reason}")]
-    InvalidValue { field: String, reason: String },
-}
+<span class="tok-attribute">#[derive(Debug, Error)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">ConfigError</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[error(&quot;config file not found: {0}&quot;)]</span>
+    <span class="tok-field">NotFound</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- one variant per distinct failure mode</span>
+    <span class="tok-attribute">#[error(&quot;invalid value for `{field}`: {reason}&quot;)]</span>
+    <span class="tok-type">InvalidValue</span> <span class="tok-punct">{</span> <span class="tok-variable">field</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-variable">reason</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn load(path: &amp;str) -&gt; Result&lt;String, ConfigError&gt; {
-    if path.is_empty() {
-        return Err(ConfigError::NotFound(path.to_string()));
-    }
-    Ok(format!("contents of {path}"))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">load</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">path</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">ConfigError</span><span class="tok-punct">::</span><span class="tok-field">NotFound</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;contents of {path}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1051,22 +1051,22 @@ fn load(path: &amp;str) -&gt; Result&lt;String, ConfigError&gt; {
 distinct reasons; <code>thiserror</code> derives <code>Display</code> and <code>Error</code> (and <code>From</code>
 conversions) so the error type stays declarative instead of hand-written
 boilerplate.</p>
-<pre><code class="rust">// [dependencies] thiserror = "2"
-use thiserror::Error;
-use std::num::ParseIntError;
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] thiserror = &quot;2&quot;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">thiserror</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">ParseIntError</span><span class="tok-punct">;</span>
 
-#[derive(Debug, Error)]
-enum ConfigError {
-    #[error("could not read config file: {0}")]
-    Io(#[from] std::io::Error), // &lt;- #[from] gives ConfigError a `From&lt;io::Error&gt;`, so `?` can convert into it
-    #[error("invalid port number: {0}")]
-    InvalidPort(#[from] ParseIntError),
-}
+<span class="tok-attribute">#[derive(Debug, Error)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">ConfigError</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[error(&quot;could not read config file: {0}&quot;)]</span>
+    <span class="tok-field">Io</span><span class="tok-punct">(</span><span class="tok-attribute">#[from]</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- #[from] gives ConfigError a `From&lt;io::Error&gt;`, so `?` can convert into it</span>
+    <span class="tok-attribute">#[error(&quot;invalid port number: {0}&quot;)]</span>
+    <span class="tok-field">InvalidPort</span><span class="tok-punct">(</span><span class="tok-attribute">#[from]</span> <span class="tok-type">ParseIntError</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn load_port(path: &amp;str) -&gt; Result&lt;u16, ConfigError&gt; {
-    let contents = std::fs::read_to_string(path)?; // &lt;- `?` converts io::Error via the derived From impl
-    Ok(contents.trim().parse()?) // &lt;- `?` converts ParseIntError via the derived From impl too
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">load_port</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">contents</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` converts io::Error via the derived From impl</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">contents</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `?` converts ParseIntError via the derived From impl too</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>thiserror</code> derives the message wording and the <code>Error</code>
@@ -1085,20 +1085,20 @@ and the <a href="https://docs.rs/thiserror/latest/thiserror/"><code>thiserror</c
             <p>A public error enum needs room to grow — a future release may add a new
 failure variant — so it's marked <code>#[non_exhaustive]</code> to keep that from
 being a breaking change for existing <code>match</code> statements.</p>
-<pre><code class="rust">#[derive(Debug)]
-#[non_exhaustive] // &lt;- callers can't exhaustively match without a wildcard arm, so new variants aren't breaking
-pub enum UploadError {
-    TooLarge { limit_bytes: u64 },
-    Rejected(String),
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-attribute">#[non_exhaustive]</span> <span class="tok-comment tok-anno">// &lt;- callers can't exhaustively match without a wildcard arm, so new variants aren't breaking</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">UploadError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">TooLarge</span> <span class="tok-punct">{</span> <span class="tok-variable">limit_bytes</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-field">Rejected</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn describe(error: &amp;UploadError) -&gt; String {
-    match error {
-        UploadError::TooLarge { limit_bytes } =&gt; format!("exceeds {limit_bytes} bytes"),
-        UploadError::Rejected(reason) =&gt; format!("rejected: {reason}"),
-        _ =&gt; "unknown upload error".to_string(), // &lt;- required because of #[non_exhaustive]
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-variable">error</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">UploadError</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">error</span> <span class="tok-punct">{</span>
+        <span class="tok-type">UploadError</span><span class="tok-punct">::</span><span class="tok-field">TooLarge</span> <span class="tok-punct">{</span> <span class="tok-variable">limit_bytes</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;exceeds {limit_bytes} bytes&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-type">UploadError</span><span class="tok-punct">::</span><span class="tok-field">Rejected</span><span class="tok-punct">(</span><span class="tok-variable">reason</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;rejected: {reason}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;unknown upload error&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- required because of #[non_exhaustive]</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without <code>#[non_exhaustive]</code>, adding a new variant to a
@@ -1118,24 +1118,24 @@ the
             <p>Validating a sensor reading against its expected range should reject
 specific, distinguishable problems, not just a generic "invalid" — so the
 custom error type has one variant per kind of invalid reading.</p>
-<pre><code class="rust">#[derive(Debug, PartialEq)]
-enum SensorError {
-    OutOfRange { value: f64, min: f64, max: f64 },
-    NotANumber,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, PartialEq)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">OutOfRange</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">min</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">max</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">NotANumber</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn validate_reading(raw: &amp;str) -&gt; Result&lt;f64, SensorError&gt; {
-    let value: f64 = raw.trim().parse().map_err(|_| SensorError::NotANumber)?;
-    if value &lt; -40.0 || value &gt; 125.0 {
-        return Err(SensorError::OutOfRange { value, min: -40.0, max: 125.0 });
-    }
-    Ok(value)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">validate_reading</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">NotANumber</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">value</span> <span class="tok-punct">&lt;</span> <span class="tok-punct">-</span><span class="tok-number">40.0</span> <span class="tok-punct">||</span> <span class="tok-variable">value</span> <span class="tok-punct">&gt;</span> <span class="tok-number">125.0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">OutOfRange</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-variable">min</span><span class="tok-punct">:</span> <span class="tok-punct">-</span><span class="tok-number">40.0</span><span class="tok-punct">,</span> <span class="tok-variable">max</span><span class="tok-punct">:</span> <span class="tok-number">125.0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(
-    validate_reading("200"),
-    Err(SensorError::OutOfRange { value: 200.0, min: -40.0, max: 125.0 })
-);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span>
+    <span class="tok-call-free">validate_reading</span><span class="tok-punct">(</span><span class="tok-string">&quot;200&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">OutOfRange</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-number">200.0</span><span class="tok-punct">,</span> <span class="tok-variable">min</span><span class="tok-punct">:</span> <span class="tok-punct">-</span><span class="tok-number">40.0</span><span class="tok-punct">,</span> <span class="tok-variable">max</span><span class="tok-punct">:</span> <span class="tok-number">125.0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a variant per failure kind lets callers branch on what
@@ -1175,18 +1175,18 @@ walks through, just without a derive macro generating the boilerplate.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[derive(Debug)]
-enum SensorError {
-    Bus,           // &lt;- one variant per distinct failure mode, no thiserror involved
-    NotResponding,
-}
+        <pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Bus</span><span class="tok-punct">,</span>           <span class="tok-comment tok-anno">// &lt;- one variant per distinct failure mode, no thiserror involved</span>
+    <span class="tok-type">NotResponding</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn read(addr: u8) -&gt; Result&lt;u8, SensorError&gt; {
-    if addr == 0 {
-        return Err(SensorError::NotResponding);
-    }
-    Ok(0x42)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">addr</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">SensorError</span><span class="tok-punct">::</span><span class="tok-field">NotResponding</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-number">0x42</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1204,28 +1204,28 @@ fn read(addr: u8) -&gt; Result&lt;u8, SensorError&gt; {
             <p>An IMU driver collapses any underlying I2C bus error into one variant via
 a hand-written <code>From</code> impl, so <code>?</code> can still convert automatically even
 without <code>thiserror</code>'s <code>#[from]</code> to generate it.</p>
-<pre><code class="rust">use embedded_hal::i2c::{I2c, Error as I2cErrorTrait};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-type">Error</span> <span class="tok-keyword">as</span> <span class="tok-type">I2cErrorTrait</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-enum ImuError {
-    Bus,
-    BadWhoAmI(u8),
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">ImuError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Bus</span><span class="tok-punct">,</span>
+    <span class="tok-field">BadWhoAmI</span><span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;E: I2cErrorTrait&gt; From&lt;E&gt; for ImuError {
-    fn from(_e: E) -&gt; Self {
-        ImuError::Bus // &lt;- hand-written From, standing in for thiserror's #[from] in a no_std crate
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">E</span><span class="tok-punct">:</span> <span class="tok-trait">I2cErrorTrait</span><span class="tok-punct">&gt;</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">E</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">ImuError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">_e</span><span class="tok-punct">:</span> <span class="tok-generic-param">E</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">ImuError</span><span class="tok-punct">::</span><span class="tok-field">Bus</span> <span class="tok-comment tok-anno">// &lt;- hand-written From, standing in for thiserror's #[from] in a no_std crate</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn init(i2c: &amp;mut impl I2c, addr: u8) -&gt; Result&lt;(), ImuError&gt; {
-    let mut who_am_i = [0u8; 1];
-    i2c.write_read(addr, &amp;[0x0F], &amp;mut who_am_i)?; // &lt;- `?` converts any bus error via the impl above
-    if who_am_i[0] != 0x68 {
-        return Err(ImuError::BadWhoAmI(who_am_i[0]));
-    }
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">ImuError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">who_am_i</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write_read</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x0F</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">who_am_i</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` converts any bus error via the impl above</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">who_am_i</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span> <span class="tok-punct">!=</span> <span class="tok-number">0x68</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">ImuError</span><span class="tok-punct">::</span><span class="tok-field">BadWhoAmI</span><span class="tok-punct">(</span><span class="tok-variable">who_am_i</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without <code>thiserror</code> available, the <code>From</code> impl has to be
@@ -1245,12 +1245,12 @@ since a later release may add a new fault code (say, for a new sensor
 revision) without that being a breaking change for downstream <code>match</code>
 statements — the same reasoning as the classic page, and still fully
 available since <code>#[non_exhaustive]</code> is a core-language attribute.</p>
-<pre><code class="rust">#[derive(Debug)]
-#[non_exhaustive] // &lt;- a later release can add a variant (e.g. a new fault code) without a breaking change
-pub enum DriverError {
-    Bus,
-    Timeout,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-attribute">#[non_exhaustive]</span> <span class="tok-comment tok-anno">// &lt;- a later release can add a variant (e.g. a new fault code) without a breaking change</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">DriverError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Bus</span><span class="tok-punct">,</span>
+    <span class="tok-type">Timeout</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without it, adding a variant to a public driver error enum
@@ -1268,20 +1268,20 @@ exactly as relevant to a <code>#![no_std]</code> driver crate as to a hosted one
             <p>Decoding a configuration register's mode field distinguishes a genuine bus
 failure from a merely unrecognized (but successfully read) encoding, since
 only one of those means "something is actually broken."</p>
-<pre><code class="rust">#[derive(Debug, PartialEq)]
-enum ConfigError {
-    Bus,
-    UnknownMode(u8),
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, PartialEq)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">ConfigError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Bus</span><span class="tok-punct">,</span>
+    <span class="tok-field">UnknownMode</span><span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn decode_mode(bits: u8) -&gt; Result&lt;u8, ConfigError&gt; {
-    match bits &amp; 0b11 {
-        0b00 | 0b01 =&gt; Ok(bits &amp; 0b11),
-        other =&gt; Err(ConfigError::UnknownMode(other)), // &lt;- distinct from Bus: the read succeeded, the value just isn't valid
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">decode_mode</span><span class="tok-punct">(</span><span class="tok-variable">bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">bits</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b11</span> <span class="tok-punct">{</span>
+        <span class="tok-number">0b00</span> <span class="tok-punct">|</span> <span class="tok-number">0b01</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">bits</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b11</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-variable">other</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">ConfigError</span><span class="tok-punct">::</span><span class="tok-field">UnknownMode</span><span class="tok-punct">(</span><span class="tok-variable">other</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- distinct from Bus: the read succeeded, the value just isn't valid</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(decode_mode(0b11), Err(ConfigError::UnknownMode(0b11)));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">decode_mode</span><span class="tok-punct">(</span><span class="tok-number">0b11</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">ConfigError</span><span class="tok-punct">::</span><span class="tok-field">UnknownMode</span><span class="tok-punct">(</span><span class="tok-number">0b11</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a caller might reasonably retry on <code>Bus</code> (a transient

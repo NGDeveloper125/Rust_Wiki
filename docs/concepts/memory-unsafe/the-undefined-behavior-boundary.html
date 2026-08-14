@@ -1020,16 +1020,16 @@ code carefully" doesn't scale as the only line of defense.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let mut value = 42;
-let ptr: *mut i32 = &amp;mut value;
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">i32</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">value</span><span class="tok-punct">;</span>
 
-unsafe {
-    // SAFETY: `ptr` was just derived from the live, uniquely-owned
-    // reference `&amp;mut value`, and nothing else accesses `value` while
-    // this dereference happens.
-    *ptr += 1; // &lt;- staying on the defined side: a valid, non-aliased, aligned dereference
-}
-println!("{value}");
+<span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: `ptr` was just derived from the live, uniquely-owned</span>
+    <span class="tok-comment">// reference `&amp;mut value`, and nothing else accesses `value` while</span>
+    <span class="tok-comment">// this dereference happens.</span>
+    <span class="tok-punct">*</span><span class="tok-variable">ptr</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- staying on the defined side: a valid, non-aliased, aligned dereference</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{value}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1048,39 +1048,39 @@ println!("{value}");
 that pointer become dangling or null on the Rust side — the contract has
 to be checked and upheld manually, since C gives the compiler no help
 here.</p>
-<pre><code class="rust">unsafe extern "C" {
-    fn device_open(name: *const u8) -&gt; *mut u8; // &lt;- returns null on failure, per the vendor's header
-    fn device_close(handle: *mut u8);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">device_open</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- returns null on failure, per the vendor's header</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">device_close</span><span class="tok-punct">(</span><span class="tok-variable">handle</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-pub struct Device {
-    handle: *mut u8,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Device</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">handle</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Device {
-    pub fn open(name: &amp;std::ffi::CStr) -&gt; Option&lt;Self&gt; {
-        let handle = unsafe {
-            // SAFETY: `name` is a valid, NUL-terminated CStr for the
-            // duration of this call, satisfying device_open's contract.
-            device_open(name.as_ptr() as *const u8)
-        };
-        if handle.is_null() {
-            None // &lt;- never hand out a Device wrapping a dangling/null pointer
-        } else {
-            Some(Device { handle })
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Device</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">open</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-type">CStr</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">handle</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: `name` is a valid, NUL-terminated CStr for the</span>
+            <span class="tok-comment">// duration of this call, satisfying device_open's contract.</span>
+            <span class="tok-call-free">device_open</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-call-method">is_null</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-field">None</span> <span class="tok-comment tok-anno">// &lt;- never hand out a Device wrapping a dangling/null pointer</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">Device</span> <span class="tok-punct">{</span> <span class="tok-variable">handle</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Drop for Device {
-    fn drop(&amp;mut self) {
-        unsafe {
-            // SAFETY: `self.handle` is non-null (checked in `open`) and
-            // closed at most once, since Drop runs exactly once.
-            device_close(self.handle);
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">Device</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: `self.handle` is non-null (checked in `open`) and</span>
+            <span class="tok-comment">// closed at most once, since Drop runs exactly once.</span>
+            <span class="tok-call-free">device_close</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">handle</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> dereferencing or passing along a null or already-closed
@@ -1102,16 +1102,16 @@ caller's responsibility at every FFI edge.</p>
 caller is what lets the rest of the crate use it correctly without
 re-deriving the reasoning each time — an undocumented <code>unsafe fn</code> shifts
 the entire burden of avoiding UB onto every future caller.</p>
-<pre><code class="rust">/// # Safety
-/// `ptr` must be non-null, properly aligned for `T`, and point to a
-/// live, initialized `T` for the duration of the call. The caller must
-/// ensure no other reference to that memory exists concurrently.
-pub unsafe fn read_register&lt;T: Copy&gt;(ptr: *const T) -&gt; T {
-    unsafe {
-        // SAFETY: upheld by this function's caller, per the doc comment above.
-        *ptr // &lt;- the invariant is documented at the fn boundary, not re-derived at each call site
-    }
-}
+<pre><code class="rust-hl"><span class="tok-comment">/// # Safety</span>
+<span class="tok-comment">/// `ptr` must be non-null, properly aligned for `T`, and point to a</span>
+<span class="tok-comment">/// live, initialized `T` for the duration of the call. The caller must</span>
+<span class="tok-comment">/// ensure no other reference to that memory exists concurrently.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_register</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Copy</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: upheld by this function's caller, per the doc comment above.</span>
+        <span class="tok-punct">*</span><span class="tok-variable">ptr</span> <span class="tok-comment tok-anno">// &lt;- the invariant is documented at the fn boundary, not re-derived at each call site</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an <code>unsafe fn</code> shifts responsibility for its invariant
@@ -1173,15 +1173,15 @@ vanishes from a receive buffer).</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">const UART_DR: *const u32 = 0x4001_1804 as *const u32; // &lt;- data register: reading it consumes one received byte
+        <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">UART_DR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_1804</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- data register: reading it consumes one received byte</span>
 
-fn read_byte() -&gt; u8 {
-    unsafe {
-        // SAFETY: UART_DR is a valid, always-mapped register; a single
-        // volatile read is UART_DR's documented way to consume one byte.
-        core::ptr::read_volatile(UART_DR) as u8 // &lt;- volatile: this read's side effect must never be duplicated or elided
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_byte</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: UART_DR is a valid, always-mapped register; a single</span>
+        <span class="tok-comment">// volatile read is UART_DR's documented way to consume one byte.</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">UART_DR</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span> <span class="tok-comment tok-anno">// &lt;- volatile: this read's side effect must never be duplicated or elided</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1200,22 +1200,22 @@ fn read_byte() -&gt; u8 {
 if every iteration genuinely re-reads the hardware — a plain dereference
 gives the optimizer permission to hoist the read out of the loop
 entirely, turning a poll into an infinite loop.</p>
-<pre><code class="rust">const UART_SR: *const u32 = 0x4001_1800 as *const u32;
-const UART_DR: *const u32 = 0x4001_1804 as *const u32;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">UART_SR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_1800</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">UART_DR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_1804</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
 
-fn wait_for_byte() -&gt; u8 {
-    // AVOID: a plain dereference has no ordering/reordering guarantee —
-    // the optimizer can legally read UART_SR once and loop forever on a
-    // cached value that never reflects the hardware's real state.
-    // while unsafe { *UART_SR } &amp; 0x1 == 0 {}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">wait_for_byte</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// AVOID: a plain dereference has no ordering/reordering guarantee —</span>
+    <span class="tok-comment">// the optimizer can legally read UART_SR once and loop forever on a</span>
+    <span class="tok-comment">// cached value that never reflects the hardware's real state.</span>
+    <span class="tok-comment">// while unsafe { *UART_SR } &amp; 0x1 == 0 {}</span>
 
-    // PREFER: read_volatile forces a genuine re-read of the register on
-    // every iteration.
-    unsafe {
-        while core::ptr::read_volatile(UART_SR) &amp; 0x1 == 0 {} // &lt;- must observe real hardware state each pass
-        core::ptr::read_volatile(UART_DR) as u8
-    }
-}
+    <span class="tok-comment">// PREFER: read_volatile forces a genuine re-read of the register on</span>
+    <span class="tok-comment">// every iteration.</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">while</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">UART_SR</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0x1</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- must observe real hardware state each pass</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">UART_DR</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the <a href="https://docs.rust-embedded.org/book/start/registers.html">Rust embedded
@@ -1236,24 +1236,24 @@ just permitted but likely to prove the loop body "doesn't change"
 touches <code>UART_DR</code> directly; its safety documentation states the
 side-effect explicitly, because a caller who calls it twice for "the
 same" byte would silently lose data instead of getting a compile error.</p>
-<pre><code class="rust">pub struct Uart;
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Uart</span><span class="tok-punct">;</span>
 
-impl Uart {
-    /// Reads and returns the next received byte.
-    ///
-    /// # Note
-    /// Each call consumes one byte from the hardware receive FIFO — the
-    /// read is not idempotent, unlike an ordinary field access.
-    pub fn read_byte(&amp;self) -&gt; u8 {
-        const UART_DR: *const u32 = 0x4001_1804 as *const u32;
-        unsafe {
-            // SAFETY: UART_DR is always mapped; read_volatile guarantees
-            // this call performs exactly one consuming read, never zero
-            // (elided) or two (duplicated).
-            core::ptr::read_volatile(UART_DR) as u8
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Uart</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// Reads and returns the next received byte.</span>
+    <span class="tok-comment">///</span>
+    <span class="tok-comment">/// # Note</span>
+    <span class="tok-comment">/// Each call consumes one byte from the hardware receive FIFO — the</span>
+    <span class="tok-comment">/// read is not idempotent, unlike an ordinary field access.</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_byte</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">UART_DR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_1804</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: UART_DR is always mapped; read_volatile guarantees</span>
+            <span class="tok-comment">// this call performs exactly one consuming read, never zero</span>
+            <span class="tok-comment">// (elided) or two (duplicated).</span>
+            <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">UART_DR</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> documenting the side effect on the safe method is what

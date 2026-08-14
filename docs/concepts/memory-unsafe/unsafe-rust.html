@@ -1019,16 +1019,16 @@ memory layout that unsafe code frequently has to reason about explicitly.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let mut num = 5;
-let r = &amp;mut num as *mut i32; // &lt;- creating a raw pointer is safe...
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">num</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">num</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">i32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- creating a raw pointer is safe...</span>
 
-unsafe {
-    // SAFETY: `r` was just derived from a valid, live `&amp;mut i32`, so it
-    // points to a properly initialized, aligned i32 for the duration of
-    // this block.
-    *r += 1; // &lt;- ...but dereferencing one requires `unsafe`
-}
-println!("{num}");
+<span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: `r` was just derived from a valid, live `&amp;mut i32`, so it</span>
+    <span class="tok-comment">// points to a properly initialized, aligned i32 for the duration of</span>
+    <span class="tok-comment">// this block.</span>
+    <span class="tok-punct">*</span><span class="tok-variable">r</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ...but dereferencing one requires `unsafe`</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{num}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1046,22 +1046,22 @@ println!("{num}");
             <p>Calling a C library's logging function is the textbook reason to write
 <code>unsafe</code> at all: the compiler has no way to verify what a foreign
 function does with its arguments.</p>
-<pre><code class="rust">// Rustonomicon-style FFI example (std-only, no crate needed).
-unsafe extern "C" {
-    fn abs(input: i32) -&gt; i32; // &lt;- foreign function; the compiler cannot check its body
-}
+<pre><code class="rust-hl"><span class="tok-comment">// Rustonomicon-style FFI example (std-only, no crate needed).</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">abs</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- foreign function; the compiler cannot check its body</span>
+<span class="tok-punct">}</span>
 
-fn absolute_value(x: i32) -&gt; i32 {
-    unsafe {
-        // SAFETY: `abs` from the C standard library is a pure function
-        // with no preconditions on its i32 argument.
-        abs(x) // &lt;- calling into C requires unsafe: the compiler can't verify the FFI contract
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">absolute_value</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: `abs` from the C standard library is a pure function</span>
+        <span class="tok-comment">// with no preconditions on its i32 argument.</span>
+        <span class="tok-call-free">abs</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- calling into C requires unsafe: the compiler can't verify the FFI contract</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    println!("{}", absolute_value(-4));
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">absolute_value</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the compiler cannot check a foreign function's body, its
@@ -1080,29 +1080,29 @@ frames every <code>extern</code> call this way.</p>
             <p>The idiom "contain unsafety in small modules" means wrapping an unsafe
 core in a safe, misuse-resistant API, so the rest of the codebase never
 needs to write <code>unsafe</code> itself or reason about the invariant directly.</p>
-<pre><code class="rust">pub struct FixedBuffer {
-    data: Vec&lt;u8&gt;,
-    len: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">FixedBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl FixedBuffer {
-    pub fn new(capacity: usize) -&gt; Self {
-        Self { data: vec![0; capacity], len: 0 }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">FixedBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">capacity</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-variable">capacity</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn push(&amp;mut self, byte: u8) -&gt; bool {
-        if self.len == self.data.len() {
-            return false; // &lt;- safe wrapper enforces the invariant unsafe code below relies on
-        }
-        unsafe {
-            // SAFETY: `self.len &lt; self.data.len()` was just checked above,
-            // so this index is in bounds and the write is aligned.
-            *self.data.get_unchecked_mut(self.len) = byte;
-        }
-        self.len += 1;
-        true
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">==</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-number">false</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- safe wrapper enforces the invariant unsafe code below relies on</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: `self.len &lt; self.data.len()` was just checked above,</span>
+            <span class="tok-comment">// so this index is in bounds and the write is aligned.</span>
+            <span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">.</span><span class="tok-call-method">get_unchecked_mut</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">byte</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-number">true</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>get_unchecked_mut</code> skips the bounds check that
@@ -1155,18 +1155,18 @@ not encountered some embedded-specific necessity for it.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">const TIMER_CTRL: *mut u32 = 0x4000_0000 as *mut u32;
+        <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">TIMER_CTRL</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4000_0000</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
 
-/// Starts the hardware timer. Contained to this one function; callers
-/// elsewhere in the firmware never touch TIMER_CTRL directly.
-pub fn start_timer() {
-    unsafe {
-        // SAFETY: TIMER_CTRL is the timer peripheral's real control
-        // register on this chip, and setting bit 0 is its documented
-        // "enable" operation.
-        core::ptr::write_volatile(TIMER_CTRL, 0x1);
-    }
-}
+<span class="tok-comment">/// Starts the hardware timer. Contained to this one function; callers</span>
+<span class="tok-comment">/// elsewhere in the firmware never touch TIMER_CTRL directly.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">start_timer</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: TIMER_CTRL is the timer peripheral's real control</span>
+        <span class="tok-comment">// register on this chip, and setting bit 0 is its documented</span>
+        <span class="tok-comment">// &quot;enable&quot; operation.</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-constant">TIMER_CTRL</span><span class="tok-punct">,</span> <span class="tok-number">0x1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1184,22 +1184,22 @@ pub fn start_timer() {
             <p>A temperature sensor driver's entire unsafe surface is one raw pointer
 read; everything a caller sees is a safe function returning a typed
 value.</p>
-<pre><code class="rust">mod sys {
-    pub const SENSOR_DATA: *const u32 = 0x4003_4000 as *const u32; // &lt;- raw address stays private to this module
-}
+<pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">sys</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">const</span> <span class="tok-constant">SENSOR_DATA</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4003_4000</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- raw address stays private to this module</span>
+<span class="tok-punct">}</span>
 
-pub struct TemperatureSensor;
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">TemperatureSensor</span><span class="tok-punct">;</span>
 
-impl TemperatureSensor {
-    pub fn read_celsius(&amp;self) -&gt; f32 {
-        let raw = unsafe {
-            // SAFETY: SENSOR_DATA is always mapped on this chip; a plain
-            // volatile read has no other preconditions.
-            core::ptr::read_volatile(sys::SENSOR_DATA) // &lt;- the only unsafe operation in the whole driver
-        };
-        (raw as f32) * 0.0625 // datasheet's raw-to-Celsius conversion
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">TemperatureSensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_celsius</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: SENSOR_DATA is always mapped on this chip; a plain</span>
+            <span class="tok-comment">// volatile read has no other preconditions.</span>
+            <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-module">sys</span><span class="tok-punct">::</span><span class="tok-constant">SENSOR_DATA</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- the only unsafe operation in the whole driver</span>
+        <span class="tok-punct">}</span><span class="tok-punct">;</span>
+        <span class="tok-punct">(</span><span class="tok-variable">raw</span> <span class="tok-keyword">as</span> <span class="tok-type">f32</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-number">0.0625</span> <span class="tok-comment">// datasheet's raw-to-Celsius conversion</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>sys::SENSOR_DATA</code> never leaves the module, so
@@ -1221,26 +1221,26 @@ structure.</p>
 loop is embedded Rust's closest analogue to sharing state across
 threads — the interrupt handler is a genuinely concurrent execution
 context, just one triggered by hardware instead of <code>thread::spawn</code>.</p>
-<pre><code class="rust">static mut TICK_COUNT: u32 = 0;
+<pre><code class="rust-hl"><span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">TICK_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
 
-// Registered as the timer interrupt handler; runs at any point, preempting main.
-#[allow(non_snake_case)]
-fn TIM2() {
-    unsafe {
-        // SAFETY: interrupts of the same priority don't nest on this
-        // chip, so no other write to TICK_COUNT can be in progress here.
-        let ptr = &amp;raw mut TICK_COUNT;
-        *ptr = ptr.read_volatile().wrapping_add(1);
-    }
-}
+<span class="tok-comment">// Registered as the timer interrupt handler; runs at any point, preempting main.</span>
+<span class="tok-attribute">#[allow(non_snake_case)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">TIM2</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: interrupts of the same priority don't nest on this</span>
+        <span class="tok-comment">// chip, so no other write to TICK_COUNT can be in progress here.</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">ptr</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">raw</span> <span class="tok-keyword">mut</span> <span class="tok-constant">TICK_COUNT</span><span class="tok-punct">;</span>
+        <span class="tok-punct">*</span><span class="tok-variable">ptr</span> <span class="tok-punct">=</span> <span class="tok-variable">ptr</span><span class="tok-punct">.</span><span class="tok-call-method">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-pub fn ticks() -&gt; u32 {
-    cortex_m::interrupt::free(|_| unsafe {
-        // SAFETY: interrupts are masked for the duration of this closure,
-        // so TIM2 cannot preempt this read.
-        core::ptr::read_volatile(&amp;raw const TICK_COUNT)
-    })
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">ticks</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-module">cortex_m</span><span class="tok-punct">::</span><span class="tok-module">interrupt</span><span class="tok-punct">::</span><span class="tok-call-assoc">free</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: interrupts are masked for the duration of this closure,</span>
+        <span class="tok-comment">// so TIM2 cannot preempt this read.</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">raw</span> <span class="tok-keyword">const</span> <span class="tok-constant">TICK_COUNT</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without masking interrupts around the main-loop read,

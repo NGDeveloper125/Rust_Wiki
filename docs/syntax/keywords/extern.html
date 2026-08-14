@@ -1040,9 +1040,9 @@ exists at all and how it fits into a real crate's design.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring a foreign function's signature</h3>
-            <pre><code class="rust">unsafe extern "C" {
-    fn abs(input: i32) -&gt; i32; // &lt;- `extern "C"`: declares a foreign function's signature
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">abs</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `extern &quot;C&quot;`: declares a foreign function's signature</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1051,31 +1051,31 @@ exists at all and how it fits into a real crate's design.</p>
             <p>A media-processing crate needs both directions at once: calling a vendor
 compression library to shrink a buffer, and exposing a Rust callback that
 the same library invokes to report progress as it works.</p>
-<pre><code class="rust">unsafe extern "C" {
-    fn compress_buffer(data: *const u8, len: usize, out_len: *mut usize) -&gt; *mut u8; // &lt;- `extern "C"`: calling INTO the foreign library
-}
+<pre><code class="rust-hl"><span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">compress_buffer</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span> <span class="tok-variable">out_len</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `extern &quot;C&quot;`: calling INTO the foreign library</span>
+<span class="tok-punct">}</span>
 
-pub fn compress(input: &amp;[u8]) -&gt; Vec&lt;u8&gt; {
-    let mut out_len: usize = 0;
-    unsafe {
-        // SAFETY: `input` is a valid slice for its full length; `out_len`
-        // is a valid, aligned `usize` the library writes its result into.
-        let ptr = compress_buffer(input.as_ptr(), input.len(), &amp;mut out_len);
-        let bytes = std::slice::from_raw_parts(ptr, out_len).to_vec();
-        libc_free(ptr);
-        bytes
-    }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">compress</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">out_len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: `input` is a valid slice for its full length; `out_len`</span>
+        <span class="tok-comment">// is a valid, aligned `usize` the library writes its result into.</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">ptr</span> <span class="tok-punct">=</span> <span class="tok-call-free">compress_buffer</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">out_len</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">slice</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_raw_parts</span><span class="tok-punct">(</span><span class="tok-variable">ptr</span><span class="tok-punct">,</span> <span class="tok-variable">out_len</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">to_vec</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-call-free">libc_free</span><span class="tok-punct">(</span><span class="tok-variable">ptr</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">bytes</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-unsafe extern "C" {
-    fn libc_free(ptr: *mut u8);
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">libc_free</span><span class="tok-punct">(</span><span class="tok-variable">ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[unsafe(no_mangle)] // &lt;- keeps the symbol name stable so the C library can call it by name
-pub extern "C" fn on_compress_progress(percent: u32) {
-    // &lt;- `extern "C"`: crossing FROM C back into Rust, called by the library itself
-    eprintln!("compressing: {percent}%");
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span> <span class="tok-comment tok-anno">// &lt;- keeps the symbol name stable so the C library can call it by name</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_compress_progress</span><span class="tok-punct">(</span><span class="tok-variable">percent</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `extern &quot;C&quot;`: crossing FROM C back into Rust, called by the library itself</span>
+    <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;compressing: {percent}%&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>extern "C"</code> on both the declared foreign function and
 the exported callback selects the same calling convention on each side of
@@ -1092,22 +1092,22 @@ one boundary.</p>
 callers read the current tick count without writing <code>unsafe</code> themselves,
 while still requiring <code>unsafe</code> for the one function that actually resets
 hardware state.</p>
-<pre><code class="rust">unsafe extern "C" {
-    safe fn hal_tick_count() -&gt; u32; // &lt;- `safe`: pure, side-effect-free — no `unsafe` needed to call it
-    fn hal_watchdog_reset(); // &lt;- no `safe`: mutates hardware state, callers must still write `unsafe`
-}
+<pre><code class="rust-hl"><span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">safe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">hal_tick_count</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `safe`: pure, side-effect-free — no `unsafe` needed to call it</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">hal_watchdog_reset</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- no `safe`: mutates hardware state, callers must still write `unsafe`</span>
+<span class="tok-punct">}</span>
 
-pub fn uptime_ticks() -&gt; u32 {
-    hal_tick_count() // &lt;- callable directly: `safe` opted this one item out of the block's default
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">uptime_ticks</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">hal_tick_count</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- callable directly: `safe` opted this one item out of the block's default</span>
+<span class="tok-punct">}</span>
 
-pub fn feed_watchdog() {
-    unsafe {
-        // SAFETY: resetting the watchdog is safe to call from any
-        // context; documented by the vendor as reentrant.
-        hal_watchdog_reset(); // &lt;- still requires `unsafe`: this item wasn't marked `safe`
-    }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">feed_watchdog</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: resetting the watchdog is safe to call from any</span>
+        <span class="tok-comment">// context; documented by the vendor as reentrant.</span>
+        <span class="tok-call-free">hal_watchdog_reset</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- still requires `unsafe`: this item wasn't marked `safe`</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Marking only the genuinely side-effect-free declaration
 <code>safe</code> lets a wrapper crate be precise about which parts of a trusted C
@@ -1155,30 +1155,30 @@ vector-table slot.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Binding a vendor C HAL function via `extern &quot;C&quot;`</h3>
-            <pre><code class="rust">unsafe extern "C" {
-    fn HAL_GPIO_WritePin(gpio_port: *mut core::ffi::c_void, pin: u16, state: u8); // &lt;- `extern "C"`: declares the vendor C HAL's signature
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">HAL_GPIO_WritePin</span><span class="tok-punct">(</span><span class="tok-variable">gpio_port</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-variable">c_void</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `extern &quot;C&quot;`: declares the vendor C HAL's signature</span>
+<span class="tok-punct">}</span>
 
-pub fn set_pin_high(port: *mut core::ffi::c_void, pin: u16) {
-    unsafe {
-        // SAFETY: `port` is a valid GPIO port base address configured by the vendor's init code.
-        HAL_GPIO_WritePin(port, pin, 1);
-    }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pin_high</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-variable">c_void</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: `port` is a valid GPIO port base address configured by the vendor's init code.</span>
+        <span class="tok-field">HAL_GPIO_WritePin</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Exposing a Rust interrupt handler with C linkage for the vector table</h3>
-            <pre><code class="rust">#[unsafe(no_mangle)]
-pub extern "C" fn TIM2_IRQHandler() {
-    // &lt;- `extern "C"`: the linker's vector-table entry calls this by a fixed symbol name and calling convention
-    unsafe { clear_tim2_update_flag() };
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">TIM2_IRQHandler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `extern &quot;C&quot;`: the linker's vector-table entry calls this by a fixed symbol name and calling convention</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-call-free">clear_tim2_update_flag</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-unsafe extern "C" {
-    fn clear_tim2_update_flag();
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">clear_tim2_update_flag</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

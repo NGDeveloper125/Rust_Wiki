@@ -1017,13 +1017,13 @@ covers the grammar of <code>pub</code> and its scoped forms.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Making a struct and field visible outside its module</h3>
-            <pre><code class="rust">mod billing {
-    pub struct Invoice {   // &lt;- `pub`: visible outside the `billing` module
-        pub total_cents: u64,
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">billing</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Invoice</span> <span class="tok-punct">{</span>   <span class="tok-comment tok-anno">// &lt;- `pub`: visible outside the `billing` module</span>
+        <span class="tok-keyword">pub</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let invoice = billing::Invoice { total_cents: 4200 };
+<span class="tok-keyword">let</span> <span class="tok-variable">invoice</span> <span class="tok-punct">=</span> <span class="tok-module">billing</span><span class="tok-punct">::</span><span class="tok-type">Invoice</span> <span class="tok-punct">{</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">4200</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1032,23 +1032,23 @@ let invoice = billing::Invoice { total_cents: 4200 };
             <p>A cache crate splits its storage and eviction logic into separate
 modules that need to share an internal entry type — <code>pub(crate)</code> lets them
 do that without the type ever becoming part of the crate's public API.</p>
-<pre><code class="rust">pub mod api {                          // &lt;- plain `pub`: visible from outside the crate entirely
-    pub(crate) mod internal {          // &lt;- `pub(crate)`: visible anywhere in this crate, not outside it
-        pub(super) fn raw_encode(bytes: &amp;[u8]) -&gt; Vec&lt;u8&gt; {
-            // &lt;- `pub(super)`: visible only to `api`, the parent module
-            bytes.to_vec()
-        }
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">api</span> <span class="tok-punct">{</span>                          <span class="tok-comment tok-anno">// &lt;- plain `pub`: visible from outside the crate entirely</span>
+    <span class="tok-keyword">pub</span><span class="tok-punct">(</span><span class="tok-keyword">crate</span><span class="tok-punct">)</span> <span class="tok-keyword">mod</span> <span class="tok-variable">internal</span> <span class="tok-punct">{</span>          <span class="tok-comment tok-anno">// &lt;- `pub(crate)`: visible anywhere in this crate, not outside it</span>
+        <span class="tok-keyword">pub</span><span class="tok-punct">(</span><span class="tok-keyword">super</span><span class="tok-punct">)</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">raw_encode</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `pub(super)`: visible only to `api`, the parent module</span>
+            <span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">to_vec</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
 
-        pub(in crate::api) fn checksum(bytes: &amp;[u8]) -&gt; u32 {
-            // &lt;- `pub(in path)`: visible only within `api` and its descendants
-            bytes.iter().map(|b| *b as u32).sum()
-        }
-    }
+        <span class="tok-keyword">pub</span><span class="tok-punct">(</span><span class="tok-keyword">in</span> <span class="tok-keyword">crate</span><span class="tok-punct">::</span><span class="tok-variable">api</span><span class="tok-punct">)</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">checksum</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `pub(in path)`: visible only within `api` and its descendants</span>
+            <span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-variable">b</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn encode(bytes: &amp;[u8]) -&gt; Vec&lt;u8&gt; {
-        internal::raw_encode(bytes) // reachable: `api` is `internal`'s parent module
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">encode</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-module">internal</span><span class="tok-punct">::</span><span class="tok-call-assoc">raw_encode</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">)</span> <span class="tok-comment">// reachable: `api` is `internal`'s parent module</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Each scoped form draws the visibility boundary at
 exactly the module that needs it — <code>pub(crate)</code> shares <code>internal</code> across
@@ -1064,23 +1064,23 @@ the
             <p>A <code>Temperature</code> type must never represent a value below absolute zero, so
 its field stays private and <code>pub</code> is applied only to the constructor and
 the read accessor, not the field itself.</p>
-<pre><code class="rust">pub struct Temperature {
-    celsius: f64,          // private: no outside code can set an invalid value directly
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Temperature</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>          <span class="tok-comment">// private: no outside code can set an invalid value directly</span>
+<span class="tok-punct">}</span>
 
-impl Temperature {
-    pub fn from_celsius(value: f64) -&gt; Result&lt;Self, &amp;'static str&gt; {
-        // &lt;- `pub`: the only public entry point that can construct one
-        if value &lt; -273.15 {
-            return Err("temperature below absolute zero");
-        }
-        Ok(Temperature { celsius: value })
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Temperature</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">from_celsius</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `pub`: the only public entry point that can construct one</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">value</span> <span class="tok-punct">&lt;</span> <span class="tok-punct">-</span><span class="tok-number">273.15</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;temperature below absolute zero&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Temperature</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-variable">value</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
 
-    pub fn celsius(&amp;self) -&gt; f64 { // &lt;- `pub`: read-only access, no bypass of the check above
-        self.celsius
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">celsius</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `pub`: read-only access, no bypass of the check above</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">celsius</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Applying <code>pub</code> to the constructor and getter but not the
 field means "never below absolute zero" is enforced by the type itself,
@@ -1122,38 +1122,38 @@ reach around them and write raw bits directly.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A HAL driver's public API over private register internals</h3>
-            <pre><code class="rust">pub struct Gpio {
-    base: u32,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">base</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Gpio {
-    pub fn set_high(&amp;mut self, pin: u8) { // &lt;- `pub`: the driver's public, safe-to-call API
-        self.write_odr(1 &lt;&lt; pin);
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `pub`: the driver's public, safe-to-call API</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">write_odr</span><span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-variable">pin</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    fn write_odr(&amp;mut self, mask: u32) {
-        // private: not `pub` — direct register access stays internal to the driver
-        let odr = (self.base + 0x14) as *mut u32;
-        unsafe { odr.write_volatile(odr.read_volatile() | mask) }
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_odr</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">mask</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// private: not `pub` — direct register access stays internal to the driver</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">odr</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">base</span> <span class="tok-punct">+</span> <span class="tok-number">0x14</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">odr</span><span class="tok-punct">.</span><span class="tok-call-method">write_volatile</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">.</span><span class="tok-call-method">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">|</span> <span class="tok-variable">mask</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Sharing register helpers across a driver's own submodules with `pub(crate)`</h3>
-            <pre><code class="rust">mod uart {
-    pub(crate) fn baud_divisor(clock_hz: u32, baud: u32) -&gt; u32 {
-        // &lt;- `pub(crate)`: shared between `uart`'s own submodules, never part of this crate's public API
-        clock_hz / (16 * baud)
-    }
+            <pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">uart</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span><span class="tok-punct">(</span><span class="tok-keyword">crate</span><span class="tok-punct">)</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">baud_divisor</span><span class="tok-punct">(</span><span class="tok-variable">clock_hz</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">baud</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `pub(crate)`: shared between `uart`'s own submodules, never part of this crate's public API</span>
+        <span class="tok-variable">clock_hz</span> <span class="tok-punct">/</span> <span class="tok-punct">(</span><span class="tok-number">16</span> <span class="tok-punct">*</span> <span class="tok-variable">baud</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
 
-    pub mod config {
-        pub fn apply(clock_hz: u32, baud: u32) -&gt; u32 {
-            super::baud_divisor(clock_hz, baud) // reachable: same crate
-        }
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">config</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply</span><span class="tok-punct">(</span><span class="tok-variable">clock_hz</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">baud</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-call-assoc">baud_divisor</span><span class="tok-punct">(</span><span class="tok-variable">clock_hz</span><span class="tok-punct">,</span> <span class="tok-variable">baud</span><span class="tok-punct">)</span> <span class="tok-comment">// reachable: same crate</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

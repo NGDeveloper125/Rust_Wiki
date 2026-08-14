@@ -992,9 +992,9 @@ call instead (<code>collection.contains(&amp;value)</code>).</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Binding a loop variable to a range</h3>
-            <pre><code class="rust">for x in 0..10 { // &lt;- `in` binds `x` to each value produced by `0..10`
-    println!("{x}");
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">for</span> <span class="tok-variable">x</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">10</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `in` binds `x` to each value produced by `0..10`</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{x}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>in</code> only exists as part of fixed grammar — the
 <code>for PATTERN in EXPR { ... }</code> loop and <code>pub(in path)</code> restricted
@@ -1006,12 +1006,12 @@ visibility — it is not a standalone membership-test operator the way
             <h3 class="scenario-title">Working with collections</h3>
             <p><code>in</code> binds whatever pattern precedes it to each item an iterator chain
 produces — including a destructured tuple, when the source yields pairs.</p>
-<pre><code class="rust">let inventory = [("widget", 12), ("gadget", 0), ("gizmo", 5)];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">inventory</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;widget&quot;</span><span class="tok-punct">,</span> <span class="tok-number">12</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;gadget&quot;</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;gizmo&quot;</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-for (name, count) in inventory.into_iter().filter(|&amp;(_, c)| c &gt; 0) {
-    // &lt;- `in` binds `(name, count)` to each item the adaptor chain yields
-    println!("{name}: {count} in stock");
-}
+<span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">,</span> <span class="tok-variable">c</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-variable">c</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `in` binds `(name, count)` to each item the adaptor chain yields</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{name}: {count} in stock&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Destructuring directly in the pattern before <code>in</code> avoids
 a separate destructuring <code>let</code> inside the loop body — the
@@ -1046,21 +1046,21 @@ a <code>heapless</code> collection all bind through <code>in</code> the same way
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Binding a loop variable while scanning a channel range</h3>
-            <pre><code class="rust">for offset in 0..NUM_CHANNELS {
-    // &lt;- `in` binds `offset` to each value the range produces
-    read_channel(offset);
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">for</span> <span class="tok-variable">offset</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-constant">NUM_CHANNELS</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `in` binds `offset` to each value the range produces</span>
+    <span class="tok-call-free">read_channel</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Destructuring a pin/level pair on each iteration</h3>
-            <pre><code class="rust">let pins = [(0u8, true), (1u8, false), (2u8, true)];
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">pins</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-number">0u8</span><span class="tok-punct">,</span> <span class="tok-number">true</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">false</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">2u8</span><span class="tok-punct">,</span> <span class="tok-number">true</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-for (pin, level) in pins {
-    // &lt;- `in` binds the destructured tuple to each pair the array yields
-    set_output(pin, level);
-}
+<span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">level</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">pins</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `in` binds the destructured tuple to each pair the array yields</span>
+    <span class="tok-call-free">set_output</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">level</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

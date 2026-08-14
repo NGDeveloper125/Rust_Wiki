@@ -999,9 +999,9 @@ loop.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Producing a value from a loop with `break`</h3>
-            <pre><code class="rust">let result = loop { // &lt;- `loop` repeats the block forever until a `break`
-    break 5;
-};
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-keyword">loop</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `loop` repeats the block forever until a `break`</span>
+    <span class="tok-keyword">break</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1011,24 +1011,24 @@ loop.</p>
 periodic housekeeping between jobs is a classic use for <code>loop</code> plus
 <code>match</code>: there is no natural boolean condition to test, only distinct
 events — a job arriving, a quiet period, the channel closing.</p>
-<pre><code class="rust">use std::sync::mpsc;
-use std::thread;
-use std::time::Duration;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-variable">mpsc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Duration</span><span class="tok-punct">;</span>
 
-fn spawn_worker(rx: mpsc::Receiver&lt;String&gt;) -&gt; thread::JoinHandle&lt;()&gt; {
-    thread::spawn(move || {
-        loop {
-            // &lt;- `loop` is the worker's unconditional service loop
-            match rx.recv_timeout(Duration::from_millis(100)) {
-                Ok(job) =&gt; println!("processing {job}"),
-                Err(mpsc::RecvTimeoutError::Timeout) =&gt; {
-                    println!("no work yet -- heartbeat / housekeeping");
-                }
-                Err(mpsc::RecvTimeoutError::Disconnected) =&gt; break, // channel closed, all senders dropped
-            }
-        }
-    })
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">spawn_worker</span><span class="tok-punct">(</span><span class="tok-variable">rx</span><span class="tok-punct">:</span> <span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-type">Receiver</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-type-return">JoinHandle</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `loop` is the worker's unconditional service loop</span>
+            <span class="tok-keyword">match</span> <span class="tok-variable">rx</span><span class="tok-punct">.</span><span class="tok-call-method">recv_timeout</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+                <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;processing {job}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+                <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-type">RecvTimeoutError</span><span class="tok-punct">::</span><span class="tok-field">Timeout</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+                    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;no work yet -- heartbeat / housekeeping&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+                <span class="tok-punct">}</span>
+                <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-type">RecvTimeoutError</span><span class="tok-punct">::</span><span class="tok-field">Disconnected</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">break</span><span class="tok-punct">,</span> <span class="tok-comment">// channel closed, all senders dropped</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>recv_timeout</code> gives the loop three genuinely distinct
 events — a job, a timeout for housekeeping, and channel shutdown — which
@@ -1046,27 +1046,27 @@ plain <code>loop</code>/<code>recv</code>/<code>match</code> version of that.</p
             <p>Polling a channel without blocking the thread — instead of calling the
 blocking <code>.recv()</code> — pairs <code>loop</code> with <code>try_recv</code>'s two distinct error
 cases: nothing available yet, or the channel is gone for good.</p>
-<pre><code class="rust">use std::sync::mpsc;
-use std::time::Duration;
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-variable">mpsc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Duration</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let (tx, rx) = mpsc::channel::&lt;u32&gt;();
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">tx</span><span class="tok-punct">,</span> <span class="tok-variable">rx</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-module">channel</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-thread::spawn(move || {
-    for reading in [17, 18, 19] {
-        tx.send(reading).unwrap();
-        thread::sleep(Duration::from_millis(20));
-    }
-}); // `tx` drops here, so the loop below eventually sees `Disconnected`
+<span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">reading</span> <span class="tok-keyword">in</span> <span class="tok-punct">[</span><span class="tok-number">17</span><span class="tok-punct">,</span> <span class="tok-number">18</span><span class="tok-punct">,</span> <span class="tok-number">19</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">tx</span><span class="tok-punct">.</span><span class="tok-call-method">send</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">sleep</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// `tx` drops here, so the loop below eventually sees `Disconnected`</span>
 
-loop {
-    // &lt;- `loop` polls the channel repeatedly instead of blocking on `recv`
-    match rx.try_recv() {
-        Ok(reading) =&gt; println!("sensor reading: {reading}"),
-        Err(mpsc::TryRecvError::Empty) =&gt; thread::sleep(Duration::from_millis(50)),
-        Err(mpsc::TryRecvError::Disconnected) =&gt; break,
-    }
-}
+<span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `loop` polls the channel repeatedly instead of blocking on `recv`</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">rx</span><span class="tok-punct">.</span><span class="tok-call-method">try_recv</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor reading: {reading}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-type">TryRecvError</span><span class="tok-punct">::</span><span class="tok-field">Empty</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">sleep</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">50</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">mpsc</span><span class="tok-punct">::</span><span class="tok-type">TryRecvError</span><span class="tok-punct">::</span><span class="tok-field">Disconnected</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">break</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><a href="https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html#method.try_recv"><code>Receiver::try_recv</code></a>
 distinguishes "empty for now" from "disconnected," which a blocking
@@ -1105,27 +1105,27 @@ hand back what you were waiting for" in a single expression.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">The firmware entry point that never returns</h3>
-            <pre><code class="rust">#[entry]
-fn main() -&gt; ! {
-    let mut led = configure_led();
-    loop {
-        // &lt;- `loop {}` is the idiomatic never-returning body of an embedded main function
-        led.toggle();
-        delay.delay_ms(500u16);
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">led</span> <span class="tok-punct">=</span> <span class="tok-call-free">configure_led</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `loop {}` is the idiomatic never-returning body of an embedded main function</span>
+        <span class="tok-variable">led</span><span class="tok-punct">.</span><span class="tok-call-method">toggle</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">delay</span><span class="tok-punct">.</span><span class="tok-call-method">delay_ms</span><span class="tok-punct">(</span><span class="tok-number">500u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Busy-waiting on a peripheral flag before interrupts are wired up</h3>
-            <pre><code class="rust">loop {
-    // &lt;- polls the status register directly; a real driver would switch to an interrupt once one is configured
-    if uart.status().read().txe().bit_is_set() {
-        break;
-    }
-}
-uart.data().write(|w| w.bits(byte as u32));
+            <pre><code class="rust-hl"><span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- polls the status register directly; a real driver would switch to an interrupt once one is configured</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">uart</span><span class="tok-punct">.</span><span class="tok-call-method">status</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">txe</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">bit_is_set</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">break</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+<span class="tok-variable">uart</span><span class="tok-punct">.</span><span class="tok-call-method">data</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">w</span><span class="tok-punct">|</span> <span class="tok-variable">w</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-variable">byte</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>

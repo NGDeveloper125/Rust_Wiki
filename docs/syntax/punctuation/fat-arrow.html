@@ -1005,16 +1005,16 @@ the macro syntax pages, not here.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Separating a match arm's pattern from its result</h3>
-            <pre><code class="rust">let day = 3;
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">day</span> <span class="tok-punct">=</span> <span class="tok-number">3</span><span class="tok-punct">;</span>
 
-let name = match day {
-    1 =&gt; "Monday", // &lt;- `=&gt;` separates the pattern from what runs if it matches
-    2 =&gt; "Tuesday",
-    3 =&gt; "Wednesday",
-    _ =&gt; "unknown",
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-variable">day</span> <span class="tok-punct">{</span>
+    <span class="tok-number">1</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;Monday&quot;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `=&gt;` separates the pattern from what runs if it matches</span>
+    <span class="tok-number">2</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;Tuesday&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-number">3</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;Wednesday&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;unknown&quot;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-println!("{name}");
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{name}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1023,23 +1023,23 @@ println!("{name}");
             <p>Looking up a playing card's color from its suit is a one-to-one mapping —
 each arm's <code>=&gt;</code> leads straight to the result, no further computation
 needed.</p>
-<pre><code class="rust">enum Suit {
-    Hearts,
-    Diamonds,
-    Clubs,
-    Spades,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Suit</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Hearts</span><span class="tok-punct">,</span>
+    <span class="tok-type">Diamonds</span><span class="tok-punct">,</span>
+    <span class="tok-type">Clubs</span><span class="tok-punct">,</span>
+    <span class="tok-type">Spades</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn color(suit: &amp;Suit) -&gt; &amp;'static str {
-    match suit {
-        Suit::Hearts =&gt; "red",  // &lt;- `=&gt;` separates the pattern from its result
-        Suit::Diamonds =&gt; "red",
-        Suit::Clubs =&gt; "black",
-        Suit::Spades =&gt; "black",
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">color</span><span class="tok-punct">(</span><span class="tok-variable">suit</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Suit</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">suit</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Suit</span><span class="tok-punct">::</span><span class="tok-field">Hearts</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;red&quot;</span><span class="tok-punct">,</span>  <span class="tok-comment tok-anno">// &lt;- `=&gt;` separates the pattern from its result</span>
+        <span class="tok-type">Suit</span><span class="tok-punct">::</span><span class="tok-field">Diamonds</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;red&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-type">Suit</span><span class="tok-punct">::</span><span class="tok-field">Clubs</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;black&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-type">Suit</span><span class="tok-punct">::</span><span class="tok-field">Spades</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;black&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-println!("{}", color(&amp;Suit::Diamonds));
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">color</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Suit</span><span class="tok-punct">::</span><span class="tok-field">Diamonds</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>A one-line arm body after <code>=&gt;</code> keeps a simple mapping
 scannable at a glance — the
@@ -1052,14 +1052,14 @@ need a block.</p>
             <h3 class="scenario-title">Handling and propagating errors</h3>
             <p>Reporting on a network fetch needs a different message per outcome — here
 <code>=&gt;</code> leads into a multi-step expression rather than a single literal.</p>
-<pre><code class="rust">fn describe_fetch(result: Result&lt;String, String&gt;) -&gt; String {
-    match result {
-        Ok(body) =&gt; format!("received {} bytes", body.len()), // &lt;- `=&gt;` here leads into a longer expression
-        Err(reason) =&gt; format!("fetch failed: {reason}"),
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">describe_fetch</span><span class="tok-punct">(</span><span class="tok-variable">result</span><span class="tok-punct">:</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">result</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">body</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;received {} bytes&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">body</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `=&gt;` here leads into a longer expression</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">reason</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;fetch failed: {reason}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-println!("{}", describe_fetch(Ok("hello".to_string())));
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">describe_fetch</span><span class="tok-punct">(</span><span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Whether the arm's expression is a bare literal or a
 multi-step <code>format!</code> call, <code>=&gt;</code> marks the same boundary — the pattern ends,
@@ -1094,28 +1094,28 @@ states standing in for the enum variants.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Dispatching on a UART interrupt flag</h3>
-            <pre><code class="rust">enum UartEvent {
-    RxNotEmpty,
-    TxEmpty,
-    Overrun,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">UartEvent</span> <span class="tok-punct">{</span>
+    <span class="tok-type">RxNotEmpty</span><span class="tok-punct">,</span>
+    <span class="tok-type">TxEmpty</span><span class="tok-punct">,</span>
+    <span class="tok-type">Overrun</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn handle(event: UartEvent) {
-    match event {
-        UartEvent::RxNotEmpty =&gt; { /* read the received byte */ } // &lt;- `=&gt;` separates the flag from its handler
-        UartEvent::TxEmpty =&gt; { /* push the next byte to transmit */ }
-        UartEvent::Overrun =&gt; { /* clear the overrun flag, log the drop */ }
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">handle</span><span class="tok-punct">(</span><span class="tok-variable">event</span><span class="tok-punct">:</span> <span class="tok-type">UartEvent</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">event</span> <span class="tok-punct">{</span>
+        <span class="tok-type">UartEvent</span><span class="tok-punct">::</span><span class="tok-field">RxNotEmpty</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment">/* read the received byte */</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- `=&gt;` separates the flag from its handler</span>
+        <span class="tok-type">UartEvent</span><span class="tok-punct">::</span><span class="tok-field">TxEmpty</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment">/* push the next byte to transmit */</span> <span class="tok-punct">}</span>
+        <span class="tok-type">UartEvent</span><span class="tok-punct">::</span><span class="tok-field">Overrun</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment">/* clear the overrun flag, log the drop */</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Mapping a HAL read result onto a defmt log level</h3>
-            <pre><code class="rust">match sensor.read() {
-    Ok(sample) =&gt; defmt::info!("sample: {}", sample), // &lt;- `=&gt;` leads into the success path
-    Err(_) =&gt; defmt::warn!("sensor read failed"),
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">match</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sample: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">sample</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `=&gt;` leads into the success path</span>
+    <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">warn!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor read failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

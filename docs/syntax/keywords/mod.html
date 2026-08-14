@@ -1007,16 +1007,16 @@ writing <code>mod</code> itself.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring an inline module</h3>
-            <pre><code class="rust">mod shapes {                            // &lt;- `mod` opens an inline module
-    pub struct Circle { pub radius: f64 }
+            <pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">shapes</span> <span class="tok-punct">{</span>                            <span class="tok-comment tok-anno">// &lt;- `mod` opens an inline module</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Circle</span> <span class="tok-punct">{</span> <span class="tok-keyword">pub</span> <span class="tok-variable">radius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 
-    pub fn area(circle: &amp;Circle) -&gt; f64 {
-        std::f64::consts::PI * circle.radius * circle.radius
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-variable">circle</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Circle</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+        <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">f64</span><span class="tok-punct">::</span><span class="tok-module">consts</span><span class="tok-punct">::</span><span class="tok-constant">PI</span> <span class="tok-punct">*</span> <span class="tok-variable">circle</span><span class="tok-punct">.</span><span class="tok-field">radius</span> <span class="tok-punct">*</span> <span class="tok-variable">circle</span><span class="tok-punct">.</span><span class="tok-field">radius</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let unit_circle = shapes::Circle { radius: 1.0 };
-println!("{}", shapes::area(&amp;unit_circle));
+<span class="tok-keyword">let</span> <span class="tok-variable">unit_circle</span> <span class="tok-punct">=</span> <span class="tok-module">shapes</span><span class="tok-punct">::</span><span class="tok-type">Circle</span> <span class="tok-punct">{</span> <span class="tok-variable">radius</span><span class="tok-punct">:</span> <span class="tok-number">1.0</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-module">shapes</span><span class="tok-punct">::</span><span class="tok-call-assoc">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">unit_circle</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1025,36 +1025,36 @@ println!("{}", shapes::area(&amp;unit_circle));
             <p>A small metrics library keeps its aggregation and reporting logic in
 separate files, loaded with <code>mod name;</code>, while re-exporting a short,
 curated list of public names from the crate root.</p>
-<pre><code class="rust">// src/lib.rs
-mod aggregator;               // &lt;- `mod name;`: loads aggregator.rs as a private module
-mod exporter;                 // &lt;- `mod name;`: loads exporter.rs as a private module
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">aggregator</span><span class="tok-punct">;</span>               <span class="tok-comment tok-anno">// &lt;- `mod name;`: loads aggregator.rs as a private module</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">exporter</span><span class="tok-punct">;</span>                 <span class="tok-comment tok-anno">// &lt;- `mod name;`: loads exporter.rs as a private module</span>
 
-pub use aggregator::Counter;  // curated public surface, independent of the file layout
-pub use exporter::ConsoleExporter;
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">aggregator</span><span class="tok-punct">::</span><span class="tok-type">Counter</span><span class="tok-punct">;</span>  <span class="tok-comment">// curated public surface, independent of the file layout</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">exporter</span><span class="tok-punct">::</span><span class="tok-type">ConsoleExporter</span><span class="tok-punct">;</span>
 
-// src/aggregator.rs
-pub struct Counter {
-    count: u64,
-}
+<span class="tok-comment">// src/aggregator.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Counter</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Counter {
-    pub fn new() -&gt; Self {
-        Counter { count: 0 }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Counter</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Counter</span> <span class="tok-punct">{</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn increment(&amp;mut self) {
-        self.count += 1;
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">increment</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">count</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// src/exporter.rs
-pub struct ConsoleExporter;
+<span class="tok-comment">// src/exporter.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">ConsoleExporter</span><span class="tok-punct">;</span>
 
-impl ConsoleExporter {
-    pub fn report(&amp;self, count: u64) {
-        println!("count = {count}");
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">ConsoleExporter</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">report</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;count = {count}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The two <code>mod name;</code> declarations keep <code>aggregator</code> and
 <code>exporter</code> as separate files mirroring the module tree on disk, while the
@@ -1070,19 +1070,19 @@ recommends for a stable public surface.</p>
             <p>A unit test module uses the <em>inline</em> form of <code>mod</code> — <code>mod name { ... }</code> —
 rather than a separate file, since the tests live right alongside the code
 they exercise.</p>
-<pre><code class="rust">pub fn celsius_to_fahrenheit(celsius: f64) -&gt; f64 {
-    celsius * 9.0 / 5.0 + 32.0
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">celsius_to_fahrenheit</span><span class="tok-punct">(</span><span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span> <span class="tok-punct">*</span> <span class="tok-number">9.0</span> <span class="tok-punct">/</span> <span class="tok-number">5.0</span> <span class="tok-punct">+</span> <span class="tok-number">32.0</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {                     // &lt;- `mod` here is inline (`mod name { ... }`), not file-loaded
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>                     <span class="tok-comment tok-anno">// &lt;- `mod` here is inline (`mod name { ... }`), not file-loaded</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn converts_freezing_point() {
-        assert_eq!(celsius_to_fahrenheit(0.0), 32.0);
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">converts_freezing_point</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">celsius_to_fahrenheit</span><span class="tok-punct">(</span><span class="tok-number">0.0</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">32.0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>An inline <code>mod tests { ... }</code> compiled only under
 <code>#[cfg(test)]</code> keeps the tests next to the code they cover instead of in a
@@ -1120,25 +1120,25 @@ the register layout itself.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A HAL crate's peripheral module layout</h3>
-            <pre><code class="rust">// src/lib.rs
-#![no_std]
+            <pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-attribute">#![no_std]</span>
 
-pub mod gpio;   // &lt;- `mod` loads gpio.rs, one file per peripheral family
-pub mod uart;
-mod pac;        // &lt;- `mod`: the generated register-definition module, not part of the public API
+<span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">gpio</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- `mod` loads gpio.rs, one file per peripheral family</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">uart</span><span class="tok-punct">;</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">pac</span><span class="tok-punct">;</span>        <span class="tok-comment tok-anno">// &lt;- `mod`: the generated register-definition module, not part of the public API</span>
 
-// src/gpio.rs
-use crate::pac;
+<span class="tok-comment">// src/gpio.rs</span>
+<span class="tok-keyword">use</span> <span class="tok-keyword">crate</span><span class="tok-punct">::</span><span class="tok-variable">pac</span><span class="tok-punct">;</span>
 
-pub struct Pin {
-    pin_number: u8,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Pin</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pin_number</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Pin {
-    pub fn set_high(&amp;mut self) {
-        unsafe { pac::GPIOA.odr.modify(|_, w| w.bits(1 &lt;&lt; self.pin_number)) }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Pin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-constant">GPIOA</span><span class="tok-punct">.</span><span class="tok-field">odr</span><span class="tok-punct">.</span><span class="tok-call-method">modify</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">,</span> <span class="tok-variable">w</span><span class="tok-punct">|</span> <span class="tok-variable">w</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pin_number</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

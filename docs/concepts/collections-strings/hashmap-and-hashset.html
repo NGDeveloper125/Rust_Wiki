@@ -1006,13 +1006,13 @@ this up by key" or "is this here" and ordering genuinely doesn't matter
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::collections::HashMap;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut inventory: HashMap&lt;&amp;str, u32&gt; = HashMap::new();
-inventory.insert("widget", 42); // &lt;- key-value pair stored; O(1) average insert
-inventory.insert("gadget", 17);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">inventory</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;widget&quot;</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- key-value pair stored; O(1) average insert</span>
+<span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;gadget&quot;</span><span class="tok-punct">,</span> <span class="tok-number">17</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-println!("{:?}", inventory.get("widget")); // Some(42)
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{:?}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;widget&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// Some(42)</span>
 </code></pre>
 <p><strong>Restriction:</strong> iteration order over a <code>HashMap</code>/<code>HashSet</code> is
 unspecified and not guaranteed to stay stable across insertions or
@@ -1034,17 +1034,17 @@ matters.</p>
             <p>The entry API is the idiomatic way to insert-or-update in a single
 lookup, and a <code>HashSet</code> is the idiomatic way to deduplicate a sequence
 without writing a manual "have I seen this" loop.</p>
-<pre><code class="rust">use std::collections::{HashMap, HashSet};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">HashMap</span><span class="tok-punct">,</span> <span class="tok-type">HashSet</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let log = ["order_placed", "order_shipped", "order_placed", "order_cancelled", "order_placed"];
+<span class="tok-keyword">let</span> <span class="tok-variable">log</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-string">&quot;order_placed&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;order_shipped&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;order_placed&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;order_cancelled&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;order_placed&quot;</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let mut counts: HashMap&lt;&amp;str, u32&gt; = HashMap::new();
-for event in log {
-    *counts.entry(event).or_insert(0) += 1; // &lt;- one lookup does both "insert if missing" and "update"
-}
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">counts</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">event</span> <span class="tok-keyword">in</span> <span class="tok-variable">log</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">*</span><span class="tok-variable">counts</span><span class="tok-punct">.</span><span class="tok-call-method">entry</span><span class="tok-punct">(</span><span class="tok-variable">event</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">or_insert</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- one lookup does both &quot;insert if missing&quot; and &quot;update&quot;</span>
+<span class="tok-punct">}</span>
 
-let unique_events: HashSet&lt;&amp;str&gt; = log.into_iter().collect(); // &lt;- HashSet collapses duplicates automatically
-println!("{:?} unique event kinds", unique_events.len());
+<span class="tok-keyword">let</span> <span class="tok-variable">unique_events</span><span class="tok-punct">:</span> <span class="tok-type">HashSet</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- HashSet collapses duplicates automatically</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{:?} unique event kinds&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">unique_events</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>entry</code> avoids the double lookup of checking
@@ -1063,22 +1063,22 @@ shape.</p>
             <p>After a bulk query returns a batch of rows, building a <code>HashMap</code> keyed
 by ID turns repeated "find the row for this ID" lookups from a linear
 scan over the batch into an O(1) average lookup.</p>
-<pre><code class="rust">// [dependencies] sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }, tokio = { version = "1", features = ["full"] }
-use std::collections::HashMap;
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] sqlx = { version = &quot;0.8&quot;, features = [&quot;postgres&quot;, &quot;runtime-tokio&quot;] }, tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-#[derive(sqlx::FromRow, Clone)]
-struct Order {
-    id: i64,
-    total_cents: i64,
-}
+<span class="tok-attribute">#[derive(sqlx::FromRow, Clone)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-async fn orders_by_id(pool: &amp;sqlx::PgPool) -&gt; sqlx::Result&lt;HashMap&lt;i64, Order&gt;&gt; {
-    let rows: Vec&lt;Order&gt; = sqlx::query_as::&lt;_, Order&gt;("SELECT id, total_cents FROM orders")
-        .fetch_all(pool)
-        .await?;
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">orders_by_id</span><span class="tok-punct">(</span><span class="tok-variable">pool</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-type">PgPool</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type-return">i64</span><span class="tok-punct">,</span> <span class="tok-type-return">Order</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">rows</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Order</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-module">query_as</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">,</span> <span class="tok-type">Order</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">&quot;SELECT id, total_cents FROM orders&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">fetch_all</span><span class="tok-punct">(</span><span class="tok-variable">pool</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
 
-    Ok(rows.into_iter().map(|order| (order.id, order)).collect()) // &lt;- collects straight into a HashMap keyed by id
-}
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">rows</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">order</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">id</span><span class="tok-punct">,</span> <span class="tok-variable">order</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- collects straight into a HashMap keyed by id</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> fetching once and indexing the results locally avoids
@@ -1097,16 +1097,16 @@ on its performance characteristics.</p>
             <p>A struct used as a <code>HashMap</code> key needs <code>Eq</code> and <code>Hash</code> alongside
 <code>PartialEq</code>, and deriving all three is correct only when equal instances
 are guaranteed to hash the same way.</p>
-<pre><code class="rust">use std::collections::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-#[derive(PartialEq, Eq, Hash)] // &lt;- Hash + Eq are exactly what HashMap requires of its key type
-struct UserId {
-    tenant: u32,
-    id: u32,
-}
+<span class="tok-attribute">#[derive(PartialEq, Eq, Hash)]</span> <span class="tok-comment tok-anno">// &lt;- Hash + Eq are exactly what HashMap requires of its key type</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">UserId</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">tenant</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let mut sessions: HashMap&lt;UserId, u64&gt; = HashMap::new();
-sessions.insert(UserId { tenant: 1, id: 42 }, 1_690_000_000);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sessions</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">UserId</span><span class="tok-punct">,</span> <span class="tok-type">u64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sessions</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-type">UserId</span> <span class="tok-punct">{</span> <span class="tok-variable">tenant</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">42</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-number">1_690_000_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1153,13 +1153,13 @@ cheap hash," not a drop-in.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use heapless::FnvIndexMap;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">FnvIndexMap</span><span class="tok-punct">;</span>
 
-let mut inventory: FnvIndexMap&lt;&amp;str, u32, 8&gt; = FnvIndexMap::new(); // &lt;- capacity fixed at 8, cheaper FNV-style hash, no allocator
-inventory.insert("widget", 42).unwrap(); // &lt;- insert returns Result: Err if the map is already full
-inventory.insert("gadget", 17).unwrap();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">inventory</span><span class="tok-punct">:</span> <span class="tok-type">FnvIndexMap</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">FnvIndexMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- capacity fixed at 8, cheaper FNV-style hash, no allocator</span>
+<span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;widget&quot;</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- insert returns Result: Err if the map is already full</span>
+<span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;gadget&quot;</span><span class="tok-punct">,</span> <span class="tok-number">17</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(inventory.get("widget"), Some(&amp;42));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;widget&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1178,17 +1178,17 @@ assert_eq!(inventory.get("widget"), Some(&amp;42));
 of keys chosen by the firmware itself, never by an attacker — exactly
 the case where <code>heapless</code>'s cheaper hash costs nothing in safety while
 avoiding both <code>SipHash</code>'s overhead and <code>HashMap</code>'s need for a heap.</p>
-<pre><code class="rust">use heapless::FnvIndexMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">FnvIndexMap</span><span class="tok-punct">;</span>
 
-const SENSOR_COUNT: usize = 8;
+<span class="tok-keyword">const</span> <span class="tok-constant">SENSOR_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">8</span><span class="tok-punct">;</span>
 
-fn build_calibration_table(offsets: [(u8, f32); 4]) -&gt; FnvIndexMap&lt;u8, f32, SENSOR_COUNT&gt; {
-    let mut table: FnvIndexMap&lt;u8, f32, SENSOR_COUNT&gt; = FnvIndexMap::new(); // &lt;- fixed capacity, no allocator
-    for (sensor_id, offset) in offsets {
-        table.insert(sensor_id, offset).unwrap(); // &lt;- Err if more than SENSOR_COUNT entries are ever inserted
-    }
-    table
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_calibration_table</span><span class="tok-punct">(</span><span class="tok-variable">offsets</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-type">f32</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">FnvIndexMap</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">f32</span><span class="tok-punct">,</span> <span class="tok-constant">SENSOR_COUNT</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">FnvIndexMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-type">f32</span><span class="tok-punct">,</span> <span class="tok-constant">SENSOR_COUNT</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">FnvIndexMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed capacity, no allocator</span>
+    <span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">sensor_id</span><span class="tok-punct">,</span> <span class="tok-variable">offset</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">offsets</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-variable">sensor_id</span><span class="tok-punct">,</span> <span class="tok-variable">offset</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Err if more than SENSOR_COUNT entries are ever inserted</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">table</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>SipHash</code>'s DOS-resistance defends against a threat

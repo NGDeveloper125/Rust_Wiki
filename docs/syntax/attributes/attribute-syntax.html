@@ -1036,12 +1036,12 @@ is already general enough to carry it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Combining outer and inner attributes</h3>
-            <pre><code class="rust">#![allow(dead_code)] // &lt;- inner attribute: applies to the enclosing module/crate, not to what follows
+            <pre><code class="rust-hl"><span class="tok-attribute">#![allow(dead_code)]</span> <span class="tok-comment tok-anno">// &lt;- inner attribute: applies to the enclosing module/crate, not to what follows</span>
 
-#[derive(Debug)] // &lt;- outer attribute: applies only to the struct immediately below
-struct Reading {
-    celsius: f64,
-}
+<span class="tok-attribute">#[derive(Debug)]</span> <span class="tok-comment tok-anno">// &lt;- outer attribute: applies only to the struct immediately below</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Reading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1052,14 +1052,14 @@ outside (an outer attribute on the <code>mod</code> item, from the parent's poin
 view) or from the inside (an inner attribute at the top of the module's
 own file/block, from the module's own point of view). Both are legal;
 which one to reach for depends on who is making the statement.</p>
-<pre><code class="rust">// lib.rs (crate root):
-#![allow(clippy::module_name_repetitions)] // &lt;- inner: crate root annotating itself, before any item
+<pre><code class="rust-hl"><span class="tok-comment">// lib.rs (crate root):</span>
+<span class="tok-attribute">#![allow(clippy::module_name_repetitions)]</span> <span class="tok-comment tok-anno">// &lt;- inner: crate root annotating itself, before any item</span>
 
-#[cfg(feature = "metrics")] // &lt;- outer: parent module gating the `metrics` module from outside
-mod metrics {
-    #![allow(dead_code)] // &lt;- inner: metrics module annotating itself, from inside
-    pub fn record_latency(_ms: u64) {}
-}
+<span class="tok-attribute">#[cfg(feature = &quot;metrics&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- outer: parent module gating the `metrics` module from outside</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">metrics</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#![allow(dead_code)]</span> <span class="tok-comment tok-anno">// &lt;- inner: metrics module annotating itself, from inside</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">record_latency</span><span class="tok-punct">(</span><span class="tok-variable">_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>An outer attribute reads naturally when a <em>caller</em> of an
 item is making a decision about it (whether to compile <code>mod metrics</code> at
@@ -1079,19 +1079,19 @@ direction matches who owns the decision.</p>
 attributes cooperating on the same file — recognizing that they're both
 just outer attributes with different targets clarifies why one gates a
 <code>mod</code> and the other marks a <code>fn</code> rather than either one doing both jobs.</p>
-<pre><code class="rust">fn add(a: i32, b: i32) -&gt; i32 {
-    a + b
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">add</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">a</span> <span class="tok-punct">+</span> <span class="tok-variable">b</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)] // &lt;- outer attribute on the `mod` item: this module compiles only under `cargo test`
-mod tests {
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span> <span class="tok-comment tok-anno">// &lt;- outer attribute on the `mod` item: this module compiles only under `cargo test`</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test] // &lt;- outer attribute on the `fn` item: marks one function as a test case
-    fn adds_two_numbers() {
-        assert_eq!(add(2, 3), 5);
-    }
-}
+    <span class="tok-attribute">#[test]</span> <span class="tok-comment tok-anno">// &lt;- outer attribute on the `fn` item: marks one function as a test case</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">adds_two_numbers</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">add</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Keeping compilation-gating (<code>cfg</code>) and test-discovery
 (<code>test</code>) as two separate, composable attributes — rather than one
@@ -1134,18 +1134,18 @@ the crate root, applying to the whole crate exactly the way
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">The attribute stack at the top of a firmware crate</h3>
-            <pre><code class="rust">#![no_std] // &lt;- inner attribute: this whole crate has no std library available
-#![no_main] // &lt;- inner attribute: this crate supplies its own entry point, not a normal fn main
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span> <span class="tok-comment tok-anno">// &lt;- inner attribute: this whole crate has no std library available</span>
+<span class="tok-attribute">#![no_main]</span> <span class="tok-comment tok-anno">// &lt;- inner attribute: this crate supplies its own entry point, not a normal fn main</span>
 
-use cortex_m_rt::entry;
-use panic_halt as _;
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-#[entry] // &lt;- outer attribute: marks this function as the runtime's entry point
-fn main() -&gt; ! {
-    loop {
-        // ... firmware body
-    }
-}
+<span class="tok-attribute">#[entry]</span> <span class="tok-comment tok-anno">// &lt;- outer attribute: marks this function as the runtime's entry point</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... firmware body</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

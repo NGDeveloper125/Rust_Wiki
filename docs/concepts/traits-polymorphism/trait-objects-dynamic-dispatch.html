@@ -1002,19 +1002,19 @@ without null being a possible value.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait Shape {
-    fn area(&amp;self) -&gt; f64;
-}
-struct Circle;
-impl Shape for Circle { fn area(&amp;self) -&gt; f64 { 3.14 } }
-struct Square;
-impl Shape for Square { fn area(&amp;self) -&gt; f64 { 4.0 } }
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Circle</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Shape</span> <span class="tok-keyword">for</span> <span class="tok-type">Circle</span> <span class="tok-punct">{</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-number">3.14</span> <span class="tok-punct">}</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Square</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Shape</span> <span class="tok-keyword">for</span> <span class="tok-type">Square</span> <span class="tok-punct">{</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-number">4.0</span> <span class="tok-punct">}</span> <span class="tok-punct">}</span>
 
-let shapes: Vec&lt;Box&lt;dyn Shape&gt;&gt; = vec![Box::new(Circle), Box::new(Square)];
-// &lt;- `dyn Shape` erases the concrete type; each element can be a different one
-for s in &amp;shapes {
-    println!("{}", s.area()); // resolved at runtime via a vtable
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">shapes</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Shape</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Circle</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Square</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- `dyn Shape` erases the concrete type; each element can be a different one</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">s</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">shapes</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">area</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// resolved at runtime via a vtable</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1032,26 +1032,26 @@ for s in &amp;shapes {
             <p>An audio effect chain needs to apply an arbitrary, user-configured mix of
 effects in sequence — the exact set and order aren't known until runtime,
 which rules out a fixed enum or a single generic function.</p>
-<pre><code class="rust">trait Effect {
-    fn apply(&amp;self, sample: f32) -&gt; f32;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Effect</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">sample</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Gain(f32);
-impl Effect for Gain {
-    fn apply(&amp;self, sample: f32) -&gt; f32 { sample * self.0 }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Gain</span><span class="tok-punct">(</span><span class="tok-type">f32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Effect</span> <span class="tok-keyword">for</span> <span class="tok-type">Gain</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">sample</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span> <span class="tok-variable">sample</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct Clip(f32);
-impl Effect for Clip {
-    fn apply(&amp;self, sample: f32) -&gt; f32 { sample.clamp(-self.0, self.0) }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Clip</span><span class="tok-punct">(</span><span class="tok-type">f32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Effect</span> <span class="tok-keyword">for</span> <span class="tok-type">Clip</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">sample</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span> <span class="tok-variable">sample</span><span class="tok-punct">.</span><span class="tok-call-method">clamp</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn process(sample: f32, chain: &amp;[Box&lt;dyn Effect&gt;]) -&gt; f32 { // &lt;- one signature, any mix of effect types
-    chain.iter().fold(sample, |s, effect| effect.apply(s))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">process</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span> <span class="tok-variable">chain</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Effect</span><span class="tok-punct">&gt;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one signature, any mix of effect types</span>
+    <span class="tok-variable">chain</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">s</span><span class="tok-punct">,</span> <span class="tok-variable">effect</span><span class="tok-punct">|</span> <span class="tok-variable">effect</span><span class="tok-punct">.</span><span class="tok-call-method">apply</span><span class="tok-punct">(</span><span class="tok-variable">s</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let chain: Vec&lt;Box&lt;dyn Effect&gt;&gt; = vec![Box::new(Gain(2.0)), Box::new(Clip(1.0))];
-process(0.6, &amp;chain);
+<span class="tok-keyword">let</span> <span class="tok-variable">chain</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Effect</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-field">Gain</span><span class="tok-punct">(</span><span class="tok-number">2.0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-field">Clip</span><span class="tok-punct">(</span><span class="tok-number">1.0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-call-free">process</span><span class="tok-punct">(</span><span class="tok-number">0.6</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">chain</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the chain's length and composition are decided at
@@ -1070,26 +1070,26 @@ uses trait objects for.</p>
             <p>A plugin-style registry is a natural <code>Vec&lt;Box&lt;dyn Trait&gt;&gt;</code> API: the crate
 owns the collection and dispatch logic, while callers register any type
 implementing the trait.</p>
-<pre><code class="rust">trait Command {
-    fn name(&amp;self) -&gt; &amp;str;
-    fn run(&amp;self, input: &amp;str);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">name</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-type-return">str</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-pub struct Registry {
-    commands: Vec&lt;Box&lt;dyn Command&gt;&gt;, // &lt;- registry stores any Command impl behind one type
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Registry</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">commands</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- registry stores any Command impl behind one type</span>
+<span class="tok-punct">}</span>
 
-impl Registry {
-    pub fn register(&amp;mut self, command: Box&lt;dyn Command&gt;) {
-        self.commands.push(command);
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Registry</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">register</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">command</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Command</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">commands</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">command</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    pub fn dispatch(&amp;self, name: &amp;str, input: &amp;str) {
-        if let Some(cmd) = self.commands.iter().find(|c| c.name() == name) {
-            cmd.run(input);
-        }
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">dispatch</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">commands</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">find</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">c</span><span class="tok-punct">|</span> <span class="tok-variable">c</span><span class="tok-punct">.</span><span class="tok-call-method">name</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">==</span> <span class="tok-variable">name</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">cmd</span><span class="tok-punct">.</span><span class="tok-call-method">run</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> designing <code>Command</code> to stay object-safe (no generic
@@ -1140,22 +1140,22 @@ type parameter per call site, decided once at compile time.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait Sensor {
-    fn read_raw(&amp;self) -&gt; u16;
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Thermistor;
-impl Sensor for Thermistor { fn read_raw(&amp;self) -&gt; u16 { 512 } }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Thermistor</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Thermistor</span> <span class="tok-punct">{</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span> <span class="tok-number">512</span> <span class="tok-punct">}</span> <span class="tok-punct">}</span>
 
-struct Photodiode;
-impl Sensor for Photodiode { fn read_raw(&amp;self) -&gt; u16 { 128 } }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Photodiode</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Photodiode</span> <span class="tok-punct">{</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span> <span class="tok-number">128</span> <span class="tok-punct">}</span> <span class="tok-punct">}</span>
 
-let thermistor = Thermistor;
-let photodiode = Photodiode;
-let sensors: [&amp;dyn Sensor; 2] = [&amp;thermistor, &amp;photodiode]; // &lt;- heterogeneous, heap-free: fixed-size array of trait objects
-for s in sensors {
-    let _raw = s.read_raw();
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">thermistor</span> <span class="tok-punct">=</span> <span class="tok-type">Thermistor</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">photodiode</span> <span class="tok-punct">=</span> <span class="tok-type">Photodiode</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sensors</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Sensor</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-punct">&amp;</span><span class="tok-variable">thermistor</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">photodiode</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- heterogeneous, heap-free: fixed-size array of trait objects</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">s</span> <span class="tok-keyword">in</span> <span class="tok-variable">sensors</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_raw</span> <span class="tok-punct">=</span> <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1175,13 +1175,13 @@ carries a thermistor and a photodiode, another adds a humidity sensor —
 so the firmware that polls "whatever sensors this board has" needs one
 type it can iterate over, without a fixed enum or a generic function per
 board revision.</p>
-<pre><code class="rust">trait Sensor {
-    fn read_raw(&amp;self) -&gt; u16;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn poll_all(sensors: &amp;[&amp;dyn Sensor]) -&gt; u32 { // &lt;- one signature, any mix of sensor types, no heap
-    sensors.iter().map(|s| s.read_raw() as u32).sum()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">poll_all</span><span class="tok-punct">(</span><span class="tok-variable">sensors</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Sensor</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one signature, any mix of sensor types, no heap</span>
+    <span class="tok-variable">sensors</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">s</span><span class="tok-punct">|</span> <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the exact sensor mix is a board-configuration fact, not
@@ -1200,21 +1200,21 @@ indirection on each read, with no allocator involved at all.</p>
 number of optional peripheral drivers at startup needs a fixed-capacity,
 allocator-free registry — a plain array of trait objects, sized to the
 board's maximum, rather than a heap-growing <code>Vec</code>.</p>
-<pre><code class="rust">trait Peripheral {
-    fn init(&amp;mut self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Peripheral</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">init</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-pub struct Registry&lt;'a&gt; {
-    peripherals: [Option&lt;&amp;'a mut dyn Peripheral&gt;; 4], // &lt;- fixed-capacity, no allocator: registry sized at compile time
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Registry</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">peripherals</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-keyword">mut</span> <span class="tok-keyword">dyn</span> <span class="tok-trait">Peripheral</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- fixed-capacity, no allocator: registry sized at compile time</span>
+<span class="tok-punct">}</span>
 
-impl&lt;'a&gt; Registry&lt;'a&gt; {
-    pub fn init_all(&amp;mut self) {
-        for p in self.peripherals.iter_mut().flatten() {
-            p.init();
-        }
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-type">Registry</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">init_all</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">p</span> <span class="tok-keyword">in</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">peripherals</span><span class="tok-punct">.</span><span class="tok-call-method">iter_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">flatten</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">p</span><span class="tok-punct">.</span><span class="tok-call-method">init</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a bare-metal target commonly has no <code>#[global_allocator]</code>
@@ -1235,19 +1235,19 @@ concrete <code>Peripheral</code> implementation.</p>
 reasonable place for <code>Box&lt;dyn Trait&gt;</code> — the allocation happens once
 during init, not on a hot path, so the flexibility is worth the one-time
 heap cost.</p>
-<pre><code class="rust">// AVOID: Box&lt;dyn Trait&gt; on a bare-metal target with no configured allocator — this won't compile
-// let drivers: Vec&lt;Box&lt;dyn Peripheral&gt;&gt; = vec![Box::new(imu), Box::new(display)];
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: Box&lt;dyn Trait&gt; on a bare-metal target with no configured allocator — this won't compile</span>
+<span class="tok-comment">// let drivers: Vec&lt;Box&lt;dyn Peripheral&gt;&gt; = vec![Box::new(imu), Box::new(display)];</span>
 
-// PREFER: on a target with `alloc` configured, a startup-only Box&lt;dyn Trait&gt; list is fine
-extern crate alloc;
-use alloc::{boxed::Box, vec::Vec};
+<span class="tok-comment">// PREFER: on a target with `alloc` configured, a startup-only Box&lt;dyn Trait&gt; list is fine</span>
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-module">boxed</span><span class="tok-punct">::</span><span class="tok-type">Box</span><span class="tok-punct">,</span> <span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-fn build_drivers(imu: impl Peripheral + 'static, display: impl Peripheral + 'static) -&gt; Vec&lt;Box&lt;dyn Peripheral&gt;&gt; {
-    let mut drivers: Vec&lt;Box&lt;dyn Peripheral&gt;&gt; = Vec::new();
-    drivers.push(Box::new(imu));     // &lt;- heap allocation, but only once, at startup
-    drivers.push(Box::new(display));
-    drivers
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_drivers</span><span class="tok-punct">(</span><span class="tok-variable">imu</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Peripheral</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">,</span> <span class="tok-variable">display</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Peripheral</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Peripheral</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">drivers</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Peripheral</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">drivers</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">imu</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>     <span class="tok-comment tok-anno">// &lt;- heap allocation, but only once, at startup</span>
+    <span class="tok-variable">drivers</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">display</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">drivers</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> whether <code>Box&lt;dyn Trait&gt;</code> is available at all is a

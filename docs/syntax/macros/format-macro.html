@@ -1011,9 +1011,9 @@ string.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Named-argument capture with precision formatting</h3>
-            <pre><code class="rust">let order_id = 42;
-let amount = 19.9;
-let receipt = format!("Order #{order_id}: ${amount:.2}"); // &lt;- named capture + 2-decimal precision, returns an owned String
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">order_id</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">amount</span> <span class="tok-punct">=</span> <span class="tok-number">19.9</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">receipt</span> <span class="tok-punct">=</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;Order #{order_id}: ${amount:.2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- named capture + 2-decimal precision, returns an owned String</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>format!</code> (and every macro sharing this grammar) checks
 argument counts and placeholder names against the arguments at compile
@@ -1028,21 +1028,21 @@ compile time, never a runtime-computed <code>String</code>.</p>
             <p>Building a fixed-width shipment label combining several fields is exactly
 what <code>format!</code> is for, instead of repeated <code>push_str</code> calls glued
 together by hand.</p>
-<pre><code class="rust">struct Shipment {
-    tracking_id: String,
-    carrier: String,
-    weight_kg: f64,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Shipment</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">tracking_id</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">carrier</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">weight_kg</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn label(shipment: &amp;Shipment) -&gt; String {
-    format!(
-        "{:&lt;12} | {:&gt;9} | {:&gt;6.2} kg", // &lt;- left-align id, right-align carrier, 2-decimal weight
-        shipment.tracking_id, shipment.carrier, shipment.weight_kg
-    )
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">label</span><span class="tok-punct">(</span><span class="tok-variable">shipment</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Shipment</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span>
+        <span class="tok-string">&quot;{:&lt;12} | {:&gt;9} | {:&gt;6.2} kg&quot;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- left-align id, right-align carrier, 2-decimal weight</span>
+        <span class="tok-variable">shipment</span><span class="tok-punct">.</span><span class="tok-field">tracking_id</span><span class="tok-punct">,</span> <span class="tok-variable">shipment</span><span class="tok-punct">.</span><span class="tok-field">carrier</span><span class="tok-punct">,</span> <span class="tok-variable">shipment</span><span class="tok-punct">.</span><span class="tok-field">weight_kg</span>
+    <span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let line = label(&amp;Shipment { tracking_id: "TRK-8841".into(), carrier: "Northwind".into(), weight_kg: 3.4 });
-println!("{line}");
+<span class="tok-keyword">let</span> <span class="tok-variable">line</span> <span class="tok-punct">=</span> <span class="tok-call-free">label</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Shipment</span> <span class="tok-punct">{</span> <span class="tok-variable">tracking_id</span><span class="tok-punct">:</span> <span class="tok-string">&quot;TRK-8841&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">carrier</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Northwind&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">weight_kg</span><span class="tok-punct">:</span> <span class="tok-number">3.4</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{line}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/std/fmt/index.html#width">std fmt docs</a> treat
@@ -1056,14 +1056,14 @@ declarative format string.</p>
             <p>Constructing a descriptive error message that embeds the offending value
 happens at the point of failure, then gets wrapped into a custom error
 type so the context isn't lost by the time it surfaces.</p>
-<pre><code class="rust">#[derive(Debug)]
-struct ConfigError(String);
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ConfigError</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn parse_port(raw: &amp;str) -&gt; Result&lt;u16, ConfigError&gt; {
-    raw.trim()
-        .parse()
-        .map_err(|_| ConfigError(format!("invalid port value: {raw:?}"))) // &lt;- {:?} quotes the raw string in the message
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_port</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">ConfigError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-field">ConfigError</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid port value: {raw:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- {:?} quotes the raw string in the message</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/book/ch09-00-error-handling.html">Book's error-handling chapter</a>
@@ -1113,26 +1113,26 @@ smaller compiled footprint.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Formatting into a heapless::String instead of allocating</h3>
-            <pre><code class="rust">use core::fmt::Write;
-use heapless::String;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">;</span>
 
-let order_id = 42;
-let amount = 19.9;
+<span class="tok-keyword">let</span> <span class="tok-variable">order_id</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">amount</span> <span class="tok-punct">=</span> <span class="tok-number">19.9</span><span class="tok-punct">;</span>
 
-let mut receipt: String&lt;64&gt; = String::new(); // &lt;- fixed 64-byte capacity, no heap
-write!(receipt, "Order #{order_id}: ${amount:.2}").unwrap(); // &lt;- same {}/:.2 grammar as format!, no allocation
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">receipt</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">&lt;</span><span class="tok-number">64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed 64-byte capacity, no heap</span>
+<span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">receipt</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Order #{order_id}: ${amount:.2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same {}/:.2 grammar as format!, no allocation</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Formatting with ufmt on a heavily size-constrained MCU</h3>
-            <pre><code class="rust">use ufmt::uwrite;
-use heapless::String; // heapless's "ufmt" feature implements uWrite for String&lt;N&gt;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">ufmt</span><span class="tok-punct">::</span><span class="tok-variable">uwrite</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">;</span> <span class="tok-comment">// heapless's &quot;ufmt&quot; feature implements uWrite for String&lt;N&gt;</span>
 
-let voltage_mv: u16 = 3300;
+<span class="tok-keyword">let</span> <span class="tok-variable">voltage_mv</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">=</span> <span class="tok-number">3300</span><span class="tok-punct">;</span>
 
-let mut line: String&lt;32&gt; = String::new();
-uwrite!(&amp;mut line, "vbus = {} mV", voltage_mv).unwrap(); // &lt;- ufmt's leaner engine, no core::fmt involved
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">line</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">&lt;</span><span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">uwrite!</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">line</span><span class="tok-punct">,</span> <span class="tok-string">&quot;vbus = {} mV&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">voltage_mv</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ufmt's leaner engine, no core::fmt involved</span>
 </code></pre>
 
           </div>

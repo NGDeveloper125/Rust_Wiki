@@ -1017,13 +1017,13 @@ a reference during the match, regardless of what the scrutinee's type is.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Borrowing a field with `ref` instead of moving it</h3>
-            <pre><code class="rust">struct Ticket { code: String }
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Ticket</span> <span class="tok-punct">{</span> <span class="tok-variable">code</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span>
 
-let ticket = Ticket { code: String::from("A-102") };
-let Ticket { ref code } = ticket; // &lt;- `ref` borrows `code` instead of moving it out of `ticket`
+<span class="tok-keyword">let</span> <span class="tok-variable">ticket</span> <span class="tok-punct">=</span> <span class="tok-type">Ticket</span> <span class="tok-punct">{</span> <span class="tok-variable">code</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;A-102&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-type">Ticket</span> <span class="tok-punct">{</span> <span class="tok-keyword">ref</span> <span class="tok-variable">code</span> <span class="tok-punct">}</span> <span class="tok-punct">=</span> <span class="tok-variable">ticket</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `ref` borrows `code` instead of moving it out of `ticket`</span>
 
-println!("{code}");
-println!("{}", ticket.code); // still valid: `code` was only borrowed, `ticket` wasn't consumed
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{code}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">ticket</span><span class="tok-punct">.</span><span class="tok-field">code</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// still valid: `code` was only borrowed, `ticket` wasn't consumed</span>
 </code></pre>
 
           </div>
@@ -1032,21 +1032,21 @@ println!("{}", ticket.code); // still valid: `code` was only borrowed, `ticket` 
             <p>Matching directly on an owned enum (not a reference to one) while still
 needing to return that same value afterward requires borrowing the field
 you inspect, rather than letting the match move it out.</p>
-<pre><code class="rust">enum Shipment {
-    Pending { tracking_code: String },
-    Delivered,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Shipment</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Pending</span> <span class="tok-punct">{</span> <span class="tok-variable">tracking_code</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Delivered</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn log_tracking(shipment: Shipment) -&gt; Shipment {
-    match shipment {
-        Shipment::Pending { ref tracking_code } =&gt; {
-            // &lt;- `ref` borrows `tracking_code` instead of moving it out of `shipment`
-            println!("still pending: {tracking_code}");
-        }
-        Shipment::Delivered =&gt; println!("delivered"),
-    }
-    shipment // still whole: only `tracking_code` was borrowed during the match, never moved
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_tracking</span><span class="tok-punct">(</span><span class="tok-variable">shipment</span><span class="tok-punct">:</span> <span class="tok-type">Shipment</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Shipment</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">shipment</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Shipment</span><span class="tok-punct">::</span><span class="tok-field">Pending</span> <span class="tok-punct">{</span> <span class="tok-keyword">ref</span> <span class="tok-variable">tracking_code</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `ref` borrows `tracking_code` instead of moving it out of `shipment`</span>
+            <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;still pending: {tracking_code}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-type">Shipment</span><span class="tok-punct">::</span><span class="tok-field">Delivered</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;delivered&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">shipment</span> <span class="tok-comment">// still whole: only `tracking_code` was borrowed during the match, never moved</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Matching <code>shipment</code> by value would otherwise move
 <code>tracking_code</code> out of it the moment that arm's pattern binds, making
@@ -1060,15 +1060,15 @@ when its scrutinee isn't already a reference.</p>
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>Destructuring a struct to read one field while continuing to use the whole
 struct afterward needs that one field bound by reference, not moved out.</p>
-<pre><code class="rust">struct Invoice {
-    number: String,
-    total_cents: u64,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Invoice</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">number</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let invoice = Invoice { number: String::from("INV-2048"), total_cents: 4599 };
-let Invoice { ref number, .. } = invoice; // &lt;- `ref` borrows `number`, leaving `invoice` itself intact
+<span class="tok-keyword">let</span> <span class="tok-variable">invoice</span> <span class="tok-punct">=</span> <span class="tok-type">Invoice</span> <span class="tok-punct">{</span> <span class="tok-variable">number</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;INV-2048&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">4599</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-type">Invoice</span> <span class="tok-punct">{</span> <span class="tok-keyword">ref</span> <span class="tok-variable">number</span><span class="tok-punct">,</span> <span class="tok-punct">..</span> <span class="tok-punct">}</span> <span class="tok-punct">=</span> <span class="tok-variable">invoice</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `ref` borrows `number`, leaving `invoice` itself intact</span>
 
-println!("{number} totals {}", invoice.total_cents); // both `number` and `invoice` are usable here
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{number} totals {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">invoice</span><span class="tok-punct">.</span><span class="tok-field">total_cents</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// both `number` and `invoice` are usable here</span>
 </code></pre>
 <p>Without <code>ref</code>, binding <code>number</code> in this pattern would move
 the <code>String</code> out of <code>invoice</code>, making <code>invoice.total_cents</code> (and the rest of
@@ -1084,21 +1084,21 @@ needs to be shared out of it.</p>
 <code>ref mut</code> — without it, a <code>Copy</code> field like a counter would bind as a
 detached copy, and mutating the copy would silently do nothing to the
 original.</p>
-<pre><code class="rust">enum Task {
-    Active { retries: u32 },
-    Done,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Task</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Active</span> <span class="tok-punct">{</span> <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Done</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn record_retry(mut task: Task) -&gt; Task {
-    match task {
-        Task::Active { ref mut retries } =&gt; {
-            // &lt;- `ref mut` mutably borrows the real field; without it, `retries: u32` would just be a copy
-            *retries += 1;
-        }
-        Task::Done =&gt; {}
-    }
-    task
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">record_retry</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">task</span><span class="tok-punct">:</span> <span class="tok-type">Task</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Task</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">task</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Task</span><span class="tok-punct">::</span><span class="tok-field">Active</span> <span class="tok-punct">{</span> <span class="tok-keyword">ref</span> <span class="tok-keyword">mut</span> <span class="tok-variable">retries</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `ref mut` mutably borrows the real field; without it, `retries: u32` would just be a copy</span>
+            <span class="tok-punct">*</span><span class="tok-variable">retries</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-type">Task</span><span class="tok-punct">::</span><span class="tok-field">Done</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">task</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>u32</code> is <code>Copy</code>, so without <code>ref mut</code> the pattern would
 bind <code>retries</code> as an independent copy and <code>*retries += 1</code> would mutate
@@ -1135,45 +1135,45 @@ from a peripheral without consuming the whole struct in the process.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Borrowing a field while matching an owned hardware-status struct</h3>
-            <pre><code class="rust">struct LinkStatus {
-    speed_mbps: u32,
-    duplex: Duplex,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">LinkStatus</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">speed_mbps</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">duplex</span><span class="tok-punct">:</span> <span class="tok-type">Duplex</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-enum Duplex { Half, Full }
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Duplex</span> <span class="tok-punct">{</span> <span class="tok-type">Half</span><span class="tok-punct">,</span> <span class="tok-type">Full</span> <span class="tok-punct">}</span>
 
-fn log_link(status: LinkStatus) -&gt; LinkStatus {
-    match status {
-        LinkStatus { ref duplex, speed_mbps } =&gt; {
-            // &lt;- `ref` borrows `duplex`; `speed_mbps` (a Copy u32) is still bound normally alongside it
-            match duplex {
-                Duplex::Full =&gt; defmt::info!("full duplex @ {}", speed_mbps),
-                Duplex::Half =&gt; defmt::info!("half duplex @ {}", speed_mbps),
-            }
-        }
-    }
-    status // still whole: only `duplex` was borrowed during the match, never moved out
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_link</span><span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-type">LinkStatus</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">LinkStatus</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">status</span> <span class="tok-punct">{</span>
+        <span class="tok-type">LinkStatus</span> <span class="tok-punct">{</span> <span class="tok-keyword">ref</span> <span class="tok-variable">duplex</span><span class="tok-punct">,</span> <span class="tok-variable">speed_mbps</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `ref` borrows `duplex`; `speed_mbps` (a Copy u32) is still bound normally alongside it</span>
+            <span class="tok-keyword">match</span> <span class="tok-variable">duplex</span> <span class="tok-punct">{</span>
+                <span class="tok-type">Duplex</span><span class="tok-punct">::</span><span class="tok-field">Full</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;full duplex @ {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">speed_mbps</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+                <span class="tok-type">Duplex</span><span class="tok-punct">::</span><span class="tok-field">Half</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;half duplex @ {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">speed_mbps</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">status</span> <span class="tok-comment">// still whole: only `duplex` was borrowed during the match, never moved out</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Mutating a retry counter with `ref mut` in an owned driver-status enum</h3>
-            <pre><code class="rust">enum SensorState {
-    Faulted { retries: u8 },
-    Ready,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">SensorState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Faulted</span> <span class="tok-punct">{</span> <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Ready</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn record_retry(mut state: SensorState) -&gt; SensorState {
-    match state {
-        SensorState::Faulted { ref mut retries } =&gt; {
-            // &lt;- `ref mut`: mutably borrows the real field so the increment survives past the match
-            *retries += 1;
-        }
-        SensorState::Ready =&gt; {}
-    }
-    state
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">record_retry</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">SensorState</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">SensorState</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">state</span> <span class="tok-punct">{</span>
+        <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Faulted</span> <span class="tok-punct">{</span> <span class="tok-keyword">ref</span> <span class="tok-keyword">mut</span> <span class="tok-variable">retries</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-comment tok-anno">// &lt;- `ref mut`: mutably borrows the real field so the increment survives past the match</span>
+            <span class="tok-punct">*</span><span class="tok-variable">retries</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-type">SensorState</span><span class="tok-punct">::</span><span class="tok-field">Ready</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">state</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

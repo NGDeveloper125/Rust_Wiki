@@ -1005,11 +1005,11 @@ from, which matters once a macro is exported (see
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reusing a captured metavariable in the expansion</h3>
-            <pre><code class="rust">macro_rules! double {
-    ($x:expr) =&gt; { $x + $x }; // &lt;- captures $x once, reuses it twice in the expansion
-}
+            <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">double</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">x</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-punct">$</span><span class="tok-variable">x</span> <span class="tok-punct">+</span> <span class="tok-punct">$</span><span class="tok-variable">x</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- captures $x once, reuses it twice in the expansion</span>
+<span class="tok-punct">}</span>
 
-let n = double!(21); // &lt;- expands to 21 + 21
+<span class="tok-keyword">let</span> <span class="tok-variable">n</span> <span class="tok-punct">=</span> <span class="tok-macro">double!</span><span class="tok-punct">(</span><span class="tok-number">21</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands to 21 + 21</span>
 </code></pre>
 
           </div>
@@ -1020,19 +1020,19 @@ let n = double!(21); // &lt;- expands to 21 + 21
 original input. Because a metavariable substitutes raw tokens, not a
 shared value, using <code>$raw</code> twice would run its expression twice — so the
 macro binds it to a local first.</p>
-<pre><code class="rust">macro_rules! calibrate {
-    ($raw:expr, $offset:expr) =&gt; {{
-        let raw = $raw; // &lt;- $raw's tokens are substituted here exactly once
-        (raw + $offset, raw) // &lt;- reused as the local `raw`, not by writing $raw again
-    }};
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">calibrate</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">raw</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">offset</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-punct">$</span><span class="tok-variable">raw</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- $raw's tokens are substituted here exactly once</span>
+        <span class="tok-punct">(</span><span class="tok-variable">raw</span> <span class="tok-punct">+</span> <span class="tok-punct">$</span><span class="tok-variable">offset</span><span class="tok-punct">,</span> <span class="tok-variable">raw</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- reused as the local `raw`, not by writing $raw again</span>
+    <span class="tok-punct">}</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn read_sensor() -&gt; f64 {
-    println!("reading sensor");
-    21.4
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;reading sensor&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-number">21.4</span>
+<span class="tok-punct">}</span>
 
-let (adjusted, original) = calibrate!(read_sensor(), 0.5); // &lt;- read_sensor() runs exactly once
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">adjusted</span><span class="tok-punct">,</span> <span class="tok-variable">original</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-macro">calibrate!</span><span class="tok-punct">(</span><span class="tok-call-free">read_sensor</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0.5</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- read_sensor() runs exactly once</span>
 </code></pre>
 <p>A metavariable re-emits the exact tokens it captured at
 every place it's written in the transcriber, so writing <code>$raw</code> twice
@@ -1071,13 +1071,13 @@ hand-writing the same shape once per register.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Capturing a register name and address</h3>
-            <pre><code class="rust">macro_rules! define_register {
-    ($name:ident, $addr:expr) =&gt; { // &lt;- captures an identifier and an expression as metavariables
-        const $name: usize = $addr; // &lt;- $name and $addr are substituted with the exact captured tokens
-    };
-}
+            <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">define_register</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- captures an identifier and an expression as metavariables</span>
+        <span class="tok-keyword">const</span> <span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- $name and $addr are substituted with the exact captured tokens</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-define_register!(GPIOA_ODR, 0x4800_0014); // &lt;- expands to: const GPIOA_ODR: usize = 0x4800_0014;
+<span class="tok-macro">define_register!</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">,</span> <span class="tok-number">0x4800_0014</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands to: const GPIOA_ODR: usize = 0x4800_0014;</span>
 </code></pre>
 
           </div>
@@ -1088,16 +1088,16 @@ value type once, then reuses each metavariable both to name the
 generated function and to build its body — the same "capture once,
 reference the tokens repeatedly" mechanism the classic examples show,
 just applied to register boilerplate instead of arithmetic.</p>
-<pre><code class="rust">macro_rules! ro_register {
-    ($fn_name:ident, $addr:expr, $ty:ty) =&gt; {
-        fn $fn_name() -&gt; $ty { // &lt;- $fn_name names the generated accessor
-            unsafe { core::ptr::read_volatile($addr as *const $ty) } // &lt;- $addr and $ty reused in the body
-        }
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">ro_register</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">fn_name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">ty</span><span class="tok-punct">:</span><span class="tok-variable">ty</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">fn</span> <span class="tok-punct">$</span><span class="tok-call-free">fn_name</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">$</span><span class="tok-variable">ty</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- $fn_name names the generated accessor</span>
+            <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">addr</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-punct">$</span><span class="tok-variable">ty</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- $addr and $ty reused in the body</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-ro_register!(read_status_reg, 0x4001_0000, u32);
-// expands to: fn read_status_reg() -&gt; u32 { unsafe { core::ptr::read_volatile(0x4001_0000 as *const u32) } }
+<span class="tok-macro">ro_register!</span><span class="tok-punct">(</span><span class="tok-variable">read_status_reg</span><span class="tok-punct">,</span> <span class="tok-number">0x4001_0000</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// expands to: fn read_status_reg() -&gt; u32 { unsafe { core::ptr::read_volatile(0x4001_0000 as *const u32) } }</span>
 </code></pre>
 
           </div>

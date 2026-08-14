@@ -1000,8 +1000,8 @@ crate root.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Embedding a text template and a binary file at compile time</h3>
-            <pre><code class="rust">const WELCOME_TEMPLATE: &amp;str = include_str!("welcome_template.txt"); // &lt;- resolved relative to *this* file, not the crate root
-const LOGO_PNG: &amp;[u8] = include_bytes!("logo.png");                  // &lt;- embedded as a byte array, no encoding requirement
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">WELCOME_TEMPLATE</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-macro">include_str!</span><span class="tok-punct">(</span><span class="tok-string">&quot;welcome_template.txt&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- resolved relative to *this* file, not the crate root</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">LOGO_PNG</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-macro">include_bytes!</span><span class="tok-punct">(</span><span class="tok-string">&quot;logo.png&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                  <span class="tok-comment tok-anno">// &lt;- embedded as a byte array, no encoding requirement</span>
 </code></pre>
 
           </div>
@@ -1009,12 +1009,12 @@ const LOGO_PNG: &amp;[u8] = include_bytes!("logo.png");                  // &lt;
             <h3 class="scenario-title">Designing a public API</h3>
             <p>A CLI tool embeds its default config as a template at compile time, so
 the binary is self-contained and needs no external file to run <code>--init</code>.</p>
-<pre><code class="rust">const DEFAULT_CONFIG_TEMPLATE: &amp;str = include_str!("default_config.toml");
-// &lt;- baked into the binary at compile time; no runtime file lookup, no missing-file failure mode
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">DEFAULT_CONFIG_TEMPLATE</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-macro">include_str!</span><span class="tok-punct">(</span><span class="tok-string">&quot;default_config.toml&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- baked into the binary at compile time; no runtime file lookup, no missing-file failure mode</span>
 
-fn write_default_config(path: &amp;std::path::Path) -&gt; std::io::Result&lt;()&gt; {
-    std::fs::write(path, DEFAULT_CONFIG_TEMPLATE)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">write_default_config</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">path</span><span class="tok-punct">::</span><span class="tok-type">Path</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">write</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">,</span> <span class="tok-constant">DEFAULT_CONFIG_TEMPLATE</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/std/macro.include_str.html">std docs</a> note
@@ -1027,15 +1027,15 @@ the installed binary — at the cost of needing a rebuild to change it.</p>
             <h3 class="scenario-title">Testing</h3>
             <p>A parser's test suite loads its sample input from a fixture file instead
 of inlining a large literal string in the test source.</p>
-<pre><code class="rust">fn parse_line_count(input: &amp;str) -&gt; usize {
-    input.lines().count()
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_line_count</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">lines</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">count</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[test]
-fn counts_lines_in_fixture() {
-    let sample = include_str!("fixtures/sample_log.txt"); // &lt;- path is relative to this test file, not the crate root
-    assert_eq!(parse_line_count(sample), 42);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">counts_lines_in_fixture</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">sample</span> <span class="tok-punct">=</span> <span class="tok-macro">include_str!</span><span class="tok-punct">(</span><span class="tok-string">&quot;fixtures/sample_log.txt&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- path is relative to this test file, not the crate root</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">parse_line_count</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Keeping fixture data in its own file, loaded via
 <code>include_str!</code>, rather than a large inline string literal keeps the test
@@ -1078,19 +1078,19 @@ thousands of lines of generated code into the repository.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Baking a lookup table into flash with no heap</h3>
-            <pre><code class="rust">const SINE_TABLE: &amp;[u8; 256] = include_bytes!("sine_table.bin"); // &lt;- lives in flash/ROM, zero runtime cost, no allocator needed
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">SINE_TABLE</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">256</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-macro">include_bytes!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sine_table.bin&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- lives in flash/ROM, zero runtime cost, no allocator needed</span>
 
-fn dac_output(phase: u8) -&gt; u8 {
-    SINE_TABLE[phase as usize]
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">dac_output</span><span class="tok-punct">(</span><span class="tok-variable">phase</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">SINE_TABLE</span><span class="tok-punct">[</span><span class="tok-variable">phase</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span><span class="tok-punct">]</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Splicing in build-script-generated peripheral definitions</h3>
-            <pre><code class="rust">// build.rs (run on the host, before the firmware itself compiles) writes the
-// SVD-derived register definitions for this exact chip into OUT_DIR.
-include!(concat!(env!("OUT_DIR"), "/device.rs")); // &lt;- splices in generated struct/impl items at compile time
+            <pre><code class="rust-hl"><span class="tok-comment">// build.rs (run on the host, before the firmware itself compiles) writes the</span>
+<span class="tok-comment">// SVD-derived register definitions for this exact chip into OUT_DIR.</span>
+<span class="tok-macro">include!</span><span class="tok-punct">(</span><span class="tok-macro">concat!</span><span class="tok-punct">(</span><span class="tok-macro">env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;OUT_DIR&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;/device.rs&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- splices in generated struct/impl items at compile time</span>
 </code></pre>
 
           </div>

@@ -1003,10 +1003,10 @@ and (in the rare, unavoidable case) <code>unsafe</code> exist.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let mut v = vec![1, 2, 3];
-let first = &amp;v[0];       // &lt;- shared borrow of v starts here
-v.push(4);                // borrow checker error: can't mutate v...
-println!("{first}");      // ...while `first` still borrows it
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">v</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">first</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">v</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>       <span class="tok-comment tok-anno">// &lt;- shared borrow of v starts here</span>
+<span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                <span class="tok-comment">// borrow checker error: can't mutate v...</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{first}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>      <span class="tok-comment">// ...while `first` still borrows it</span>
 </code></pre>
 <p><strong>Restriction:</strong> this is a compile-time rejection, not a runtime panic —
 the fix is to shorten <code>first</code>'s scope (or restructure the code) so it no
@@ -1027,21 +1027,21 @@ longer overlaps with the mutable use.</p>
             <p>Reading a shared config in several places goes smoothly as long as each
 borrow's scope is kept as small as the code that actually needs it,
 rather than held open for the rest of a function "just in case."</p>
-<pre><code class="rust">struct Config {
-    max_retries: u32,
-    timeout_ms: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Config</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">max_retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn summarize(cfg: &amp;Config) -&gt; String {
-    format!("retries={} timeout={}", cfg.max_retries, cfg.timeout_ms)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">summarize</span><span class="tok-punct">(</span><span class="tok-variable">cfg</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Config</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;retries={} timeout={}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">cfg</span><span class="tok-punct">.</span><span class="tok-field">max_retries</span><span class="tok-punct">,</span> <span class="tok-variable">cfg</span><span class="tok-punct">.</span><span class="tok-field">timeout_ms</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let cfg = Config { max_retries: 3, timeout_ms: 500 };
+<span class="tok-keyword">let</span> <span class="tok-variable">cfg</span> <span class="tok-punct">=</span> <span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">max_retries</span><span class="tok-punct">:</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-number">500</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-{
-    let view = &amp;cfg; // &lt;- borrow scoped tightly to this block
-    println!("{}", summarize(view)); // &lt;- last use: the borrow ends here (NLL)
-} // well before any later mutation of cfg would need to happen
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">view</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">cfg</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- borrow scoped tightly to this block</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">summarize</span><span class="tok-punct">(</span><span class="tok-variable">view</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- last use: the borrow ends here (NLL)</span>
+<span class="tok-punct">}</span> <span class="tok-comment">// well before any later mutation of cfg would need to happen</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> letting a shared borrow end at its last use, rather
@@ -1062,17 +1062,17 @@ friction, not a workaround for it.</p>
 in a single scope because the borrow checker tracks borrows of individual
 fields separately — a mutable borrow of one field can coexist with a
 shared borrow of a different one.</p>
-<pre><code class="rust">struct Sensor {
-    readings: Vec&lt;f64&gt;,
-    status: String,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let mut sensor = Sensor { readings: Vec::new(), status: "ok".into() };
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sensor</span> <span class="tok-punct">=</span> <span class="tok-type">Sensor</span> <span class="tok-punct">{</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-string">&quot;ok&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let readings = &amp;mut sensor.readings; // &lt;- mutable borrow of ONE field
-let status = &amp;sensor.status;         // &lt;- simultaneous shared borrow of a DIFFERENT field
-readings.push(21.5);
-println!("{status}");
+<span class="tok-keyword">let</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-field">readings</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutable borrow of ONE field</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">status</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-field">status</span><span class="tok-punct">;</span>         <span class="tok-comment tok-anno">// &lt;- simultaneous shared borrow of a DIFFERENT field</span>
+<span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">21.5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{status}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the borrow checker tracks field-level (disjoint)
@@ -1127,12 +1127,12 @@ hardware.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct SensorConfig { gain: u8 }
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">gain</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span>
 
-let mut config = SensorConfig { gain: 4 };
-let cfg_ref = &amp;config;     // &lt;- shared borrow of config starts here
-config.gain = 8;            // borrow checker error: can't mutate while borrowed
-println!("{}", cfg_ref.gain);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">gain</span><span class="tok-punct">:</span> <span class="tok-number">4</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">cfg_ref</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">;</span>     <span class="tok-comment tok-anno">// &lt;- shared borrow of config starts here</span>
+<span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-field">gain</span> <span class="tok-punct">=</span> <span class="tok-number">8</span><span class="tok-punct">;</span>            <span class="tok-comment">// borrow checker error: can't mutate while borrowed</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">cfg_ref</span><span class="tok-punct">.</span><span class="tok-field">gain</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1150,30 +1150,30 @@ println!("{}", cfg_ref.gain);
             <p>A timer interrupt updates the latest sample while the main loop reads it;
 the borrow checker won't let either side reach the shared value except
 through a synchronization wrapper it can verify.</p>
-<pre><code class="rust">use core::cell::Cell;
-use critical_section::Mutex;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">Cell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
 
-// AVOID: a bare mutable static — nothing stops `main` and the interrupt
-// handler from touching it at the same instant, and the aliasing bug is
-// only caught (if ever) as a corrupted reading discovered on hardware
-// static mut LATEST_SAMPLE: u16 = 0;
+<span class="tok-comment">// AVOID: a bare mutable static — nothing stops `main` and the interrupt</span>
+<span class="tok-comment">// handler from touching it at the same instant, and the aliasing bug is</span>
+<span class="tok-comment">// only caught (if ever) as a corrupted reading discovered on hardware</span>
+<span class="tok-comment">// static mut LATEST_SAMPLE: u16 = 0;</span>
 
-// PREFER: the borrow checker enforces exclusive access at compile time
-static LATEST_SAMPLE: Mutex&lt;Cell&lt;u16&gt;&gt; = Mutex::new(Cell::new(0));
+<span class="tok-comment">// PREFER: the borrow checker enforces exclusive access at compile time</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">LATEST_SAMPLE</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">Cell</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Cell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-#[interrupt]
-fn ADC1() {
-    critical_section::with(|cs| {
-        LATEST_SAMPLE.borrow(cs).set(read_adc_register()); // &lt;- only reachable inside a checked critical section
-    });
-}
+<span class="tok-attribute">#[interrupt]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">ADC1</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-constant">LATEST_SAMPLE</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-call-free">read_adc_register</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- only reachable inside a checked critical section</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn main_loop() -&gt; ! {
-    loop {
-        let sample = critical_section::with(|cs| LATEST_SAMPLE.borrow(cs).get());
-        process(sample);
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main_loop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">sample</span> <span class="tok-punct">=</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-constant">LATEST_SAMPLE</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-call-free">process</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> wrapping the shared sample in <code>critical-section</code>'s
@@ -1195,14 +1195,14 @@ idiom offers no equivalent compile-time backstop.</p>
             <p>A HAL's <code>split()</code> call turns one peripheral register block into disjoint,
 individually-owned fields specifically so the borrow checker can reason
 about each pin's borrows independently of the others.</p>
-<pre><code class="rust">let gpiob = dp.GPIOB.split(); // &lt;- returns disjoint per-pin fields, not one shared handle
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">gpiob</span> <span class="tok-punct">=</span> <span class="tok-variable">dp</span><span class="tok-punct">.</span><span class="tok-field">GPIOB</span><span class="tok-punct">.</span><span class="tok-call-method">split</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- returns disjoint per-pin fields, not one shared handle</span>
 
-let led = &amp;mut gpiob.pb0;   // &lt;- exclusive borrow of ONE pin
-let button = &amp;gpiob.pb1;    // &lt;- simultaneous shared borrow of a DIFFERENT pin
-led.set_high();
-if button.is_high() {
-    // ...
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">led</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">gpiob</span><span class="tok-punct">.</span><span class="tok-field">pb0</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- exclusive borrow of ONE pin</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">button</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">gpiob</span><span class="tok-punct">.</span><span class="tok-field">pb1</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- simultaneous shared borrow of a DIFFERENT pin</span>
+<span class="tok-variable">led</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">if</span> <span class="tok-variable">button</span><span class="tok-punct">.</span><span class="tok-call-method">is_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ...</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the borrow checker tracks field-level (disjoint) borrows

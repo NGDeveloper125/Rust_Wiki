@@ -1012,8 +1012,8 @@ plus <code>std::panic::Location::caller()</code> is the runtime equivalent used 
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Capturing source text and concatenating literals</h3>
-            <pre><code class="rust">let expr_text = stringify!(1 + 2);            // &lt;- "1 + 2", the source text, not the evaluated "3"
-let banner = concat!("build ", "v", "1.0.3"); // &lt;- joined into one &amp;'static str at compile time
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">expr_text</span> <span class="tok-punct">=</span> <span class="tok-macro">stringify!</span><span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">+</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>            <span class="tok-comment tok-anno">// &lt;- &quot;1 + 2&quot;, the source text, not the evaluated &quot;3&quot;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">banner</span> <span class="tok-punct">=</span> <span class="tok-macro">concat!</span><span class="tok-punct">(</span><span class="tok-string">&quot;build &quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;v&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;1.0.3&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- joined into one &amp;'static str at compile time</span>
 </code></pre>
 
           </div>
@@ -1022,21 +1022,21 @@ let banner = concat!("build ", "v", "1.0.3"); // &lt;- joined into one &amp;'sta
             <p>A small custom assertion macro reports the failed condition's own source
 text using <code>stringify!</code>, the same technique the standard <code>assert!</code> macro
 uses internally.</p>
-<pre><code class="rust">macro_rules! check_positive {
-    ($value:expr) =&gt; {
-        if $value &lt;= 0 {
-            panic!(
-                "expected {} to be positive, got {}",
-                stringify!($value), // &lt;- turns the *expression itself* into a string, e.g. "order.total"
-                $value
-            );
-        }
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">check_positive</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">value</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-punct">$</span><span class="tok-variable">value</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">panic!</span><span class="tok-punct">(</span>
+                <span class="tok-string">&quot;expected {} to be positive, got {}&quot;</span><span class="tok-punct">,</span>
+                <span class="tok-macro">stringify!</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- turns the *expression itself* into a string, e.g. &quot;order.total&quot;</span>
+                <span class="tok-punct">$</span><span class="tok-variable">value</span>
+            <span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Order { total: i64 }
-let order = Order { total: -5 };
-check_positive!(order.total); // panics: "expected order.total to be positive, got -5"
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i64</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-punct">-</span><span class="tok-number">5</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">check_positive!</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">total</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// panics: &quot;expected order.total to be positive, got -5&quot;</span>
 </code></pre>
 <p>Reporting the expression's own source text
 (<code>"order.total"</code>) rather than a hand-written label keeps the message
@@ -1051,19 +1051,19 @@ the same trick the
             <p>A lightweight logging macro tags every log line with its own source
 location, using <code>file!()</code>/<code>line!()</code>/<code>module_path!()</code> rather than
 requiring the caller to pass that information manually.</p>
-<pre><code class="rust">macro_rules! log_here {
-    ($message:expr) =&gt; {
-        println!(
-            "[{}:{} ({})] {}",
-            file!(), line!(), module_path!(), $message
-            // &lt;- all three are compile-time constants naming the call site of THIS invocation
-        )
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">log_here</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">message</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span>
+            <span class="tok-string">&quot;[{}:{} ({})] {}&quot;</span><span class="tok-punct">,</span>
+            <span class="tok-macro">file!</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-macro">line!</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-macro">module_path!</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">message</span>
+            <span class="tok-comment tok-anno">// &lt;- all three are compile-time constants naming the call site of THIS invocation</span>
+        <span class="tok-punct">)</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn process_order(order_id: u64) {
-    log_here!(format!("processing order {order_id}"));
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">process_order</span><span class="tok-punct">(</span><span class="tok-variable">order_id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">log_here!</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;processing order {order_id}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Baking the call site into the macro itself means every
 call site gets accurate location info for free without the caller having
@@ -1102,25 +1102,25 @@ instead of printed to a terminal.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reporting a fault's source location with no backtrace available</h3>
-            <pre><code class="rust">macro_rules! trace_fault {
-    ($msg:expr) =&gt; {
-        defmt::error!("[{}:{}] {}", file!(), line!(), $msg); // &lt;- file!()/line!() name the call site, no OS backtrace involved
-    };
-}
+            <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">trace_fault</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">msg</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">error!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[{}:{}] {}&quot;</span><span class="tok-punct">,</span> <span class="tok-macro">file!</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-macro">line!</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">msg</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- file!()/line!() name the call site, no OS backtrace involved</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn check_watchdog(expired: bool) {
-    if expired {
-        trace_fault!("watchdog expired");
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">check_watchdog</span><span class="tok-punct">(</span><span class="tok-variable">expired</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">expired</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">trace_fault!</span><span class="tok-punct">(</span><span class="tok-string">&quot;watchdog expired&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Tagging log output with module_path!</h3>
-            <pre><code class="rust">fn log_sensor_event(message: &amp;str) {
-    defmt::info!("[{}] {}", module_path!(), message); // &lt;- e.g. "drivers::temperature_sensor", resolved at compile time
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">log_sensor_event</span><span class="tok-punct">(</span><span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[{}] {}&quot;</span><span class="tok-punct">,</span> <span class="tok-macro">module_path!</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">message</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- e.g. &quot;drivers::temperature_sensor&quot;, resolved at compile time</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

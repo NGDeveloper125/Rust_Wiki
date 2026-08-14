@@ -1033,13 +1033,13 @@ runtime representation left behind in the compiled program.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let readings = [21.4, 19.8, 23.1, 18.6];
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">21.4</span><span class="tok-punct">,</span> <span class="tok-number">19.8</span><span class="tok-punct">,</span> <span class="tok-number">23.1</span><span class="tok-punct">,</span> <span class="tok-number">18.6</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let above_freezing: f64 = readings
-    .iter()
-    .copied()
-    .filter(|&amp;c| c &gt; 0.0) // &lt;- adaptor: describes a transformation, allocates nothing
-    .sum();                // &lt;- consumer: pulls values through the chain one at a time
+<span class="tok-keyword">let</span> <span class="tok-variable">above_freezing</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">c</span><span class="tok-punct">|</span> <span class="tok-variable">c</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0.0</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- adaptor: describes a transformation, allocates nothing</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                <span class="tok-comment tok-anno">// &lt;- consumer: pulls values through the chain one at a time</span>
 </code></pre>
 <p>Compiled, this is instruction-for-instruction the same as a hand-written
 <code>for</code> loop that checks each reading and accumulates a running total — the
@@ -1061,15 +1061,15 @@ cost anyway.</p>
             <p>A unit-conversion helper used with both <code>f32</code> sensor readings and <code>f64</code>
 configuration values should exist once in source, while still compiling to
 code as tight as two separately hand-written functions.</p>
-<pre><code class="rust">fn to_fahrenheit&lt;T: Into&lt;f64&gt;&gt;(celsius: T) -&gt; f64 { // &lt;- generic: monomorphized per concrete type used
-    celsius.into() * 9.0 / 5.0 + 32.0
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">to_fahrenheit</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Into</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic: monomorphized per concrete type used</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-number">9.0</span> <span class="tok-punct">/</span> <span class="tok-number">5.0</span> <span class="tok-punct">+</span> <span class="tok-number">32.0</span>
+<span class="tok-punct">}</span>
 
-let sensor_reading: f32 = 21.5;
-let calibration_target: f64 = 20.0;
+<span class="tok-keyword">let</span> <span class="tok-variable">sensor_reading</span><span class="tok-punct">:</span> <span class="tok-type">f32</span> <span class="tok-punct">=</span> <span class="tok-number">21.5</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">calibration_target</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">=</span> <span class="tok-number">20.0</span><span class="tok-punct">;</span>
 
-to_fahrenheit(sensor_reading);      // compiler emits a to_fahrenheit::&lt;f32&gt; copy
-to_fahrenheit(calibration_target);  // ...and a separate to_fahrenheit::&lt;f64&gt; copy, both resolved at compile time
+<span class="tok-call-free">to_fahrenheit</span><span class="tok-punct">(</span><span class="tok-variable">sensor_reading</span><span class="tok-punct">)</span><span class="tok-punct">;</span>      <span class="tok-comment">// compiler emits a to_fahrenheit::&lt;f32&gt; copy</span>
+<span class="tok-call-free">to_fahrenheit</span><span class="tok-punct">(</span><span class="tok-variable">calibration_target</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment">// ...and a separate to_fahrenheit::&lt;f64&gt; copy, both resolved at compile time</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> writing the conversion once as a generic function avoids
@@ -1091,21 +1091,21 @@ no runtime penalty.</p>
 filter-then-fold chain, and compiles to the same single pass a hand-written
 loop would take — no intermediate <code>Vec</code> is allocated for the filtered
 subset.</p>
-<pre><code class="rust">struct Reading { celsius: f64, valid: bool }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">valid</span><span class="tok-punct">:</span> <span class="tok-type">bool</span> <span class="tok-punct">}</span>
 
-let readings = [
-    Reading { celsius: 21.4, valid: true },
-    Reading { celsius: -999.0, valid: false }, // sensor fault code, not a real temperature
-    Reading { celsius: 19.8, valid: true },
-];
+<span class="tok-keyword">let</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-type">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-number">21.4</span><span class="tok-punct">,</span> <span class="tok-variable">valid</span><span class="tok-punct">:</span> <span class="tok-number">true</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-punct">-</span><span class="tok-number">999.0</span><span class="tok-punct">,</span> <span class="tok-variable">valid</span><span class="tok-punct">:</span> <span class="tok-number">false</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-comment">// sensor fault code, not a real temperature</span>
+    <span class="tok-type">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-number">19.8</span><span class="tok-punct">,</span> <span class="tok-variable">valid</span><span class="tok-punct">:</span> <span class="tok-number">true</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let (sum, count) = readings
-    .iter()
-    .filter(|r| r.valid)  // &lt;- adaptor: skips faulty readings lazily, no allocation
-    .map(|r| r.celsius)   // &lt;- adaptor: projects to just the value needed
-    .fold((0.0, 0), |(sum, count), c| (sum + c, count + 1)); // &lt;- consumer: single pass over the data
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">sum</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span><span class="tok-punct">.</span><span class="tok-field">valid</span><span class="tok-punct">)</span>  <span class="tok-comment tok-anno">// &lt;- adaptor: skips faulty readings lazily, no allocation</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span><span class="tok-punct">.</span><span class="tok-field">celsius</span><span class="tok-punct">)</span>   <span class="tok-comment tok-anno">// &lt;- adaptor: projects to just the value needed</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">0.0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">sum</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">c</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-variable">sum</span> <span class="tok-punct">+</span> <span class="tok-variable">c</span><span class="tok-punct">,</span> <span class="tok-variable">count</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- consumer: single pass over the data</span>
 
-let average = sum / count as f64;
+<span class="tok-keyword">let</span> <span class="tok-variable">average</span> <span class="tok-punct">=</span> <span class="tok-variable">sum</span> <span class="tok-punct">/</span> <span class="tok-variable">count</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> chaining <code>filter</code>/<code>map</code>/<code>fold</code> instead of collecting into
@@ -1174,14 +1174,14 @@ it genuinely does.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let readings: [i16; 4] = [212, -999, 198, 205]; // raw ADC counts; -999 marks a faulty sample
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">212</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">999</span><span class="tok-punct">,</span> <span class="tok-number">198</span><span class="tok-punct">,</span> <span class="tok-number">205</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment">// raw ADC counts; -999 marks a faulty sample</span>
 
-let total: i32 = readings
-    .iter()
-    .copied()
-    .filter(|&amp;r| r != -999) // &lt;- adaptor: drops the fault sentinel, allocates nothing
-    .map(i32::from)          // &lt;- adaptor: widens before summing, still zero-cost
-    .sum();                  // &lt;- consumer: single pass, compiles to the same loop a hand-rolled `for` would
+<span class="tok-keyword">let</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span> <span class="tok-punct">!=</span> <span class="tok-punct">-</span><span class="tok-number">999</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- adaptor: drops the fault sentinel, allocates nothing</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-module">i32</span><span class="tok-punct">::</span><span class="tok-variable">from</span><span class="tok-punct">)</span>          <span class="tok-comment tok-anno">// &lt;- adaptor: widens before summing, still zero-cost</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                  <span class="tok-comment tok-anno">// &lt;- consumer: single pass, compiles to the same loop a hand-rolled `for` would</span>
 </code></pre>
 
       </section>
@@ -1200,17 +1200,17 @@ let total: i32 = readings
 sentinel, needs to run inside a tight interrupt handler with no
 allocation and no wasted cycles — an iterator chain over the raw array
 gets there without hand-writing the loop.</p>
-<pre><code class="rust">const FAULT_SENTINEL: i16 = -999;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">FAULT_SENTINEL</span><span class="tok-punct">:</span> <span class="tok-type">i16</span> <span class="tok-punct">=</span> <span class="tok-punct">-</span><span class="tok-number">999</span><span class="tok-punct">;</span>
 
-fn average_valid_readings(samples: &amp;[i16; 8]) -&gt; Option&lt;i32&gt; { // &lt;- fixed-size array: no heap, no Vec, no allocation
-    let (sum, count) = samples
-        .iter()
-        .copied()
-        .filter(|&amp;s| s != FAULT_SENTINEL) // &lt;- adaptor: lazily skips faults, no intermediate buffer allocated
-        .fold((0i32, 0i32), |(sum, count), s| (sum + s as i32, count + 1)); // &lt;- consumer: one pass over the array
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">average_valid_readings</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- fixed-size array: no heap, no Vec, no allocation</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">sum</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">samples</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">s</span><span class="tok-punct">|</span> <span class="tok-variable">s</span> <span class="tok-punct">!=</span> <span class="tok-constant">FAULT_SENTINEL</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- adaptor: lazily skips faults, no intermediate buffer allocated</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">0i32</span><span class="tok-punct">,</span> <span class="tok-number">0i32</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">sum</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">s</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-variable">sum</span> <span class="tok-punct">+</span> <span class="tok-variable">s</span> <span class="tok-keyword">as</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">count</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- consumer: one pass over the array</span>
 
-    if count == 0 { None } else { Some(sum / count) }
-}
+    <span class="tok-keyword">if</span> <span class="tok-variable">count</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span> <span class="tok-field">None</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">sum</span> <span class="tok-punct">/</span> <span class="tok-variable">count</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the compiled loop here is indistinguishable from a
@@ -1231,14 +1231,14 @@ without a size or speed tax.</p>
             <p>A single "blink" routine should work against any GPIO pin type from any
 supported chip family, compiling down to the same direct register writes
 a version hand-written for one specific chip would use.</p>
-<pre><code class="rust">use embedded_hal::digital::OutputPin;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-type">OutputPin</span><span class="tok-punct">;</span>
 
-fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P, delay_ms: impl Fn(u32)) { // &lt;- generic: monomorphized per concrete pin type
-    pin.set_high().ok();
-    delay_ms(200);
-    pin.set_low().ok();
-    delay_ms(200);
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">,</span> <span class="tok-variable">delay_ms</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic: monomorphized per concrete pin type</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-call-free">delay_ms</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-call-free">delay_ms</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> calling <code>blink</code> with an <code>stm32</code>-family pin and, in a
@@ -1260,18 +1260,18 @@ imposing a per-call indirection cost on any of them.</p>
 holds a nonzero calibration value — modeling that as <code>Option&lt;NonZeroU16&gt;</code>
 instead of a separate <code>bool</code> flag plus a <code>u16</code> keeps the struct at exactly
 2 bytes, with no discriminant byte spent on the tag.</p>
-<pre><code class="rust">use core::num::NonZeroU16;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">NonZeroU16</span><span class="tok-punct">;</span>
 
-struct Calibration {
-    offset: Option&lt;NonZeroU16&gt;, // &lt;- niche-optimized: None reuses the all-zero bit pattern NonZeroU16 can't hold
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Calibration</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">NonZeroU16</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- niche-optimized: None reuses the all-zero bit pattern NonZeroU16 can't hold</span>
+<span class="tok-punct">}</span>
 
-fn apply_calibration(raw_reading: u16, cal: &amp;Calibration) -&gt; u16 {
-    match cal.offset {
-        Some(offset) =&gt; raw_reading.wrapping_add(offset.get()),
-        None =&gt; raw_reading, // not yet calibrated: pass the raw reading through unchanged
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">apply_calibration</span><span class="tok-punct">(</span><span class="tok-variable">raw_reading</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">cal</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Calibration</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">cal</span><span class="tok-punct">.</span><span class="tok-field">offset</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">raw_reading</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">raw_reading</span><span class="tok-punct">,</span> <span class="tok-comment">// not yet calibrated: pass the raw reading through unchanged</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>size_of::&lt;Option&lt;NonZeroU16&gt;&gt;()</code> is 2, identical to

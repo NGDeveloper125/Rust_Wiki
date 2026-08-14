@@ -990,7 +990,7 @@ on out-of-range shift amounts.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Right-shifting the bits of an integer</h3>
-            <pre><code class="rust">let x = 8u8 &gt;&gt; 3; // &lt;- `&gt;&gt;` shifts the bits of `8u8` right by 3
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">8u8</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-number">3</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&gt;&gt;` shifts the bits of `8u8` right by 3</span>
 </code></pre>
 <p><strong>Restriction:</strong> as with <code>&lt;&lt;</code>, shifting by an amount greater than or
 equal to the type's bit width panics in debug builds; with overflow
@@ -1003,14 +1003,14 @@ behavior, but usually not what you meant).</p>
             <p>Extracting a specific field from a packed byte combines <code>&gt;&gt;</code> (move the
 field down to bit 0) with <code>&amp;</code> (mask off everything else) — a pairing
 that shows up constantly when decoding protocol or register bytes.</p>
-<pre><code class="rust">// A status byte: bits 7-4 = error code, bits 3-0 = flags
-let status: u8 = 0b0101_0011;
+<pre><code class="rust-hl"><span class="tok-comment">// A status byte: bits 7-4 = error code, bits 3-0 = flags</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0b0101_0011</span><span class="tok-punct">;</span>
 
-let error_code = status &gt;&gt; 4; // &lt;- `&gt;&gt;` moves the high nibble down to bit 0
-let flags = status &amp; 0b1111;   // low nibble, no shift needed
+<span class="tok-keyword">let</span> <span class="tok-variable">error_code</span> <span class="tok-punct">=</span> <span class="tok-variable">status</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-number">4</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&gt;&gt;` moves the high nibble down to bit 0</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">flags</span> <span class="tok-punct">=</span> <span class="tok-variable">status</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b1111</span><span class="tok-punct">;</span>   <span class="tok-comment">// low nibble, no shift needed</span>
 
-assert_eq!(error_code, 0b0101);
-assert_eq!(flags, 0b0011);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">error_code</span><span class="tok-punct">,</span> <span class="tok-number">0b0101</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">flags</span><span class="tok-punct">,</span> <span class="tok-number">0b0011</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Shifting before masking (or masking before shifting,
 for a low field) is the standard field-extraction idiom for packed data —
@@ -1044,12 +1044,12 @@ packed register value before masking off the surrounding bits.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Downscaling a 12-bit ADC sample to an 8-bit duty cycle</h3>
-            <pre><code class="rust">fn adc_to_duty_cycle(sample_12bit: u16) -&gt; u8 {
-    (sample_12bit &gt;&gt; 4) as u8 // &lt;- `&gt;&gt;` discards the low 4 bits, mapping 0..=4095 to 0..=255
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">adc_to_duty_cycle</span><span class="tok-punct">(</span><span class="tok-variable">sample_12bit</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-variable">sample_12bit</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-number">4</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span> <span class="tok-comment tok-anno">// &lt;- `&gt;&gt;` discards the low 4 bits, mapping 0..=4095 to 0..=255</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(adc_to_duty_cycle(4095), 255);
-assert_eq!(adc_to_duty_cycle(0), 0);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">adc_to_duty_cycle</span><span class="tok-punct">(</span><span class="tok-number">4095</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">255</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">adc_to_duty_cycle</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>

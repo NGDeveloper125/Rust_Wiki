@@ -995,11 +995,11 @@ enforcement moves later, and with it the chance of catching the mistake.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::cell::RefCell;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
 
-let data = RefCell::new(5);
-*data.borrow_mut() += 1; // &lt;- mutates through a shared RefCell value
-println!("{}", data.borrow());
+<span class="tok-keyword">let</span> <span class="tok-variable">data</span> <span class="tok-punct">=</span> <span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">*</span><span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutates through a shared RefCell value</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>RefCell</code>'s borrow rules are checked at runtime, not
 compile time — holding two overlapping <code>borrow_mut()</code>s (or a <code>borrow()</code>
@@ -1020,24 +1020,24 @@ alongside a <code>borrow_mut()</code>) panics instead of failing to compile.</p>
             <p>A single-threaded lookup type caches its last computed result behind a
 <code>RefCell</code>, so <code>&amp;self</code> methods can still update the cache internally
 without forcing every caller through <code>&amp;mut self</code>.</p>
-<pre><code class="rust">use std::cell::RefCell;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
 
-struct PriceLookup {
-    cache: RefCell&lt;Option&lt;(String, f64)&gt;&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PriceLookup</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cache</span><span class="tok-punct">:</span> <span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl PriceLookup {
-    fn price_for(&amp;self, sku: &amp;str) -&gt; f64 { // &lt;- `&amp;self`, not `&amp;mut self`: mutation stays internal
-        if let Some((cached_sku, price)) = &amp;*self.cache.borrow() {
-            if cached_sku == sku {
-                return *price;
-            }
-        }
-        let price = 19.99; // pretend this is an expensive lookup
-        *self.cache.borrow_mut() = Some((sku.to_string(), price)); // &lt;- mutates through &amp;self
-        price
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">PriceLookup</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">price_for</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">sku</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;self`, not `&amp;mut self`: mutation stays internal</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">cached_sku</span><span class="tok-punct">,</span> <span class="tok-variable">price</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">cache</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">if</span> <span class="tok-variable">cached_sku</span> <span class="tok-punct">==</span> <span class="tok-variable">sku</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">return</span> <span class="tok-punct">*</span><span class="tok-variable">price</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">price</span> <span class="tok-punct">=</span> <span class="tok-number">19.99</span><span class="tok-punct">;</span> <span class="tok-comment">// pretend this is an expensive lookup</span>
+        <span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">cache</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">sku</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">price</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutates through &amp;self</span>
+        <span class="tok-variable">price</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>RefCell</code> lets a type present a read-only (<code>&amp;self</code>)
@@ -1057,18 +1057,18 @@ contract.</p>
             <p>The moment that single-threaded cache needs to be touched from more than
 one thread, <code>RefCell</code> stops being an option — the fix is <code>Mutex</code>, not a
 thread-safe variant of <code>RefCell</code>.</p>
-<pre><code class="rust">use std::sync::Mutex;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
 
-struct SharedCounter {
-    hits: Mutex&lt;u64&gt;, // &lt;- Mutex, not RefCell: RefCell's borrow tracking isn't thread-safe
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SharedCounter</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">hits</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">u64</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- Mutex, not RefCell: RefCell's borrow tracking isn't thread-safe</span>
+<span class="tok-punct">}</span>
 
-impl SharedCounter {
-    fn record_hit(&amp;self) {
-        let mut hits = self.hits.lock().unwrap(); // &lt;- blocks other threads instead of racing
-        *hits += 1;
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">SharedCounter</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">record_hit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">hits</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">hits</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- blocks other threads instead of racing</span>
+        <span class="tok-punct">*</span><span class="tok-variable">hits</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>RefCell</code> doesn't implement <code>Sync</code>, so it can't be
@@ -1122,10 +1122,10 @@ OS-level locking isn't available to fall back on.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use core::cell::Cell;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">Cell</span><span class="tok-punct">;</span>
 
-let sample = Cell::new(0u16);
-sample.set(sample.get() + 1); // &lt;- mutates through a shared Cell value, no runtime check needed: u16 is Copy
+<span class="tok-keyword">let</span> <span class="tok-variable">sample</span> <span class="tok-punct">=</span> <span class="tok-type">Cell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sample</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutates through a shared Cell value, no runtime check needed: u16 is Copy</span>
 </code></pre>
 
       </section>
@@ -1144,20 +1144,20 @@ sample.set(sample.get() + 1); // &lt;- mutates through a shared Cell value, no r
 <code>&amp;self</code> reading method can update the cache without needing <code>&amp;mut self</code> —
 safe because the value is <code>Copy</code> and the driver never crosses an
 interrupt boundary.</p>
-<pre><code class="rust">use core::cell::Cell;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">Cell</span><span class="tok-punct">;</span>
 
-struct Thermometer {
-    last_offset: Cell&lt;i16&gt;, // &lt;- Copy type: Cell is the cheapest form of interior mutability here
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Thermometer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">last_offset</span><span class="tok-punct">:</span> <span class="tok-type">Cell</span><span class="tok-punct">&lt;</span><span class="tok-type">i16</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- Copy type: Cell is the cheapest form of interior mutability here</span>
+<span class="tok-punct">}</span>
 
-impl Thermometer {
-    fn read_celsius(&amp;self, raw: i16) -&gt; i16 { // &lt;- &amp;self, not &amp;mut self
-        let offset = self.last_offset.get();
-        let corrected = raw - offset;
-        self.last_offset.set(corrected / 10); // &lt;- mutates through &amp;self, no reference ever handed out
-        corrected
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Thermometer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_celsius</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- &amp;self, not &amp;mut self</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">offset</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">last_offset</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">corrected</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span> <span class="tok-punct">-</span> <span class="tok-variable">offset</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">last_offset</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-variable">corrected</span> <span class="tok-punct">/</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutates through &amp;self, no reference ever handed out</span>
+        <span class="tok-variable">corrected</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Cell</code> never hands out a reference to its contents, so
@@ -1178,25 +1178,25 @@ loop — the same no-OS pattern covered on
 <a href="../../concepts/concurrency-async/send-and-sync.html">Send &amp; Sync</a>, here from the
 interior-mutability angle: a bare <code>RefCell</code> isn't <code>Sync</code>, so it has to be
 wrapped before an interrupt handler can touch it too.</p>
-<pre><code class="rust">use core::cell::RefCell;
-use critical_section::Mutex;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
 
-static LAST_ERROR: Mutex&lt;RefCell&lt;Option&lt;u8&gt;&gt;&gt; = Mutex::new(RefCell::new(None));
+<span class="tok-keyword">static</span> <span class="tok-constant">LAST_ERROR</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-#[interrupt]
-fn USART1() {
-    critical_section::with(|cs| {
-        *LAST_ERROR.borrow_ref_mut(cs) = Some(read_status_register());
-    });
-}
+<span class="tok-attribute">#[interrupt]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">USART1</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">*</span><span class="tok-constant">LAST_ERROR</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_ref_mut</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-call-free">read_status_register</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn main_loop() -&gt; ! {
-    loop {
-        if let Some(code) = critical_section::with(|cs| LAST_ERROR.borrow_ref_mut(cs).take()) {
-            handle_error(code);
-        }
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main_loop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-constant">LAST_ERROR</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_ref_mut</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-call-free">handle_error</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a bare <code>RefCell&lt;Option&lt;u8&gt;&gt;</code> isn't <code>Sync</code>, so <code>static LAST_ERROR: RefCell&lt;...&gt;</code> would fail to compile the instant the interrupt
@@ -1215,24 +1215,24 @@ program would reach for instead.</p>
             <p>A pressure sensor driver lazily computes and caches an expensive
 linearization result behind <code>&amp;self</code>, mirroring the classic single-threaded
 cache pattern but grounded in a real embedded correction routine.</p>
-<pre><code class="rust">use core::cell::RefCell;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
 
-struct PressureSensor {
-    cache: RefCell&lt;Option&lt;(u16, f32)&gt;&gt;, // (last raw reading, linearized result)
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PressureSensor</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cache</span><span class="tok-punct">:</span> <span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-type">f32</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment">// (last raw reading, linearized result)</span>
+<span class="tok-punct">}</span>
 
-impl PressureSensor {
-    fn read_kpa(&amp;self, raw: u16) -&gt; f32 { // &lt;- &amp;self: mutation of the cache stays an internal detail
-        if let Some((cached_raw, kpa)) = *self.cache.borrow() {
-            if cached_raw == raw {
-                return kpa;
-            }
-        }
-        let kpa = linearize(raw); // pretend this is an expensive polynomial correction
-        *self.cache.borrow_mut() = Some((raw, kpa));
-        kpa
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">PressureSensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_kpa</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- &amp;self: mutation of the cache stays an internal detail</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">cached_raw</span><span class="tok-punct">,</span> <span class="tok-variable">kpa</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">cache</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">if</span> <span class="tok-variable">cached_raw</span> <span class="tok-punct">==</span> <span class="tok-variable">raw</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">return</span> <span class="tok-variable">kpa</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">kpa</span> <span class="tok-punct">=</span> <span class="tok-call-free">linearize</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// pretend this is an expensive polynomial correction</span>
+        <span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">cache</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">,</span> <span class="tok-variable">kpa</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">kpa</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> exposing a read-only (<code>&amp;self</code>) public API while updating

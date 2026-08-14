@@ -997,7 +997,7 @@ lint.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Subtracting two numbers</h3>
-            <pre><code class="rust">let diff = 10 - 3; // &lt;- binary `-` subtracts the right operand
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">diff</span> <span class="tok-punct">=</span> <span class="tok-number">10</span> <span class="tok-punct">-</span> <span class="tok-number">3</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- binary `-` subtracts the right operand</span>
 </code></pre>
 <p><strong>Restriction:</strong> subtracting runtime values past a type's minimum panics
 in debug builds; release builds wrap instead, unless you use a checked
@@ -1010,15 +1010,15 @@ compile error instead (deny-by-default <code>arithmetic_overflow</code> lint).</
             <p>A sensor reading's delta from a setpoint is a common place binary <code>-</code>
 shows up — and a good spot to reach for <code>checked_sub</code> instead of the bare
 operator once the operands might not stay in a safe order.</p>
-<pre><code class="rust">fn temperature_delta(setpoint: i32, reading: i32) -&gt; i32 {
-    reading - setpoint // &lt;- binary `-`: how far off target, signed
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">temperature_delta</span><span class="tok-punct">(</span><span class="tok-variable">setpoint</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">reading</span> <span class="tok-punct">-</span> <span class="tok-variable">setpoint</span> <span class="tok-comment tok-anno">// &lt;- binary `-`: how far off target, signed</span>
+<span class="tok-punct">}</span>
 
-fn safe_battery_drop(before: u8, after: u8) -&gt; Option&lt;u8&gt; {
-    before.checked_sub(after) // avoids the panic/wrap that bare `-` risks on u8
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">safe_battery_drop</span><span class="tok-punct">(</span><span class="tok-variable">before</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">after</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">before</span><span class="tok-punct">.</span><span class="tok-call-method">checked_sub</span><span class="tok-punct">(</span><span class="tok-variable">after</span><span class="tok-punct">)</span> <span class="tok-comment">// avoids the panic/wrap that bare `-` risks on u8</span>
+<span class="tok-punct">}</span>
 
-let delta = temperature_delta(20, 17); // -3: three degrees below setpoint
+<span class="tok-keyword">let</span> <span class="tok-variable">delta</span> <span class="tok-punct">=</span> <span class="tok-call-free">temperature_delta</span><span class="tok-punct">(</span><span class="tok-number">20</span><span class="tok-punct">,</span> <span class="tok-number">17</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// -3: three degrees below setpoint</span>
 </code></pre>
 <p>Signed deltas (<code>i32</code>, not <code>u32</code>) let "below setpoint"
 be a negative number instead of an underflow; for unsigned subtraction
@@ -1032,14 +1032,14 @@ potential panic into an <code>Option</code> the caller must handle, per the
             <p>Computing pairwise differences between consecutive elements — e.g. the
 gaps between successive sensor readings — is a natural fit for
 <code>windows(2)</code> paired with binary <code>-</code>.</p>
-<pre><code class="rust">let readings = [10.0, 12.5, 11.0, 13.5];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">10.0</span><span class="tok-punct">,</span> <span class="tok-number">12.5</span><span class="tok-punct">,</span> <span class="tok-number">11.0</span><span class="tok-punct">,</span> <span class="tok-number">13.5</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let deltas: Vec&lt;f64&gt; = readings
-    .windows(2)
-    .map(|pair| pair[1] - pair[0]) // &lt;- `-` computes each consecutive gap
-    .collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">deltas</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">windows</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">pair</span><span class="tok-punct">|</span> <span class="tok-variable">pair</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span> <span class="tok-punct">-</span> <span class="tok-variable">pair</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `-` computes each consecutive gap</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(deltas, vec![2.5, -1.5, 2.5]);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">deltas</span><span class="tok-punct">,</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">2.5</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">1.5</span><span class="tok-punct">,</span> <span class="tok-number">2.5</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>windows(2)</code> avoids manually indexing with <code>i</code> and
 <code>i - 1</code> (an off-by-one hazard), letting <code>-</code> do the actual subtraction
@@ -1084,17 +1084,17 @@ fully under the program's control.</p>
 value, so plain <code>-</code> would occasionally underflow across that wrap;
 <code>wrapping_sub</code> treats the wraparound as intentional and yields the
 correct short elapsed time regardless.</p>
-<pre><code class="rust">fn ticks_since(now: u32, last: u32) -&gt; u32 {
-    now.wrapping_sub(last) // &lt;- wrapping `-`: still correct even after `now` has wrapped past u32::MAX
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">ticks_since</span><span class="tok-punct">(</span><span class="tok-variable">now</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">last</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">now</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_sub</span><span class="tok-punct">(</span><span class="tok-variable">last</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- wrapping `-`: still correct even after `now` has wrapped past u32::MAX</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Guarding a sensor delta against a silent release-mode wrap</h3>
-            <pre><code class="rust">fn safe_delta(current: u16, baseline: u16) -&gt; Option&lt;u16&gt; {
-    current.checked_sub(baseline) // &lt;- None instead of a silently wrapped value on a shipped device
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">safe_delta</span><span class="tok-punct">(</span><span class="tok-variable">current</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">baseline</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">current</span><span class="tok-punct">.</span><span class="tok-call-method">checked_sub</span><span class="tok-punct">(</span><span class="tok-variable">baseline</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- None instead of a silently wrapped value on a shipped device</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

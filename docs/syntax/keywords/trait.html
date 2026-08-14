@@ -1013,9 +1013,9 @@ declaration instead of a type parameter.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring a trait's method contract</h3>
-            <pre><code class="rust">trait Greet { // &lt;- `trait` declares the contract, no implementation yet
-    fn greet(&amp;self) -&gt; String;
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Greet</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `trait` declares the contract, no implementation yet</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1023,19 +1023,19 @@ declaration instead of a type parameter.</p>
             <h3 class="scenario-title">Implementing traits</h3>
             <p>A trait that mixes one required method with one default method lets every
 implementer supply only the irreducible part, while sharing the rest.</p>
-<pre><code class="rust">trait Greet {
-    fn name(&amp;self) -&gt; String; // &lt;- required: no body, every implementer must define it
-    fn greet(&amp;self) -&gt; String { // &lt;- optional: default body, inherited unless overridden
-        format!("Hello, {}!", self.name())
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Greet</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">name</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- required: no body, every implementer must define it</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- optional: default body, inherited unless overridden</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;Hello, {}!&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">name</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct Visitor;
-impl Greet for Visitor {
-    fn name(&amp;self) -&gt; String { "Visitor".into() } // greet() comes for free
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Visitor</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Greet</span> <span class="tok-keyword">for</span> <span class="tok-type">Visitor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">name</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;Visitor&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment">// greet() comes for free</span>
+<span class="tok-punct">}</span>
 
-println!("{}", Visitor.greet());
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Visitor</span><span class="tok-punct">.</span><span class="tok-call-method">greet</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Declaring <code>name</code> as required and <code>greet</code> as a default
 lets the <code>trait</code> capture exactly one piece of per-type information while
@@ -1049,20 +1049,20 @@ the standard shape for a trait that's more than a bare method list.</p>
             <p>A crate that wants callers to plug in their own storage backend declares
 a narrow <code>trait</code> as the extension point, rather than exposing an internal
 struct for callers to depend on directly.</p>
-<pre><code class="rust">pub trait Storage { // &lt;- `trait` is the extension point; callers implement it for their own types
-    fn get(&amp;self, key: &amp;str) -&gt; Option&lt;String&gt;;
-    fn set(&amp;mut self, key: &amp;str, value: String);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">trait</span> <span class="tok-type-def">Storage</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `trait` is the extension point; callers implement it for their own types</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-pub struct KeyValueStore&lt;S: Storage&gt; {
-    backend: S,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">KeyValueStore</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">Storage</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">backend</span><span class="tok-punct">:</span> <span class="tok-generic-param">S</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;S: Storage&gt; KeyValueStore&lt;S&gt; {
-    pub fn refresh(&amp;mut self, key: &amp;str, value: String) {
-        self.backend.set(key, value);
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">Storage</span><span class="tok-punct">&gt;</span> <span class="tok-type">KeyValueStore</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">refresh</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">backend</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Keeping the <code>trait</code>'s method list minimal leaves room to
 add backends later without breaking existing implementers — see
@@ -1103,25 +1103,25 @@ single vendor-specific line inside it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring an embedded-hal-style trait</h3>
-            <pre><code class="rust">trait OutputPin { // &lt;- `trait`: the contract every vendor's GPIO pin type must satisfy
-    type Error;
-    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt;;
-    fn set_low(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt;;
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `trait`: the contract every vendor's GPIO pin type must satisfy</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Writing a hardware-agnostic driver against the trait</h3>
-            <pre><code class="rust">struct Led&lt;P: OutputPin&gt; { // &lt;- generic over any type implementing OutputPin, not one vendor's pin type
-    pin: P,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Led</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic over any type implementing OutputPin, not one vendor's pin type</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-generic-param">P</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;P: OutputPin&gt; Led&lt;P&gt; {
-    fn turn_on(&amp;mut self) -&gt; Result&lt;(), P::Error&gt; {
-        self.pin.set_high()
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span> <span class="tok-type">Led</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">turn_on</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">P</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>This <code>Led</code> driver compiles against any microcontroller's HAL that
 implements <code>OutputPin</code> for its own pin type — swapping boards means

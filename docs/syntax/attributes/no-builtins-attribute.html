@@ -1008,8 +1008,8 @@ needs to reach for <code>#![no_builtins]</code> itself.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Disabling implicit libc-builtin substitution</h3>
-            <pre><code class="rust">#![no_std]
-#![no_builtins] // &lt;- forbids the compiler from silently assuming a libc-provided memcpy/memset exist
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_builtins]</span> <span class="tok-comment tok-anno">// &lt;- forbids the compiler from silently assuming a libc-provided memcpy/memset exist</span>
 </code></pre>
 
           </div>
@@ -1019,22 +1019,22 @@ needs to reach for <code>#![no_builtins]</code> itself.</p>
 rather than linking against any C runtime — <code>#![no_builtins]</code> guarantees
 the compiler never quietly assumes a <code>memcpy</code> symbol will show up from
 somewhere else.</p>
-<pre><code class="rust">#![no_std]
-#![no_builtins] // &lt;- this kernel supplies its own memory routines; nothing may assume libc's exist
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_builtins]</span> <span class="tok-comment tok-anno">// &lt;- this kernel supplies its own memory routines; nothing may assume libc's exist</span>
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, n: usize) -&gt; *mut u8 {
-    let mut i = 0;
-    while i &lt; n {
-        unsafe {
-            // SAFETY: caller guarantees `dest` and `src` are valid for `n`
-            // bytes and don't overlap, per the standard memcpy contract.
-            *dest.add(i) = *src.add(i);
-        }
-        i += 1;
-    }
-    dest
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">memcpy</span><span class="tok-punct">(</span><span class="tok-variable">dest</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">src</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">i</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">while</span> <span class="tok-variable">i</span> <span class="tok-punct">&lt;</span> <span class="tok-variable">n</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: caller guarantees `dest` and `src` are valid for `n`</span>
+            <span class="tok-comment">// bytes and don't overlap, per the standard memcpy contract.</span>
+            <span class="tok-punct">*</span><span class="tok-variable">dest</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-variable">i</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">*</span><span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-variable">i</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-variable">i</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">dest</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without <code>#![no_builtins]</code>, the compiler may still lower
 some Rust code into a call to <code>memcpy</code> even though this crate defines its
@@ -1088,43 +1088,43 @@ substitution first.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A bootloader supplying its own memcpy instead of relying on compiler_builtins</h3>
-            <pre><code class="rust">#![no_std]
-#![no_builtins] // &lt;- this bootloader controls its own memory routines; nothing may assume the compiler's
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_builtins]</span> <span class="tok-comment tok-anno">// &lt;- this bootloader controls its own memory routines; nothing may assume the compiler's</span>
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, n: usize) -&gt; *mut u8 {
-    let mut i = 0;
-    while i &lt; n {
-        unsafe {
-            // SAFETY: caller guarantees `dest`/`src` are valid for `n` bytes and don't overlap.
-            *dest.add(i) = *src.add(i);
-        }
-        i += 1;
-    }
-    dest
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">memcpy</span><span class="tok-punct">(</span><span class="tok-variable">dest</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">src</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">i</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">while</span> <span class="tok-variable">i</span> <span class="tok-punct">&lt;</span> <span class="tok-variable">n</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: caller guarantees `dest`/`src` are valid for `n` bytes and don't overlap.</span>
+            <span class="tok-punct">*</span><span class="tok-variable">dest</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-variable">i</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">*</span><span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-variable">i</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-variable">i</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">dest</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Ordinary firmware needs none of this</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
-// No #![no_builtins] here: this application-level firmware relies on
-// compiler_builtins' memcpy/memset (linked in automatically) exactly
-// like the overwhelming majority of #![no_std] HAL-based projects do.
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
+<span class="tok-comment">// No #![no_builtins] here: this application-level firmware relies on</span>
+<span class="tok-comment">// compiler_builtins' memcpy/memset (linked in automatically) exactly</span>
+<span class="tok-comment">// like the overwhelming majority of #![no_std] HAL-based projects do.</span>
 
-use panic_halt as _;
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    let buffer = [0u8; 64];
-    let mut copy = [0u8; 64];
-    copy.copy_from_slice(&amp;buffer); // compiles to a memcpy call, satisfied by compiler_builtins
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">buffer</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">copy</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-variable">copy</span><span class="tok-punct">.</span><span class="tok-call-method">copy_from_slice</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">buffer</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// compiles to a memcpy call, satisfied by compiler_builtins</span>
 
-    loop {}
-}
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The second example is the realistic default for nearly all embedded
 Rust; <code>#![no_builtins]</code> belongs to the small slice of bootloader- and

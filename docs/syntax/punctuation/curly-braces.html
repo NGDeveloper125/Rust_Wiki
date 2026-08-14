@@ -998,10 +998,10 @@ otherwise try to read the struct literal as the <code>if</code>'s block.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Evaluating a block to a value</h3>
-            <pre><code class="rust">let y = { // &lt;- `{` opens a block expression
-    let x = 1;
-    x + 1 // no trailing `;`, so this is the block's value
-}; // &lt;- `}` closes it; y is now 2
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">y</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `{` opens a block expression</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-variable">x</span> <span class="tok-punct">+</span> <span class="tok-number">1</span> <span class="tok-comment">// no trailing `;`, so this is the block's value</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `}` closes it; y is now 2</span>
 </code></pre>
 
           </div>
@@ -1010,11 +1010,11 @@ otherwise try to read the struct literal as the <code>if</code>'s block.</p>
             <p>A struct literal's <code>{ }</code> can build the whole value in one expression,
 including computing derived fields inline — no separate mutation step
 needed afterward.</p>
-<pre><code class="rust">struct Rectangle { width: f64, height: f64, area: f64 }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Rectangle</span> <span class="tok-punct">{</span> <span class="tok-variable">width</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">height</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">area</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 
-fn rectangle(width: f64, height: f64) -&gt; Rectangle {
-    Rectangle { width, height, area: width * height } // &lt;- `{ }` builds the whole value at once
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">rectangle</span><span class="tok-punct">(</span><span class="tok-variable">width</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">height</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Rectangle</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Rectangle</span> <span class="tok-punct">{</span> <span class="tok-variable">width</span><span class="tok-punct">,</span> <span class="tok-variable">height</span><span class="tok-punct">,</span> <span class="tok-variable">area</span><span class="tok-punct">:</span> <span class="tok-variable">width</span> <span class="tok-punct">*</span> <span class="tok-variable">height</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- `{ }` builds the whole value at once</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Constructing the fully-formed value in one struct
 literal, rather than creating a default/partial value and mutating fields
@@ -1028,16 +1028,16 @@ observe.</p>
             <p>A <code>match</code> arm's body is any expression — wrapping it in <code>{ }</code> turns it
 into a block expression, which is what lets an arm run several statements
 before producing its value, while a short arm skips the braces entirely.</p>
-<pre><code class="rust">enum Status { Ok, Error(u16) }
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Status</span> <span class="tok-punct">{</span> <span class="tok-field">Ok</span><span class="tok-punct">,</span> <span class="tok-field">Error</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
 
-let status = Status::Error(503);
-let description = match status {
-    Status::Ok =&gt; "ready",
-    Status::Error(code) =&gt; { // &lt;- `{` opens a multi-statement arm body
-        eprintln!("request failed with code {code}");
-        "failed"
-    } // &lt;- `}` closes it; "failed" is this arm's value
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">status</span> <span class="tok-punct">=</span> <span class="tok-type">Status</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">(</span><span class="tok-number">503</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">description</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-variable">status</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Status</span><span class="tok-punct">::</span><span class="tok-field">Ok</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;ready&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-type">Status</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `{` opens a multi-statement arm body</span>
+        <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;request failed with code {code}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-string">&quot;failed&quot;</span>
+    <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- `}` closes it; &quot;failed&quot; is this arm's value</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>match</code> is itself an expression with a single type, so
 every arm — braced block or bare expression — must produce that same
@@ -1072,21 +1072,21 @@ of what's inside.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">An interrupt handler's body</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use cortex_m_rt::interrupt;
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">interrupt</span><span class="tok-punct">;</span>
 
-#[interrupt]
-fn TIM2() { // &lt;- `{` opens the handler body; ordinary block-expression grammar
-    // acknowledge the timer interrupt, service the peripheral
-} // &lt;- `}` closes it
+<span class="tok-attribute">#[interrupt]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">TIM2</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `{` opens the handler body; ordinary block-expression grammar</span>
+    <span class="tok-comment">// acknowledge the timer interrupt, service the peripheral</span>
+<span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- `}` closes it</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Constructing a peripheral config struct literal</h3>
-            <pre><code class="rust">let config = SerialConfig { baud_rate: 115_200, parity: Parity::None }; // &lt;- `{ }` builds the config value in one expression
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">SerialConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-number">115_200</span><span class="tok-punct">,</span> <span class="tok-variable">parity</span><span class="tok-punct">:</span> <span class="tok-type">Parity</span><span class="tok-punct">::</span><span class="tok-field">None</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `{ }` builds the config value in one expression</span>
 </code></pre>
 
           </div>

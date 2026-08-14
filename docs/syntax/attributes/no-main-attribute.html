@@ -1010,13 +1010,13 @@ control the process's true entry point.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Supplying a custom C-ABI entry point</h3>
-            <pre><code class="rust">#![no_main] // &lt;- suppresses generation of the ordinary Rust startup shim / `main` call
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_main]</span> <span class="tok-comment tok-anno">// &lt;- suppresses generation of the ordinary Rust startup shim / `main` call</span>
 
-#[unsafe(no_mangle)]
-pub extern "C" fn main(_argc: i32, _argv: *const *const u8) -&gt; i32 {
-    // this function itself is now the program's real entry point
-    0
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-variable">_argc</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">_argv</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// this function itself is now the program's real entry point</span>
+    <span class="tok-number">0</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1026,22 +1026,22 @@ pub extern "C" fn main(_argc: i32, _argv: *const *const u8) -&gt; i32 {
 symbol at all — the microcontroller's reset handler jumps directly to an
 address the linker script names, so the crate supplies that exact symbol
 itself instead of an ordinary <code>fn main</code>.</p>
-<pre><code class="rust">#![no_std]
-#![no_main] // &lt;- no OS-provided runtime exists to call `main`; the entry point is supplied below
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span> <span class="tok-comment tok-anno">// &lt;- no OS-provided runtime exists to call `main`; the entry point is supplied below</span>
 
-use core::panic::PanicInfo;
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">panic</span><span class="tok-punct">::</span><span class="tok-type">PanicInfo</span><span class="tok-punct">;</span>
 
-#[unsafe(no_mangle)] // &lt;- the linker script's reset vector points at this exact symbol name
-pub extern "C" fn _start() -&gt; ! {
-    loop {
-        // firmware main loop
-    }
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span> <span class="tok-comment tok-anno">// &lt;- the linker script's reset vector points at this exact symbol name</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">_start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// firmware main loop</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[panic_handler]
-fn panic(_info: &amp;PanicInfo) -&gt; ! {
-    loop {}
-}
+<span class="tok-attribute">#[panic_handler]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">panic</span><span class="tok-punct">(</span><span class="tok-variable">_info</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">PanicInfo</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without <code>#[no_main]</code>, the compiler still expects to
 generate a call into a conventional <code>main</code>, which requires a C runtime
@@ -1095,46 +1095,46 @@ single linear entry point.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Using cortex-m-rt's #[entry] instead of a hand-rolled reset handler</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main] // &lt;- no C runtime exists to call an ordinary `main`
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span> <span class="tok-comment tok-anno">// &lt;- no C runtime exists to call an ordinary `main`</span>
 
-use panic_halt as _;
-use cortex_m_rt::entry; // &lt;- provides the real reset-vector wiring
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- provides the real reset-vector wiring</span>
 
-#[entry] // &lt;- expands to the equivalent of a #[no_mangle] reset-called entry function
-fn main() -&gt; ! {
-    loop {
-        // application logic
-    }
-}
+<span class="tok-attribute">#[entry]</span> <span class="tok-comment tok-anno">// &lt;- expands to the equivalent of a #[no_mangle] reset-called entry function</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// application logic</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Building an interrupt-driven application with RTIC</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main] // &lt;- RTIC's #[app] macro generates the real entry point and vector table wiring
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span> <span class="tok-comment tok-anno">// &lt;- RTIC's #[app] macro generates the real entry point and vector table wiring</span>
 
-use panic_halt as _;
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-#[rtic::app(device = nrf52840_hal::pac)]
-mod app {
-    #[shared]
-    struct Shared {}
+<span class="tok-attribute">#[rtic::app(device = nrf52840_hal::pac)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">app</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[shared]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">Shared</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-    #[local]
-    struct Local {}
+    <span class="tok-attribute">#[local]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">Local</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-    #[init]
-    fn init(_cx: init::Context) -&gt; (Shared, Local) {
-        (Shared {}, Local {})
-    }
+    <span class="tok-attribute">#[init]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">init</span><span class="tok-punct">(</span><span class="tok-variable">_cx</span><span class="tok-punct">:</span> <span class="tok-module">init</span><span class="tok-punct">::</span><span class="tok-type">Context</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">Shared</span><span class="tok-punct">,</span> <span class="tok-type-return">Local</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">(</span><span class="tok-type">Shared</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-type">Local</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
 
-    #[task(binds = TIMER0)]
-    fn on_timer(_cx: on_timer::Context) {
-        // runs whenever the TIMER0 interrupt fires
-    }
-}
+    <span class="tok-attribute">#[task(binds = TIMER0)]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_timer</span><span class="tok-punct">(</span><span class="tok-variable">_cx</span><span class="tok-punct">:</span> <span class="tok-module">on_timer</span><span class="tok-punct">::</span><span class="tok-type">Context</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// runs whenever the TIMER0 interrupt fires</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#![no_main]</code> here isn't optional scaffolding — the <code>#[app]</code> macro's
 generated code <em>is</em> the crate's entry point and interrupt table, so the

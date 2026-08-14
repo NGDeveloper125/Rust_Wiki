@@ -1005,14 +1005,14 @@ compiler warning itself rather than requiring a trip to a changelog.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Deprecating a function in favor of its replacement</h3>
-            <pre><code class="rust">#[deprecated(since = "1.2.0", note = "use `parse_duration_ms` instead")] // &lt;- warns at every call site
-pub fn parse_duration(input: &amp;str) -&gt; u64 {
-    parse_duration_ms(input)
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[deprecated(since = &quot;1.2.0&quot;, note = &quot;use `parse_duration_ms` instead&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- warns at every call site</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_duration</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">parse_duration_ms</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-pub fn parse_duration_ms(input: &amp;str) -&gt; u64 {
-    input.trim_end_matches("ms").parse().unwrap_or(0)
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_duration_ms</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">trim_end_matches</span><span class="tok-punct">(</span><span class="tok-string">&quot;ms&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1022,24 +1022,24 @@ pub fn parse_duration_ms(input: &amp;str) -&gt; u64 {
 one — rather than deleting the old function outright and breaking every
 downstream caller in one release, it's kept working but marked deprecated
 so callers get a compile-time nudge to migrate on their own schedule.</p>
-<pre><code class="rust">pub struct RetryPolicy {
-    pub max_attempts: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RetryPolicy {
-    #[deprecated(since = "2.0.0", note = "use `RetryPolicy::with_max_attempts` instead")]
-    pub fn new(max_attempts: u32) -&gt; Self {
-        RetryPolicy { max_attempts }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[deprecated(since = &quot;2.0.0&quot;, note = &quot;use `RetryPolicy::with_max_attempts` instead&quot;)]</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RetryPolicy</span> <span class="tok-punct">{</span> <span class="tok-variable">max_attempts</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn with_max_attempts(max_attempts: u32) -&gt; Self {
-        RetryPolicy { max_attempts }
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">with_max_attempts</span><span class="tok-punct">(</span><span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RetryPolicy</span> <span class="tok-punct">{</span> <span class="tok-variable">max_attempts</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn build_default_policy() -&gt; RetryPolicy {
-    RetryPolicy::with_max_attempts(3) // &lt;- migrated call site: no warning
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_default_policy</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-type">RetryPolicy</span><span class="tok-punct">::</span><span class="tok-call-assoc">with_max_attempts</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- migrated call site: no warning</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Deprecating first and removing later, rather than
 removing immediately, gives downstream crates a compiler-enforced,
@@ -1082,24 +1082,24 @@ schedule rather than their own.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Deprecating an old register-access method in a HAL crate</h3>
-            <pre><code class="rust">pub struct Gpio {
-    // ...
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ...</span>
+<span class="tok-punct">}</span>
 
-impl Gpio {
-    #[deprecated(since = "0.5.0", note = "use `Gpio::set_pin_state` instead; this method silently ignores an invalid pin index")] // &lt;-
-    pub fn set_pin(&amp;mut self, pin: u8, high: bool) {
-        self.set_pin_state(pin, high).ok();
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[deprecated(since = &quot;0.5.0&quot;, note = &quot;use `Gpio::set_pin_state` instead; this method silently ignores an invalid pin index&quot;)]</span> <span class="tok-comment tok-anno">// &lt;-</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pin</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">set_pin_state</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    pub fn set_pin_state(&amp;mut self, pin: u8, high: bool) -&gt; Result&lt;(), &amp;'static str&gt; {
-        if pin &gt; 15 {
-            return Err("pin index out of range for this GPIO port");
-        }
-        // ... write to the port's ODR register here
-        Ok(())
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pin_state</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">pin</span> <span class="tok-punct">&gt;</span> <span class="tok-number">15</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;pin index out of range for this GPIO port&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-comment">// ... write to the port's ODR register here</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

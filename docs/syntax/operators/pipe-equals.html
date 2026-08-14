@@ -987,8 +987,8 @@ in a bitmask.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">ORing a value into a variable in place</h3>
-            <pre><code class="rust">let mut flags = 0b1000u8;
-flags |= 0b0010; // &lt;- `|=` ORs the right operand into `flags` in place
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">flags</span> <span class="tok-punct">=</span> <span class="tok-number">0b1000u8</span><span class="tok-punct">;</span>
+<span class="tok-variable">flags</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-number">0b0010</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `|=` ORs the right operand into `flags` in place</span>
 </code></pre>
 
           </div>
@@ -996,16 +996,16 @@ flags |= 0b0010; // &lt;- `|=` ORs the right operand into `flags` in place
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>Setting an individual flag bit on a status word is the canonical <code>|=</code>
 use — it turns one bit on without disturbing the others, in place.</p>
-<pre><code class="rust">const FLAG_READY: u8   = 0b0000_0001;
-const FLAG_ERROR: u8   = 0b0000_0010;
-const FLAG_LOGGING: u8 = 0b0000_0100;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">FLAG_READY</span><span class="tok-punct">:</span> <span class="tok-type">u8</span>   <span class="tok-punct">=</span> <span class="tok-number">0b0000_0001</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">FLAG_ERROR</span><span class="tok-punct">:</span> <span class="tok-type">u8</span>   <span class="tok-punct">=</span> <span class="tok-number">0b0000_0010</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">FLAG_LOGGING</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0b0000_0100</span><span class="tok-punct">;</span>
 
-let mut status = 0u8;
-status |= FLAG_READY;   // &lt;- `|=` sets the READY bit, leaves others untouched
-status |= FLAG_LOGGING; // &lt;- `|=` sets LOGGING on top of READY
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">status</span> <span class="tok-punct">=</span> <span class="tok-number">0u8</span><span class="tok-punct">;</span>
+<span class="tok-variable">status</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-constant">FLAG_READY</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- `|=` sets the READY bit, leaves others untouched</span>
+<span class="tok-variable">status</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-constant">FLAG_LOGGING</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `|=` sets LOGGING on top of READY</span>
 
-assert_eq!(status, FLAG_READY | FLAG_LOGGING);
-assert_eq!(status &amp; FLAG_ERROR, 0); // ERROR was never touched
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">,</span> <span class="tok-constant">FLAG_READY</span> <span class="tok-punct">|</span> <span class="tok-constant">FLAG_LOGGING</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">status</span> <span class="tok-punct">&amp;</span> <span class="tok-constant">FLAG_ERROR</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// ERROR was never touched</span>
 </code></pre>
 <p><code>status |= FLAG</code> mutates the existing word in place
 instead of rebuilding it from scratch, which matters once other bits are
@@ -1044,16 +1044,16 @@ preempt the read and the write.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Enabling a peripheral clock before configuring it</h3>
-            <pre><code class="rust">const RCC_APB1ENR: *mut u32 = 0x4002_1840 as *mut u32; // RCC APB1 clock-enable register
-const USART2EN: u32 = 1 &lt;&lt; 17;
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">RCC_APB1ENR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4002_1840</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment">// RCC APB1 clock-enable register</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">USART2EN</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">17</span><span class="tok-punct">;</span>
 
-fn enable_usart2_clock() {
-    unsafe {
-        let mut enr = core::ptr::read_volatile(RCC_APB1ENR);
-        enr |= USART2EN; // &lt;- sets only the USART2 clock-enable bit
-        core::ptr::write_volatile(RCC_APB1ENR, enr);
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">enable_usart2_clock</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">enr</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">RCC_APB1ENR</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">enr</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-constant">USART2EN</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- sets only the USART2 clock-enable bit</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-constant">RCC_APB1ENR</span><span class="tok-punct">,</span> <span class="tok-variable">enr</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

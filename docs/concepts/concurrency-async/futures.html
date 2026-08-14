@@ -1023,19 +1023,19 @@ dynamic dispatch over otherwise-unrelated future types.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::future::Future;
-use std::pin::Pin;
-use std::task::{Context, Poll};
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">future</span><span class="tok-punct">::</span><span class="tok-type">Future</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">pin</span><span class="tok-punct">::</span><span class="tok-type">Pin</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">task</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Context</span><span class="tok-punct">,</span> <span class="tok-type">Poll</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct Immediately&lt;T&gt;(Option&lt;T&gt;); // &lt;- a minimal Future: ready the very first time it's polled
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Immediately</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a minimal Future: ready the very first time it's polled</span>
 
-impl&lt;T: Unpin&gt; Future for Immediately&lt;T&gt; { // &lt;- implementing the Future trait directly, no async fn involved
-    type Output = T;
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Unpin</span><span class="tok-punct">&gt;</span> <span class="tok-trait">Future</span> <span class="tok-keyword">for</span> <span class="tok-type">Immediately</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- implementing the Future trait directly, no async fn involved</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">;</span>
 
-    fn poll(mut self: Pin&lt;&amp;mut Self&gt;, _cx: &amp;mut Context&lt;'_&gt;) -&gt; Poll&lt;T&gt; {
-        Poll::Ready(self.0.take().expect("polled after completion"))
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">poll</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">:</span> <span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-variable">_cx</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Context</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'_</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Poll</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Poll</span><span class="tok-punct">::</span><span class="tok-field">Ready</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;polled after completion&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Note:</strong> this compiles standalone because it only <em>defines</em> a <code>Future</code> —
 actually polling <code>Immediately</code> to get its value still needs something to
@@ -1057,25 +1057,25 @@ runtime</a>'s executor.</p>
             <p>A dashboard that needs three independent readings before it can render
 should drive all three futures concurrently with <code>tokio::join!</code>, rather
 than awaiting them one at a time and paying their latencies sequentially.</p>
-<pre><code class="rust">// [dependencies] tokio = { version = "1", features = ["full"] }
-use std::time::Duration;
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Duration</span><span class="tok-punct">;</span>
 
-async fn fetch_cpu_load() -&gt; f64 {
-    tokio::time::sleep(Duration::from_millis(30)).await;
-    0.42
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">fetch_cpu_load</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-call-assoc">sleep</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span>
+    <span class="tok-number">0.42</span>
+<span class="tok-punct">}</span>
 
-async fn fetch_memory_used() -&gt; f64 {
-    tokio::time::sleep(Duration::from_millis(20)).await;
-    0.71
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">fetch_memory_used</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-call-assoc">sleep</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span>
+    <span class="tok-number">0.71</span>
+<span class="tok-punct">}</span>
 
-#[tokio::main]
-async fn main() {
-    // &lt;- tokio::join! polls both futures concurrently, resolving once both are Ready
-    let (cpu, memory) = tokio::join!(fetch_cpu_load(), fetch_memory_used());
-    println!("cpu={cpu:.2} memory={memory:.2}");
-}
+<span class="tok-attribute">#[tokio::main]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- tokio::join! polls both futures concurrently, resolving once both are Ready</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">cpu</span><span class="tok-punct">,</span> <span class="tok-variable">memory</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-macro">join!</span><span class="tok-punct">(</span><span class="tok-call-free">fetch_cpu_load</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-call-free">fetch_memory_used</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;cpu={cpu:.2} memory={memory:.2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because futures are inert until polled, <code>tokio::join!</code>
@@ -1096,23 +1096,23 @@ concurrently within one task.</p>
 callers to a specific executor should return <code>impl Future</code> from its
 signature; a scheduler that needs to store many different concrete future
 types together has to erase that type with a boxed trait object instead.</p>
-<pre><code class="rust">use std::future::Future;
-use std::pin::Pin;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">future</span><span class="tok-punct">::</span><span class="tok-type">Future</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">pin</span><span class="tok-punct">::</span><span class="tok-type">Pin</span><span class="tok-punct">;</span>
 
-fn delayed_greeting(name: String) -&gt; impl Future&lt;Output = String&gt; { // &lt;- concrete type hidden, still zero-cost
-    async move { format!("hello, {name}") }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">delayed_greeting</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">impl</span> <span class="tok-type-return">Future</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Output</span> <span class="tok-punct">=</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- concrete type hidden, still zero-cost</span>
+    <span class="tok-keyword">async</span> <span class="tok-keyword">move</span> <span class="tok-punct">{</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello, {name}&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct Scheduler {
-    // &lt;- boxed and pinned: the only way to store futures of different concrete types in one Vec
-    pending: Vec&lt;Pin&lt;Box&lt;dyn Future&lt;Output = String&gt; + Send&gt;&gt;&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Scheduler</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- boxed and pinned: the only way to store futures of different concrete types in one Vec</span>
+    <span class="tok-variable">pending</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Future</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-type">Send</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Scheduler {
-    fn push(&amp;mut self, fut: impl Future&lt;Output = String&gt; + Send + 'static) {
-        self.pending.push(Box::pin(fut));
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Scheduler</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">fut</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Future</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">+</span> <span class="tok-type">Send</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pending</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">pin</span><span class="tok-punct">(</span><span class="tok-variable">fut</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>impl Future</code> keeps the zero-cost, statically-dispatched
@@ -1164,19 +1164,19 @@ not <code>tokio</code>.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use core::future::Future;
-use core::pin::Pin;
-use core::task::{Context, Poll};
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">future</span><span class="tok-punct">::</span><span class="tok-type">Future</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">pin</span><span class="tok-punct">::</span><span class="tok-type">Pin</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">task</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Context</span><span class="tok-punct">,</span> <span class="tok-type">Poll</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct ReadyNow&lt;T&gt;(Option&lt;T&gt;); // &lt;- a minimal Future, no_std-compatible: core::future::Future only
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ReadyNow</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a minimal Future, no_std-compatible: core::future::Future only</span>
 
-impl&lt;T: Unpin&gt; Future for ReadyNow&lt;T&gt; { // &lt;- same trait as on a hosted target, imported from core instead of std
-    type Output = T;
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Unpin</span><span class="tok-punct">&gt;</span> <span class="tok-trait">Future</span> <span class="tok-keyword">for</span> <span class="tok-type">ReadyNow</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- same trait as on a hosted target, imported from core instead of std</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Output</span> <span class="tok-punct">=</span> <span class="tok-generic-param">T</span><span class="tok-punct">;</span>
 
-    fn poll(mut self: Pin&lt;&amp;mut Self&gt;, _cx: &amp;mut Context&lt;'_&gt;) -&gt; Poll&lt;T&gt; {
-        Poll::Ready(self.0.take().expect("polled after completion"))
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">poll</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">:</span> <span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-variable">_cx</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Context</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'_</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Poll</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Poll</span><span class="tok-punct">::</span><span class="tok-field">Ready</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;polled after completion&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Note:</strong> this compiles under <code>#![no_std]</code> as-is because it only defines a
 <code>Future</code> — actually polling <code>ReadyNow</code> to get its value still needs a
@@ -1199,28 +1199,28 @@ driver, whether that's <code>.await</code> inside an executor-spawned task (e.g.
 data-ready signal should combine both as futures polled together, rather
 than blocking on one before checking the other, so a slow timer doesn't
 delay noticing the sensor is already ready.</p>
-<pre><code class="rust">use embassy_executor::Spawner;
-use embassy_time::{Duration, Timer};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embassy_executor</span><span class="tok-punct">::</span><span class="tok-type">Spawner</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">embassy_time</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Duration</span><span class="tok-punct">,</span> <span class="tok-type">Timer</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-async fn wait_for_reading() -&gt; u16 {
-    Timer::after(Duration::from_millis(50)).await; // &lt;- an embassy-provided Future; this task only owns the .await point
-    // ... read the conversion result register here
-    512
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">wait_for_reading</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Timer</span><span class="tok-punct">::</span><span class="tok-call-assoc">after</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">50</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- an embassy-provided Future; this task only owns the .await point</span>
+    <span class="tok-comment">// ... read the conversion result register here</span>
+    <span class="tok-number">512</span>
+<span class="tok-punct">}</span>
 
-#[embassy_executor::task]
-async fn sample_loop() {
-    loop {
-        let reading = wait_for_reading().await; // &lt;- polling happens inside embassy's executor, not this code
-        // ... use `reading`
-        let _ = reading;
-    }
-}
+<span class="tok-attribute">#[embassy_executor::task]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">sample_loop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">reading</span> <span class="tok-punct">=</span> <span class="tok-call-free">wait_for_reading</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- polling happens inside embassy's executor, not this code</span>
+        <span class="tok-comment">// ... use `reading`</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">reading</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[embassy_executor::main]
-async fn main(spawner: Spawner) {
-    spawner.spawn(sample_loop()).unwrap();
-}
+<span class="tok-attribute">#[embassy_executor::main]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-variable">spawner</span><span class="tok-punct">:</span> <span class="tok-type">Spawner</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">spawner</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">sample_loop</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because <code>wait_for_reading</code>'s future is inert until
@@ -1241,14 +1241,14 @@ what lets embassy avoid wasting cycles here.</p>
 callers onto a specific embedded executor should return <code>impl Future</code>
 from its API, the same choice a hosted async library makes to stay
 executor-agnostic.</p>
-<pre><code class="rust">use core::future::Future;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">future</span><span class="tok-punct">::</span><span class="tok-type">Future</span><span class="tok-punct">;</span>
 
-pub fn read_temperature() -&gt; impl Future&lt;Output = i16&gt; { // &lt;- concrete future type hidden, still no_std, still zero-cost
-    async {
-        // ... trigger a conversion and await its completion
-        21
-    }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_temperature</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">impl</span> <span class="tok-type-return">Future</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Output</span> <span class="tok-punct">=</span> <span class="tok-type-return">i16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- concrete future type hidden, still no_std, still zero-cost</span>
+    <span class="tok-keyword">async</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... trigger a conversion and await its completion</span>
+        <span class="tok-number">21</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Future&lt;Output = i16&gt;</code> keeps the driver

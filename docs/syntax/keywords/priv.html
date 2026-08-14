@@ -997,8 +997,8 @@ word — no concrete proposal currently claims it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Using the raw-identifier escape hatch</h3>
-            <pre><code class="rust">let priv = 5;     // error: expected identifier, found reserved keyword `priv`
-let r#priv = 5;   // ok: the raw-identifier form escapes the reservation
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">priv</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>     <span class="tok-comment">// error: expected identifier, found reserved keyword `priv`</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r</span><span class="tok-punct">#</span><span class="tok-variable">priv</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>   <span class="tok-comment">// ok: the raw-identifier form escapes the reservation</span>
 </code></pre>
 
           </div>
@@ -1009,19 +1009,19 @@ just with the default flipped: a struct's fields stay private unless
 explicitly marked <code>pub</code>, which is what lets a type keep its invariants
 enforced through a constructor instead of allowing direct field
 mutation.</p>
-<pre><code class="rust">pub struct Account {
-    balance: i64, // private by default — no `priv` needed, this is the current default
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Account</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">balance</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span> <span class="tok-comment">// private by default — no `priv` needed, this is the current default</span>
+<span class="tok-punct">}</span>
 
-impl Account {
-    pub fn new(opening_balance: i64) -&gt; Self {
-        Account { balance: opening_balance.max(0) } // &lt;- invariant enforced here, not by the field
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Account</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">opening_balance</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Account</span> <span class="tok-punct">{</span> <span class="tok-variable">balance</span><span class="tok-punct">:</span> <span class="tok-variable">opening_balance</span><span class="tok-punct">.</span><span class="tok-call-method">max</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- invariant enforced here, not by the field</span>
+    <span class="tok-punct">}</span>
 
-    pub fn balance(&amp;self) -&gt; i64 {
-        self.balance
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">balance</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i64</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">balance</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>If <code>balance</code> were public, nothing would stop external
 code from setting it to a negative value directly; keeping it private
@@ -1062,24 +1062,24 @@ there's genuinely no embedded-specific nuance to add.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">The raw-identifier escape hatch, unchanged under `#![no_std]`</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-let priv = 5;     // error: expected identifier, found reserved keyword `priv`
-let r#priv = 5;   // ok: the raw-identifier form escapes the reservation, same as on any hosted target
+<span class="tok-keyword">let</span> <span class="tok-variable">priv</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>     <span class="tok-comment">// error: expected identifier, found reserved keyword `priv`</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r</span><span class="tok-punct">#</span><span class="tok-variable">priv</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>   <span class="tok-comment">// ok: the raw-identifier form escapes the reservation, same as on any hosted target</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Today's default-private HAL internals doing `priv`'s old job</h3>
-            <pre><code class="rust">pub struct Adc {
-    resolution_bits: u8, // private by default — no `priv` needed, this is the current default
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Adc</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">resolution_bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-comment">// private by default — no `priv` needed, this is the current default</span>
+<span class="tok-punct">}</span>
 
-impl Adc {
-    pub fn new(resolution_bits: u8) -&gt; Self {
-        Adc { resolution_bits: resolution_bits.min(12) } // &lt;- invariant enforced here, not by the field
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Adc</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">resolution_bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Adc</span> <span class="tok-punct">{</span> <span class="tok-variable">resolution_bits</span><span class="tok-punct">:</span> <span class="tok-variable">resolution_bits</span><span class="tok-punct">.</span><span class="tok-call-method">min</span><span class="tok-punct">(</span><span class="tok-number">12</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- invariant enforced here, not by the field</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

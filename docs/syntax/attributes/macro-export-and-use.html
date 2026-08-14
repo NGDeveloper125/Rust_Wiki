@@ -1015,10 +1015,10 @@ older examples, but it's a legacy form now; new code should prefer
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Exporting a macro so other crates can use it</h3>
-            <pre><code class="rust">#[macro_export] // &lt;- opts this macro into being usable from other crates
-macro_rules! log_event {
-    ($msg:expr) =&gt; { println!("[event] {}", $msg) };
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[macro_export]</span> <span class="tok-comment tok-anno">// &lt;- opts this macro into being usable from other crates</span>
+<span class="tok-macro">macro_rules!</span> <span class="tok-variable">log_event</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">msg</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[event] {}&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">msg</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1027,20 +1027,20 @@ macro_rules! log_event {
             <p>A logging crate exports a formatting macro so downstream crates get the
 same convenience <code>println!</code>/<code>format!</code> already give them, without needing
 a logger instance passed around.</p>
-<pre><code class="rust">// crate "telemetry", src/lib.rs
-#[macro_export] // &lt;- required: without it, log_event! would stay private to this crate
-macro_rules! log_event {
-    ($($arg:tt)*) =&gt; { // &lt;- forwards arbitrary format arguments, the same way println! does
-        println!("[telemetry] {}", format!($($arg)*))
-    };
-}
+<pre><code class="rust-hl"><span class="tok-comment">// crate &quot;telemetry&quot;, src/lib.rs</span>
+<span class="tok-attribute">#[macro_export]</span> <span class="tok-comment tok-anno">// &lt;- required: without it, log_event! would stay private to this crate</span>
+<span class="tok-macro">macro_rules!</span> <span class="tok-variable">log_event</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">arg</span><span class="tok-punct">:</span><span class="tok-variable">tt</span><span class="tok-punct">)</span><span class="tok-punct">*</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- forwards arbitrary format arguments, the same way println! does</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[telemetry] {}&quot;</span><span class="tok-punct">,</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">arg</span><span class="tok-punct">)</span><span class="tok-punct">*</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-// downstream crate, Cargo.toml: telemetry = { path = "../telemetry" }
-use telemetry::log_event; // &lt;- imported like any ordinary item, thanks to 2018-edition macro scoping
+<span class="tok-comment">// downstream crate, Cargo.toml: telemetry = { path = &quot;../telemetry&quot; }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">telemetry</span><span class="tok-punct">::</span><span class="tok-variable">log_event</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- imported like any ordinary item, thanks to 2018-edition macro scoping</span>
 
-fn start() {
-    log_event!("sensor {} online", 7); // &lt;- resolves via the crate root, not telemetry's internal module path
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">log_event!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor {} online&quot;</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- resolves via the crate root, not telemetry's internal module path</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Macro visibility doesn't follow ordinary item
 visibility rules, so <code>#[macro_export]</code> is mandatory for any macro meant
@@ -1083,23 +1083,23 @@ current <code>svd2rust</code> output and hand-written HALs use <code>use</code>.
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Exporting a register-definition macro for HAL crates to consume</h3>
-            <pre><code class="rust">// crate "chip-pac", src/lib.rs
-#[macro_export] // &lt;- required: without it, define_register! stays private to chip-pac
-macro_rules! define_register {
-    ($name:ident, $addr:expr) =&gt; {
-        pub struct $name;
-        impl $name {
-            pub unsafe fn read() -&gt; u32 {
-                core::ptr::read_volatile($addr as *const u32)
-            }
-        }
-    };
-}
+            <pre><code class="rust-hl"><span class="tok-comment">// crate &quot;chip-pac&quot;, src/lib.rs</span>
+<span class="tok-attribute">#[macro_export]</span> <span class="tok-comment tok-anno">// &lt;- required: without it, define_register! stays private to chip-pac</span>
+<span class="tok-macro">macro_rules!</span> <span class="tok-variable">define_register</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">impl</span> <span class="tok-punct">$</span><span class="tok-variable">name</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+                <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">addr</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">)</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-// downstream HAL crate, Cargo.toml: chip-pac = { path = "../chip-pac" }
-use chip_pac::define_register; // &lt;- imported like any ordinary item
+<span class="tok-comment">// downstream HAL crate, Cargo.toml: chip-pac = { path = &quot;../chip-pac&quot; }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">chip_pac</span><span class="tok-punct">::</span><span class="tok-variable">define_register</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- imported like any ordinary item</span>
 
-define_register!(GpioaIdr, 0x4002_0010);
+<span class="tok-macro">define_register!</span><span class="tok-punct">(</span><span class="tok-type">GpioaIdr</span><span class="tok-punct">,</span> <span class="tok-number">0x4002_0010</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>

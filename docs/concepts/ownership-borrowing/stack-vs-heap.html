@@ -998,9 +998,9 @@ time the way a stack allocation requires).</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let a = 5;           // stack: fixed size, popped automatically at scope end
-let b = Box::new(5); // &lt;- heap: explicit allocation, freed when `b` is dropped
-println!("{a} {b}");
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>           <span class="tok-comment">// stack: fixed size, popped automatically at scope end</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- heap: explicit allocation, freed when `b` is dropped</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{a} {b}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1018,17 +1018,17 @@ println!("{a} {b}");
             <p>A large, rarely-used buffer stored inline in an enum variant forces every
 variant of that enum to reserve the biggest one's stack space — boxing
 the large variant keeps the common ones cheap.</p>
-<pre><code class="rust">struct Board {
-    cells: [[u8; 64]; 64], // 4 KiB — fine on its own, expensive to carry in every enum variant
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Board</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cells</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment">// 4 KiB — fine on its own, expensive to carry in every enum variant</span>
+<span class="tok-punct">}</span>
 
-enum GameState {
-    Menu,
-    Loading(u8),
-    Playing(Box&lt;Board&gt;), // &lt;- PREFER: heap-allocated; GameState's size is two words instead of ~4 KiB, even for `Menu`
-}
+<span class="tok-keyword">enum</span> <span class="tok-type-def">GameState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Menu</span><span class="tok-punct">,</span>
+    <span class="tok-field">Loading</span><span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Playing</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">Board</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- PREFER: heap-allocated; GameState's size is two words instead of ~4 KiB, even for `Menu`</span>
+<span class="tok-punct">}</span>
 
-let state = GameState::Playing(Box::new(Board { cells: [[0; 64]; 64] }));
+<span class="tok-keyword">let</span> <span class="tok-variable">state</span> <span class="tok-punct">=</span> <span class="tok-type">GameState</span><span class="tok-punct">::</span><span class="tok-field">Playing</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Board</span> <span class="tok-punct">{</span> <span class="tok-variable">cells</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an enum's stack size is the size of its largest
@@ -1091,8 +1091,8 @@ size genuinely can't be known until runtime."</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let sample: i32 = 5;                  // stack: works identically to hosted Rust, no allocator needed
-static CALIBRATION: [u8; 4] = [0; 4]; // &lt;- static/BSS: fixed address, known at link time, no heap involved
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">sample</span><span class="tok-punct">:</span> <span class="tok-type">i32</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>                  <span class="tok-comment">// stack: works identically to hosted Rust, no allocator needed</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">CALIBRATION</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- static/BSS: fixed address, known at link time, no heap involved</span>
 </code></pre>
 
       </section>
@@ -1111,23 +1111,23 @@ static CALIBRATION: [u8; 4] = [0; 4]; // &lt;- static/BSS: fixed address, known 
 target needs a different fix on a project with no allocator configured at
 all — moving the big buffer out of the enum and into its own <code>static</code>
 instead of boxing it.</p>
-<pre><code class="rust">struct Board {
-    cells: [[u8; 64]; 64], // 4 KiB
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Board</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cells</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment">// 4 KiB</span>
+<span class="tok-punct">}</span>
 
-// AVOID (no allocator configured): inlining the large variant bloats every GameState to ~4 KiB
-enum GameStateInline {
-    Menu,
-    Playing(Board),
-}
+<span class="tok-comment">// AVOID (no allocator configured): inlining the large variant bloats every GameState to ~4 KiB</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">GameStateInline</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Menu</span><span class="tok-punct">,</span>
+    <span class="tok-field">Playing</span><span class="tok-punct">(</span><span class="tok-type">Board</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-// PREFER: the large buffer lives once in `static` storage; GameState only ever holds a flag/index
-static mut BOARD: Board = Board { cells: [[0; 64]; 64] }; // &lt;- fixed address, sized at compile time, no heap
+<span class="tok-comment">// PREFER: the large buffer lives once in `static` storage; GameState only ever holds a flag/index</span>
+<span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">BOARD</span><span class="tok-punct">:</span> <span class="tok-type">Board</span> <span class="tok-punct">=</span> <span class="tok-type">Board</span> <span class="tok-punct">{</span> <span class="tok-variable">cells</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed address, sized at compile time, no heap</span>
 
-enum GameState {
-    Menu,
-    Playing, // &lt;- refers to the static BOARD rather than owning a copy
-}
+<span class="tok-keyword">enum</span> <span class="tok-type-def">GameState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Menu</span><span class="tok-punct">,</span>
+    <span class="tok-type">Playing</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- refers to the static BOARD rather than owning a copy</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> with no allocator, <code>Box&lt;Board&gt;</code> isn't an option at all,
@@ -1151,13 +1151,13 @@ the right call once <code>alloc</code> is already configured.</p>
 before the transfer starts, and that stays put for the transfer's entire
 duration — a <code>static</code> buffer satisfies this directly; a heap allocation
 would need extra work to make the same promise.</p>
-<pre><code class="rust">const FRAME_LEN: usize = 256;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">FRAME_LEN</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">256</span><span class="tok-punct">;</span>
 
-static mut DMA_BUFFER: [u8; FRAME_LEN] = [0; FRAME_LEN]; // &lt;- fixed address at link time, never moves
+<span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">DMA_BUFFER</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-constant">FRAME_LEN</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-constant">FRAME_LEN</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed address at link time, never moves</span>
 
-fn start_transfer() -&gt; *mut u8 {
-    unsafe { DMA_BUFFER.as_mut_ptr() } // &lt;- safe to hand to a DMA controller: this address is stable forever
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">start_transfer</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-constant">DMA_BUFFER</span><span class="tok-punct">.</span><span class="tok-call-method">as_mut_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- safe to hand to a DMA controller: this address is stable forever</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> DMA hardware is given a raw address and writes to it

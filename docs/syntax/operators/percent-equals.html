@@ -986,8 +986,8 @@ overloadable via <code>std::ops::RemAssign</code>.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Assigning a remainder back into a variable</h3>
-            <pre><code class="rust">let mut x = 7;
-x %= 2; // &lt;- `%=` assigns the remainder of `x / 2` back into `x`
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">7</span><span class="tok-punct">;</span>
+<span class="tok-variable">x</span> <span class="tok-punct">%=</span> <span class="tok-number">2</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `%=` assigns the remainder of `x / 2` back into `x`</span>
 </code></pre>
 
           </div>
@@ -996,22 +996,22 @@ x %= 2; // &lt;- `%=` assigns the remainder of `x / 2` back into `x`
             <p>A ring buffer's write index needs to wrap back to <code>0</code> once it reaches the
 buffer's length — <code>%=</code> expresses "wrap this index in place" in one step,
 without a separate comparison-and-reset branch.</p>
-<pre><code class="rust">struct RingBuffer {
-    data: [u8; 8],
-    idx: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RingBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">8</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">idx</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RingBuffer {
-    fn push(&amp;mut self, byte: u8) {
-        self.data[self.idx] = byte;
-        self.idx += 1;
-        self.idx %= self.data.len(); // &lt;- `%=` wraps `idx` back into range in place
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">RingBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">[</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-variable">byte</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span> <span class="tok-punct">%=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `%=` wraps `idx` back into range in place</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut buf = RingBuffer { data: [0; 8], idx: 7 };
-buf.push(42);
-assert_eq!(buf.idx, 0); // wrapped from 7 back to 0
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-type">RingBuffer</span> <span class="tok-punct">{</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">8</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">idx</span><span class="tok-punct">:</span> <span class="tok-number">7</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">buf</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">.</span><span class="tok-field">idx</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// wrapped from 7 back to 0</span>
 </code></pre>
 <p><code>idx %= len</code> is the idiomatic circular-index pattern —
 see <a href="../../syntax/operators/plus-equals.html"><code>+=</code></a> for the general in-place-assignment rationale;
@@ -1046,35 +1046,35 @@ length isn't a convenient power of two.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Wrapping a UART receive buffer's write index in place</h3>
-            <pre><code class="rust">struct UartRxBuffer {
-    data: [u8; 32],
-    idx: usize,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">UartRxBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">32</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">idx</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl UartRxBuffer {
-    fn store(&amp;mut self, byte: u8) {
-        self.data[self.idx] = byte;
-        self.idx += 1;
-        self.idx %= self.data.len(); // &lt;- `%=` wraps `idx` back into range in place
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">UartRxBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">store</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">[</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-variable">byte</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span> <span class="tok-punct">%=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `%=` wraps `idx` back into range in place</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">The same buffer wrapped with a bitmask instead of `%=`</h3>
-            <pre><code class="rust">struct UartRxBufferMasked {
-    data: [u8; 32], // still a power of two, so the mask below is exact
-    idx: usize,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">UartRxBufferMasked</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">32</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment">// still a power of two, so the mask below is exact</span>
+    <span class="tok-variable">idx</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl UartRxBufferMasked {
-    fn store(&amp;mut self, byte: u8) {
-        self.data[self.idx] = byte;
-        self.idx += 1;
-        self.idx &amp;= self.data.len() - 1; // stands in for `idx %= self.data.len()`, no divide needed
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">UartRxBufferMasked</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">store</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">[</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-variable">byte</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">idx</span> <span class="tok-punct">&amp;</span><span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment">// stands in for `idx %= self.data.len()`, no divide needed</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

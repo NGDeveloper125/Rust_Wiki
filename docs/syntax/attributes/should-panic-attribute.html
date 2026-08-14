@@ -1003,22 +1003,22 @@ tweak elsewhere in the message.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Asserting a panic with an expected message</h3>
-            <pre><code class="rust">struct OrderId(u32);
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">OrderId</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl OrderId {
-    fn new(value: u32) -&gt; Self {
-        if value == 0 {
-            panic!("order id must be non-zero");
-        }
-        OrderId(value)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">OrderId</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">value</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;order id must be non-zero&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">OrderId</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[test]
-#[should_panic(expected = "order id must be non-zero")] // &lt;- passes only if this exact panic occurs
-fn rejects_zero_order_id() {
-    OrderId::new(0);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-attribute">#[should_panic(expected = &quot;order id must be non-zero&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- passes only if this exact panic occurs</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_zero_order_id</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-type">OrderId</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1029,31 +1029,31 @@ fn rejects_zero_order_id() {
 <code>Result</code>-returning one needs its <code>Err</code> branch tested; <code>#[should_panic]</code>
 with <code>expected</code> confirms both that it panics <em>and</em> that it panics for the
 validation reason the test intends, not some unrelated bug.</p>
-<pre><code class="rust">struct PositiveQuantity(u32);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">PositiveQuantity</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl PositiveQuantity {
-    fn new(value: u32) -&gt; Self {
-        assert!(value &gt; 0, "quantity must be positive, got {value}");
-        PositiveQuantity(value)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">PositiveQuantity</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">value</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-string">&quot;quantity must be positive, got {value}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-field">PositiveQuantity</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn accepts_a_positive_quantity() {
-        let q = PositiveQuantity::new(3);
-        assert_eq!(q.0, 3);
-    }
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">accepts_a_positive_quantity</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">q</span> <span class="tok-punct">=</span> <span class="tok-type">PositiveQuantity</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">q</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    #[test]
-    #[should_panic(expected = "quantity must be positive")] // &lt;- narrows the pass condition to THIS panic
-    fn rejects_zero_quantity() {
-        PositiveQuantity::new(0);
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-attribute">#[should_panic(expected = &quot;quantity must be positive&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- narrows the pass condition to THIS panic</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_zero_quantity</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-type">PositiveQuantity</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without <code>expected</code>, <code>rejects_zero_quantity</code> would also
 "pass" if <code>PositiveQuantity::new</code> panicked for a completely unrelated
@@ -1098,30 +1098,30 @@ test-run, which these harnesses aren't built around.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Asserting a panic in host-tested, hardware-independent validation logic</h3>
-            <pre><code class="rust">struct ChannelId(u8);
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">ChannelId</span><span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl ChannelId {
-    fn new(value: u8) -&gt; Self {
-        assert!(value &lt; 8, "ADC channel {value} out of range (0..=7)");
-        ChannelId(value)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">ChannelId</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">value</span> <span class="tok-punct">&lt;</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-string">&quot;ADC channel {value} out of range (0..=7)&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-field">ChannelId</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn accepts_a_valid_channel() {
-        assert_eq!(ChannelId::new(3).0, 3);
-    }
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">accepts_a_valid_channel</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">ChannelId</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    #[test]
-    #[should_panic(expected = "out of range")] // &lt;- runs on the host; no on-target equivalent exists
-    fn rejects_an_out_of_range_channel() {
-        ChannelId::new(9);
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-attribute">#[should_panic(expected = &quot;out of range&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- runs on the host; no on-target equivalent exists</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_an_out_of_range_channel</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-type">ChannelId</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

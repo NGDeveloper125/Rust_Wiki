@@ -1015,13 +1015,13 @@ would need to be found and updated at every occurrence.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Using `Self` as a constructor's return type</h3>
-            <pre><code class="rust">struct Client { host: String }
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Client</span> <span class="tok-punct">{</span> <span class="tok-variable">host</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span>
 
-impl Client {
-    fn new(host: &amp;str) -&gt; Self { // &lt;- `Self` means `Client` here, without repeating the name
-        Client { host: host.into() }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Client</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">host</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `Self` means `Client` here, without repeating the name</span>
+        <span class="tok-type">Client</span> <span class="tok-punct">{</span> <span class="tok-variable">host</span><span class="tok-punct">:</span> <span class="tok-variable">host</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1030,17 +1030,17 @@ impl Client {
             <p>A constructor's return type is conventionally written <code>Self</code>, not the
 type's own name repeated — the two are identical here, but only one of
 them survives a rename with zero edits.</p>
-<pre><code class="rust">pub struct Configuration {
-    max_connections: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Configuration</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Configuration {
-    pub fn new(max_connections: u32) -&gt; Self { // &lt;- `Self`, not `Configuration`, per convention
-        Self { max_connections } // &lt;- `Self` also usable as the constructor path itself
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Configuration</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `Self`, not `Configuration`, per convention</span>
+        <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">max_connections</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- `Self` also usable as the constructor path itself</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let config = Configuration::new(10);
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">Configuration</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>The
 <a href="https://rust-lang.github.io/api-guidelines/predictability.html#constructors-are-static-inherent-methods-c-ctor">API Guidelines' C-CTOR</a>
@@ -1054,23 +1054,23 @@ examples consistently use <code>Self</code> for a constructor's return type — 
             <p>A trait method that must return "whatever type is implementing this
 trait" can only be expressed with <code>Self</code> — writing a concrete type name
 here would be wrong for every implementer except one.</p>
-<pre><code class="rust">trait Buildable {
-    fn empty() -&gt; Self; // &lt;- `Self`: each implementer returns its own type, not a fixed one
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Buildable</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `Self`: each implementer returns its own type, not a fixed one</span>
+<span class="tok-punct">}</span>
 
-struct Playlist { tracks: Vec&lt;String&gt; }
-impl Buildable for Playlist {
-    fn empty() -&gt; Self { // &lt;- resolves to `Playlist` for this impl specifically
-        Playlist { tracks: Vec::new() }
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Playlist</span> <span class="tok-punct">{</span> <span class="tok-variable">tracks</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Buildable</span> <span class="tok-keyword">for</span> <span class="tok-type">Playlist</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- resolves to `Playlist` for this impl specifically</span>
+        <span class="tok-type">Playlist</span> <span class="tok-punct">{</span> <span class="tok-variable">tracks</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct Queue { items: Vec&lt;u32&gt; }
-impl Buildable for Queue {
-    fn empty() -&gt; Self { // &lt;- the same trait method, resolving to `Queue` here instead
-        Queue { items: Vec::new() }
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Queue</span> <span class="tok-punct">{</span> <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Buildable</span> <span class="tok-keyword">for</span> <span class="tok-type">Queue</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the same trait method, resolving to `Queue` here instead</span>
+        <span class="tok-type">Queue</span> <span class="tok-punct">{</span> <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Writing <code>fn empty() -&gt; Playlist</code> directly inside the
 <code>trait Buildable</code> declaration wouldn't type-check for <code>Queue</code>'s
@@ -1103,23 +1103,23 @@ chained fluently before the peripheral is finally initialized.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">`Self` in a builder-style HAL config type</h3>
-            <pre><code class="rust">struct UartConfig {
-    baud_rate: u32,
-    parity: bool,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">UartConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">parity</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl UartConfig {
-    fn new() -&gt; Self { // &lt;- `Self` means `UartConfig` here
-        Self { baud_rate: 9600, parity: false }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">UartConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `Self` means `UartConfig` here</span>
+        <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-number">9600</span><span class="tok-punct">,</span> <span class="tok-variable">parity</span><span class="tok-punct">:</span> <span class="tok-number">false</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn baud_rate(mut self, rate: u32) -&gt; Self { // &lt;- `Self`: consumes and returns the same config type
-        self.baud_rate = rate;
-        self
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">baud_rate</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">rate</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `Self`: consumes and returns the same config type</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">baud_rate</span> <span class="tok-punct">=</span> <span class="tok-variable">rate</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let config = UartConfig::new().baud_rate(115_200);
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">UartConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">baud_rate</span><span class="tok-punct">(</span><span class="tok-number">115_200</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>

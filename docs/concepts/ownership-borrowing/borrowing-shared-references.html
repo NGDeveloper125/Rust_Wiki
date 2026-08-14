@@ -998,12 +998,12 @@ garbage-collected language would.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let s = String::from("hello");
-let r1 = &amp;s;
-let r2 = &amp;s; // &lt;- a second shared reference coexists safely with r1
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">s</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r1</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">s</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r2</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">s</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a second shared reference coexists safely with r1</span>
 
-println!("{r1} and {r2}");
-println!("{s}"); // s is still usable: borrowing never took ownership
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{r1} and {r2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{s}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// s is still usable: borrowing never took ownership</span>
 </code></pre>
 <p><strong>Restriction:</strong> a shared reference only permits reading — mutating
 through it (unless the type uses interior mutability), or mutating the
@@ -1025,21 +1025,21 @@ it is still alive, is rejected at compile time.</p>
             <p>A report function reads two different fields of the same struct through
 separate shared borrows at once — safe because neither borrow grants
 write access.</p>
-<pre><code class="rust">struct Inventory {
-    in_stock: Vec&lt;String&gt;,
-    reserved: Vec&lt;String&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Inventory</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">in_stock</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">reserved</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn report(stock: &amp;[String], reserved: &amp;[String]) {
-    println!("{} in stock, {} reserved", stock.len(), reserved.len());
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">report</span><span class="tok-punct">(</span><span class="tok-variable">stock</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">reserved</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} in stock, {} reserved&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">stock</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">reserved</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let inv = Inventory {
-    in_stock: vec!["widget".into()],
-    reserved: vec!["gadget".into()],
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">inv</span> <span class="tok-punct">=</span> <span class="tok-type">Inventory</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">in_stock</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;widget&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">reserved</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;gadget&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-report(&amp;inv.in_stock, &amp;inv.reserved); // &lt;- two live shared borrows of `inv`, both read-only
+<span class="tok-call-free">report</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">inv</span><span class="tok-punct">.</span><span class="tok-field">in_stock</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">inv</span><span class="tok-punct">.</span><span class="tok-field">reserved</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- two live shared borrows of `inv`, both read-only</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because <code>&amp;T</code> never grants write access, any number of
@@ -1058,18 +1058,18 @@ exclusive.</p>
             <p>Several worker threads need read-only access to the same local data
 without moving it into each thread or reaching for <code>Arc</code> — <code>thread::scope</code>
 lets them borrow it directly.</p>
-<pre><code class="rust">use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let samples = vec![10, 20, 30, 40];
+<span class="tok-keyword">let</span> <span class="tok-variable">samples</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">10</span><span class="tok-punct">,</span> <span class="tok-number">20</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">,</span> <span class="tok-number">40</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-thread::scope(|s| {
-    for chunk in samples.chunks(2) {
-        s.spawn(move || { // &lt;- borrows `chunk`, itself borrowed from `samples`, never owns it
-            let sum: i32 = chunk.iter().sum();
-            println!("chunk sum: {sum}");
-        });
-    }
-}); // every scoped thread is joined here; `samples` is still valid afterward
+<span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">scope</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">s</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">chunk</span> <span class="tok-keyword">in</span> <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">chunks</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- borrows `chunk`, itself borrowed from `samples`, never owns it</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">sum</span><span class="tok-punct">:</span> <span class="tok-type">i32</span> <span class="tok-punct">=</span> <span class="tok-variable">chunk</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;chunk sum: {sum}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// every scoped thread is joined here; `samples` is still valid afterward</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>thread::scope</code> guarantees every spawned thread finishes
@@ -1111,13 +1111,13 @@ handles across driver code is its everyday, lower-stakes case.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct SensorConfig { gain: u8, sample_rate_hz: u16 }
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">gain</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">sample_rate_hz</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">}</span>
 
-fn init_temperature(cfg: &amp;SensorConfig) { /* ... */ }
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init_temperature</span><span class="tok-punct">(</span><span class="tok-variable">cfg</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorConfig</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* ... */</span> <span class="tok-punct">}</span>
 
-let config = SensorConfig { gain: 4, sample_rate_hz: 100 };
-init_temperature(&amp;config); // &lt;- borrows: init_temperature never takes ownership
-println!("{}", config.gain); // config is still usable afterward
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">gain</span><span class="tok-punct">:</span> <span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-variable">sample_rate_hz</span><span class="tok-punct">:</span> <span class="tok-number">100</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-call-free">init_temperature</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- borrows: init_temperature never takes ownership</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-field">gain</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// config is still usable afterward</span>
 </code></pre>
 
       </section>
@@ -1134,14 +1134,14 @@ println!("{}", config.gain); // config is still usable afterward
             <h3 class="scenario-title">Sharing data with multiple references</h3>
             <p>A configuration struct built once in <code>main</code> is read by two separate
 sensor driver init calls, neither of which needs to own it.</p>
-<pre><code class="rust">struct SensorConfig { gain: u8, sample_rate_hz: u16 }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">gain</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">sample_rate_hz</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">}</span>
 
-fn init_temperature(cfg: &amp;SensorConfig) { /* configure the temperature ADC channel */ }
-fn init_humidity(cfg: &amp;SensorConfig) { /* configure the humidity ADC channel */ }
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init_temperature</span><span class="tok-punct">(</span><span class="tok-variable">cfg</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorConfig</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* configure the temperature ADC channel */</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init_humidity</span><span class="tok-punct">(</span><span class="tok-variable">cfg</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorConfig</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* configure the humidity ADC channel */</span> <span class="tok-punct">}</span>
 
-let config = SensorConfig { gain: 4, sample_rate_hz: 100 };
-init_temperature(&amp;config); // &lt;- first shared borrow
-init_humidity(&amp;config);    // &lt;- second shared borrow of the same config, both read-only
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">gain</span><span class="tok-punct">:</span> <span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-variable">sample_rate_hz</span><span class="tok-punct">:</span> <span class="tok-number">100</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-call-free">init_temperature</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- first shared borrow</span>
+<span class="tok-call-free">init_humidity</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- second shared borrow of the same config, both read-only</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> cloning <code>config</code> for each call would duplicate it for no
@@ -1163,18 +1163,18 @@ never granting write access.</p>
             <p>A function that only reads a config should accept a shared reference
 rather than take ownership of it, so the caller can keep using that value
 for every other init call afterward.</p>
-<pre><code class="rust">// PREFER: accept a shared reference — the caller keeps ownership of `cfg`
-fn validate(cfg: &amp;SensorConfig) -&gt; bool {
-    cfg.sample_rate_hz &lt;= 1000
-}
+<pre><code class="rust-hl"><span class="tok-comment">// PREFER: accept a shared reference — the caller keeps ownership of `cfg`</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">validate</span><span class="tok-punct">(</span><span class="tok-variable">cfg</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SensorConfig</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cfg</span><span class="tok-punct">.</span><span class="tok-field">sample_rate_hz</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">1000</span>
+<span class="tok-punct">}</span>
 
-// AVOID: taking ownership here forces the caller to clone `cfg` or give it up
-// fn validate_owned(cfg: SensorConfig) -&gt; bool { cfg.sample_rate_hz &lt;= 1000 }
+<span class="tok-comment">// AVOID: taking ownership here forces the caller to clone `cfg` or give it up</span>
+<span class="tok-comment">// fn validate_owned(cfg: SensorConfig) -&gt; bool { cfg.sample_rate_hz &lt;= 1000 }</span>
 
-let config = SensorConfig { gain: 4, sample_rate_hz: 100 };
-if validate(&amp;config) {
-    init_temperature(&amp;config); // &lt;- config is still available: validate() only ever borrowed it
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">gain</span><span class="tok-punct">:</span> <span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-variable">sample_rate_hz</span><span class="tok-punct">:</span> <span class="tok-number">100</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">if</span> <span class="tok-call-free">validate</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">init_temperature</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- config is still available: validate() only ever borrowed it</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a function that only needs to read should ask for no

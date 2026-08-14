@@ -1001,11 +1001,11 @@ complaints.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let s1 = String::from("hello");
-let s2 = s1; // &lt;- ownership of the String moves from s1 to s2 here
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">s1</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">s2</span> <span class="tok-punct">=</span> <span class="tok-variable">s1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ownership of the String moves from s1 to s2 here</span>
 
-println!("{s2}"); // fine: s2 owns the value now
-// println!("{s1}"); // would fail to compile: s1 no longer owns anything
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{s2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// fine: s2 owns the value now</span>
+<span class="tok-comment">// println!(&quot;{s1}&quot;); // would fail to compile: s1 no longer owns anything</span>
 </code></pre>
 <p><strong>Restriction:</strong> once ownership moves, the old binding (<code>s1</code>) can no
 longer be used — this is enforced at compile time, not left as a runtime
@@ -1026,19 +1026,19 @@ footgun.</p>
             <p>A function that hands an order off to a queue should take ownership
 outright, rather than borrowing it — the queue becomes the new home for
 the value, and the caller genuinely shouldn't keep using it afterward.</p>
-<pre><code class="rust">struct Order {
-    id: u64,
-    total_cents: u64,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn enqueue(order: Order, queue: &amp;mut Vec&lt;Order&gt;) {
-    queue.push(order); // &lt;- ownership of `order` moves into the Vec here
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">enqueue</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-type">Order</span><span class="tok-punct">,</span> <span class="tok-variable">queue</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Order</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">queue</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ownership of `order` moves into the Vec here</span>
+<span class="tok-punct">}</span>
 
-let order = Order { id: 42, total_cents: 1999 };
-let mut pending = Vec::new();
-enqueue(order, &amp;mut pending);
-// order.id would fail to compile here: order was moved into enqueue
+<span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">42</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">1999</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">pending</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-call-free">enqueue</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">pending</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// order.id would fail to compile here: order was moved into enqueue</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> passing ownership instead of a reference is the right
@@ -1058,24 +1058,24 @@ is exactly what enqueueing means here.</p>
             <p>An axum handler needs read access to shared application state on every
 request, but no single request can become that state's owner — other
 concurrent requests need it too.</p>
-<pre><code class="rust">// [dependencies] axum = "0.8", tokio = { version = "1", features = ["full"] }
-use axum::{extract::State, routing::get, Json, Router};
-use std::sync::{atomic::{AtomicU64, Ordering}, Arc};
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] axum = &quot;0.8&quot;, tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">axum</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-module">extract</span><span class="tok-punct">::</span><span class="tok-type">State</span><span class="tok-punct">,</span> <span class="tok-module">routing</span><span class="tok-punct">::</span><span class="tok-variable">get</span><span class="tok-punct">,</span> <span class="tok-type">Json</span><span class="tok-punct">,</span> <span class="tok-type">Router</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-module">atomic</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">AtomicU64</span><span class="tok-punct">,</span> <span class="tok-type">Ordering</span><span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-type">Arc</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct AppState {
-    order_count: AtomicU64,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">AppState</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">order_count</span><span class="tok-punct">:</span> <span class="tok-type">AtomicU64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-async fn order_count(State(state): State&lt;Arc&lt;AppState&gt;&gt;) -&gt; Json&lt;u64&gt; {
-    // &lt;- `state` is a shared, cloned Arc handle, never an owned AppState
-    Json(state.order_count.load(Ordering::Relaxed))
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">order_count</span><span class="tok-punct">(</span><span class="tok-field">State</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">)</span><span class="tok-punct">:</span> <span class="tok-type">State</span><span class="tok-punct">&lt;</span><span class="tok-type">Arc</span><span class="tok-punct">&lt;</span><span class="tok-type">AppState</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Json</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `state` is a shared, cloned Arc handle, never an owned AppState</span>
+    <span class="tok-field">Json</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">.</span><span class="tok-field">order_count</span><span class="tok-punct">.</span><span class="tok-call-method">load</span><span class="tok-punct">(</span><span class="tok-type">Ordering</span><span class="tok-punct">::</span><span class="tok-field">Relaxed</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn app(state: Arc&lt;AppState&gt;) -&gt; Router {
-    Router::new()
-        .route("/orders/count", get(order_count))
-        .with_state(state) // &lt;- each request gets a cheap Arc clone, never ownership of the original
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">app</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-type">Arc</span><span class="tok-punct">&lt;</span><span class="tok-type">AppState</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Router</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Router</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">route</span><span class="tok-punct">(</span><span class="tok-string">&quot;/orders/count&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">get</span><span class="tok-punct">(</span><span class="tok-variable">order_count</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">with_state</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- each request gets a cheap Arc clone, never ownership of the original</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> handler state must outlive any single request and stay
@@ -1094,25 +1094,25 @@ an <code>Arc</code> per request rather than moving the state in, per the
             <p>Choosing a method's receiver — owned <code>self</code>, <code>&amp;self</code>, or <code>&amp;mut self</code> — is
 part of the API's contract, not an implementation detail: it tells the
 caller exactly what happens to their ownership when they call it.</p>
-<pre><code class="rust">struct RequestBuilder {
-    url: String,
-    retries: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RequestBuilder</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">url</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RequestBuilder {
-    fn retries(mut self, n: u32) -&gt; Self { // &lt;- owned self: enables method chaining, consumes the builder
-        self.retries = n;
-        self
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">RequestBuilder</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">retries</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- owned self: enables method chaining, consumes the builder</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">retries</span> <span class="tok-punct">=</span> <span class="tok-variable">n</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span>
+    <span class="tok-punct">}</span>
 
-    fn url(&amp;self) -&gt; &amp;str { // &lt;- &amp;self: read-only inspection, caller keeps ownership
-        &amp;self.url
-    }
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">url</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-type-return">str</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- &amp;self: read-only inspection, caller keeps ownership</span>
+        <span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">url</span>
+    <span class="tok-punct">}</span>
 
-    fn reset_retries(&amp;mut self) { // &lt;- &amp;mut self: in-place mutation, no ownership change
-        self.retries = 0;
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">reset_retries</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- &amp;mut self: in-place mutation, no ownership change</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">retries</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> owned <code>self</code> signals "this call consumes and reshapes
@@ -1169,26 +1169,26 @@ loses the ability to touch it directly — see
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Gpioa; // stand-in for a PAC-generated peripheral type
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Gpioa</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a PAC-generated peripheral type</span>
 
-struct Peripherals { gpioa: Gpioa }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Peripherals</span> <span class="tok-punct">{</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span> <span class="tok-punct">}</span>
 
-static TAKEN: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+<span class="tok-keyword">static</span> <span class="tok-constant">TAKEN</span><span class="tok-punct">:</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-module">atomic</span><span class="tok-punct">::</span><span class="tok-type">AtomicBool</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-module">atomic</span><span class="tok-punct">::</span><span class="tok-type">AtomicBool</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">false</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl Peripherals {
-    fn take() -&gt; Option&lt;Self&gt; {
-        if TAKEN.swap(true, core::sync::atomic::Ordering::AcqRel) {
-            None // &lt;- already taken once: no second owner of the hardware is possible
-        } else {
-            Some(Peripherals { gpioa: Gpioa })
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Peripherals</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-constant">TAKEN</span><span class="tok-punct">.</span><span class="tok-call-method">swap</span><span class="tok-punct">(</span><span class="tok-number">true</span><span class="tok-punct">,</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-module">atomic</span><span class="tok-punct">::</span><span class="tok-type">Ordering</span><span class="tok-punct">::</span><span class="tok-field">AcqRel</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-field">None</span> <span class="tok-comment tok-anno">// &lt;- already taken once: no second owner of the hardware is possible</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">Peripherals</span> <span class="tok-punct">{</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let p1 = Peripherals::take(); // Some(...): first call succeeds
-let p2 = Peripherals::take(); // None: the hardware is already owned
-assert!(p1.is_some());
-assert!(p2.is_none());
+<span class="tok-keyword">let</span> <span class="tok-variable">p1</span> <span class="tok-punct">=</span> <span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// Some(...): first call succeeds</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">p2</span> <span class="tok-punct">=</span> <span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// None: the hardware is already owned</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">p1</span><span class="tok-punct">.</span><span class="tok-call-method">is_some</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">p2</span><span class="tok-punct">.</span><span class="tok-call-method">is_none</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1206,22 +1206,22 @@ assert!(p2.is_none());
             <p>Taking the chip's <code>Peripherals</code> once and moving individual peripherals
 into the drivers that use them chains single ownership all the way from
 "raw hardware" to "the one driver responsible for it."</p>
-<pre><code class="rust">struct Gpioa; // stand-in for a PAC-generated peripheral type
-struct Peripherals { gpioa: Gpioa }
-struct Led { pin: Gpioa }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Gpioa</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a PAC-generated peripheral type</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Peripherals</span> <span class="tok-punct">{</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Led</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span> <span class="tok-punct">}</span>
 
-impl Peripherals {
-    fn take() -&gt; Option&lt;Self&gt; { Some(Peripherals { gpioa: Gpioa }) } // simplified for this example
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Peripherals</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">Peripherals</span> <span class="tok-punct">{</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span> <span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment">// simplified for this example</span>
+<span class="tok-punct">}</span>
 
-impl Led {
-    fn new(pin: Gpioa) -&gt; Self { // &lt;- ownership moves again: the Led is now the pin's sole owner
-        Led { pin }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Led</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- ownership moves again: the Led is now the pin's sole owner</span>
+        <span class="tok-type">Led</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let peripherals = Peripherals::take().unwrap();
-let led = Led::new(peripherals.gpioa); // &lt;- peripherals.gpioa moves into led; it can't be reused from `peripherals`
+<span class="tok-keyword">let</span> <span class="tok-variable">peripherals</span> <span class="tok-punct">=</span> <span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">led</span> <span class="tok-punct">=</span> <span class="tok-type">Led</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">peripherals</span><span class="tok-punct">.</span><span class="tok-field">gpioa</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- peripherals.gpioa moves into led; it can't be reused from `peripherals`</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> each move narrows who is responsible for the hardware —
@@ -1244,26 +1244,26 @@ instead of into one collection.</p>
 twice — including from two different execution contexts, such as <code>main</code>
 and an interrupt handler — so its implementation needs to be atomic, not
 just "check a boolean."</p>
-<pre><code class="rust">use core::sync::atomic::{AtomicBool, Ordering};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-module">atomic</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">AtomicBool</span><span class="tok-punct">,</span> <span class="tok-type">Ordering</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct Gpioa; // stand-in for a PAC-generated peripheral type
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Gpioa</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a PAC-generated peripheral type</span>
 
-pub struct Peripherals {
-    pub gpioa: Gpioa,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Peripherals</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-static TAKEN: AtomicBool = AtomicBool::new(false);
+<span class="tok-keyword">static</span> <span class="tok-constant">TAKEN</span><span class="tok-punct">:</span> <span class="tok-type">AtomicBool</span> <span class="tok-punct">=</span> <span class="tok-type">AtomicBool</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">false</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl Peripherals {
-    pub fn take() -&gt; Option&lt;Self&gt; {
-        // &lt;- swap is a single atomic operation: two simultaneous callers can't both see `false`
-        if TAKEN.swap(true, Ordering::AcqRel) {
-            None
-        } else {
-            Some(Peripherals { gpioa: Gpioa })
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Peripherals</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- swap is a single atomic operation: two simultaneous callers can't both see `false`</span>
+        <span class="tok-keyword">if</span> <span class="tok-constant">TAKEN</span><span class="tok-punct">.</span><span class="tok-call-method">swap</span><span class="tok-punct">(</span><span class="tok-number">true</span><span class="tok-punct">,</span> <span class="tok-type">Ordering</span><span class="tok-punct">::</span><span class="tok-field">AcqRel</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-field">None</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">Peripherals</span> <span class="tok-punct">{</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">Gpioa</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>Option&lt;Self&gt;</code> from a plain, safe function —

@@ -1000,15 +1000,15 @@ for bounds that get too long to read comfortably inline.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn largest&lt;T: PartialOrd&gt;(items: &amp;[T]) -&gt; &amp;T { // &lt;- bound: only types supporting `&gt;` allowed
-    let mut m = &amp;items[0];
-    for item in items {
-        if item &gt; m { m = item; }
-    }
-    m
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">largest</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">PartialOrd</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-generic-param">T</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- bound: only types supporting `&gt;` allowed</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">m</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">items</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">item</span> <span class="tok-keyword">in</span> <span class="tok-variable">items</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">item</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">m</span> <span class="tok-punct">{</span> <span class="tok-variable">m</span> <span class="tok-punct">=</span> <span class="tok-variable">item</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">m</span>
+<span class="tok-punct">}</span>
 
-largest(&amp;[3, 7, 2]);
+<span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1026,17 +1026,17 @@ largest(&amp;[3, 7, 2]);
             <p>Once a generic function needs more than one bound, or the bound list gets
 long, moving it to a <code>where</code> clause keeps the signature itself scannable
 without changing what's required.</p>
-<pre><code class="rust">fn unique_sorted&lt;T&gt;(readings: &amp;[T]) -&gt; Vec&lt;T&gt;
-where
-    T: Ord + Clone, // &lt;- bounds relocated to `where`, still constraining T the same way
-{
-    let mut sorted: Vec&lt;T&gt; = readings.to_vec(); // needs Clone
-    sorted.sort();                              // needs Ord
-    sorted.dedup();
-    sorted
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">unique_sorted</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-generic-param">T</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-type">Ord</span> <span class="tok-punct">+</span> <span class="tok-type">Clone</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- bounds relocated to `where`, still constraining T the same way</span>
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sorted</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">to_vec</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// needs Clone</span>
+    <span class="tok-variable">sorted</span><span class="tok-punct">.</span><span class="tok-call-method">sort</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>                              <span class="tok-comment">// needs Ord</span>
+    <span class="tok-variable">sorted</span><span class="tok-punct">.</span><span class="tok-call-method">dedup</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">sorted</span>
+<span class="tok-punct">}</span>
 
-unique_sorted(&amp;[3, 1, 3, 2, 1]);
+<span class="tok-call-free">unique_sorted</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1055,15 +1055,15 @@ signature) from "what its inputs must support" (the bounds).</p>
             <p>A generic function should only require what its own body actually uses —
 bounding it against a broader trait than necessary forces every caller's
 type to satisfy requirements the function never touches.</p>
-<pre><code class="rust">// AVOID: over-constrained — Clone is required but never used
-fn describe_avoid&lt;T: Clone + std::fmt::Debug&gt;(item: &amp;T) -&gt; String {
-    format!("{item:?}")
-}
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: over-constrained — Clone is required but never used</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe_avoid</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Clone</span> <span class="tok-punct">+</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Debug</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{item:?}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// PREFER: bound only what the body needs
-fn describe&lt;T: std::fmt::Debug&gt;(item: &amp;T) -&gt; String { // &lt;- Debug is the only bound this fn needs
-    format!("{item:?}")
-}
+<span class="tok-comment">// PREFER: bound only what the body needs</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Debug</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- Debug is the only bound this fn needs</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{item:?}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> minimal bounds keep the function usable by the widest
@@ -1112,15 +1112,15 @@ different trait parameters entirely (a display driver bounded by both
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait OutputPin {
-    type Error;
-    fn set_high(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt;;
-    fn set_low(&amp;mut self) -&gt; Result&lt;(), Self::Error&gt;;
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">type</span> <span class="tok-type-def">Error</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_low</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P, on: bool) -&gt; Result&lt;(), P::Error&gt; { // &lt;- bound: only pin types implementing OutputPin allowed
-    if on { pin.set_high() } else { pin.set_low() }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">,</span> <span class="tok-variable">on</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">P</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- bound: only pin types implementing OutputPin allowed</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">on</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1139,16 +1139,16 @@ fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P, on: bool) -&gt; Result&lt;(), P::E
 once — a data bus and a separate chip-select line — so it's bounded over
 two <code>embedded-hal</code> traits, one per generic parameter, combined in a
 <code>where</code> clause once the list is long enough to hurt readability inline.</p>
-<pre><code class="rust">fn write_frame&lt;BUS, CS&gt;(bus: &amp;mut BUS, cs: &amp;mut CS, frame: &amp;[u8]) -&gt; Result&lt;(), BUS::Error&gt;
-where
-    BUS: SpiBus,        // &lt;- bound: the data line must support SPI transfers
-    CS: OutputPin,       // &lt;- bound: the chip-select line must support digital output
-{
-    cs.set_low().ok();
-    bus.write(frame)?;
-    cs.set_high().ok();
-    Ok(())
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">write_frame</span><span class="tok-punct">&lt;</span><span class="tok-constant">BUS</span><span class="tok-punct">,</span> <span class="tok-constant">CS</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">BUS</span><span class="tok-punct">,</span> <span class="tok-variable">cs</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">CS</span><span class="tok-punct">,</span> <span class="tok-variable">frame</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-constant">BUS</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-constant">BUS</span><span class="tok-punct">:</span> <span class="tok-type">SpiBus</span><span class="tok-punct">,</span>        <span class="tok-comment tok-anno">// &lt;- bound: the data line must support SPI transfers</span>
+    <span class="tok-constant">CS</span><span class="tok-punct">:</span> <span class="tok-type">OutputPin</span><span class="tok-punct">,</span>       <span class="tok-comment tok-anno">// &lt;- bound: the chip-select line must support digital output</span>
+<span class="tok-punct">{</span>
+    <span class="tok-variable">cs</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">bus</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-variable">frame</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-variable">cs</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> bounding each generic parameter by the narrowest
@@ -1169,12 +1169,12 @@ meant to buy.</p>
 type lets <code>?</code> propagate that peripheral's own error type straight out of
 the function, instead of the function inventing an error type of its
 own.</p>
-<pre><code class="rust">fn blink_twice&lt;P: OutputPin&gt;(pin: &amp;mut P) -&gt; Result&lt;(), P::Error&gt; {
-    pin.set_high()?; // &lt;- P::Error only exists because of the P: OutputPin bound
-    pin.set_low()?;
-    pin.set_high()?;
-    pin.set_low()
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">blink_twice</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">P</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- P::Error only exists because of the P: OutputPin bound</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> letting each concrete pin type's own <code>Error</code> flow
@@ -1195,15 +1195,15 @@ without a conversion step.</p>
 narrowest <code>embedded-hal</code> trait its body actually calls — requiring a
 broader trait than necessary forces every board's pin/bus type to
 implement methods the function never uses.</p>
-<pre><code class="rust">// AVOID: bounds by a broader trait than the body needs
-fn blink_avoid&lt;P: OutputPin + InputPin&gt;(pin: &amp;mut P) -&gt; Result&lt;(), P::Error&gt; {
-    pin.set_high()
-}
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: bounds by a broader trait than the body needs</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink_avoid</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span> <span class="tok-punct">+</span> <span class="tok-type">InputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">P</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// PREFER: bound only what the body calls
-fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P) -&gt; Result&lt;(), P::Error&gt; { // &lt;- OutputPin is the only capability this fn uses
-    pin.set_high()
-}
+<span class="tok-comment">// PREFER: bound only what the body calls</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">P</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- OutputPin is the only capability this fn uses</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an over-bounded driver function can only be called with

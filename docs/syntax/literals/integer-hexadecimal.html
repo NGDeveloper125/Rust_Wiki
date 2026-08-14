@@ -992,7 +992,7 @@ Underscores are allowed between digits, including immediately after the
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring a memory address</h3>
-            <pre><code class="rust">let addr = 0x2000; // &lt;- `0x` prefix marks a base-16 (hexadecimal) integer literal
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">addr</span> <span class="tok-punct">=</span> <span class="tok-number">0x2000</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `0x` prefix marks a base-16 (hexadecimal) integer literal</span>
 </code></pre>
 <p><strong>Restriction:</strong> only the hex <em>digits</em> <code>0</code>–<code>9</code> and <code>a</code>–<code>f</code>/<code>A</code>–<code>F</code> may
 appear after the <code>0x</code> prefix (underscores and a type suffix like
@@ -1003,16 +1003,16 @@ appear after the <code>0x</code> prefix (underscores and a type suffix like
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>Hex groups bits into 4-bit nibbles, so a multi-bit register mask reads as
 "which nibble, which bits" at a glance — far harder to see in decimal.</p>
-<pre><code class="rust">const TX_ENABLE: u32   = 0x0000_0001;
-const RX_ENABLE: u32   = 0x0000_0002;
-const PARITY_EVEN: u32 = 0x0000_0004;
-const BAUD_MASK: u32   = 0x0000_0F00; // &lt;- hex literal: a multi-bit mask, nibble boundaries stay visible
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">TX_ENABLE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span>   <span class="tok-punct">=</span> <span class="tok-number">0x0000_0001</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">RX_ENABLE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span>   <span class="tok-punct">=</span> <span class="tok-number">0x0000_0002</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">PARITY_EVEN</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x0000_0004</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">BAUD_MASK</span><span class="tok-punct">:</span> <span class="tok-type">u32</span>   <span class="tok-punct">=</span> <span class="tok-number">0x0000_0F00</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- hex literal: a multi-bit mask, nibble boundaries stay visible</span>
 
-fn configure(control: u32) -&gt; u32 {
-    control | TX_ENABLE | RX_ENABLE | PARITY_EVEN
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure</span><span class="tok-punct">(</span><span class="tok-variable">control</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">control</span> <span class="tok-punct">|</span> <span class="tok-constant">TX_ENABLE</span> <span class="tok-punct">|</span> <span class="tok-constant">RX_ENABLE</span> <span class="tok-punct">|</span> <span class="tok-constant">PARITY_EVEN</span>
+<span class="tok-punct">}</span>
 
-let baud_bits = configure(0) &amp; BAUD_MASK;
+<span class="tok-keyword">let</span> <span class="tok-variable">baud_bits</span> <span class="tok-punct">=</span> <span class="tok-call-free">configure</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;</span> <span class="tok-constant">BAUD_MASK</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Hex digits map exactly onto 4-bit groups, so a mask like
 <code>0x0F00</code> communicates "bits 8–11" directly — the readability reason
@@ -1025,14 +1025,14 @@ decimal.</p>
             <p>Power-of-two sizes and addresses read as recognizable patterns in hex in
 a way their decimal equivalents don't, which matters for anything doing
 alignment arithmetic.</p>
-<pre><code class="rust">const PAGE_SIZE: usize = 0x1000; // &lt;- hex literal: a power-of-two boundary reads clearly in hex
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">PAGE_SIZE</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">0x1000</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- hex literal: a power-of-two boundary reads clearly in hex</span>
 
-fn is_page_aligned(addr: usize) -&gt; bool {
-    addr &amp; (PAGE_SIZE - 1) == 0
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_page_aligned</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">addr</span> <span class="tok-punct">&amp;</span> <span class="tok-punct">(</span><span class="tok-constant">PAGE_SIZE</span> <span class="tok-punct">-</span> <span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">==</span> <span class="tok-number">0</span>
+<span class="tok-punct">}</span>
 
-assert!(is_page_aligned(0x4000));
-assert!(!is_page_aligned(0x4010));
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">is_page_aligned</span><span class="tok-punct">(</span><span class="tok-number">0x4000</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-call-free">is_page_aligned</span><span class="tok-punct">(</span><span class="tok-number">0x4010</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>0x1000</code> and <code>0x4000</code> are instantly recognizable as
 round, aligned values in a way <code>4096</code> and <code>16384</code> aren't — which is why
@@ -1072,15 +1072,15 @@ hex for exactly this reason.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring a peripheral's base address from a reference manual</h3>
-            <pre><code class="rust">const GPIOA_BASE: u32 = 0x4001_0800; // &lt;- hex literal: matches the address exactly as printed in the MCU reference manual
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_0800</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- hex literal: matches the address exactly as printed in the MCU reference manual</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Deriving a register's address from a base and an offset</h3>
-            <pre><code class="rust">const RCC_BASE: u32           = 0x4002_1000;
-const RCC_AHB1ENR_OFFSET: u32 = 0x30;
-const RCC_AHB1ENR: u32 = RCC_BASE + RCC_AHB1ENR_OFFSET; // &lt;- hex literals: base + offset, exactly as the reference manual documents it
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">RCC_BASE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span>           <span class="tok-punct">=</span> <span class="tok-number">0x4002_1000</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">RCC_AHB1ENR_OFFSET</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x30</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">RCC_AHB1ENR</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-constant">RCC_BASE</span> <span class="tok-punct">+</span> <span class="tok-constant">RCC_AHB1ENR_OFFSET</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- hex literals: base + offset, exactly as the reference manual documents it</span>
 </code></pre>
 
           </div>

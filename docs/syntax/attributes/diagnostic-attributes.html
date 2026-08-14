@@ -1018,13 +1018,13 @@ recommend.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Customizing the error message for an unimplemented trait</h3>
-            <pre><code class="rust">#[diagnostic::on_unimplemented(
-    message = "`{Self}` cannot be rendered to the screen",
-    label = "missing `Renderable` implementation"
-)]
-trait Renderable {
-    fn render(&amp;self) -&gt; String;
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[diagnostic::on_unimplemented(
+    message = &quot;`{Self}` cannot be rendered to the screen&quot;,
+    label = &quot;missing `Renderable` implementation&quot;
+)]</span>
+<span class="tok-keyword">trait</span> <span class="tok-type-def">Renderable</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">render</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1034,30 +1034,30 @@ trait Renderable {
 application; a plain, generic trait-bound error doesn't tell a newcomer
 <em>what</em> is missing or <em>why</em> — a custom <code>on_unimplemented</code> message speaks
 directly to the framework's own vocabulary instead.</p>
-<pre><code class="rust">#[diagnostic::on_unimplemented(
-    message = "`{Self}` is not a `Widget` — implement `Widget` to use it in a layout",
-    label = "not a `Widget`"
-)]
-trait Widget {
-    fn measure(&amp;self) -&gt; (u32, u32);
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[diagnostic::on_unimplemented(
+    message = &quot;`{Self}` is not a `Widget` — implement `Widget` to use it in a layout&quot;,
+    label = &quot;not a `Widget`&quot;
+)]</span>
+<span class="tok-keyword">trait</span> <span class="tok-type-def">Widget</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">measure</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Label {
-    text: String,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Label</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Widget for Label {
-    fn measure(&amp;self) -&gt; (u32, u32) {
-        (self.text.len() as u32 * 8, 16)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Widget</span> <span class="tok-keyword">for</span> <span class="tok-type">Label</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">measure</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">text</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">*</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn add_to_layout&lt;W: Widget&gt;(_widget: W) {}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">add_to_layout</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">W</span><span class="tok-punct">:</span> <span class="tok-trait">Widget</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">_widget</span><span class="tok-punct">:</span> <span class="tok-generic-param">W</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-fn build_layout() {
-    add_to_layout(Label { text: "Hello".to_string() }); // &lt;- compiles: Label implements Widget
-    // add_to_layout(42); // would show the custom message above instead of a generic trait-bound error
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_layout</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">add_to_layout</span><span class="tok-punct">(</span><span class="tok-type">Label</span> <span class="tok-punct">{</span> <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Hello&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- compiles: Label implements Widget</span>
+    <span class="tok-comment">// add_to_layout(42); // would show the custom message above instead of a generic trait-bound error</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>A generic "the trait bound <code>i32: Widget</code> is not
 satisfied" tells a reader <em>that</em> something is wrong but not <em>what to do</em>
@@ -1076,16 +1076,16 @@ types and a broad blanket impl covering anything convertible through
 <code>Display</code> — when a genuinely unrelated type fails to implement the
 trait, suggesting the blanket impl as "the fix" would be more confusing
 than helpful, since the real gap is that the type isn't <code>Display</code> either.</p>
-<pre><code class="rust">trait ToWireFormat {
-    fn to_wire(&amp;self) -&gt; String;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">ToWireFormat</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">to_wire</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[diagnostic::do_not_recommend] // &lt;- don't suggest this blanket impl as the fix for unrelated failures
-impl&lt;T: std::fmt::Display&gt; ToWireFormat for T {
-    fn to_wire(&amp;self) -&gt; String {
-        self.to_string()
-    }
-}
+<span class="tok-attribute">#[diagnostic::do_not_recommend]</span> <span class="tok-comment tok-anno">// &lt;- don't suggest this blanket impl as the fix for unrelated failures</span>
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Display</span><span class="tok-punct">&gt;</span> <span class="tok-trait">ToWireFormat</span> <span class="tok-keyword">for</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">to_wire</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without <code>do_not_recommend</code>, a compiler error involving
 some type that implements neither <code>Display</code> nor <code>ToWireFormat</code> directly
@@ -1126,13 +1126,13 @@ doesn't implement it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A HAL trait with a custom message for unimplemented pin types</h3>
-            <pre><code class="rust">#[diagnostic::on_unimplemented(
-    message = "`{Self}` is not configured as an output pin",
-    label = "missing `OutputPin` implementation"
-)]
-trait OutputPin {
-    fn set_high(&amp;mut self);
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[diagnostic::on_unimplemented(
+    message = &quot;`{Self}` is not configured as an output pin&quot;,
+    label = &quot;missing `OutputPin` implementation&quot;
+)]</span>
+<span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

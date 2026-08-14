@@ -1009,8 +1009,8 @@ unlike <a href="../../syntax/keywords/become.html"><code>become</code></a> or <a
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Using the raw-identifier escape hatch</h3>
-            <pre><code class="rust">let box = 5;     // error: expected identifier, found reserved keyword `box`
-let r#box = 5;   // ok: the raw-identifier form escapes the reservation
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">box</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>     <span class="tok-comment">// error: expected identifier, found reserved keyword `box`</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r</span><span class="tok-punct">#</span><span class="tok-variable">box</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>   <span class="tok-comment">// ok: the raw-identifier form escapes the reservation</span>
 </code></pre>
 
           </div>
@@ -1018,11 +1018,11 @@ let r#box = 5;   // ok: the raw-identifier form escapes the reservation
             <h3 class="scenario-title">Boxing and heap allocation</h3>
             <p>Today's real way to heap-allocate a value is the ordinary <code>Box::new</code>
 associated function — no reserved keyword involved.</p>
-<pre><code class="rust">struct SensorFrame {
-    readings: [f64; 64], // large enough that boxing it avoids a big stack copy
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorFrame</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">f64</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment">// large enough that boxing it avoids a big stack copy</span>
+<span class="tok-punct">}</span>
 
-let frame = Box::new(SensorFrame { readings: [0.0; 64] }); // &lt;- today's real heap-allocation syntax
+<span class="tok-keyword">let</span> <span class="tok-variable">frame</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">SensorFrame</span> <span class="tok-punct">{</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">0.0</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- today's real heap-allocation syntax</span>
 </code></pre>
 <p><code>Box::new</code> is a perfectly ordinary function call, not
 special syntax, and the compiler frequently optimizes away the
@@ -1072,32 +1072,32 @@ boxed, dispatched with a <code>match</code> instead of a vtable.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">`Box::new` once `alloc` is configured</h3>
-            <pre><code class="rust">extern crate alloc;
-use alloc::boxed::Box;
+            <pre><code class="rust-hl"><span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">boxed</span><span class="tok-punct">::</span><span class="tok-type">Box</span><span class="tok-punct">;</span>
 
-struct SensorFrame {
-    readings: [f64; 64],
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorFrame</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">f64</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn make_frame() -&gt; Box&lt;SensorFrame&gt; {
-    Box::new(SensorFrame { readings: [0.0; 64] }) // &lt;- identical to hosted Rust once alloc + a #[global_allocator] exist
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">make_frame</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-type-return">SensorFrame</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">SensorFrame</span> <span class="tok-punct">{</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">0.0</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- identical to hosted Rust once alloc + a #[global_allocator] exist</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Avoiding heap indirection with a fixed-size enum instead of `Box&lt;dyn Trait&gt;`</h3>
-            <pre><code class="rust">enum Command { // &lt;- fixed-size enum in place of Box&lt;dyn Trait&gt;: no allocator needed, dispatch via match
-    SetPin { pin: u8, high: bool },
-    ReadAdc { channel: u8 },
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Command</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- fixed-size enum in place of Box&lt;dyn Trait&gt;: no allocator needed, dispatch via match</span>
+    <span class="tok-type">SetPin</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">:</span> <span class="tok-type">bool</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">ReadAdc</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn dispatch(cmd: Command) {
-    match cmd {
-        Command::SetPin { pin, high } =&gt; { let _ = (pin, high); }
-        Command::ReadAdc { channel } =&gt; { let _ = channel; }
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">dispatch</span><span class="tok-punct">(</span><span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-type">Command</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">cmd</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">SetPin</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">high</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">high</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+        <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-field">ReadAdc</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">channel</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

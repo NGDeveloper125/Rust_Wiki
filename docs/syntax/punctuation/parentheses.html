@@ -1003,9 +1003,9 @@ tuple.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Grouping, calling, and building tuples</h3>
-            <pre><code class="rust">fn add(a: i32, b: i32) -&gt; i32 { a + b } // &lt;- `( )` groups the parameter list
-let sum = add(1, 2); // &lt;- `( )` here is the call, passing the arguments
-let pair = (1, "a"); // &lt;- `( )` here builds a tuple value
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">add</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span> <span class="tok-punct">+</span> <span class="tok-variable">b</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- `( )` groups the parameter list</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sum</span> <span class="tok-punct">=</span> <span class="tok-call-free">add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `( )` here is the call, passing the arguments</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">pair</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;a&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `( )` here builds a tuple value</span>
 </code></pre>
 
           </div>
@@ -1015,13 +1015,13 @@ let pair = (1, "a"); // &lt;- `( )` here builds a tuple value
 like a function — the same <code>( )</code> syntax as any other function call,
 which is what makes <code>Some</code>/<code>Ok</code>/a tuple struct usable directly as a
 function value in iterator adaptors.</p>
-<pre><code class="rust">struct Meters(f64);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Meters</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let distance = Meters(4.2); // &lt;- `( )` here constructs a tuple struct
-let readings: Vec&lt;Option&lt;f64&gt;&gt; = vec![1.0, 2.0]
-    .into_iter()
-    .map(Some) // &lt;- `Some` used directly as a fn value, thanks to this same `( )` construction rule
-    .collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">distance</span> <span class="tok-punct">=</span> <span class="tok-field">Meters</span><span class="tok-punct">(</span><span class="tok-number">4.2</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `( )` here constructs a tuple struct</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1.0</span><span class="tok-punct">,</span> <span class="tok-number">2.0</span><span class="tok-punct">]</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-field">Some</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `Some` used directly as a fn value, thanks to this same `( )` construction rule</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Because tuple-struct/variant construction really is a
 function call under the hood, the constructor can be passed anywhere a
@@ -1033,16 +1033,16 @@ less closure to write and read.</p>
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>The same <code>( )</code> used to construct a tuple struct or variant is used, in
 reverse, to destructure one inside a <code>match</code> arm or <code>if let</code>.</p>
-<pre><code class="rust">enum Shape {
-    Circle(f64),
-    Rectangle(f64, f64),
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Circle</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Rectangle</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let shape = Shape::Circle(2.0); // &lt;- `( )` constructs the variant...
-let area = match shape {
-    Shape::Circle(r) =&gt; std::f64::consts::PI * r * r, // &lt;- ...and `( )` destructures it again here
-    Shape::Rectangle(w, h) =&gt; w * h,
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">shape</span> <span class="tok-punct">=</span> <span class="tok-type">Shape</span><span class="tok-punct">::</span><span class="tok-field">Circle</span><span class="tok-punct">(</span><span class="tok-number">2.0</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `( )` constructs the variant...</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">area</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-variable">shape</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Shape</span><span class="tok-punct">::</span><span class="tok-field">Circle</span><span class="tok-punct">(</span><span class="tok-variable">r</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">f64</span><span class="tok-punct">::</span><span class="tok-module">consts</span><span class="tok-punct">::</span><span class="tok-constant">PI</span> <span class="tok-punct">*</span> <span class="tok-variable">r</span> <span class="tok-punct">*</span> <span class="tok-variable">r</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- ...and `( )` destructures it again here</span>
+    <span class="tok-type">Shape</span><span class="tok-punct">::</span><span class="tok-field">Rectangle</span><span class="tok-punct">(</span><span class="tok-variable">w</span><span class="tok-punct">,</span> <span class="tok-variable">h</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">w</span> <span class="tok-punct">*</span> <span class="tok-variable">h</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Matching gives each field a name at the point of use
 (<code>r</code>, <code>w</code>, <code>h</code>) instead of reaching into the value with <code>.0</code>/<code>.1</code>
@@ -1077,18 +1077,18 @@ is usually returned and destructured as a tuple.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Taking peripherals and constructing a driver</h3>
-            <pre><code class="rust">let dp = pac::Peripherals::take().unwrap(); // &lt;- `( )` here is the `.take()` call
-let mut led = Led::new(dp.GPIOA); // &lt;- `( )` here constructs the driver
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">dp</span> <span class="tok-punct">=</span> <span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `( )` here is the `.take()` call</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">led</span> <span class="tok-punct">=</span> <span class="tok-type">Led</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">dp</span><span class="tok-punct">.</span><span class="tok-field">GPIOA</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `( )` here constructs the driver</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Building and destructuring a timer config tuple</h3>
-            <pre><code class="rust">fn timer_config() -&gt; (u32, u8) {
-    (16_000_000, 8) // &lt;- `( )` builds a tuple: (clock_hz, prescaler)
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">timer_config</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-number">16_000_000</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `( )` builds a tuple: (clock_hz, prescaler)</span>
+<span class="tok-punct">}</span>
 
-let (clock_hz, prescaler) = timer_config(); // &lt;- `( )` destructures it back into two bindings
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">clock_hz</span><span class="tok-punct">,</span> <span class="tok-variable">prescaler</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-call-free">timer_config</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `( )` destructures it back into two bindings</span>
 </code></pre>
 
           </div>

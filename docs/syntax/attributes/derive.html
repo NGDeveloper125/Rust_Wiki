@@ -1019,12 +1019,12 @@ attribute syntax.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Deriving common traits mechanically</h3>
-            <pre><code class="rust">#[derive(Debug, Clone, PartialEq)] // &lt;- generates Debug, Clone, and PartialEq impls mechanically
-struct Point { x: f64, y: f64 }
+            <pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, Clone, PartialEq)]</span> <span class="tok-comment tok-anno">// &lt;- generates Debug, Clone, and PartialEq impls mechanically</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Point</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 
-let a = Point { x: 1.0, y: 2.0 };
-let b = a.clone();
-println!("{:?} {}", b, a == b);
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-type">Point</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-number">1.0</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-number">2.0</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{:?} {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">,</span> <span class="tok-variable">a</span> <span class="tok-punct">==</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1034,18 +1034,18 @@ println!("{:?} {}", b, a == b);
 <code>impl</code> once the mechanical, field-by-field behavior stops being correct,
 keeps a type's trait implementations both terse and honest about when
 something custom is actually happening.</p>
-<pre><code class="rust">#[derive(Debug, Clone)] // &lt;- straightforward mechanical impls: nothing custom needed here
-struct SensorReading {
-    celsius: f64,
-    measured_at: u64,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, Clone)]</span> <span class="tok-comment tok-anno">// &lt;- straightforward mechanical impls: nothing custom needed here</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">measured_at</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-// PartialEq needs to be hand-written: measured_at shouldn't count toward equality
-impl PartialEq for SensorReading {
-    fn eq(&amp;self, other: &amp;Self) -&gt; bool {
-        self.celsius == other.celsius
-    }
-}
+<span class="tok-comment">// PartialEq needs to be hand-written: measured_at shouldn't count toward equality</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">PartialEq</span> <span class="tok-keyword">for</span> <span class="tok-type">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">eq</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">other</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">Self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">celsius</span> <span class="tok-punct">==</span> <span class="tok-variable">other</span><span class="tok-punct">.</span><span class="tok-field">celsius</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#[derive(PartialEq)]</code> would compare <code>measured_at</code> too,
 which isn't the intended meaning of equality here — the
@@ -1060,14 +1060,14 @@ wanted.</p>
             <p><code>assert_eq!</code> requires both <code>PartialEq</code> (to compare the two sides) and
 <code>Debug</code> (to print them in the failure message) — deriving both together
 is what makes an ordinary equality assertion in a test compile at all.</p>
-<pre><code class="rust">#[derive(Debug, PartialEq)] // &lt;- both needed: PartialEq for `==`, Debug for the panic message on mismatch
-struct Order { id: u32, total_cents: u32 }
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, PartialEq)]</span> <span class="tok-comment tok-anno">// &lt;- both needed: PartialEq for `==`, Debug for the panic message on mismatch</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span>
 
-#[test]
-fn totals_order_correctly() {
-    let order = Order { id: 1, total_cents: 1999 };
-    assert_eq!(order, Order { id: 1, total_cents: 1999 });
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">totals_order_correctly</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">order</span> <span class="tok-punct">=</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">1999</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">,</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-number">1999</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without <code>#[derive(Debug)]</code>, this fails to <em>compile</em>,
 not just to pass — <code>assert_eq!</code> requires <code>Debug</code> on both sides to build
@@ -1115,22 +1115,22 @@ or only used during development.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Deriving core-only traits identically under no_std</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-#[derive(Debug, Clone, Copy, PartialEq)] // &lt;- routes through core::fmt/core::clone/core::cmp, not std
-pub struct SensorReading {
-    pub raw_adc: u16,
-}
+<span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq)]</span> <span class="tok-comment tok-anno">// &lt;- routes through core::fmt/core::clone/core::cmp, not std</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">raw_adc</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Feature-gating Debug to keep its code out of the flash budget by default</h3>
-            <pre><code class="rust">#[cfg_attr(feature = "debug-impls", derive(Debug))] // &lt;- Debug's formatting code only ships when explicitly opted into
-#[derive(Clone, Copy)]
-pub struct RegisterSnapshot {
-    pub value: u32,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cfg_attr(feature = &quot;debug-impls&quot;, derive(Debug))]</span> <span class="tok-comment tok-anno">// &lt;- Debug's formatting code only ships when explicitly opted into</span>
+<span class="tok-attribute">#[derive(Clone, Copy)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RegisterSnapshot</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

@@ -1010,15 +1010,15 @@ other fallible I/O call is handled.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Writing formatted text into a String</h3>
-            <pre><code class="rust">use std::fmt::Write as _;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-fn build_summary(item_count: u32, total: f64) -&gt; String {
-    let mut summary = String::new();
-    write!(summary, "{item_count} items, ${total:.2} total").unwrap(); // &lt;- fmt::Write for String never actually fails
-    summary
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_summary</span><span class="tok-punct">(</span><span class="tok-variable">item_count</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">summary</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">summary</span><span class="tok-punct">,</span> <span class="tok-string">&quot;{item_count} items, ${total:.2} total&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fmt::Write for String never actually fails</span>
+    <span class="tok-variable">summary</span>
+<span class="tok-punct">}</span>
 
-let summary = build_summary(3, 47.5);
+<span class="tok-keyword">let</span> <span class="tok-variable">summary</span> <span class="tok-punct">=</span> <span class="tok-call-free">build_summary</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">47.5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
@@ -1027,20 +1027,20 @@ let summary = build_summary(3, 47.5);
             <p>A custom <code>Display</code> impl for a duration-like type formats its value piece
 by piece using <code>write!</code>, avoiding an intermediate allocation just to
 combine the pieces.</p>
-<pre><code class="rust">use std::fmt;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fmt</span><span class="tok-punct">;</span>
 
-struct Elapsed { seconds: u64 }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Elapsed</span> <span class="tok-punct">{</span> <span class="tok-variable">seconds</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">}</span>
 
-impl fmt::Display for Elapsed {
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        let minutes = self.seconds / 60;
-        let remaining = self.seconds % 60;
-        write!(f, "{minutes}m {remaining:02}s") // &lt;- writes straight into the Formatter, no intermediate String
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">Elapsed</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">minutes</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">seconds</span> <span class="tok-punct">/</span> <span class="tok-number">60</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">remaining</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">seconds</span> <span class="tok-punct">%</span> <span class="tok-number">60</span><span class="tok-punct">;</span>
+        <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;{minutes}m {remaining:02}s&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- writes straight into the Formatter, no intermediate String</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let elapsed = Elapsed { seconds: 125 };
-println!("{elapsed}"); // 2m 05s
+<span class="tok-keyword">let</span> <span class="tok-variable">elapsed</span> <span class="tok-punct">=</span> <span class="tok-type">Elapsed</span> <span class="tok-punct">{</span> <span class="tok-variable">seconds</span><span class="tok-punct">:</span> <span class="tok-number">125</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{elapsed}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// 2m 05s</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/std/fmt/trait.Display.html">std fmt docs</a>
@@ -1055,13 +1055,13 @@ unnecessary allocation on every call.</p>
             <p>Appending log lines to an open file propagates the <code>io::Write</code> <code>Result</code>
 with <code>?</code> rather than unwrapping it, since the destination is a real OS
 resource whose writes can genuinely fail.</p>
-<pre><code class="rust">use std::fs::File;
-use std::io::{self, Write};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-type">File</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-fn log_reading(file: &amp;mut File, sensor_id: u32, value: f64) -&gt; io::Result&lt;()&gt; {
-    writeln!(file, "sensor {sensor_id}: {value:.2}")?; // &lt;- io::Write target: a real I/O error must be propagated, not unwrapped
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading</span><span class="tok-punct">(</span><span class="tok-variable">file</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">File</span><span class="tok-punct">,</span> <span class="tok-variable">sensor_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">writeln!</span><span class="tok-punct">(</span><span class="tok-variable">file</span><span class="tok-punct">,</span> <span class="tok-string">&quot;sensor {sensor_id}: {value:.2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- io::Write target: a real I/O error must be propagated, not unwrapped</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>An <code>io::Write</code> destination can genuinely fail (disk
 full, broken pipe), so production code propagates the <code>Result</code> with <code>?</code>
@@ -1109,14 +1109,14 @@ destination type implements is what decides which of these applies.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Writing formatted text into a heapless::String (no heap)</h3>
-            <pre><code class="rust">use core::fmt::Write as _;
-use heapless::String;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">String</span><span class="tok-punct">;</span>
 
-fn build_status_line(errors: u8, uptime_s: u32) -&gt; String&lt;64&gt; { // &lt;- fixed 64-byte capacity, no allocator
-    let mut line: String&lt;64&gt; = String::new();
-    write!(line, "errors={errors} uptime={uptime_s}s").unwrap(); // &lt;- core::fmt::Write target: fails only if capacity is exceeded
-    line
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_status_line</span><span class="tok-punct">(</span><span class="tok-variable">errors</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">uptime_s</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">&lt;</span><span class="tok-number">64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- fixed 64-byte capacity, no allocator</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">line</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">&lt;</span><span class="tok-number">64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">line</span><span class="tok-punct">,</span> <span class="tok-string">&quot;errors={errors} uptime={uptime_s}s&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- core::fmt::Write target: fails only if capacity is exceeded</span>
+    <span class="tok-variable">line</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1125,22 +1125,22 @@ fn build_status_line(errors: u8, uptime_s: u32) -&gt; String&lt;64&gt; { // &lt;
             <p>A UART/USART HAL type implementing <code>core::fmt::Write</code> lets <code>write!</code> send
 formatted diagnostic text straight over the wire, with no intermediate
 <code>String</code> — and no heap — involved at all.</p>
-<pre><code class="rust">use core::fmt::Write as _;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-struct Uart; // stand-in for a HAL's concrete UART type
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Uart</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a HAL's concrete UART type</span>
 
-impl core::fmt::Write for Uart {
-    fn write_str(&amp;mut self, s: &amp;str) -&gt; core::fmt::Result {
-        for byte in s.bytes() {
-            // ... block until the transmit register is free, then write `byte`
-        }
-        Ok(())
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Write</span> <span class="tok-keyword">for</span> <span class="tok-type">Uart</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_str</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">s</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">byte</span> <span class="tok-keyword">in</span> <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// ... block until the transmit register is free, then write `byte`</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn report_reading(uart: &amp;mut Uart, sensor_id: u32, value: f32) {
-    writeln!(uart, "sensor {sensor_id}: {value:.2}").unwrap(); // &lt;- formatted text goes straight out over the wire, no String built at all
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">report_reading</span><span class="tok-punct">(</span><span class="tok-variable">uart</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Uart</span><span class="tok-punct">,</span> <span class="tok-variable">sensor_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">writeln!</span><span class="tok-punct">(</span><span class="tok-variable">uart</span><span class="tok-punct">,</span> <span class="tok-string">&quot;sensor {sensor_id}: {value:.2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- formatted text goes straight out over the wire, no String built at all</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

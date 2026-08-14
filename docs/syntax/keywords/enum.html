@@ -1012,13 +1012,13 @@ concept page; this page covers only the declaration grammar.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Declaring an enum with all three variant kinds</h3>
-            <pre><code class="rust">enum Status {
-    Active,                    // &lt;- unit-like variant: no data
-    Paused(u32),                // &lt;- tuple-like variant: positional data
-    Stopped { reason: String }, // &lt;- struct-like variant: named data
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Status</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Active</span><span class="tok-punct">,</span>                    <span class="tok-comment tok-anno">// &lt;- unit-like variant: no data</span>
+    <span class="tok-field">Paused</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">,</span>                <span class="tok-comment tok-anno">// &lt;- tuple-like variant: positional data</span>
+    <span class="tok-type">Stopped</span> <span class="tok-punct">{</span> <span class="tok-variable">reason</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- struct-like variant: named data</span>
+<span class="tok-punct">}</span>
 
-let s = Status::Paused(30); // &lt;- `enum` values are always one specific variant
+<span class="tok-keyword">let</span> <span class="tok-variable">s</span> <span class="tok-punct">=</span> <span class="tok-type">Status</span><span class="tok-punct">::</span><span class="tok-field">Paused</span><span class="tok-punct">(</span><span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `enum` values are always one specific variant</span>
 </code></pre>
 
           </div>
@@ -1028,19 +1028,19 @@ let s = Status::Paused(30); // &lt;- `enum` values are always one specific varia
 it was declared with — unit-like variants need no parentheses or braces
 at all, which is part of what makes matching read as plainly as the
 declaration itself.</p>
-<pre><code class="rust">enum Shape {
-    Point,                              // &lt;- unit-like
-    Circle(f64),                        // &lt;- tuple-like
-    Rectangle { width: f64, height: f64 }, // &lt;- struct-like
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Point</span><span class="tok-punct">,</span>                              <span class="tok-comment tok-anno">// &lt;- unit-like</span>
+    <span class="tok-field">Circle</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>                        <span class="tok-comment tok-anno">// &lt;- tuple-like</span>
+    <span class="tok-type">Rectangle</span> <span class="tok-punct">{</span> <span class="tok-variable">width</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">height</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- struct-like</span>
+<span class="tok-punct">}</span>
 
-fn area(shape: &amp;Shape) -&gt; f64 {
-    match shape {
-        Shape::Point =&gt; 0.0,                                   // &lt;- no fields to bind
-        Shape::Circle(radius) =&gt; std::f64::consts::PI * radius * radius, // &lt;- positional binding
-        Shape::Rectangle { width, height } =&gt; width * height,  // &lt;- named binding
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-variable">shape</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Shape</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">shape</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Shape</span><span class="tok-punct">::</span><span class="tok-field">Point</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">0.0</span><span class="tok-punct">,</span>                                   <span class="tok-comment tok-anno">// &lt;- no fields to bind</span>
+        <span class="tok-type">Shape</span><span class="tok-punct">::</span><span class="tok-field">Circle</span><span class="tok-punct">(</span><span class="tok-variable">radius</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">f64</span><span class="tok-punct">::</span><span class="tok-module">consts</span><span class="tok-punct">::</span><span class="tok-constant">PI</span> <span class="tok-punct">*</span> <span class="tok-variable">radius</span> <span class="tok-punct">*</span> <span class="tok-variable">radius</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- positional binding</span>
+        <span class="tok-type">Shape</span><span class="tok-punct">::</span><span class="tok-field">Rectangle</span> <span class="tok-punct">{</span> <span class="tok-variable">width</span><span class="tok-punct">,</span> <span class="tok-variable">height</span> <span class="tok-punct">}</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">width</span> <span class="tok-punct">*</span> <span class="tok-variable">height</span><span class="tok-punct">,</span>  <span class="tok-comment tok-anno">// &lt;- named binding</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Matching each variant with its own declared shape means
 there's exactly one way to write the pattern for a given variant, so a
@@ -1056,11 +1056,11 @@ introduces all three variant forms together for this reason.</p>
 attribute directly above the <code>enum</code> item, not as part of the variant list
 itself — it changes what downstream <code>match</code> expressions on that enum are
 required to include.</p>
-<pre><code class="rust">#[non_exhaustive] // &lt;- attribute sits above the `enum` keyword, not inside the variant list
-pub enum PaymentMethod {
-    Card,
-    BankTransfer,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[non_exhaustive]</span> <span class="tok-comment tok-anno">// &lt;- attribute sits above the `enum` keyword, not inside the variant list</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">PaymentMethod</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Card</span><span class="tok-punct">,</span>
+    <span class="tok-type">BankTransfer</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#[non_exhaustive]</code> is the attribute-level tool for
 enums a library expects to grow — see
@@ -1100,37 +1100,37 @@ back into the bit pattern a peripheral expects.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Modeling a peripheral's power mode</h3>
-            <pre><code class="rust">#[repr(u8)]
-enum PowerMode { // &lt;- `enum` models the datasheet's fixed set of power states
-    Off = 0,
-    Standby = 1,
-    Active = 2,
-    LowPower = 3,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[repr(u8)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">PowerMode</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `enum` models the datasheet's fixed set of power states</span>
+    <span class="tok-type">Off</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">,</span>
+    <span class="tok-type">Standby</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">,</span>
+    <span class="tok-type">Active</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">,</span>
+    <span class="tok-type">LowPower</span> <span class="tok-punct">=</span> <span class="tok-number">3</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn configure_power(mode: PowerMode) -&gt; u8 {
-    mode as u8 // &lt;- explicit discriminants make the enum-to-register-value mapping direct
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure_power</span><span class="tok-punct">(</span><span class="tok-variable">mode</span><span class="tok-punct">:</span> <span class="tok-type">PowerMode</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">mode</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span> <span class="tok-comment tok-anno">// &lt;- explicit discriminants make the enum-to-register-value mapping direct</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Decoding a sensor fault code</h3>
-            <pre><code class="rust">enum SensorFault { // &lt;- `enum` covers the datasheet's documented fault codes
-    None,
-    OverTemperature,
-    UnderVoltage,
-    CommunicationTimeout,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">SensorFault</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `enum` covers the datasheet's documented fault codes</span>
+    <span class="tok-field">None</span><span class="tok-punct">,</span>
+    <span class="tok-type">OverTemperature</span><span class="tok-punct">,</span>
+    <span class="tok-type">UnderVoltage</span><span class="tok-punct">,</span>
+    <span class="tok-type">CommunicationTimeout</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn decode_fault(raw: u8) -&gt; SensorFault {
-    match raw {
-        0 =&gt; SensorFault::None,
-        1 =&gt; SensorFault::OverTemperature,
-        2 =&gt; SensorFault::UnderVoltage,
-        _ =&gt; SensorFault::CommunicationTimeout,
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">decode_fault</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">SensorFault</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">raw</span> <span class="tok-punct">{</span>
+        <span class="tok-number">0</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">SensorFault</span><span class="tok-punct">::</span><span class="tok-field">None</span><span class="tok-punct">,</span>
+        <span class="tok-number">1</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">SensorFault</span><span class="tok-punct">::</span><span class="tok-field">OverTemperature</span><span class="tok-punct">,</span>
+        <span class="tok-number">2</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">SensorFault</span><span class="tok-punct">::</span><span class="tok-field">UnderVoltage</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">SensorFault</span><span class="tok-punct">::</span><span class="tok-field">CommunicationTimeout</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

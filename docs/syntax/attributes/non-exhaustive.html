@@ -1021,17 +1021,17 @@ concept page.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Restricting external struct-literal construction</h3>
-            <pre><code class="rust">#[non_exhaustive] // &lt;- downstream crates can't build this with a plain struct literal
-pub struct Config {
-    pub retries: u32,
-    pub timeout_ms: u32,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[non_exhaustive]</span> <span class="tok-comment tok-anno">// &lt;- downstream crates can't build this with a plain struct literal</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Config</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Config {
-    pub fn new(retries: u32, timeout_ms: u32) -&gt; Self {
-        Config { retries, timeout_ms } // &lt;- fine here: plain literals still work inside the defining crate
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Config</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">retries</span><span class="tok-punct">,</span> <span class="tok-variable">timeout_ms</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- fine here: plain literals still work inside the defining crate</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1041,21 +1041,21 @@ impl Config {
 growth as new providers get added, so the enum is marked
 <code>#[non_exhaustive]</code> up front — before any downstream crate has a chance
 to write a <code>match</code> that a later variant would silently break.</p>
-<pre><code class="rust">#[non_exhaustive] // &lt;- tells downstream crates more variants may arrive without a breaking release
-pub enum PaymentMethod {
-    Card,
-    BankTransfer,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[non_exhaustive]</span> <span class="tok-comment tok-anno">// &lt;- tells downstream crates more variants may arrive without a breaking release</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">PaymentMethod</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Card</span><span class="tok-punct">,</span>
+    <span class="tok-type">BankTransfer</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-pub struct RefundRequest {
-    pub amount_cents: u64,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RefundRequest</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RefundRequest {
-    pub fn new(amount_cents: u64) -&gt; Self {
-        RefundRequest { amount_cents }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">RefundRequest</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RefundRequest</span> <span class="tok-punct">{</span> <span class="tok-variable">amount_cents</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Adding a variant to a published, non-<code>#[non_exhaustive]</code>
 enum is a breaking change for every downstream exhaustive <code>match</code>; the
@@ -1070,17 +1070,17 @@ after a breaking release already shipped.</p>
             <p>Downstream code consuming a <code>#[non_exhaustive]</code> enum must add a wildcard
 arm even when it currently lists every known variant, because the
 compiler won't treat the match as complete without one.</p>
-<pre><code class="rust">// Defined in an upstream crate:
-// #[non_exhaustive]
-// pub enum PaymentMethod { Card, BankTransfer }
+<pre><code class="rust-hl"><span class="tok-comment">// Defined in an upstream crate:</span>
+<span class="tok-comment">// #[non_exhaustive]</span>
+<span class="tok-comment">// pub enum PaymentMethod { Card, BankTransfer }</span>
 
-fn describe(method: &amp;PaymentMethod) -&gt; &amp;'static str {
-    match method {
-        PaymentMethod::Card =&gt; "card",
-        PaymentMethod::BankTransfer =&gt; "bank transfer",
-        _ =&gt; "unsupported payment method", // &lt;- required here: #[non_exhaustive] blocks treating this as exhaustive
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-variable">method</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">PaymentMethod</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">method</span> <span class="tok-punct">{</span>
+        <span class="tok-type">PaymentMethod</span><span class="tok-punct">::</span><span class="tok-field">Card</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;card&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-type">PaymentMethod</span><span class="tok-punct">::</span><span class="tok-field">BankTransfer</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;bank transfer&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;unsupported payment method&quot;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- required here: #[non_exhaustive] blocks treating this as exhaustive</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without the wildcard arm, this fails to compile with an
 error naming <code>PaymentMethod</code> as non-exhaustive, even though every variant
@@ -1121,29 +1121,29 @@ open.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A HAL's fault-code enum left open for future variants</h3>
-            <pre><code class="rust">#[non_exhaustive] // &lt;- lets this HAL add new fault variants later without a semver break
-pub enum I2cFault {
-    BusTimeout,
-    ArbitrationLost,
-    NackOnAddress,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[non_exhaustive]</span> <span class="tok-comment tok-anno">// &lt;- lets this HAL add new fault variants later without a semver break</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">I2cFault</span> <span class="tok-punct">{</span>
+    <span class="tok-type">BusTimeout</span><span class="tok-punct">,</span>
+    <span class="tok-type">ArbitrationLost</span><span class="tok-punct">,</span>
+    <span class="tok-type">NackOnAddress</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Downstream firmware handling the fault enum with a required wildcard</h3>
-            <pre><code class="rust">// Defined in the HAL crate:
-// #[non_exhaustive]
-// pub enum I2cFault { BusTimeout, ArbitrationLost, NackOnAddress }
+            <pre><code class="rust-hl"><span class="tok-comment">// Defined in the HAL crate:</span>
+<span class="tok-comment">// #[non_exhaustive]</span>
+<span class="tok-comment">// pub enum I2cFault { BusTimeout, ArbitrationLost, NackOnAddress }</span>
 
-fn recover_from(fault: &amp;I2cFault) {
-    match fault {
-        I2cFault::BusTimeout =&gt; { /* reset the peripheral */ }
-        I2cFault::ArbitrationLost =&gt; { /* retry the transaction */ }
-        I2cFault::NackOnAddress =&gt; { /* mark the device unresponsive */ }
-        _ =&gt; { /* unknown fault added in a later HAL version: fall back to a full peripheral reset */ }
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">recover_from</span><span class="tok-punct">(</span><span class="tok-variable">fault</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">I2cFault</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">fault</span> <span class="tok-punct">{</span>
+        <span class="tok-type">I2cFault</span><span class="tok-punct">::</span><span class="tok-field">BusTimeout</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment">/* reset the peripheral */</span> <span class="tok-punct">}</span>
+        <span class="tok-type">I2cFault</span><span class="tok-punct">::</span><span class="tok-field">ArbitrationLost</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment">/* retry the transaction */</span> <span class="tok-punct">}</span>
+        <span class="tok-type">I2cFault</span><span class="tok-punct">::</span><span class="tok-field">NackOnAddress</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment">/* mark the device unresponsive */</span> <span class="tok-punct">}</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment">/* unknown fault added in a later HAL version: fall back to a full peripheral reset */</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

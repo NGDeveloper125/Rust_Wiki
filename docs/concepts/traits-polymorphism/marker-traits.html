@@ -999,10 +999,10 @@ non-<code>Send</code> field (e.g. <code>PhantomData&lt;*const ()&gt;</code>), an
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Sensor { reading: i32 } // &lt;- auto-`Send`: every field (i32) is Send, so no impl is needed
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span> <span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">i32</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- auto-`Send`: every field (i32) is Send, so no impl is needed</span>
 
-fn assert_send&lt;T: Send&gt;() {}
-assert_send::&lt;Sensor&gt;();
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">assert_send</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Send</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-module">assert_send</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Sensor</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1020,15 +1020,15 @@ assert_send::&lt;Sensor&gt;();
             <p>A type shared across threads only compiles where the API requires it if
 every field is itself <code>Send</code>/<code>Sync</code> — the marker traits are what the
 compiler checks, not something the code has to assert by hand.</p>
-<pre><code class="rust">struct SensorReading { value: f64, timestamp: u64 } // &lt;- auto-Send/Sync: every field is
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">timestamp</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- auto-Send/Sync: every field is</span>
 
-fn spawn_worker(reading: SensorReading) {
-    std::thread::spawn(move || { // &lt;- requires SensorReading: Send, checked at compile time
-        println!("{}: {}", reading.timestamp, reading.value);
-    });
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">spawn_worker</span><span class="tok-punct">(</span><span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">SensorReading</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- requires SensorReading: Send, checked at compile time</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">.</span><span class="tok-field">timestamp</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-spawn_worker(SensorReading { value: 21.5, timestamp: 1_700_000_000 });
+<span class="tok-call-free">spawn_worker</span><span class="tok-punct">(</span><span class="tok-type">SensorReading</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-number">21.5</span><span class="tok-punct">,</span> <span class="tok-variable">timestamp</span><span class="tok-punct">:</span> <span class="tok-number">1_700_000_000</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because <code>Send</code>/<code>Sync</code> propagate structurally from a
@@ -1050,16 +1050,16 @@ do by accident.</p>
 needed when a type contains something that isn't automatically
 thread-safe (a raw pointer, an FFI handle) and the author can prove, by
 hand, that sharing it really is safe.</p>
-<pre><code class="rust">struct FfiHandle(*mut u8); // raw pointer: not auto-Send
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">FfiHandle</span><span class="tok-punct">(</span><span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// raw pointer: not auto-Send</span>
 
-// SAFETY: FfiHandle owns its pointer exclusively (no aliases exist), and
-// the underlying C object may be used from any one thread at a time, so
-// transferring ownership across a thread boundary is sound.
-unsafe impl Send for FfiHandle {} // &lt;- manual, unsafe: author is vouching for thread-safety
+<span class="tok-comment">// SAFETY: FfiHandle owns its pointer exclusively (no aliases exist), and</span>
+<span class="tok-comment">// the underlying C object may be used from any one thread at a time, so</span>
+<span class="tok-comment">// transferring ownership across a thread boundary is sound.</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">impl</span> <span class="tok-trait">Send</span> <span class="tok-keyword">for</span> <span class="tok-type">FfiHandle</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- manual, unsafe: author is vouching for thread-safety</span>
 
-fn move_to_worker(handle: FfiHandle) {
-    std::thread::spawn(move || drop(handle)); // only compiles because of the impl above
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">move_to_worker</span><span class="tok-punct">(</span><span class="tok-variable">handle</span><span class="tok-punct">:</span> <span class="tok-type">FfiHandle</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-call-free">drop</span><span class="tok-punct">(</span><span class="tok-variable">handle</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// only compiles because of the impl above</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong>
@@ -1107,17 +1107,17 @@ pin that was never wired to a timer.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait PwmCapable {} // marker: no methods, just a type-level fact about this pin
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">PwmCapable</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// marker: no methods, just a type-level fact about this pin</span>
 
-struct Pa0; // this pin's timer channel is routed for PWM
-impl PwmCapable for Pa0 {}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pa0</span><span class="tok-punct">;</span> <span class="tok-comment">// this pin's timer channel is routed for PWM</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">PwmCapable</span> <span class="tok-keyword">for</span> <span class="tok-type">Pa0</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-struct Pa1; // this pin has no timer channel wired up — no impl
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pa1</span><span class="tok-punct">;</span> <span class="tok-comment">// this pin has no timer channel wired up — no impl</span>
 
-fn configure_pwm&lt;P: PwmCapable&gt;(_pin: P) { /* ... */ }
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure_pwm</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">PwmCapable</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">_pin</span><span class="tok-punct">:</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* ... */</span> <span class="tok-punct">}</span>
 
-configure_pwm(Pa0);
-// configure_pwm(Pa1); // &lt;- fails to compile: Pa1 doesn't implement PwmCapable
+<span class="tok-call-free">configure_pwm</span><span class="tok-punct">(</span><span class="tok-type">Pa0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// configure_pwm(Pa1); // &lt;- fails to compile: Pa1 doesn't implement PwmCapable</span>
 </code></pre>
 
       </section>
@@ -1136,26 +1136,26 @@ configure_pwm(Pa0);
 compile time rather than at runtime — a zero-method marker trait
 implemented only for the pins whose hardware genuinely supports it makes
 the constraint part of the function's signature.</p>
-<pre><code class="rust">trait PwmCapable {} // &lt;- marker trait: encodes "this pin's timer channel supports PWM"
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">PwmCapable</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- marker trait: encodes &quot;this pin's timer channel supports PWM&quot;</span>
 
-struct TimerChannel2Pin; // wired to a timer with PWM output
-impl PwmCapable for TimerChannel2Pin {}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">TimerChannel2Pin</span><span class="tok-punct">;</span> <span class="tok-comment">// wired to a timer with PWM output</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">PwmCapable</span> <span class="tok-keyword">for</span> <span class="tok-type">TimerChannel2Pin</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-struct PlainGpioPin; // no timer routing — deliberately no impl
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PlainGpioPin</span><span class="tok-punct">;</span> <span class="tok-comment">// no timer routing — deliberately no impl</span>
 
-struct PwmOutput&lt;P: PwmCapable&gt; { // &lt;- only accepts pins that implement the marker
-    pin: P,
-    duty: u8,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PwmOutput</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">PwmCapable</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- only accepts pins that implement the marker</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-generic-param">P</span><span class="tok-punct">,</span>
+    <span class="tok-variable">duty</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;P: PwmCapable&gt; PwmOutput&lt;P&gt; {
-    fn new(pin: P) -&gt; Self {
-        PwmOutput { pin, duty: 0 }
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">PwmCapable</span><span class="tok-punct">&gt;</span> <span class="tok-type">PwmOutput</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">PwmOutput</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">,</span> <span class="tok-variable">duty</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let pwm = PwmOutput::new(TimerChannel2Pin); // compiles
-// let bad = PwmOutput::new(PlainGpioPin); // &lt;- fails to compile: PlainGpioPin isn't PwmCapable
+<span class="tok-keyword">let</span> <span class="tok-variable">pwm</span> <span class="tok-punct">=</span> <span class="tok-type">PwmOutput</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">TimerChannel2Pin</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// compiles</span>
+<span class="tok-comment">// let bad = PwmOutput::new(PlainGpioPin); // &lt;- fails to compile: PlainGpioPin isn't PwmCapable</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a wrong pin passed to <code>PwmOutput::new</code> becomes a
@@ -1178,21 +1178,21 @@ handler needs its element type bounded by <code>Send</code>, the same marker tra
 covers for sharing state across that boundary — here the constraint
 shows up on a generic queue's type parameter rather than on a single
 <code>static</code>.</p>
-<pre><code class="rust">struct IsrQueue&lt;T: Send, const N: usize&gt; { // &lt;- Send bound: T must be safe to hand across the ISR boundary
-    items: [Option&lt;T&gt;; N],
-    len: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">IsrQueue</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Send</span><span class="tok-punct">,</span> <span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- Send bound: T must be safe to hand across the ISR boundary</span>
+    <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;T: Send, const N: usize&gt; IsrQueue&lt;T, N&gt; {
-    fn push(&amp;mut self, item: T) -&gt; bool {
-        if self.len == N {
-            return false;
-        }
-        self.items[self.len] = Some(item);
-        self.len += 1;
-        true
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Send</span><span class="tok-punct">,</span> <span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-type">IsrQueue</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">,</span> <span class="tok-generic-param">N</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">==</span> <span class="tok-generic-param">N</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-number">false</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">[</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-number">true</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> requiring <code>T: Send</code> on the queue itself means any
