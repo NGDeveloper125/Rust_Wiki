@@ -952,10 +952,19 @@
       <hr class="divider">
 
       <style>
-:root{--cm-macro:#D972EE;--cm-attribute:#944695;--cm-number:#A17297;--cm-fn-def:#FF5C7A;--cm-call-free:#D9A98A;--cm-call-assoc:#F5A55A;--cm-keyword:#FFB700;--cm-constant:#E5D9A8;--cm-lifetime:#F2DB69;--cm-call-method:#FFEA00;--cm-type-def:#7BFF57;--cm-trait:#019D59;--cm-type:#1FFF9E;--cm-string:#86D7BF;--cm-type-return:#70FFE7;--cm-variable:#34E7EA;--cm-field:#7ED1FB;--cm-generic-param:#A9D6F5;--cm-module:#8FA8D8;--cm-comment:#FFFFFF;--cm-punct:#A9C4C2;}
-:root[data-theme="light"]{--cm-macro:#D972EE;--cm-attribute:#944695;--cm-number:#A17297;--cm-fn-def:#FF5C7A;--cm-call-free:#D9A98A;--cm-call-assoc:#F5A55A;--cm-keyword:#FFB700;--cm-constant:#E5D9A8;--cm-lifetime:#F2DB69;--cm-call-method:#FFEA00;--cm-type-def:#7BFF57;--cm-trait:#019D59;--cm-type:#1FFF9E;--cm-string:#86D7BF;--cm-type-return:#70FFE7;--cm-variable:#34E7EA;--cm-field:#7ED1FB;--cm-generic-param:#A9D6F5;--cm-module:#8FA8D8;--cm-comment:#FFFFFF;--cm-punct:#A9C4C2;}
+.cmap-preview[data-cm-theme="dark"]{--cm-macro:#D972EE;--cm-attribute:#944695;--cm-number:#A17297;--cm-fn-def:#FF5C7A;--cm-call-free:#D9A98A;--cm-call-assoc:#F5A55A;--cm-keyword:#FFB700;--cm-constant:#E5D9A8;--cm-lifetime:#F2DB69;--cm-call-method:#FFEA00;--cm-type-def:#7BFF57;--cm-trait:#019D59;--cm-type:#1FFF9E;--cm-string:#86D7BF;--cm-type-return:#70FFE7;--cm-variable:#34E7EA;--cm-field:#7ED1FB;--cm-generic-param:#A9D6F5;--cm-module:#8FA8D8;--cm-comment:#FFFFFF;--cm-punct:#A9C4C2;--cm-panel-bg:#0a2c2e;--cm-panel-border:#17494b;--cm-muted:#8FB3B0;}
+.cmap-preview[data-cm-theme="light"]{--cm-macro:#D972EE;--cm-attribute:#944695;--cm-number:#A17297;--cm-fn-def:#FF5C7A;--cm-call-free:#D9A98A;--cm-call-assoc:#F5A55A;--cm-keyword:#FFB700;--cm-constant:#E5D9A8;--cm-lifetime:#F2DB69;--cm-call-method:#FFEA00;--cm-type-def:#7BFF57;--cm-trait:#019D59;--cm-type:#1FFF9E;--cm-string:#86D7BF;--cm-type-return:#70FFE7;--cm-variable:#34E7EA;--cm-field:#7ED1FB;--cm-generic-param:#A9D6F5;--cm-module:#8FA8D8;--cm-comment:#FFFFFF;--cm-punct:#A9C4C2;--cm-panel-bg:#e9f1ef;--cm-panel-border:#cfe0dc;--cm-muted:#4a6b69;}
 </style>
 
+      <div class="cmap-bar">
+        <span class="cmap-bar-label">Preview on</span>
+        <div class="segmented" id="cmap-theme" role="group" aria-label="Preview background">
+          <button type="button" data-cm="dark" aria-pressed="true">Dark</button>
+          <button type="button" data-cm="light" aria-pressed="false">Light</button>
+        </div>
+      </div>
+
+      <div class="cmap-preview" data-cm-theme="dark">
         <div class="cmap-list" style="grid-template-rows: repeat(11, auto)">
           <div class="cmap-row" title="println!, vec!">
             <span class="cmap-chip" style="background:var(--cm-macro)"></span>
@@ -1064,10 +1073,10 @@
           </div>
         </div>
 
-      <h2 class="cmap-specimen-title">Every role, one snippet</h2>
-      <p class="cmap-note">Each colour above appears at least once below.</p>
+        <h2 class="cmap-specimen-title">Every role, one snippet</h2>
+        <p class="cmap-note">Each colour above appears at least once below.</p>
 
-      <pre class="cmap-code"><code><span class="cm-attribute">#![allow(dead_code)]</span>
+        <pre class="cmap-code"><code><span class="cm-attribute">#![allow(dead_code)]</span>
 
 <span class="cm-keyword">use</span> <span class="cm-module">std</span><span class="cm-punct">::</span><span class="cm-module">collections</span><span class="cm-punct">::</span><span class="cm-type">HashMap</span><span class="cm-punct">;</span>
 
@@ -1146,6 +1155,28 @@
         <span class="cm-keyword">if</span> <span class="cm-punct">*</span><span class="cm-variable">value</span> <span class="cm-punct">==</span> <span class="cm-number">4</span> <span class="cm-punct">{</span> <span class="cm-keyword">break</span> <span class="cm-lifetime">'outer</span><span class="cm-punct">;</span> <span class="cm-punct">}</span>
     <span class="cm-punct">}</span>
 <span class="cm-punct">}</span></code></pre>
+      </div>
+
+      <script>
+(function () {
+  var wrap = document.querySelector('.cmap-preview');
+  var seg = document.getElementById('cmap-theme');
+  if (!wrap || !seg) return;
+  function set(mode) {
+    wrap.dataset.cmTheme = mode;
+    seg.querySelectorAll('button').forEach(function (b) {
+      var on = b.dataset.cm === mode;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  set(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+  seg.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (b) set(b.dataset.cm);
+  });
+})();
+</script>
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>

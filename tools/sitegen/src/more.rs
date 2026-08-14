@@ -62,22 +62,66 @@ pub const SLOTS: &[Slot] = &[
 /// away. See the test at the bottom of this file.
 const SPECIMEN: &str = include_str!("langcolormap-specimen.html");
 
-/// The `--cm-*` custom properties for both themes, emitted into the page so the
-/// palette can move without a stylesheet edit while it is still being tuned.
+/// The panel a preview is painted on, per theme. The colours only mean anything
+/// against the background they were chosen for, so the preview carries its own
+/// panel rather than borrowing whichever one the site happens to be showing.
+struct Panel {
+    bg: &'static str,
+    border: &'static str,
+    muted: &'static str,
+}
+
+const DARK_PANEL: Panel = Panel { bg: "#0a2c2e", border: "#17494b", muted: "#8FB3B0" };
+const LIGHT_PANEL: Panel = Panel { bg: "#e9f1ef", border: "#cfe0dc", muted: "#4a6b69" };
+
+/// The `--cm-*` custom properties for both themes.
+///
+/// Scoped to `.cmap-preview[data-cm-theme=…]` rather than to `:root`, so the
+/// in-page toggle can show either palette without touching the site's own
+/// theme — a reader can compare the two without leaving the page they are on.
 fn palette_style() -> String {
-    let vars = |pick: fn(&Slot) -> &'static str| {
-        SLOTS
+    let block = |pick: fn(&Slot) -> &'static str, panel: &Panel| {
+        let slots = SLOTS
             .iter()
             .map(|s| format!("--cm-{}:{};", s.class, pick(s)))
             .collect::<Vec<_>>()
-            .join("")
+            .join("");
+        format!(
+            "{slots}--cm-panel-bg:{bg};--cm-panel-border:{border};--cm-muted:{muted};",
+            bg = panel.bg,
+            border = panel.border,
+            muted = panel.muted,
+        )
     };
     format!(
-        "<style>\n:root{{{dark}}}\n:root[data-theme=\"light\"]{{{light}}}\n</style>",
-        dark = vars(|s| s.dark),
-        light = vars(|s| s.light),
+        "<style>\n.cmap-preview[data-cm-theme=\"dark\"]{{{dark}}}\n.cmap-preview[data-cm-theme=\"light\"]{{{light}}}\n</style>",
+        dark = block(|s| s.dark, &DARK_PANEL),
+        light = block(|s| s.light, &LIGHT_PANEL),
     )
 }
+
+/// Starts on whatever the site is showing, then the two run independently —
+/// flipping the preview to compare palettes should not repaint the whole site.
+const PREVIEW_TOGGLE_JS: &str = r#"<script>
+(function () {
+  var wrap = document.querySelector('.cmap-preview');
+  var seg = document.getElementById('cmap-theme');
+  if (!wrap || !seg) return;
+  function set(mode) {
+    wrap.dataset.cmTheme = mode;
+    seg.querySelectorAll('button').forEach(function (b) {
+      var on = b.dataset.cm === mode;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  set(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+  seg.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (b) set(b.dataset.cm);
+  });
+})();
+</script>"#;
 
 fn render_slot_list() -> String {
     let rows: String = SLOTS
@@ -133,12 +177,24 @@ fn render_colormap(pages: &[Page]) -> String {
 
       {palette}
 
+      <div class="cmap-bar">
+        <span class="cmap-bar-label">Preview on</span>
+        <div class="segmented" id="cmap-theme" role="group" aria-label="Preview background">
+          <button type="button" data-cm="dark" aria-pressed="true">Dark</button>
+          <button type="button" data-cm="light" aria-pressed="false">Light</button>
+        </div>
+      </div>
+
+      <div class="cmap-preview" data-cm-theme="dark">
         {list}
 
-      <h2 class="cmap-specimen-title">Every role, one snippet</h2>
-      <p class="cmap-note">Each colour above appears at least once below.</p>
+        <h2 class="cmap-specimen-title">Every role, one snippet</h2>
+        <p class="cmap-note">Each colour above appears at least once below.</p>
 
-      <pre class="cmap-code"><code>{specimen}</code></pre>
+        <pre class="cmap-code"><code>{specimen}</code></pre>
+      </div>
+
+      {toggle_js}
 
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
@@ -148,6 +204,7 @@ fn render_colormap(pages: &[Page]) -> String {
         palette = palette_style(),
         list = render_slot_list(),
         specimen = SPECIMEN,
+        toggle_js = PREVIEW_TOGGLE_JS,
     );
 
     let head = Head {
