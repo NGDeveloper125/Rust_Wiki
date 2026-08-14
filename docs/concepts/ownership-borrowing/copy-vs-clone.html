@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -996,13 +997,13 @@ implicit copy in a GC'd language typically isn't.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let a = 5;
-let b = a; // &lt;- i32 is Copy: a is silently duplicated, both remain usable
-println!("{a} {b}");
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- i32 is Copy: a is silently duplicated, both remain usable</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{a} {b}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let s1 = String::from("hi");
-let s2 = s1.clone(); // &lt;- String is not Copy: duplication must be explicit
-println!("{s1} {s2}");
+<span class="tok-keyword">let</span> <span class="tok-variable">s1</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;hi&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">s2</span> <span class="tok-punct">=</span> <span class="tok-variable">s1</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- String is not Copy: duplication must be explicit</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{s1} {s2}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>Copy</code> can only be implemented for a type if every one
 of its fields is also <code>Copy</code> — any type owning a heap allocation (like
@@ -1024,22 +1025,22 @@ of its fields is also <code>Copy</code> — any type owning a heap allocation (l
 duplicating it is genuinely trivial — a <code>Point</code> of two <code>i32</code>s qualifies; a
 <code>Session</code> holding a <code>String</code> and a <code>Vec</code> should stay <code>Clone</code>-only so
 duplication remains a visible, explicit choice.</p>
-<pre><code class="rust">#[derive(Clone, Copy)] // &lt;- safe: two i32 fields, bitwise duplication is cheap and correct
-struct Point {
-    x: i32,
-    y: i32,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Clone, Copy)]</span> <span class="tok-comment tok-anno">// &lt;- safe: two i32 fields, bitwise duplication is cheap and correct</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Point</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-#[derive(Clone)] // &lt;- deliberately NOT Copy: duplicating a session should stay a visible choice
-struct Session {
-    token: String,
-    permissions: Vec&lt;String&gt;,
-}
+<span class="tok-attribute">#[derive(Clone)]</span> <span class="tok-comment tok-anno">// &lt;- deliberately NOT Copy: duplicating a session should stay a visible choice</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Session</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">token</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">permissions</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let p1 = Point { x: 1, y: 2 };
-let p2 = p1; // implicit copy: both p1 and p2 remain usable
-let s1 = Session { token: "abc".into(), permissions: vec!["read".into()] };
-let s2 = s1.clone(); // explicit: the cost (allocating a new String/Vec) is visible at the call site
+<span class="tok-keyword">let</span> <span class="tok-variable">p1</span> <span class="tok-punct">=</span> <span class="tok-type">Point</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">p2</span> <span class="tok-punct">=</span> <span class="tok-variable">p1</span><span class="tok-punct">;</span> <span class="tok-comment">// implicit copy: both p1 and p2 remain usable</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">s1</span> <span class="tok-punct">=</span> <span class="tok-type">Session</span> <span class="tok-punct">{</span> <span class="tok-variable">token</span><span class="tok-punct">:</span> <span class="tok-string">&quot;abc&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">permissions</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;read&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">s2</span> <span class="tok-punct">=</span> <span class="tok-variable">s1</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// explicit: the cost (allocating a new String/Vec) is visible at the call site</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1060,18 +1061,18 @@ duplicate, like <code>Point</code>.</p>
 between borrowing (<code>Vec&lt;&amp;str&gt;</code>, tied to the source's lifetime) and
 cloning (<code>Vec&lt;String&gt;</code>, independent but costing an allocation per
 element).</p>
-<pre><code class="rust">struct Order {
-    id: u64,
-    customer: String,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">customer</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn names_borrowed(orders: &amp;[Order]) -&gt; Vec&lt;&amp;str&gt; {
-    orders.iter().map(|o| o.customer.as_str()).collect() // &lt;- borrows: cheap, but tied to `orders`' lifetime
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">names_borrowed</span><span class="tok-punct">(</span><span class="tok-variable">orders</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">Order</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">orders</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">o</span><span class="tok-punct">|</span> <span class="tok-variable">o</span><span class="tok-punct">.</span><span class="tok-field">customer</span><span class="tok-punct">.</span><span class="tok-call-method">as_str</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- borrows: cheap, but tied to `orders`' lifetime</span>
+<span class="tok-punct">}</span>
 
-fn names_owned(orders: &amp;[Order]) -&gt; Vec&lt;String&gt; {
-    orders.iter().map(|o| o.customer.clone()).collect() // &lt;- clones: costs an allocation, but outlives `orders`
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">names_owned</span><span class="tok-punct">(</span><span class="tok-variable">orders</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">Order</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">orders</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">o</span><span class="tok-punct">|</span> <span class="tok-variable">o</span><span class="tok-punct">.</span><span class="tok-field">customer</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- clones: costs an allocation, but outlives `orders`</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> borrow when the derived collection is used before its
@@ -1117,12 +1118,12 @@ code budgeted RAM for exactly once.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#[derive(Clone, Copy)]
-struct AdcSample { channel: u8, value: u16 } // &lt;- 3 bytes: bitwise copy is free, Copy is the right call
+        <pre><code class="rust-hl"><span class="tok-attribute">#[derive(Clone, Copy)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">AdcSample</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- 3 bytes: bitwise copy is free, Copy is the right call</span>
 
-let a = AdcSample { channel: 0, value: 512 };
-let b = a; // &lt;- silently duplicated, both usable — no cost beyond the 3 bytes already on the stack
-println!("{} {}", a.value, b.value);
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-type">AdcSample</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-number">512</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- silently duplicated, both usable — no cost beyond the 3 bytes already on the stack</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">a</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1140,18 +1141,18 @@ println!("{} {}", a.value, b.value);
             <p>A small register-value sample type derives <code>Copy</code>; a log built on a
 <code>heapless</code> buffer stays <code>Clone</code>-only, because duplicating it copies a real,
 visible chunk of the device's RAM budget.</p>
-<pre><code class="rust">#[derive(Clone, Copy)] // &lt;- 3 bytes total: bitwise duplication is free, no reason to make it explicit
-struct AdcSample { channel: u8, value: u16 }
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Clone, Copy)]</span> <span class="tok-comment tok-anno">// &lt;- 3 bytes total: bitwise duplication is free, no reason to make it explicit</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">AdcSample</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">}</span>
 
-#[derive(Clone)] // &lt;- deliberately NOT Copy: duplicating this copies the whole fixed-capacity buffer
-struct SensorLog {
-    samples: heapless::Vec&lt;AdcSample, 32&gt;, // &lt;- up to 32 * 3 bytes moved on every .clone()
-}
+<span class="tok-attribute">#[derive(Clone)]</span> <span class="tok-comment tok-anno">// &lt;- deliberately NOT Copy: duplicating this copies the whole fixed-capacity buffer</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorLog</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">AdcSample</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- up to 32 * 3 bytes moved on every .clone()</span>
+<span class="tok-punct">}</span>
 
-let sample = AdcSample { channel: 0, value: 512 };
-let sample2 = sample; // &lt;- implicit copy: 3 bytes, effectively free
-let log = SensorLog { samples: heapless::Vec::new() };
-let log_snapshot = log.clone(); // &lt;- explicit: visibly copies up to 96 bytes, worth a second look in a hot path
+<span class="tok-keyword">let</span> <span class="tok-variable">sample</span> <span class="tok-punct">=</span> <span class="tok-type">AdcSample</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-number">512</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sample2</span> <span class="tok-punct">=</span> <span class="tok-variable">sample</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- implicit copy: 3 bytes, effectively free</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">log</span> <span class="tok-punct">=</span> <span class="tok-type">SensorLog</span> <span class="tok-punct">{</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">log_snapshot</span> <span class="tok-punct">=</span> <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">clone</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- explicit: visibly copies up to 96 bytes, worth a second look in a hot path</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> on a device with only a few KB of RAM total, an implicit
@@ -1173,13 +1174,13 @@ while anything <code>heapless</code>-backed stays visibly costed at the call sit
             <p>Reading the most recent value out of a fixed-capacity log collapses the
 usual borrow-vs-clone tradeoff into a near-free decision once the element
 type is small and <code>Copy</code>.</p>
-<pre><code class="rust">fn latest_borrowed(log: &amp;heapless::Vec&lt;AdcSample, 32&gt;) -&gt; Option&lt;&amp;AdcSample&gt; {
-    log.last() // &lt;- borrows: zero-cost, tied to `log`'s lifetime
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">latest_borrowed</span><span class="tok-punct">(</span><span class="tok-variable">log</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">AdcSample</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type-return">AdcSample</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">last</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- borrows: zero-cost, tied to `log`'s lifetime</span>
+<span class="tok-punct">}</span>
 
-fn latest_owned(log: &amp;heapless::Vec&lt;AdcSample, 32&gt;) -&gt; Option&lt;AdcSample&gt; {
-    log.last().copied() // &lt;- AdcSample is Copy: ".copied()" is a 3-byte copy, not a heap-owning clone
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">latest_owned</span><span class="tok-punct">(</span><span class="tok-variable">log</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">AdcSample</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">AdcSample</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">last</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- AdcSample is Copy: &quot;.copied()&quot; is a 3-byte copy, not a heap-owning clone</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because <code>AdcSample</code> is <code>Copy</code>, pulling one out of the

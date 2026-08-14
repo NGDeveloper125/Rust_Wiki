@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1006,12 +1007,12 @@ can emit <code>#[automatically_derived]</code> on its own generated code too.</p
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Recognizing the compiler-generated attribute in expanded output</h3>
-            <pre><code class="rust">#[derive(Debug)] // &lt;- the compiler attaches #[automatically_derived] to the impl this generates
-struct Point { x: f64, y: f64 }
+            <pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span> <span class="tok-comment tok-anno">// &lt;- the compiler attaches #[automatically_derived] to the impl this generates</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Point</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 
-// roughly what `cargo expand` shows was generated (never written by hand):
-// #[automatically_derived]
-// impl std::fmt::Debug for Point { ... }
+<span class="tok-comment">// roughly what `cargo expand` shows was generated (never written by hand):</span>
+<span class="tok-comment">// #[automatically_derived]</span>
+<span class="tok-comment">// impl std::fmt::Debug for Point { ... }</span>
 </code></pre>
 
           </div>
@@ -1022,15 +1023,15 @@ compiler's built-in derives, should tag its own generated <code>impl</code> bloc
 with <code>#[automatically_derived]</code> too — matching the convention lets
 downstream lints treat the custom derive's output the same way they treat
 <code>Debug</code>/<code>Clone</code>/<code>PartialEq</code>.</p>
-<pre><code class="rust">// inside a #[proc_macro_derive(Describe)] function's generated output:
-let expanded = quote::quote! {
-    #[automatically_derived] // &lt;- marks this impl as generated, matching the compiler's own derives
-    impl Describe for #name {
-        fn describe() -&gt; &amp;'static str {
-            stringify!(#name)
-        }
-    }
-};
+<pre><code class="rust-hl"><span class="tok-comment">// inside a #[proc_macro_derive(Describe)] function's generated output:</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">expanded</span> <span class="tok-punct">=</span> <span class="tok-module">quote</span><span class="tok-punct">::</span><span class="tok-macro">quote!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[automatically_derived]</span> <span class="tok-comment tok-anno">// &lt;- marks this impl as generated, matching the compiler's own derives</span>
+    <span class="tok-keyword">impl</span> <span class="tok-trait">Describe</span> <span class="tok-keyword">for</span> <span class="tok-punct">#</span><span class="tok-variable">name</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">stringify!</span><span class="tok-punct">(</span><span class="tok-punct">#</span><span class="tok-variable">name</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Without the attribute, a lint has no way to
 distinguish a custom derive's generated code from something a human
@@ -1067,26 +1068,26 @@ same way regardless of target.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Recognizing it above a defmt-generated impl</h3>
-            <pre><code class="rust">#[derive(defmt::Format)] // &lt;- defmt's own proc-macro derive attaches #[automatically_derived] here too
-pub struct SensorReading {
-    raw_adc: u16,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[derive(defmt::Format)]</span> <span class="tok-comment tok-anno">// &lt;- defmt's own proc-macro derive attaches #[automatically_derived] here too</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">SensorReading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw_adc</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-// roughly what expands (never written by hand):
-// #[automatically_derived]
-// impl defmt::Format for SensorReading { ... }
+<span class="tok-comment">// roughly what expands (never written by hand):</span>
+<span class="tok-comment">// #[automatically_derived]</span>
+<span class="tok-comment">// impl defmt::Format for SensorReading { ... }</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Marking a register-access crate's own derive output the same way</h3>
-            <pre><code class="rust">// inside a #[proc_macro_derive(RegisterField)] function's generated output for a no_std register-access crate:
-let expanded = quote::quote! {
-    #[automatically_derived] // &lt;- marks this impl as generated, the same convention the compiler's own derives use
-    impl RegisterField for #name {
-        const OFFSET: u8 = #offset;
-    }
-};
+            <pre><code class="rust-hl"><span class="tok-comment">// inside a #[proc_macro_derive(RegisterField)] function's generated output for a no_std register-access crate:</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">expanded</span> <span class="tok-punct">=</span> <span class="tok-module">quote</span><span class="tok-punct">::</span><span class="tok-macro">quote!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[automatically_derived]</span> <span class="tok-comment tok-anno">// &lt;- marks this impl as generated, the same convention the compiler's own derives use</span>
+    <span class="tok-keyword">impl</span> <span class="tok-trait">RegisterField</span> <span class="tok-keyword">for</span> <span class="tok-punct">#</span><span class="tok-variable">name</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">OFFSET</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-punct">#</span><span class="tok-variable">offset</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>

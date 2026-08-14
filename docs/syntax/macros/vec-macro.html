@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1003,8 +1004,8 @@ the per-element cloning actually happening at runtime.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Building a Vec with the list and repeat forms</h3>
-            <pre><code class="rust">let ids = vec![101, 102, 103]; // &lt;- list form: three explicit elements
-let zeros = vec![0u8; 8];      // &lt;- repeat form: 8 copies of 0u8
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">ids</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">101</span><span class="tok-punct">,</span> <span class="tok-number">102</span><span class="tok-punct">,</span> <span class="tok-number">103</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- list form: three explicit elements</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">zeros</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">8</span><span class="tok-punct">]</span><span class="tok-punct">;</span>      <span class="tok-comment tok-anno">// &lt;- repeat form: 8 copies of 0u8</span>
 </code></pre>
 <p><strong>Restriction:</strong> the repeat count in <code>vec![element; count]</code> must be a
 <code>usize</code> expression, and <code>element</code> must implement <code>Clone</code> —
@@ -1017,13 +1018,13 @@ let zeros = vec![0u8; 8];      // &lt;- repeat form: 8 copies of 0u8
             <p>Pre-sizing a lookup table of per-sensor accumulators is the natural job
 for the repeat form — "N copies of a starting value" — rather than a
 manual push loop.</p>
-<pre><code class="rust">const SENSOR_COUNT: usize = 6;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">SENSOR_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">6</span><span class="tok-punct">;</span>
 
-let totals = vec![0.0_f64; SENSOR_COUNT];         // &lt;- repeat form: SENSOR_COUNT independent f64 accumulators, all 0.0
-let labels = vec!["temp", "humidity", "pressure"]; // &lt;- list form: explicit, known-up-front elements
+<span class="tok-keyword">let</span> <span class="tok-variable">totals</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0.0_f64</span><span class="tok-punct">;</span> <span class="tok-constant">SENSOR_COUNT</span><span class="tok-punct">]</span><span class="tok-punct">;</span>         <span class="tok-comment tok-anno">// &lt;- repeat form: SENSOR_COUNT independent f64 accumulators, all 0.0</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">labels</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-string">&quot;temp&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;humidity&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;pressure&quot;</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- list form: explicit, known-up-front elements</span>
 
-println!("{totals:?}");
-println!("{labels:?}");
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{totals:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{labels:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html">std Vec docs</a> treat
@@ -1037,11 +1038,11 @@ equal" — allocated and filled in one call rather than
             <p>Building a fixed-size grid of independently owned buffers — each row its
 own <code>Vec&lt;u8&gt;</code> — is exactly where <code>Clone</code>, not <code>Copy</code>, is what makes the
 repeat form legal at all.</p>
-<pre><code class="rust">const ROWS: usize = 4;
-const COLS: usize = 16;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">ROWS</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">4</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">COLS</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">16</span><span class="tok-punct">;</span>
 
-let grid: Vec&lt;Vec&lt;u8&gt;&gt; = vec![vec![0u8; COLS]; ROWS];
-// &lt;- the outer vec! clones the inner Vec&lt;u8&gt; (non-Copy) ROWS times — a real runtime clone per row, not a memcpy
+<span class="tok-keyword">let</span> <span class="tok-variable">grid</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-constant">COLS</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-constant">ROWS</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-comment tok-anno">// &lt;- the outer vec! clones the inner Vec&lt;u8&gt; (non-Copy) ROWS times — a real runtime clone per row, not a memcpy</span>
 </code></pre>
 <p>Reaching for <code>vec![inner; n]</code> here is correct
 specifically because each row must be its own independently owned
@@ -1084,25 +1085,25 @@ however big the source list turns out to be."</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Building a Vec once alloc is configured</h3>
-            <pre><code class="rust">extern crate alloc;
-use alloc::vec::Vec;
+            <pre><code class="rust-hl"><span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-fn make_thresholds() -&gt; Vec&lt;u16&gt; {
-    vec![100, 200, 300] // &lt;- list form, identical to hosted Rust once `alloc` + a #[global_allocator] are set up
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">make_thresholds</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-number">300</span><span class="tok-punct">]</span> <span class="tok-comment tok-anno">// &lt;- list form, identical to hosted Rust once `alloc` + a #[global_allocator] are set up</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Building a fixed-capacity buffer with heapless (no allocator)</h3>
-            <pre><code class="rust">use heapless::Vec;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-fn make_readings() -&gt; Vec&lt;f32, 8&gt; { // &lt;- capacity 8, fixed at compile time, no heap involved
-    let mut readings = Vec::new(); // &lt;- heapless::Vec has no vec!-style literal
-    readings.push(21.4).unwrap(); // &lt;- push() returns a Result, since the buffer can be full
-    readings.push(19.8).unwrap();
-    readings
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">make_readings</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f32</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- capacity 8, fixed at compile time, no heap involved</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- heapless::Vec has no vec!-style literal</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">21.4</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- push() returns a Result, since the buffer can be full</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">19.8</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">readings</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1111,13 +1112,13 @@ fn make_readings() -&gt; Vec&lt;f32, 8&gt; { // &lt;- capacity 8, fixed at compi
             <p>Where classic code reaches for <code>vec![0u8; 8]</code>'s repeat form, the
 <code>heapless</code> equivalent is a <code>.resize()</code> call on an already-constructed
 fixed-capacity <code>Vec</code>.</p>
-<pre><code class="rust">use heapless::Vec;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-fn zeroed_frame() -&gt; Vec&lt;u8, 8&gt; {
-    let mut frame = Vec::new();
-    frame.resize(8, 0u8).unwrap(); // &lt;- fills to 8 elements of 0u8, the resize() this page's vec![elem; n] maps onto
-    frame
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">zeroed_frame</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">frame</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">frame</span><span class="tok-punct">.</span><span class="tok-call-method">resize</span><span class="tok-punct">(</span><span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">0u8</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fills to 8 elements of 0u8, the resize() this page's vec![elem; n] maps onto</span>
+    <span class="tok-variable">frame</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

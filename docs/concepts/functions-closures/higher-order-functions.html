@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1009,12 +1010,12 @@ the closure's trait bound is just another trait bound like any other.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn make_multiplier(factor: i32) -&gt; impl Fn(i32) -&gt; i32 { // &lt;- returns a function: this is a higher-order function
-    move |n| n * factor
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">make_multiplier</span><span class="tok-punct">(</span><span class="tok-variable">factor</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">impl</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-type-return">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- returns a function: this is a higher-order function</span>
+    <span class="tok-keyword">move</span> <span class="tok-punct">|</span><span class="tok-variable">n</span><span class="tok-punct">|</span> <span class="tok-variable">n</span> <span class="tok-punct">*</span> <span class="tok-variable">factor</span>
+<span class="tok-punct">}</span>
 
-let triple = make_multiplier(3);
-println!("{}", triple(7));
+<span class="tok-keyword">let</span> <span class="tok-variable">triple</span> <span class="tok-punct">=</span> <span class="tok-call-free">make_multiplier</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">triple</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1032,16 +1033,16 @@ println!("{}", triple(7));
             <p>A validator "factory" builds a closure parameterized by a threshold,
 generic over any orderable type — the higher-order function <em>returns</em> the
 behavior rather than the caller writing it out each time.</p>
-<pre><code class="rust">fn threshold_validator&lt;T: PartialOrd + Copy&gt;(min: T) -&gt; impl Fn(T) -&gt; bool {
-    // &lt;- generic higher-order function: returns a closure specialized to `min`
-    move |value| value &gt;= min
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">threshold_validator</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">PartialOrd</span> <span class="tok-punct">+</span> <span class="tok-type">Copy</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">min</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">impl</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- generic higher-order function: returns a closure specialized to `min`</span>
+    <span class="tok-keyword">move</span> <span class="tok-punct">|</span><span class="tok-variable">value</span><span class="tok-punct">|</span> <span class="tok-variable">value</span> <span class="tok-punct">&gt;=</span> <span class="tok-variable">min</span>
+<span class="tok-punct">}</span>
 
-let is_adult = threshold_validator(18);
-let is_safe_temp = threshold_validator(-10.0);
+<span class="tok-keyword">let</span> <span class="tok-variable">is_adult</span> <span class="tok-punct">=</span> <span class="tok-call-free">threshold_validator</span><span class="tok-punct">(</span><span class="tok-number">18</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">is_safe_temp</span> <span class="tok-punct">=</span> <span class="tok-call-free">threshold_validator</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">10.0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert!(is_adult(21));
-assert!(is_safe_temp(5.0));
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">is_adult</span><span class="tok-punct">(</span><span class="tok-number">21</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">is_safe_temp</span><span class="tok-punct">(</span><span class="tok-number">5.0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Fn(T) -&gt; bool</code> instead of a boxed trait
@@ -1061,18 +1062,18 @@ recommends whenever the closure's exact type doesn't need to be erased.</p>
 instead of an inline closure — <code>filter</code> itself is the higher-order
 function here, and it doesn't care whether its argument is a closure or
 a bare function.</p>
-<pre><code class="rust">struct Order {
-    quantity: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn is_in_stock(order: &amp;&amp;Order) -&gt; bool { // &lt;- a plain function used as the higher-order argument
-    order.quantity &gt; 0
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_in_stock</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;&amp;</span><span class="tok-type">Order</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- a plain function used as the higher-order argument</span>
+    <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">quantity</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span>
+<span class="tok-punct">}</span>
 
-fn available_orders(orders: &amp;[Order]) -&gt; Vec&lt;&amp;Order&gt; {
-    orders.iter().filter(is_in_stock).collect()
-    // &lt;- `filter` is higher-order: it takes `is_in_stock` as its argument
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">available_orders</span><span class="tok-punct">(</span><span class="tok-variable">orders</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">Order</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type-return">Order</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">orders</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-variable">is_in_stock</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-comment tok-anno">// &lt;- `filter` is higher-order: it takes `is_in_stock` as its argument</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Iterator::filter</code> is declared generic over any
@@ -1091,33 +1092,33 @@ accept either form without a different call site.</p>
             <p>A processing pipeline accepts each step generically (so adding a step is
 zero-cost at the call site) but stores the accumulated steps as trait
 objects, since a <code>Vec</code> needs every element to share one concrete type.</p>
-<pre><code class="rust">struct Order {
-    quantity: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-struct Pipeline {
-    steps: Vec&lt;Box&lt;dyn Fn(&amp;mut Order)&gt;&gt;, // &lt;- stored as trait objects: steps come from different closures
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pipeline</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">steps</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Order</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- stored as trait objects: steps come from different closures</span>
+<span class="tok-punct">}</span>
 
-impl Pipeline {
-    fn new() -&gt; Self {
-        Pipeline { steps: Vec::new() }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Pipeline</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Pipeline</span> <span class="tok-punct">{</span> <span class="tok-variable">steps</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn add_step&lt;F: Fn(&amp;mut Order) + 'static&gt;(&amp;mut self, step: F) {
-        // &lt;- generic parameter here: no boxing cost at the caller's call site
-        self.steps.push(Box::new(step));
-    }
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">add_step</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">F</span><span class="tok-punct">:</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Order</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">step</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- generic parameter here: no boxing cost at the caller's call site</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">steps</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">step</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    fn run(&amp;self, order: &amp;mut Order) {
-        for step in &amp;self.steps {
-            step(order);
-        }
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Order</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">step</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">steps</span> <span class="tok-punct">{</span>
+            <span class="tok-call-free">step</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut pipeline = Pipeline::new();
-pipeline.add_step(|order: &amp;mut Order| order.quantity += 1);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">pipeline</span> <span class="tok-punct">=</span> <span class="tok-type">Pipeline</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">pipeline</span><span class="tok-punct">.</span><span class="tok-call-method">add_step</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Order</span><span class="tok-punct">|</span> <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">quantity</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> accepting <code>impl Trait</code>/a generic bound at the API
@@ -1160,14 +1161,14 @@ that allocates.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn to_fahrenheit(c: i32) -&gt; i32 { c * 9 / 5 + 32 }
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">to_fahrenheit</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span> <span class="tok-variable">c</span> <span class="tok-punct">*</span> <span class="tok-number">9</span> <span class="tok-punct">/</span> <span class="tok-number">5</span> <span class="tok-punct">+</span> <span class="tok-number">32</span> <span class="tok-punct">}</span>
 
-let readings_c: [i32; 4] = [20, 22, 19, 25];
-let mut readings_f = [0; 4];
+<span class="tok-keyword">let</span> <span class="tok-variable">readings_c</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">20</span><span class="tok-punct">,</span> <span class="tok-number">22</span><span class="tok-punct">,</span> <span class="tok-number">19</span><span class="tok-punct">,</span> <span class="tok-number">25</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">readings_f</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-for (dst, &amp;c) in readings_f.iter_mut().zip(readings_c.iter()) {
-    *dst = to_fahrenheit(c); // &lt;- `to_fahrenheit` passed as ordinary per-element behavior
-}
+<span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">dst</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-variable">c</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">readings_f</span><span class="tok-punct">.</span><span class="tok-call-method">iter_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">zip</span><span class="tok-punct">(</span><span class="tok-variable">readings_c</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">*</span><span class="tok-variable">dst</span> <span class="tok-punct">=</span> <span class="tok-call-free">to_fahrenheit</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `to_fahrenheit` passed as ordinary per-element behavior</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1186,16 +1187,16 @@ for (dst, &amp;c) in readings_f.iter_mut().zip(readings_c.iter()) {
 threshold uses the same <code>.filter()</code> higher-order function as hosted code,
 just over a stack-allocated <code>heapless::Vec</code> instead of an allocating
 <code>Vec</code> — no heap involved at any point in the chain.</p>
-<pre><code class="rust">// [dependencies] heapless = "0.8"
-use heapless::Vec;
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] heapless = &quot;0.8&quot;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-fn readings_above(readings: &amp;[i32], threshold: i32) -&gt; Vec&lt;i32, 8&gt; {
-    readings
-        .iter()
-        .copied()
-        .filter(|&amp;reading| reading &gt; threshold) // &lt;- `filter` is the higher-order function; the closure is its argument
-        .collect()
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">readings_above</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">threshold</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">i32</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">reading</span><span class="tok-punct">|</span> <span class="tok-variable">reading</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">threshold</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `filter` is the higher-order function; the closure is its argument</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>heapless::Vec&lt;T, N&gt;</code> gives iterator adaptors like
@@ -1216,13 +1217,13 @@ the <code>no_std</code> substitute for exactly this kind of collection-building 
 offset, generic over the reading type — a higher-order function that
 returns behavior rather than requiring every call site to inline its own
 correction formula, with the returned closure staying stack-allocated.</p>
-<pre><code class="rust">fn calibrator(offset: i32) -&gt; impl Fn(i32) -&gt; i32 {
-    // &lt;- higher-order function: returns a closure specialized to `offset`, no boxing needed
-    move |raw| raw + offset
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">calibrator</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">impl</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-type-return">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- higher-order function: returns a closure specialized to `offset`, no boxing needed</span>
+    <span class="tok-keyword">move</span> <span class="tok-punct">|</span><span class="tok-variable">raw</span><span class="tok-punct">|</span> <span class="tok-variable">raw</span> <span class="tok-punct">+</span> <span class="tok-variable">offset</span>
+<span class="tok-punct">}</span>
 
-let correct_temp_sensor = calibrator(-3);
-let corrected = correct_temp_sensor(21);
+<span class="tok-keyword">let</span> <span class="tok-variable">correct_temp_sensor</span> <span class="tok-punct">=</span> <span class="tok-call-free">calibrator</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">corrected</span> <span class="tok-punct">=</span> <span class="tok-call-free">correct_temp_sensor</span><span class="tok-punct">(</span><span class="tok-number">21</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>impl Fn(i32) -&gt; i32</code> instead of

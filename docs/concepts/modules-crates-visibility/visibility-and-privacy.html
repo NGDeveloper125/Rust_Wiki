@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1015,24 +1016,24 @@ it to apply to.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">mod account {
-    pub struct Account {
-        id: u32,             // private: not reachable outside this module
-        pub owner: String,   // &lt;- pub: reachable from anywhere the module itself is
-    }
+        <pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">account</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Account</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>             <span class="tok-comment">// private: not reachable outside this module</span>
+        <span class="tok-keyword">pub</span> <span class="tok-variable">owner</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>   <span class="tok-comment tok-anno">// &lt;- pub: reachable from anywhere the module itself is</span>
+    <span class="tok-punct">}</span>
 
-    impl Account {
-        pub fn new(id: u32, owner: String) -&gt; Self {
-            Account { id, owner }
-        }
-    }
-}
+    <span class="tok-keyword">impl</span> <span class="tok-type">Account</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">owner</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+            <span class="tok-type">Account</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">,</span> <span class="tok-variable">owner</span> <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    let acc = account::Account::new(1, "Priya".into());
-    println!("{}", acc.owner);   // fine: owner is pub
-    // println!("{}", acc.id);  // would fail to compile: id is private
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">acc</span> <span class="tok-punct">=</span> <span class="tok-module">account</span><span class="tok-punct">::</span><span class="tok-type">Account</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Priya&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">acc</span><span class="tok-punct">.</span><span class="tok-field">owner</span><span class="tok-punct">)</span><span class="tok-punct">;</span>   <span class="tok-comment">// fine: owner is pub</span>
+    <span class="tok-comment">// println!(&quot;{}&quot;, acc.id);  // would fail to compile: id is private</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1050,28 +1051,28 @@ fn main() {
             <p>An <code>Account</code>'s balance must never go negative, so the field stays private
 and the only way to change it is through a method that enforces the
 rule.</p>
-<pre><code class="rust">pub struct Account {
-    owner: String,
-    balance_cents: i64,   // &lt;- private: no outside code can set this directly
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Account</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">owner</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">balance_cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span>   <span class="tok-comment tok-anno">// &lt;- private: no outside code can set this directly</span>
+<span class="tok-punct">}</span>
 
-impl Account {
-    pub fn open(owner: String) -&gt; Self {
-        Account { owner, balance_cents: 0 }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Account</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">open</span><span class="tok-punct">(</span><span class="tok-variable">owner</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Account</span> <span class="tok-punct">{</span> <span class="tok-variable">owner</span><span class="tok-punct">,</span> <span class="tok-variable">balance_cents</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn deposit(&amp;mut self, cents: i64) -&gt; Result&lt;(), &amp;'static str&gt; {
-        if cents &lt;= 0 {
-            return Err("deposit must be positive");
-        }
-        self.balance_cents += cents;
-        Ok(())
-    }
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">deposit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">cents</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;deposit must be positive&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">balance_cents</span> <span class="tok-punct">+=</span> <span class="tok-variable">cents</span><span class="tok-punct">;</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
 
-    pub fn balance_cents(&amp;self) -&gt; i64 { // &lt;- read-only access, no bypass of deposit's check
-        self.balance_cents
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">balance_cents</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- read-only access, no bypass of deposit's check</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">balance_cents</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping <code>balance_cents</code> private and reachable only
@@ -1091,23 +1092,23 @@ recommends private fields for exactly this reason.</p>
             <p>A crate's internal helper function needs to stay invisible to the
 crate's users, but still be reachable from its own unit tests, which live
 in a nested <code>tests</code> module in the same file.</p>
-<pre><code class="rust">pub fn format_receipt(total_cents: i64) -&gt; String {
-    format!("Total: {}", format_cents(total_cents))
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">format_receipt</span><span class="tok-punct">(</span><span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;Total: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">format_cents</span><span class="tok-punct">(</span><span class="tok-variable">total_cents</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn format_cents(cents: i64) -&gt; String { // &lt;- private: an implementation detail, not part of the public API
-    format!("${}.{:02}", cents / 100, cents % 100)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">format_cents</span><span class="tok-punct">(</span><span class="tok-variable">cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- private: an implementation detail, not part of the public API</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;${}.{:02}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">cents</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-variable">cents</span> <span class="tok-punct">%</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::*; // &lt;- test module is a descendant, so it can see `format_cents` despite it being private
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- test module is a descendant, so it can see `format_cents` despite it being private</span>
 
-    #[test]
-    fn formats_dollars_and_cents() {
-        assert_eq!(format_cents(1999), "$19.99");
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">formats_dollars_and_cents</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">format_cents</span><span class="tok-punct">(</span><span class="tok-number">1999</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;$19.99&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because descendant modules can always see their
@@ -1127,22 +1128,22 @@ relies on throughout.</p>
             <p>rustdoc only generates public documentation pages for items reachable
 from the crate's public API, so marking something private is also how
 it stays out of the docs a crate's users see.</p>
-<pre><code class="rust">pub mod client {                     // &lt;- pub: this module and its public items appear in rustdoc
-    pub struct WeatherClient {
-        api_key: String,             // &lt;- private field: never shown in generated docs
-    }
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">client</span> <span class="tok-punct">{</span>                     <span class="tok-comment tok-anno">// &lt;- pub: this module and its public items appear in rustdoc</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">WeatherClient</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">api_key</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>             <span class="tok-comment tok-anno">// &lt;- private field: never shown in generated docs</span>
+    <span class="tok-punct">}</span>
 
-    impl WeatherClient {
-        /// Creates a client authenticated with `api_key`.
-        pub fn new(api_key: String) -&gt; Self { // &lt;- pub: shows up as public API documentation
-            WeatherClient { api_key }
-        }
-    }
+    <span class="tok-keyword">impl</span> <span class="tok-type">WeatherClient</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">/// Creates a client authenticated with `api_key`.</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">api_key</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- pub: shows up as public API documentation</span>
+            <span class="tok-type">WeatherClient</span> <span class="tok-punct">{</span> <span class="tok-variable">api_key</span> <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn sign_request(_key: &amp;str) -&gt; String { // &lt;- private helper: absent from the published docs
-        String::new()
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">sign_request</span><span class="tok-punct">(</span><span class="tok-variable">_key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- private helper: absent from the published docs</span>
+        <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> rustdoc renders exactly the items visible from the
@@ -1175,15 +1176,15 @@ small, audited surface instead of scattered through application code.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">pub struct Gpio {
-    port: *mut u32,   // private: raw register pointer, never exposed
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>   <span class="tok-comment">// private: raw register pointer, never exposed</span>
+<span class="tok-punct">}</span>
 
-impl Gpio {
-    pub fn set_high(&amp;mut self, pin: u8) {
-        unsafe { self.port.write_volatile(self.port.read_volatile() | (1 &lt;&lt; pin)) } // &lt;- unsafe write, contained here
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">port</span><span class="tok-punct">.</span><span class="tok-call-method">write_volatile</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">port</span><span class="tok-punct">.</span><span class="tok-call-method">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-variable">pin</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- unsafe write, contained here</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1201,23 +1202,23 @@ impl Gpio {
             <p>A GPIO driver's whole safety argument rests on nobody outside the module
 ever getting a raw pointer to the peripheral's registers — the <code>pub</code>
 surface only offers already-validated operations.</p>
-<pre><code class="rust">pub struct Gpio {
-    port: *mut u32,        // &lt;- private: the raw register address never leaves this module
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>        <span class="tok-comment tok-anno">// &lt;- private: the raw register address never leaves this module</span>
+<span class="tok-punct">}</span>
 
-impl Gpio {
-    /// # Safety
-    /// `port` must be a valid pointer to this peripheral's GPIO register block.
-    pub unsafe fn new(port: *mut u32) -&gt; Self {  // &lt;- the one place the invariant is asserted, once
-        Gpio { port }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// # Safety</span>
+    <span class="tok-comment">/// `port` must be a valid pointer to this peripheral's GPIO register block.</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>  <span class="tok-comment tok-anno">// &lt;- the one place the invariant is asserted, once</span>
+        <span class="tok-type">Gpio</span> <span class="tok-punct">{</span> <span class="tok-variable">port</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn set_high(&amp;mut self, pin: u8) {         // &lt;- safe: callers can no longer misuse the address
-        unsafe {
-            self.port.write_volatile(self.port.read_volatile() | (1 &lt;&lt; pin));
-        }
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>         <span class="tok-comment tok-anno">// &lt;- safe: callers can no longer misuse the address</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">port</span><span class="tok-punct">.</span><span class="tok-call-method">write_volatile</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">port</span><span class="tok-punct">.</span><span class="tok-call-method">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-variable">pin</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> funneling every register access through a handful of
@@ -1238,20 +1239,20 @@ here to memory-mapped registers.</p>
             <p>A HAL crate's generated docs should read like a peripheral's user
 manual, not its register map — so the register-level constants and raw
 pointer types stay private and never appear in the published API.</p>
-<pre><code class="rust">mod registers {                 // &lt;- private module: register offsets and bit positions
-    pub(super) const ENABLE_BIT: u32 = 1 &lt;&lt; 0;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">registers</span> <span class="tok-punct">{</span>                 <span class="tok-comment tok-anno">// &lt;- private module: register offsets and bit positions</span>
+    <span class="tok-keyword">pub</span><span class="tok-punct">(</span><span class="tok-keyword">super</span><span class="tok-punct">)</span> <span class="tok-keyword">const</span> <span class="tok-constant">ENABLE_BIT</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-pub struct Spi {
-    // ...
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Spi</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ...</span>
+<span class="tok-punct">}</span>
 
-impl Spi {
-    /// Enables the SPI peripheral.
-    pub fn enable(&amp;mut self) {  // &lt;- pub: this is what shows up in rustdoc
-        // uses registers::ENABLE_BIT internally
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Spi</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// Enables the SPI peripheral.</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">enable</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>  <span class="tok-comment tok-anno">// &lt;- pub: this is what shows up in rustdoc</span>
+        <span class="tok-comment">// uses registers::ENABLE_BIT internally</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping register offsets and bit masks in a

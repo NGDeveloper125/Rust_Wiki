@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -991,8 +992,8 @@ is needed but shared ownership isn't.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let boxed: Box&lt;i32&gt; = Box::new(5); // &lt;- value is allocated on the heap; boxed is its sole owner
-println!("{boxed}");
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">boxed</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- value is allocated on the heap; boxed is its sole owner</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{boxed}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1010,20 +1011,20 @@ println!("{boxed}");
             <p>An AST-like <code>Expr</code> type that contains itself needs <code>Box</code> to give the
 recursive variant a fixed, known size — without it, the type would need
 infinite space.</p>
-<pre><code class="rust">enum Expr {
-    Literal(i32),
-    Add(Box&lt;Expr&gt;, Box&lt;Expr&gt;), // &lt;- Box breaks the infinite size: each variant is one pointer
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Expr</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Literal</span><span class="tok-punct">(</span><span class="tok-type">i32</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Add</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">Expr</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">Expr</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- Box breaks the infinite size: each variant is one pointer</span>
+<span class="tok-punct">}</span>
 
-fn eval(e: &amp;Expr) -&gt; i32 {
-    match e {
-        Expr::Literal(n) =&gt; *n,
-        Expr::Add(lhs, rhs) =&gt; eval(lhs) + eval(rhs),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">eval</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Expr</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">e</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Literal</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">*</span><span class="tok-variable">n</span><span class="tok-punct">,</span>
+        <span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Add</span><span class="tok-punct">(</span><span class="tok-variable">lhs</span><span class="tok-punct">,</span> <span class="tok-variable">rhs</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-call-free">eval</span><span class="tok-punct">(</span><span class="tok-variable">lhs</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-call-free">eval</span><span class="tok-punct">(</span><span class="tok-variable">rhs</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let expr = Expr::Add(Box::new(Expr::Literal(2)), Box::new(Expr::Literal(3)));
-println!("{}", eval(&amp;expr));
+<span class="tok-keyword">let</span> <span class="tok-variable">expr</span> <span class="tok-punct">=</span> <span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Add</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Literal</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Literal</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">eval</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">expr</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without <code>Box</code>, <code>Expr::Add(Expr, Expr)</code> would need
@@ -1043,24 +1044,24 @@ store instead, which the
             <p>A plugin-style list of handlers with different concrete types needs
 somewhere to live together despite not sharing a size — <code>Box&lt;dyn Trait&gt;</code>
 erases the concrete type behind a uniform, heap-allocated pointer.</p>
-<pre><code class="rust">trait Handler {
-    fn handle(&amp;self, event: &amp;str);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Handler</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">handle</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">event</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Logger;
-impl Handler for Logger {
-    fn handle(&amp;self, event: &amp;str) { println!("log: {event}"); }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Logger</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Handler</span> <span class="tok-keyword">for</span> <span class="tok-type">Logger</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">handle</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">event</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;log: {event}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct Notifier;
-impl Handler for Notifier {
-    fn handle(&amp;self, event: &amp;str) { println!("notify: {event}"); }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Notifier</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Handler</span> <span class="tok-keyword">for</span> <span class="tok-type">Notifier</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">handle</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">event</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;notify: {event}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let handlers: Vec&lt;Box&lt;dyn Handler&gt;&gt; = vec![Box::new(Logger), Box::new(Notifier)]; // &lt;- heterogeneous, heap-allocated trait objects
-for h in &amp;handlers {
-    h.handle("order.created");
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">handlers</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Handler</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Logger</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Notifier</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- heterogeneous, heap-allocated trait objects</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">h</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">handlers</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">h</span><span class="tok-punct">.</span><span class="tok-call-method">handle</span><span class="tok-punct">(</span><span class="tok-string">&quot;order.created&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Box&lt;dyn Handler&gt;</code> is needed because <code>Logger</code> and
@@ -1115,11 +1116,11 @@ genuinely has no fixed upper bound.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">extern crate alloc;
-use alloc::boxed::Box;
+        <pre><code class="rust-hl"><span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">boxed</span><span class="tok-punct">::</span><span class="tok-type">Box</span><span class="tok-punct">;</span>
 
-let boxed: Box&lt;i32&gt; = Box::new(5); // &lt;- identical to hosted Rust, once alloc + a #[global_allocator] exist
-println!("{boxed}");
+<span class="tok-keyword">let</span> <span class="tok-variable">boxed</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- identical to hosted Rust, once alloc + a #[global_allocator] exist</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{boxed}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1138,20 +1139,20 @@ println!("{boxed}");
 structurally needs indirection — once a project already depends on
 <code>alloc</code>, boxing the recursive fields is the direct embedded equivalent of
 the hosted version of this example.</p>
-<pre><code class="rust">extern crate alloc;
-use alloc::boxed::Box;
+<pre><code class="rust-hl"><span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">boxed</span><span class="tok-punct">::</span><span class="tok-type">Box</span><span class="tok-punct">;</span>
 
-enum Expr {
-    Literal(i32),
-    Add(Box&lt;Expr&gt;, Box&lt;Expr&gt;), // &lt;- same fix as hosted Rust: Box breaks the infinite size
-}
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Expr</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Literal</span><span class="tok-punct">(</span><span class="tok-type">i32</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Add</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">Expr</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-type">Expr</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- same fix as hosted Rust: Box breaks the infinite size</span>
+<span class="tok-punct">}</span>
 
-fn eval(e: &amp;Expr) -&gt; i32 {
-    match e {
-        Expr::Literal(n) =&gt; *n,
-        Expr::Add(lhs, rhs) =&gt; eval(lhs) + eval(rhs),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">eval</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Expr</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">e</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Literal</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">*</span><span class="tok-variable">n</span><span class="tok-punct">,</span>
+        <span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Add</span><span class="tok-punct">(</span><span class="tok-variable">lhs</span><span class="tok-punct">,</span> <span class="tok-variable">rhs</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-call-free">eval</span><span class="tok-punct">(</span><span class="tok-variable">lhs</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-call-free">eval</span><span class="tok-punct">(</span><span class="tok-variable">rhs</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an expression tree's depth depends on runtime input, so
@@ -1175,21 +1176,21 @@ allocator-free tradeoff the
 allocation to be handled polymorphically — <code>&amp;dyn Trait</code> gives one
 concrete instance dynamic dispatch with a compile-time-known size,
 without <code>Box&lt;dyn Trait&gt;</code>'s <code>alloc</code> requirement.</p>
-<pre><code class="rust">trait Sensor {
-    fn read(&amp;self) -&gt; f32;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Thermometer;
-impl Sensor for Thermometer {
-    fn read(&amp;self) -&gt; f32 { 21.4 }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Thermometer</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Thermometer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span> <span class="tok-number">21.4</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn log_reading(sensor: &amp;dyn Sensor) { // &lt;- &amp;dyn Trait: no heap, no alloc, works on a bare #![no_std] target
-    println!("{}", sensor.read());
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Sensor</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- &amp;dyn Trait: no heap, no alloc, works on a bare #![no_std] target</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let thermometer = Thermometer;
-log_reading(&amp;thermometer);
+<span class="tok-keyword">let</span> <span class="tok-variable">thermometer</span> <span class="tok-punct">=</span> <span class="tok-type">Thermometer</span><span class="tok-punct">;</span>
+<span class="tok-call-free">log_reading</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">thermometer</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>&amp;dyn Sensor</code> gets the same erased-type, dynamic-dispatch

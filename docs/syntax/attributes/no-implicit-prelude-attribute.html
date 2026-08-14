@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1006,12 +1007,12 @@ only what's implicitly visible to them.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Blocking implicit prelude imports in a module</h3>
-            <pre><code class="rust">#[no_implicit_prelude] // &lt;- nothing from the standard prelude is implicitly in scope here
-mod generated {
-    pub fn identity(x: i32) -&gt; i32 {
-        x // no `Option`/`Vec`/etc. needed here, so nothing is missing
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[no_implicit_prelude]</span> <span class="tok-comment tok-anno">// &lt;- nothing from the standard prelude is implicitly in scope here</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">generated</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">identity</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">x</span> <span class="tok-comment">// no `Option`/`Vec`/etc. needed here, so nothing is missing</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1021,15 +1022,15 @@ mod generated {
 functions and wants an absolute guarantee that none of its generated
 identifiers can accidentally resolve to a prelude item instead of the
 name the generator intended.</p>
-<pre><code class="rust">#[no_implicit_prelude] // &lt;- guarantees a blank namespace: no accidental prelude shadowing
-mod schema_generated {
-    use core::option::Option; // &lt;- must be spelled out explicitly; nothing is implicit here
+<pre><code class="rust-hl"><span class="tok-attribute">#[no_implicit_prelude]</span> <span class="tok-comment tok-anno">// &lt;- guarantees a blank namespace: no accidental prelude shadowing</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">schema_generated</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">option</span><span class="tok-punct">::</span><span class="tok-type">Option</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- must be spelled out explicitly; nothing is implicit here</span>
 
-    pub struct Record {
-        pub id: u64,
-        pub label: Option&lt;&amp;'static str&gt;,
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Record</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+        <span class="tok-keyword">pub</span> <span class="tok-variable">label</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type">str</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Codegen tools produce identifiers programmatically and
 can't always predict every name a future prelude addition might
@@ -1075,14 +1076,14 @@ with genuine embedded-specific pull.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A peripheral-register codegen module, still not reaching for this attribute</h3>
-            <pre><code class="rust">#[no_implicit_prelude] // &lt;- guarantees no accidental collision with prelude items
-mod gpio_regs_generated {
-    use core::marker::PhantomData; // must be spelled out; nothing implicit here
+            <pre><code class="rust-hl"><span class="tok-attribute">#[no_implicit_prelude]</span> <span class="tok-comment tok-anno">// &lt;- guarantees no accidental collision with prelude items</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">gpio_regs_generated</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">marker</span><span class="tok-punct">::</span><span class="tok-type">PhantomData</span><span class="tok-punct">;</span> <span class="tok-comment">// must be spelled out; nothing implicit here</span>
 
-    pub struct MODER&lt;T&gt; {
-        pub(crate) _marker: PhantomData&lt;T&gt;,
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">MODER</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span><span class="tok-punct">(</span><span class="tok-keyword">crate</span><span class="tok-punct">)</span> <span class="tok-variable">_marker</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>This is the same kind of guaranteed-empty-namespace guarantee a
 non-embedded codegen tool would want, just applied to a register-

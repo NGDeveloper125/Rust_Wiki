@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -994,18 +995,18 @@ never forget to use them.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Guard;
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Guard</span><span class="tok-punct">;</span>
 
-impl Drop for Guard {
-    fn drop(&amp;mut self) {
-        println!("cleaning up");
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">Guard</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;cleaning up&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-{
-    let _g = Guard;
-    println!("using resource");
-} // &lt;- _g goes out of scope here: drop() runs automatically
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_g</span> <span class="tok-punct">=</span> <span class="tok-type">Guard</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;using resource&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- _g goes out of scope here: drop() runs automatically</span>
 </code></pre>
 
       </section>
@@ -1023,27 +1024,27 @@ impl Drop for Guard {
             <p>A file-writing session wraps an open file and guarantees its buffered
 contents are flushed no matter how the enclosing function exits —
 including an early <code>return</code>.</p>
-<pre><code class="rust">struct LogSession {
-    file: std::io::BufWriter&lt;std::fs::File&gt;, // &lt;- BufWriter buffers in userspace, so flushing is meaningful
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">LogSession</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">file</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">BufWriter</span><span class="tok-punct">&lt;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-type">File</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- BufWriter buffers in userspace, so flushing is meaningful</span>
+<span class="tok-punct">}</span>
 
-impl Drop for LogSession {
-    fn drop(&amp;mut self) {
-        use std::io::Write;
-        let _ = self.file.flush(); // &lt;- runs on every exit path: normal return, early return, or panic
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">LogSession</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Write</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">file</span><span class="tok-punct">.</span><span class="tok-call-method">flush</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- runs on every exit path: normal return, early return, or panic</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn write_entries(session: &amp;mut LogSession, entries: &amp;[&amp;str]) -&gt; std::io::Result&lt;()&gt; {
-    use std::io::Write;
-    for e in entries {
-        if e.is_empty() {
-            return Ok(()); // &lt;- only the borrow of session ends here; Drop (and the flush) fires at the end of the owning scope
-        }
-        writeln!(session.file, "{e}")?;
-    }
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">write_entries</span><span class="tok-punct">(</span><span class="tok-variable">session</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">LogSession</span><span class="tok-punct">,</span> <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Write</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">e</span> <span class="tok-keyword">in</span> <span class="tok-variable">entries</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">e</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- only the borrow of session ends here; Drop (and the flush) fires at the end of the owning scope</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-macro">writeln!</span><span class="tok-punct">(</span><span class="tok-variable">session</span><span class="tok-punct">.</span><span class="tok-field">file</span><span class="tok-punct">,</span> <span class="tok-string">&quot;{e}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> tying cleanup to a value's scope via <code>Drop</code> means every
@@ -1063,20 +1064,20 @@ this as RAII's central guarantee.</p>
             <p>A database transaction is represented as a guard value — if the code
 returns early or panics before calling <code>.commit()</code>, <code>Drop</code> rolls the
 transaction back automatically instead of leaving it half-applied.</p>
-<pre><code class="rust">// [dependencies] sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }, tokio = { version = "1", features = ["full"] }
-use sqlx::PgPool;
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] sqlx = { version = &quot;0.8&quot;, features = [&quot;postgres&quot;, &quot;runtime-tokio&quot;] }, tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-type">PgPool</span><span class="tok-punct">;</span>
 
-async fn transfer_funds(pool: &amp;PgPool, from: i64, to: i64, cents: i64) -&gt; sqlx::Result&lt;()&gt; {
-    let mut tx = pool.begin().await?; // &lt;- transaction guard: rolls back on Drop unless committed
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">transfer_funds</span><span class="tok-punct">(</span><span class="tok-variable">pool</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">PgPool</span><span class="tok-punct">,</span> <span class="tok-variable">from</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span> <span class="tok-variable">to</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">,</span> <span class="tok-variable">cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">tx</span> <span class="tok-punct">=</span> <span class="tok-variable">pool</span><span class="tok-punct">.</span><span class="tok-call-method">begin</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- transaction guard: rolls back on Drop unless committed</span>
 
-    sqlx::query("UPDATE accounts SET balance_cents = balance_cents - $1 WHERE id = $2")
-        .bind(cents).bind(from).execute(&amp;mut *tx).await?;
-    sqlx::query("UPDATE accounts SET balance_cents = balance_cents + $1 WHERE id = $2")
-        .bind(cents).bind(to).execute(&amp;mut *tx).await?;
+    <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-call-assoc">query</span><span class="tok-punct">(</span><span class="tok-string">&quot;UPDATE accounts SET balance_cents = balance_cents - $1 WHERE id = $2&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">bind</span><span class="tok-punct">(</span><span class="tok-variable">cents</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">bind</span><span class="tok-punct">(</span><span class="tok-variable">from</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">*</span><span class="tok-variable">tx</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-module">sqlx</span><span class="tok-punct">::</span><span class="tok-call-assoc">query</span><span class="tok-punct">(</span><span class="tok-string">&quot;UPDATE accounts SET balance_cents = balance_cents + $1 WHERE id = $2&quot;</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">bind</span><span class="tok-punct">(</span><span class="tok-variable">cents</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">bind</span><span class="tok-punct">(</span><span class="tok-variable">to</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">execute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">*</span><span class="tok-variable">tx</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
 
-    tx.commit().await?; // &lt;- only this makes the changes permanent; any earlier `?` drops `tx` first
-    Ok(())
-}
+    <span class="tok-variable">tx</span><span class="tok-punct">.</span><span class="tok-call-method">commit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- only this makes the changes permanent; any earlier `?` drops `tx` first</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> representing an open transaction as a guard whose
@@ -1123,25 +1124,25 @@ a matching "release" call at every possible exit.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct CriticalSection;
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">CriticalSection</span><span class="tok-punct">;</span>
 
-impl CriticalSection {
-    fn enter() -&gt; Self { // &lt;- disables interrupts on construction
-        // ... disable interrupts
-        CriticalSection
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">CriticalSection</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">enter</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- disables interrupts on construction</span>
+        <span class="tok-comment">// ... disable interrupts</span>
+        <span class="tok-type">CriticalSection</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Drop for CriticalSection {
-    fn drop(&amp;mut self) {
-        // ... re-enable interrupts, unconditionally
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">CriticalSection</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... re-enable interrupts, unconditionally</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn read_shared_counter() -&gt; u32 {
-    let _guard = CriticalSection::enter();
-    42 // placeholder for a real read of interrupt-shared state
-} // &lt;- _guard drops here: interrupts are re-enabled even on an early return above it
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_shared_counter</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_guard</span> <span class="tok-punct">=</span> <span class="tok-type">CriticalSection</span><span class="tok-punct">::</span><span class="tok-call-assoc">enter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-number">42</span> <span class="tok-comment">// placeholder for a real read of interrupt-shared state</span>
+<span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- _guard drops here: interrupts are re-enabled even on an early return above it</span>
 </code></pre>
 
       </section>
@@ -1160,31 +1161,31 @@ fn read_shared_counter() -&gt; u32 {
 known-safe default (input, high-impedance) the instant it's done being
 used, even if the function driving it returns early or panics partway
 through.</p>
-<pre><code class="rust">struct OutputPin { number: u8 } // stand-in for a HAL output-pin type
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span> <span class="tok-variable">number</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span> <span class="tok-comment">// stand-in for a HAL output-pin type</span>
 
-struct DriveHigh&lt;'a&gt; { pin: &amp;'a mut OutputPin }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">DriveHigh</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-keyword">mut</span> <span class="tok-type">OutputPin</span> <span class="tok-punct">}</span>
 
-impl&lt;'a&gt; DriveHigh&lt;'a&gt; {
-    fn new(pin: &amp;'a mut OutputPin) -&gt; Self {
-        // ... set the pin high
-        DriveHigh { pin }
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-type">DriveHigh</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-keyword">mut</span> <span class="tok-type">OutputPin</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... set the pin high</span>
+        <span class="tok-type">DriveHigh</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl&lt;'a&gt; Drop for DriveHigh&lt;'a&gt; {
-    fn drop(&amp;mut self) {
-        // ... set the pin back to input/high-impedance, regardless of how the guard's scope ended
-        let _ = self.pin.number;
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">DriveHigh</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... set the pin back to input/high-impedance, regardless of how the guard's scope ended</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pin</span><span class="tok-punct">.</span><span class="tok-field">number</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn pulse(pin: &amp;mut OutputPin, should_abort: bool) {
-    let _guard = DriveHigh::new(pin);
-    if should_abort {
-        return; // &lt;- _guard still drops here: the pin is returned to a safe state either way
-    }
-    // ... hold the pin high for the pulse duration
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">pulse</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">OutputPin</span><span class="tok-punct">,</span> <span class="tok-variable">should_abort</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_guard</span> <span class="tok-punct">=</span> <span class="tok-type">DriveHigh</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">should_abort</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- _guard still drops here: the pin is returned to a safe state either way</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-comment">// ... hold the pin high for the pulse duration</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> tying "pin driven high" to a guard's scope means every

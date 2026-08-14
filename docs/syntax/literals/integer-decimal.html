@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -993,7 +994,7 @@ to pin the literal's type explicitly — see
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Writing everyday quantities in decimal</h3>
-            <pre><code class="rust">let count = 42; // &lt;- decimal integer literal: base 10, no prefix needed
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">count</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- decimal integer literal: base 10, no prefix needed</span>
 </code></pre>
 
           </div>
@@ -1002,12 +1003,12 @@ to pin the literal's type explicitly — see
             <p>Decimal is the natural base for everyday quantities — order counts, prices
 in cents — and feeds straight into checked arithmetic when the inputs
 might overflow.</p>
-<pre><code class="rust">fn total_cents(unit_price_cents: u32, quantity: u32) -&gt; Option&lt;u32&gt; {
-    unit_price_cents.checked_mul(quantity)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">total_cents</span><span class="tok-punct">(</span><span class="tok-variable">unit_price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">unit_price_cents</span><span class="tok-punct">.</span><span class="tok-call-method">checked_mul</span><span class="tok-punct">(</span><span class="tok-variable">quantity</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let subtotal = total_cents(1999, 3); // &lt;- decimal literals: the natural base for prices and counts
-assert_eq!(subtotal, Some(5997));
+<span class="tok-keyword">let</span> <span class="tok-variable">subtotal</span> <span class="tok-punct">=</span> <span class="tok-call-free">total_cents</span><span class="tok-punct">(</span><span class="tok-number">1999</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- decimal literals: the natural base for prices and counts</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">subtotal</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">5997</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>checked_mul</code> turns a would-be silent overflow into an
 explicit <code>None</code> the caller must handle — the
@@ -1022,19 +1023,19 @@ silent overflow.</p>
             <p>A <code>Default</code> impl built from plain decimal literals gives callers a
 documented, zero-argument starting point instead of forcing every call
 site to repeat the same constants.</p>
-<pre><code class="rust">struct RetryPolicy {
-    max_attempts: u32,
-    backoff_ms: u64,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">backoff_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Default for RetryPolicy {
-    fn default() -&gt; Self {
-        RetryPolicy {
-            max_attempts: 3,   // &lt;- decimal literal: a sensible default value
-            backoff_ms: 500,   // &lt;- decimal literal: a sensible default value
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Default</span> <span class="tok-keyword">for</span> <span class="tok-type">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RetryPolicy</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-number">3</span><span class="tok-punct">,</span>   <span class="tok-comment tok-anno">// &lt;- decimal literal: a sensible default value</span>
+            <span class="tok-variable">backoff_ms</span><span class="tok-punct">:</span> <span class="tok-number">500</span><span class="tok-punct">,</span>   <span class="tok-comment tok-anno">// &lt;- decimal literal: a sensible default value</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Implementing <code>Default</code> with straightforward literal
 values documents the intended starting point at one place, which the
@@ -1073,26 +1074,26 @@ base.)</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Sizing a heapless buffer with a plain decimal constant</h3>
-            <pre><code class="rust">use heapless::Vec;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-const SAMPLE_COUNT: usize = 32; // &lt;- decimal literal: a buffer capacity, nothing embedded-specific about the base
-let mut samples: Vec&lt;u16, SAMPLE_COUNT&gt; = Vec::new();
+<span class="tok-keyword">const</span> <span class="tok-constant">SAMPLE_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- decimal literal: a buffer capacity, nothing embedded-specific about the base</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-constant">SAMPLE_COUNT</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Retrying a sensor read a fixed number of times</h3>
-            <pre><code class="rust">fn read_with_retries&lt;E&gt;(mut read: impl FnMut() -&gt; Result&lt;u16, E&gt;) -&gt; Result&lt;u16, E&gt; {
-    let max_attempts = 3; // &lt;- decimal literal: a plain retry count, same as it would be in hosted code
-    let mut last_err = None;
-    for _ in 0..max_attempts {
-        match read() {
-            Ok(v) =&gt; return Ok(v),
-            Err(e) =&gt; last_err = Some(e),
-        }
-    }
-    Err(last_err.unwrap())
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">read_with_retries</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">E</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">read</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-field">FnMut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-generic-param">E</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-generic-param">E</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">max_attempts</span> <span class="tok-punct">=</span> <span class="tok-number">3</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- decimal literal: a plain retry count, same as it would be in hosted code</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">last_err</span> <span class="tok-punct">=</span> <span class="tok-field">None</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-variable">max_attempts</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">match</span> <span class="tok-call-free">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">return</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+            <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">last_err</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">last_err</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

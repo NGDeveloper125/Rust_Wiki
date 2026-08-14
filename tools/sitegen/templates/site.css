@@ -65,14 +65,6 @@
     --shadow-card: 0 2px 10px rgba(0,0,0,.28);
     --scrim: rgba(0,0,0,.55);
 
-    /* code tokens on dark panel */
-    --t-comment: #6f9c98;
-    --t-keyword: #ffce54;
-    --t-string: #86d7bf;
-    --t-number: #f0a878;
-    --t-type: #7cc4f2;
-    --t-macro: #f6a6bd;
-    --t-default: #dbe8e6;
   }
 
   /* ---- LIGHT MODE (relationships swap) ---- */
@@ -116,14 +108,6 @@
     --shadow-card: 0 2px 10px rgba(13,59,61,.10);
     --scrim: rgba(13,59,61,.4);
 
-    /* code tokens on light panel */
-    --t-comment: #6a807c;
-    --t-keyword: #9a6b00;
-    --t-string: #0a6b52;
-    --t-number: #a2542a;
-    --t-type: #1a6ea6;
-    --t-macro: #a83a63;
-    --t-default: #123a3b;
   }
 
   * { box-sizing: border-box; }
@@ -487,13 +471,7 @@
   .codeblock code {
     font-family: var(--font-mono); font-size: 14px; line-height: 1.65;
     color: var(--t-default); white-space: pre; display: block;
-  }
-  .tok-comment { color: var(--t-comment); font-style: italic; }
-  .tok-keyword { color: var(--t-keyword); }
-  .tok-string  { color: var(--t-string); }
-  .tok-number  { color: var(--t-number); }
-  .tok-type    { color: var(--t-type); }
-  .tok-macro   { color: var(--t-macro); }
+  }
 
   /* scenario cards */
   .scenarios { display: grid; gap: 16px; margin-top: 18px; }
@@ -1127,4 +1105,96 @@
     .lp-way-k { width: auto; }
     .lp-specimen-bar { flex-direction: column; align-items: flex-start; }
     .lp-specimen-bar .segmented { transform: none; }
+  }
+
+  /* ---------- MORE HUB + LANGCOLORMAP ---------- */
+
+  .more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .more-card { display: block; text-decoration: none; color: inherit; }
+  .more-card h3 { margin: 0 0 6px; font-size: 16px; color: var(--content-fg); }
+  .more-card p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--content-fg-dim); }
+  .more-card:hover { border-color: var(--accent); }
+
+  /* LangColorMap runs wider than the site's prose measure: two columns of
+     swatches inside 84ch squeeze both halves until the longer slot names
+     truncate. The prose keeps a reading measure of its own. */
+  .page-colormap { max-width: 1080px; }
+  .page-colormap .lead, .page-colormap .cmap-note { max-width: 76ch; }
+
+  /* Quieter than .lead: says how the page is arranged, not what it is for. */
+  .content .cmap-note {
+    margin: -6px 0 0; font-size: 14.5px; line-height: 1.7;
+    color: var(--content-fg-dim); max-width: 74ch; text-wrap: pretty;
+  }
+
+  /* The toggle above the preview. */
+  .cmap-bar {
+    display: flex; align-items: center; gap: 12px;
+    margin: 26px 0 14px; flex-wrap: wrap;
+  }
+  .cmap-bar-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--content-fg-dim);
+  }
+  /* The specimen heading sits inside the preview so the toggle governs it too,
+     but it is page prose and reads against the page, not the preview panel. */
+  .cmap-preview > .cmap-specimen-title, .cmap-preview > .cmap-note { color: inherit; }
+
+  /* Column-major fill, so the hue order runs down the first column and then
+     down the second — neighbouring colours stay neighbours on screen. The row
+     count comes from the generator, which knows how many slots there are. */
+  .cmap-list {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: column;
+    gap: 1px 22px; margin: 0;
+    padding: 16px 18px; border-radius: var(--radius-md);
+    background: var(--cm-panel-bg); border: 1px solid var(--cm-panel-border);
+  }
+  .cmap-row {
+    display: flex; align-items: center; gap: 9px;
+    padding: 4px 6px; border-radius: 6px;
+  }
+  .cmap-row:hover { background: rgba(127, 127, 127, .12); }
+  .cmap-chip {
+    width: 14px; height: 14px; border-radius: 4px; flex: none;
+    border: 1px solid rgba(127, 127, 127, .45);
+  }
+  .cmap-name {
+    font-family: var(--font-mono); font-size: 12.5px; font-weight: 700;
+    flex: 1 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cmap-hex {
+    font-family: var(--font-mono); font-size: 11.5px; flex: none;
+    color: var(--cm-muted); text-transform: uppercase;
+  }
+  /* Only the hex for the palette on screen — showing both would invite the
+     reader to compare a colour they can see against one they cannot. Keyed to
+     the preview, not the site theme, so it tracks the toggle. */
+  .cmap-hex-light { display: none; }
+  [data-cm-theme="light"] .cmap-hex-light { display: inline; }
+  [data-cm-theme="light"] .cmap-hex-dark { display: none; }
+
+  .content .cmap-specimen-title {
+    margin: 44px 0 6px; font-size: 19px; font-weight: 700; color: var(--content-fg);
+  }
+  .cmap-code {
+    margin: 20px 0 0; padding: 18px 20px; overflow-x: auto;
+    border-radius: var(--radius-md);
+    background: var(--cm-panel-bg); border: 1px solid var(--cm-panel-border);
+  }
+  .cmap-code code {
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.65;
+    white-space: pre; display: block; color: var(--t-variable);
+    background: none; border: 0; padding: 0;
+  }
+
+
+  @media (max-width: 900px) {
+    .more-grid { grid-template-columns: 1fr; }
+    .cmap-list {
+      grid-template-columns: minmax(0, 1fr);
+      grid-auto-flow: row;
+      grid-template-rows: none !important;
+    }
   }

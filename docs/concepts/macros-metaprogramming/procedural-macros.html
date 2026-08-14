@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1017,22 +1018,22 @@ described here — the sibling pages cover what's specific to each.</p>
         <h2 class="section-title">Basic usage example</h2>
         <p>A procedural macro's defining function always lives in its own
 <code>proc-macro = true</code> crate:</p>
-<pre><code class="rust">use proc_macro::TokenStream;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">proc_macro</span><span class="tok-punct">::</span><span class="tok-type">TokenStream</span><span class="tok-punct">;</span>
 
-#[proc_macro] // &lt;- the compiler hands this function raw tokens instead of calling it at runtime
-pub fn tuple_of_two(input: TokenStream) -&gt; TokenStream {
-    let expr = input.to_string();
-    format!("({expr}, {expr})").parse().unwrap()
-}
+<span class="tok-attribute">#[proc_macro]</span> <span class="tok-comment tok-anno">// &lt;- the compiler hands this function raw tokens instead of calling it at runtime</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">tuple_of_two</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">TokenStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">TokenStream</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">expr</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;({expr}, {expr})&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>and here is a separate, consuming crate that depends on it:</p>
-<pre><code class="rust">// Cargo.toml: proc_macro_demo = { path = "../proc_macro_demo" }
-use proc_macro_demo::tuple_of_two;
+<pre><code class="rust-hl"><span class="tok-comment">// Cargo.toml: proc_macro_demo = { path = &quot;../proc_macro_demo&quot; }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">proc_macro_demo</span><span class="tok-punct">::</span><span class="tok-variable">tuple_of_two</span><span class="tok-punct">;</span>
 
-fn main() {
-    let pair = tuple_of_two!(4 + 1); // &lt;- expands at compile time to (4 + 1, 4 + 1)
-    println!("{pair:?}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">pair</span> <span class="tok-punct">=</span> <span class="tok-macro">tuple_of_two!</span><span class="tok-punct">(</span><span class="tok-number">4</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands at compile time to (4 + 1, 4 + 1)</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{pair:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1050,25 +1051,25 @@ fn main() {
             <p>A library that wants <code>#[derive(Reading)]</code> to feel like part of its own
 crate — the way serde's derive does — ships the macro in an internal
 crate and re-exports it, so users add one dependency instead of two.</p>
-<pre><code class="rust">// sensorkit-macros/Cargo.toml
-// [lib]
-// proc-macro = true
+<pre><code class="rust-hl"><span class="tok-comment">// sensorkit-macros/Cargo.toml</span>
+<span class="tok-comment">// [lib]</span>
+<span class="tok-comment">// proc-macro = true</span>
 
-// sensorkit-macros/src/lib.rs
-use proc_macro::TokenStream;
+<span class="tok-comment">// sensorkit-macros/src/lib.rs</span>
+<span class="tok-keyword">use</span> <span class="tok-module">proc_macro</span><span class="tok-punct">::</span><span class="tok-type">TokenStream</span><span class="tok-punct">;</span>
 
-#[proc_macro_derive(Reading)] // &lt;- proc-macro crates may only export macros like this one
-pub fn derive_reading(input: TokenStream) -&gt; TokenStream {
-    // ... inspect `input`, build an impl, return it as a TokenStream
-    TokenStream::new()
-}
+<span class="tok-attribute">#[proc_macro_derive(Reading)]</span> <span class="tok-comment tok-anno">// &lt;- proc-macro crates may only export macros like this one</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">derive_reading</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">TokenStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">TokenStream</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ... inspect `input`, build an impl, return it as a TokenStream</span>
+    <span class="tok-type">TokenStream</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// sensorkit/Cargo.toml
-// [dependencies]
-// sensorkit-macros = { path = "../sensorkit-macros", version = "0.1" }
+<span class="tok-comment">// sensorkit/Cargo.toml</span>
+<span class="tok-comment">// [dependencies]</span>
+<span class="tok-comment">// sensorkit-macros = { path = &quot;../sensorkit-macros&quot;, version = &quot;0.1&quot; }</span>
 
-// sensorkit/src/lib.rs
-pub use sensorkit_macros::Reading; // &lt;- re-exports the macro so users depend on one crate, not two
+<span class="tok-comment">// sensorkit/src/lib.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">sensorkit_macros</span><span class="tok-punct">::</span><span class="tok-type">Reading</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- re-exports the macro so users depend on one crate, not two</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>proc-macro = true</code> crates can only export macros, so
@@ -1087,19 +1088,19 @@ recommends hiding that internal split from downstream users.</p>
             <p>A procedural macro only exists at compile time, so its output is tested
 the same way any generated code is tested: compile a real use of it in
 an integration test and assert on the resulting runtime behavior.</p>
-<pre><code class="rust">// sensorkit/tests/derive_reading.rs — integration test in the crate that USES the proc macro
-use sensorkit::Reading;
+<pre><code class="rust-hl"><span class="tok-comment">// sensorkit/tests/derive_reading.rs — integration test in the crate that USES the proc macro</span>
+<span class="tok-keyword">use</span> <span class="tok-module">sensorkit</span><span class="tok-punct">::</span><span class="tok-type">Reading</span><span class="tok-punct">;</span>
 
-#[derive(Reading)] // &lt;- the proc macro under test; expansion happens before this test even runs
-struct Temperature {
-    celsius: f64,
-}
+<span class="tok-attribute">#[derive(Reading)]</span> <span class="tok-comment tok-anno">// &lt;- the proc macro under test; expansion happens before this test even runs</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Temperature</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-#[test]
-fn describes_generated_impl() {
-    let t = Temperature { celsius: 21.5 };
-    assert_eq!(t.describe(), "Temperature"); // exercises the code the macro generated
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describes_generated_impl</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">t</span> <span class="tok-punct">=</span> <span class="tok-type">Temperature</span> <span class="tok-punct">{</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-number">21.5</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">t</span><span class="tok-punct">.</span><span class="tok-call-method">describe</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Temperature&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// exercises the code the macro generated</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> you cannot unit-test macro expansion from inside the
@@ -1144,20 +1145,20 @@ touches ARM/RISC-V code generation at all.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use proc_macro::TokenStream;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">proc_macro</span><span class="tok-punct">::</span><span class="tok-type">TokenStream</span><span class="tok-punct">;</span>
 
-#[proc_macro] // &lt;- ordinary std-using Rust: compiled for and run on the host, regardless of the target below
-pub fn double_addr(input: TokenStream) -&gt; TokenStream {
-    let addr: usize = input.to_string().trim().parse().unwrap();
-    format!("{}", addr * 2).parse().unwrap()
-}
+<span class="tok-attribute">#[proc_macro]</span> <span class="tok-comment tok-anno">// &lt;- ordinary std-using Rust: compiled for and run on the host, regardless of the target below</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">double_addr</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">TokenStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">TokenStream</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span> <span class="tok-punct">*</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>and the consuming, <code>#![no_std]</code> firmware crate:</p>
-<pre><code class="rust">#![no_std]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use regkit::double_addr;
+<span class="tok-keyword">use</span> <span class="tok-module">regkit</span><span class="tok-punct">::</span><span class="tok-variable">double_addr</span><span class="tok-punct">;</span>
 
-const MIRROR_OFFSET: usize = double_addr!(0x1000); // &lt;- expands before the no_std build even begins
+<span class="tok-keyword">const</span> <span class="tok-constant">MIRROR_OFFSET</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-macro">double_addr!</span><span class="tok-punct">(</span><span class="tok-number">0x1000</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands before the no_std build even begins</span>
 </code></pre>
 
       </section>
@@ -1176,21 +1177,21 @@ const MIRROR_OFFSET: usize = double_addr!(0x1000); // &lt;- expands before the n
 part of its own <code>no_std</code> API; the macro crate itself depends on ordinary
 <code>std</code> tooling (<code>syn</code>, <code>quote</code>) even though every consumer of the HAL
 builds with <code>#![no_std]</code>.</p>
-<pre><code class="rust">// hal-macros/Cargo.toml
-// [lib]
-// proc-macro = true
-// [dependencies]
-// syn = "2"
-// quote = "1"
+<pre><code class="rust-hl"><span class="tok-comment">// hal-macros/Cargo.toml</span>
+<span class="tok-comment">// [lib]</span>
+<span class="tok-comment">// proc-macro = true</span>
+<span class="tok-comment">// [dependencies]</span>
+<span class="tok-comment">// syn = &quot;2&quot;</span>
+<span class="tok-comment">// quote = &quot;1&quot;</span>
 
-// hal/Cargo.toml
-// [dependencies]
-// hal-macros = { path = "../hal-macros", version = "0.1" }
-// # hal itself is #![no_std] — hal-macros is not, and never needs to be
+<span class="tok-comment">// hal/Cargo.toml</span>
+<span class="tok-comment">// [dependencies]</span>
+<span class="tok-comment">// hal-macros = { path = &quot;../hal-macros&quot;, version = &quot;0.1&quot; }</span>
+<span class="tok-comment">// # hal itself is #![no_std] — hal-macros is not, and never needs to be</span>
 
-// hal/src/lib.rs
-#![no_std]
-pub use hal_macros::RegisterBlock; // &lt;- re-exports a host-only macro crate from a no_std crate
+<span class="tok-comment">// hal/src/lib.rs</span>
+<span class="tok-attribute">#![no_std]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">hal_macros</span><span class="tok-punct">::</span><span class="tok-type">RegisterBlock</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- re-exports a host-only macro crate from a no_std crate</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a <code>proc-macro = true</code> crate never contributes code to
@@ -1212,19 +1213,19 @@ reason about it.</p>
 is still tested with ordinary <code>#[test]</code>s in a hosted binary, because the
 macro's expansion — and the test binary itself — both run on the host,
 never on the target.</p>
-<pre><code class="rust">// hal/tests/register_gen.rs — an ordinary hosted integration test, no #![no_std] here
-use hal::RegisterBlock;
+<pre><code class="rust-hl"><span class="tok-comment">// hal/tests/register_gen.rs — an ordinary hosted integration test, no #![no_std] here</span>
+<span class="tok-keyword">use</span> <span class="tok-module">hal</span><span class="tok-punct">::</span><span class="tok-type">RegisterBlock</span><span class="tok-punct">;</span>
 
-#[derive(RegisterBlock)] // &lt;- expansion happens on the host; this test never touches the target at all
-struct Gpioa {
-    base: usize,
-}
+<span class="tok-attribute">#[derive(RegisterBlock)]</span> <span class="tok-comment tok-anno">// &lt;- expansion happens on the host; this test never touches the target at all</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Gpioa</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">base</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-#[test]
-fn generates_expected_offset() {
-    let gpioa = Gpioa { base: 0x4800_0000 };
-    assert_eq!(gpioa.odr_address(), 0x4800_0014); // exercises code the macro generated
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">generates_expected_offset</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">gpioa</span> <span class="tok-punct">=</span> <span class="tok-type">Gpioa</span> <span class="tok-punct">{</span> <span class="tok-variable">base</span><span class="tok-punct">:</span> <span class="tok-number">0x4800_0000</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">gpioa</span><span class="tok-punct">.</span><span class="tok-call-method">odr_address</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0x4800_0014</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// exercises code the macro generated</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the target microcontroller is never involved in either

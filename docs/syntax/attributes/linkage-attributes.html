@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1036,10 +1037,10 @@ a rare need, mostly internal to <code>rustc</code>'s own build.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Exporting a function under its exact, unmangled name</h3>
-            <pre><code class="rust">#[unsafe(no_mangle)] // &lt;- keeps this exact name in the compiled binary's symbol table
-pub extern "C" fn add_i32(a: i32, b: i32) -&gt; i32 {
-    a + b
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[unsafe(no_mangle)]</span> <span class="tok-comment tok-anno">// &lt;- keeps this exact name in the compiled binary's symbol table</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">add_i32</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">a</span> <span class="tok-punct">+</span> <span class="tok-variable">b</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1048,20 +1049,20 @@ pub extern "C" fn add_i32(a: i32, b: i32) -&gt; i32 {
             <p>A telemetry library exposes one function to C callers and links against a
 vendor-supplied compression library whose header declares a function
 under a name that isn't a valid Rust identifier style.</p>
-<pre><code class="rust">#[link(name = "vendor_codec")] // &lt;- tells the linker to search for libvendor_codec
-unsafe extern "C" {
-    #[link_name = "vc_compress_v2"] // &lt;- renames only this item's resolved symbol
-    fn compress(input: *const u8, len: usize, out: *mut u8) -&gt; i32;
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[link(name = &quot;vendor_codec&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- tells the linker to search for libvendor_codec</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[link_name = &quot;vc_compress_v2&quot;]</span> <span class="tok-comment tok-anno">// &lt;- renames only this item's resolved symbol</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">compress</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span> <span class="tok-variable">out</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[unsafe(no_mangle)] // &lt;- exports under the plain name `report_batch`, not a mangled one
-pub extern "C" fn report_batch(data: *const u8, len: usize) -&gt; i32 {
-    unsafe {
-        // SAFETY: `data` is a valid pointer to `len` initialized bytes,
-        // guaranteed by this function's documented C-side contract.
-        compress(data, len, std::ptr::null_mut())
-    }
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span> <span class="tok-comment tok-anno">// &lt;- exports under the plain name `report_batch`, not a mangled one</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">report_batch</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: `data` is a valid pointer to `len` initialized bytes,</span>
+        <span class="tok-comment">// guaranteed by this function's documented C-side contract.</span>
+        <span class="tok-call-free">compress</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">null_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#[link(name = "...")]</code> on the <code>extern</code> block and
 <code>#[link_name]</code> on the individual item are the two separate knobs FFI code
@@ -1117,43 +1118,43 @@ for that broader picture.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Naming a hardware interrupt handler for the vector table</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use panic_halt as _;
-use cortex_m_rt::{entry, interrupt};
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">entry</span><span class="tok-punct">,</span> <span class="tok-variable">interrupt</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    loop {}
-}
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[interrupt] // &lt;- expands to a #[unsafe(no_mangle)] fn named exactly "USART1"
-fn USART1() {
-    // this exact symbol name is what the vector table's USART1 slot expects;
-    // a typo here becomes an undefined-reference link error, not a Rust error
-}
+<span class="tok-attribute">#[interrupt]</span> <span class="tok-comment tok-anno">// &lt;- expands to a #[unsafe(no_mangle)] fn named exactly &quot;USART1&quot;</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">USART1</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// this exact symbol name is what the vector table's USART1 slot expects;</span>
+    <span class="tok-comment">// a typo here becomes an undefined-reference link error, not a Rust error</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Linking directly against a vendor's C HAL</h3>
-            <pre><code class="rust">#![no_std]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-#[link(name = "stm32f4xx_hal")] // &lt;- tells the linker to search the prebuilt vendor HAL library
-unsafe extern "C" {
-    #[link_name = "HAL_GPIO_TogglePin"] // &lt;- renames only this item's resolved C symbol
-    fn hal_gpio_toggle_pin(port: *mut core::ffi::c_void, pin: u16);
-}
+<span class="tok-attribute">#[link(name = &quot;stm32f4xx_hal&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- tells the linker to search the prebuilt vendor HAL library</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[link_name = &quot;HAL_GPIO_TogglePin&quot;]</span> <span class="tok-comment tok-anno">// &lt;- renames only this item's resolved C symbol</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">hal_gpio_toggle_pin</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-variable">c_void</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[unsafe(no_mangle)] // &lt;- exported under a stable name a C-side test harness or bootloader can call
-pub extern "C" fn toggle_status_led(gpio_port: *mut core::ffi::c_void) {
-    unsafe {
-        // SAFETY: `gpio_port` is a valid GPIO peripheral base address,
-        // guaranteed by this function's documented C-side contract.
-        hal_gpio_toggle_pin(gpio_port, 1u16 &lt;&lt; 5);
-    }
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span> <span class="tok-comment tok-anno">// &lt;- exported under a stable name a C-side test harness or bootloader can call</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">toggle_status_led</span><span class="tok-punct">(</span><span class="tok-variable">gpio_port</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-variable">c_void</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: `gpio_port` is a valid GPIO peripheral base address,</span>
+        <span class="tok-comment">// guaranteed by this function's documented C-side contract.</span>
+        <span class="tok-call-free">hal_gpio_toggle_pin</span><span class="tok-punct">(</span><span class="tok-variable">gpio_port</span><span class="tok-punct">,</span> <span class="tok-number">1u16</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Both examples are the same two attributes doing the same jobs as in the
 classic section — naming a symbol precisely, and telling the linker where

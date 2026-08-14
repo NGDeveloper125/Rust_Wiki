@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1003,11 +1004,11 @@ unconditionally.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let a: u8 = 250;
-let b: u8 = 10;
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">250</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">10</span><span class="tok-punct">;</span>
 
-let sum = a.checked_add(b); // &lt;- None: 260 doesn't fit in a u8, caught explicitly
-println!("{sum:?}");
+<span class="tok-keyword">let</span> <span class="tok-variable">sum</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span><span class="tok-punct">.</span><span class="tok-call-method">checked_add</span><span class="tok-punct">(</span><span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- None: 260 doesn't fit in a u8, caught explicitly</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{sum:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><strong>Restriction:</strong> writing plain <code>a + b</code> here instead hides the same
 problem — it panics in a debug build but silently wraps to <code>4</code> in a
@@ -1029,12 +1030,12 @@ explicit <code>checked_</code>/<code>wrapping_</code>/<code>saturating_</code> m
             <p>Widening an accumulator before summing narrow values sidesteps overflow
 entirely, which is cheaper than reaching for checked arithmetic for what
 is otherwise ordinary, bounded addition.</p>
-<pre><code class="rust">let sensor_readings: [u16; 4] = [1200, 980, 1500, 1100];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">sensor_readings</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u16</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1200</span><span class="tok-punct">,</span> <span class="tok-number">980</span><span class="tok-punct">,</span> <span class="tok-number">1500</span><span class="tok-punct">,</span> <span class="tok-number">1100</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let total: u32 = sensor_readings.iter().map(|&amp;r| r as u32).sum(); // &lt;- widen before summing: u16 could overflow
-let average = total / sensor_readings.len() as u32;
+<span class="tok-keyword">let</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">sensor_readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- widen before summing: u16 could overflow</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">average</span> <span class="tok-punct">=</span> <span class="tok-variable">total</span> <span class="tok-punct">/</span> <span class="tok-variable">sensor_readings</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
 
-println!("average reading: {average}");
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;average reading: {average}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> summing narrow integers directly risks overflowing the
@@ -1055,14 +1056,14 @@ lint flags when it can't prove overflow is impossible.</p>
 file, anything the caller could get wrong — plain arithmetic on it trusts
 an assumption untrusted input is specifically there to violate.
 <code>checked_*</code> turns that into a <code>Result</code> instead of a silent wraparound.</p>
-<pre><code class="rust">fn apply_discount(price_cents: u32, discount_cents: u32) -&gt; Result&lt;u32, &amp;'static str&gt; {
-    price_cents
-        .checked_sub(discount_cents) // &lt;- untrusted input: a discount larger than the price must not silently wrap
-        .ok_or("discount exceeds price")
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">apply_discount</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">discount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">price_cents</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">checked_sub</span><span class="tok-punct">(</span><span class="tok-variable">discount_cents</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- untrusted input: a discount larger than the price must not silently wrap</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">ok_or</span><span class="tok-punct">(</span><span class="tok-string">&quot;discount exceeds price&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-apply_discount(500, 100); // Ok(400)
-apply_discount(500, 900); // Err("discount exceeds price") instead of wrapping to a huge u32
+<span class="tok-call-free">apply_discount</span><span class="tok-punct">(</span><span class="tok-number">500</span><span class="tok-punct">,</span> <span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// Ok(400)</span>
+<span class="tok-call-free">apply_discount</span><span class="tok-punct">(</span><span class="tok-number">500</span><span class="tok-punct">,</span> <span class="tok-number">900</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// Err(&quot;discount exceeds price&quot;) instead of wrapping to a huge u32</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a release build silently wraps on overflow rather than
@@ -1128,17 +1129,17 @@ parsed from storage.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Millis(u32);
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Millis</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl Millis {
-    fn on_tick(&amp;mut self) {
-        self.0 = self.0.wrapping_add(1); // &lt;- correct by design: rollover is expected, not an error
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Millis</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_tick</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- correct by design: rollover is expected, not an error</span>
+    <span class="tok-punct">}</span>
 
-    fn elapsed_since(&amp;self, earlier: u32) -&gt; u32 {
-        self.0.wrapping_sub(earlier) // &lt;- still correct even if self.0 has wrapped past u32::MAX since `earlier`
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">elapsed_since</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">earlier</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_sub</span><span class="tok-punct">(</span><span class="tok-variable">earlier</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- still correct even if self.0 has wrapped past u32::MAX since `earlier`</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1157,18 +1158,18 @@ impl Millis {
 value derived from it should never be allowed to wrap at all, because a
 wrapped duty cycle is a plausible-looking but wildly wrong value that
 could reach the hardware.</p>
-<pre><code class="rust">struct Millis(u32);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Millis</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn duty_cycle_percent(on_time_us: u32, period_us: u32) -&gt; u8 {
-    let ratio = (on_time_us * 100) / period_us; // assumes period_us &gt; 0, checked elsewhere
-    ratio.min(100) as u8 // &lt;- PREFER: clamp explicitly, never let a computed duty cycle exceed the valid range
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">duty_cycle_percent</span><span class="tok-punct">(</span><span class="tok-variable">on_time_us</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">period_us</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">ratio</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">on_time_us</span> <span class="tok-punct">*</span> <span class="tok-number">100</span><span class="tok-punct">)</span> <span class="tok-punct">/</span> <span class="tok-variable">period_us</span><span class="tok-punct">;</span> <span class="tok-comment">// assumes period_us &gt; 0, checked elsewhere</span>
+    <span class="tok-variable">ratio</span><span class="tok-punct">.</span><span class="tok-call-method">min</span><span class="tok-punct">(</span><span class="tok-number">100</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span> <span class="tok-comment tok-anno">// &lt;- PREFER: clamp explicitly, never let a computed duty cycle exceed the valid range</span>
+<span class="tok-punct">}</span>
 
-impl Millis {
-    fn on_tick(&amp;mut self) {
-        self.0 = self.0.wrapping_add(1); // &lt;- PREFER: rollover is the intended behavior for a tick counter
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Millis</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_tick</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- PREFER: rollover is the intended behavior for a tick counter</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the tick counter's job is to keep counting forever
@@ -1192,11 +1193,11 @@ checked before it's used in arithmetic that ultimately drives hardware —
 unlike a tick counter, there's no "intended" out-of-range value here, so
 overflow must surface as an explicit error instead of continuing with a
 wrapped or clamped number that looks plausible but isn't.</p>
-<pre><code class="rust">fn scaled_reading(raw_adc: u16, calibration_gain: u16) -&gt; Result&lt;u32, &amp;'static str&gt; {
-    (raw_adc as u32)
-        .checked_mul(calibration_gain as u32) // &lt;- corrupt calibration data must not silently produce a bogus reading
-        .ok_or("calibration overflow: check stored gain value")
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">scaled_reading</span><span class="tok-punct">(</span><span class="tok-variable">raw_adc</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">calibration_gain</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-variable">raw_adc</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">checked_mul</span><span class="tok-punct">(</span><span class="tok-variable">calibration_gain</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- corrupt calibration data must not silently produce a bogus reading</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">ok_or</span><span class="tok-punct">(</span><span class="tok-string">&quot;calibration overflow: check stored gain value&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a gain constant corrupted by a bad flash write or a

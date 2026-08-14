@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1014,12 +1015,12 @@ trait already has one.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Binding an iterator's associated type</h3>
-            <pre><code class="rust">fn print_all&lt;T: Iterator&lt;Item = String&gt;&gt;(items: T) {
-    // &lt;- `Item = String` binds T's associated type to exactly String
-    for item in items {
-        println!("{item}");
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">print_all</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Iterator</span><span class="tok-punct">&lt;</span><span class="tok-type">Item</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `Item = String` binds T's associated type to exactly String</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">item</span> <span class="tok-keyword">in</span> <span class="tok-variable">items</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{item}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1029,14 +1030,14 @@ trait already has one.</p>
 whose <code>Item</code> is actually summable as <code>u32</code> — the associated-type binding
 in the bound is what pins that down, rather than accepting any <code>Iterator</code>
 and hoping the element type works out.</p>
-<pre><code class="rust">fn total_readings&lt;I&gt;(readings: I) -&gt; u32
-where
-    I: Iterator&lt;Item = u32&gt;, // &lt;- binds Item to u32; without this, Item could be anything
-{
-    readings.sum()
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">total_readings</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">I</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-generic-param">I</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span>
+<span class="tok-keyword">where</span>
+    <span class="tok-generic-param">I</span><span class="tok-punct">:</span> <span class="tok-type">Iterator</span><span class="tok-punct">&lt;</span><span class="tok-type">Item</span> <span class="tok-punct">=</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- binds Item to u32; without this, Item could be anything</span>
+<span class="tok-punct">{</span>
+    <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let total = total_readings(vec![10, 20, 30].into_iter());
+<span class="tok-keyword">let</span> <span class="tok-variable">total</span> <span class="tok-punct">=</span> <span class="tok-call-free">total_readings</span><span class="tok-punct">(</span><span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">10</span><span class="tok-punct">,</span> <span class="tok-number">20</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Leaving off <code>Item = u32</code> and writing just <code>I: Iterator</code>
 wouldn't compile inside <code>.sum()</code>, since the compiler would have no
@@ -1052,12 +1053,12 @@ binding is how that extends to a trait's associated types specifically.</p>
             <p>A plugin system that hands back a boxed, dynamically-dispatched iterator
 needs the binding to make <code>dyn Iterator</code> into a concrete, sized-behind-a-
 pointer type in the first place.</p>
-<pre><code class="rust">fn even_numbers(limit: u32) -&gt; Box&lt;dyn Iterator&lt;Item = u32&gt;&gt; {
-    // &lt;- `Item = u32` here is required: `dyn Iterator` alone isn't a complete type
-    Box::new((0..limit).filter(|n| n % 2 == 0))
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">even_numbers</span><span class="tok-punct">(</span><span class="tok-variable">limit</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Iterator</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Item</span> <span class="tok-punct">=</span> <span class="tok-type-return">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `Item = u32` here is required: `dyn Iterator` alone isn't a complete type</span>
+    <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-variable">limit</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">filter</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">n</span><span class="tok-punct">|</span> <span class="tok-variable">n</span> <span class="tok-punct">%</span> <span class="tok-number">2</span> <span class="tok-punct">==</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let evens: Vec&lt;u32&gt; = even_numbers(10).collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">evens</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-call-free">even_numbers</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Returning <code>Box&lt;dyn Iterator&lt;Item = u32&gt;&gt;</code> lets the
 function's actual iterator type (a <code>Filter&lt;Range&lt;u32&gt;, _&gt;</code> closure type,
@@ -1099,31 +1100,31 @@ handling simple instead of wrapping an arbitrary, unconstrained <code>E</code>.<
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Constraining a generic driver to an infallible GPIO pin</h3>
-            <pre><code class="rust">use core::convert::Infallible;
-use embedded_hal::digital::OutputPin;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">convert</span><span class="tok-punct">::</span><span class="tok-type">Infallible</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-type">OutputPin</span><span class="tok-punct">;</span>
 
-fn blink&lt;P: OutputPin&lt;Error = Infallible&gt;&gt;(led: &amp;mut P) {
-    // &lt;- `Error = Infallible`: this driver only supports pins whose operations can't fail
-    led.set_high().unwrap(); // safe to unwrap: Infallible can never actually be constructed
-    led.set_low().unwrap();
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&lt;</span><span class="tok-type">Error</span> <span class="tok-punct">=</span> <span class="tok-type">Infallible</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">led</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `Error = Infallible`: this driver only supports pins whose operations can't fail</span>
+    <span class="tok-variable">led</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// safe to unwrap: Infallible can never actually be constructed</span>
+    <span class="tok-variable">led</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Constraining a driver to a board's own concrete error type</h3>
-            <pre><code class="rust">use embedded_hal::digital::OutputPin;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-type">OutputPin</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-enum GpioError {
-    BusFault,
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">GpioError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">BusFault</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn drive_relay&lt;P: OutputPin&lt;Error = GpioError&gt;&gt;(relay_pin: &amp;mut P) -&gt; Result&lt;(), GpioError&gt; {
-    // &lt;- `Error = GpioError`: only pins reporting this concrete error type are accepted
-    relay_pin.set_high()?;
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">drive_relay</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&lt;</span><span class="tok-type">Error</span> <span class="tok-punct">=</span> <span class="tok-type">GpioError</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">relay_pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">GpioError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `Error = GpioError`: only pins reporting this concrete error type are accepted</span>
+    <span class="tok-variable">relay_pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

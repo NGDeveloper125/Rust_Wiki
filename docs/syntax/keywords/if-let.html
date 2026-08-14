@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1022,23 +1023,23 @@ less common than using it purely for its side effects.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Chaining if let / else if let / else</h3>
-            <pre><code class="rust">enum ConfigValue {
-    Number(i64),
-    Text(String),
-    Missing,
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">ConfigValue</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Number</span><span class="tok-punct">(</span><span class="tok-type">i64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Text</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-type">Missing</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let value = ConfigValue::Text("info".to_string());
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">ConfigValue</span><span class="tok-punct">::</span><span class="tok-field">Text</span><span class="tok-punct">(</span><span class="tok-string">&quot;info&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-if let ConfigValue::Number(n) = &amp;value {
-    // &lt;- `if let` tests the pattern against `&amp;value`
-    println!("number: {n}");
-} else if let ConfigValue::Text(s) = &amp;value {
-    // &lt;- `else if let`: a second, different pattern tried only if the first failed
-    println!("text: {s}");
-} else {
-    println!("missing"); // &lt;- runs only if neither pattern above matched
-}
+<span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-type">ConfigValue</span><span class="tok-punct">::</span><span class="tok-field">Number</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">value</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `if let` tests the pattern against `&amp;value`</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;number: {n}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-type">ConfigValue</span><span class="tok-punct">::</span><span class="tok-field">Text</span><span class="tok-punct">(</span><span class="tok-variable">s</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">value</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `else if let`: a second, different pattern tried only if the first failed</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;text: {s}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;missing&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- runs only if neither pattern above matched</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1047,23 +1048,23 @@ if let ConfigValue::Number(n) = &amp;value {
             <p>A network frame handler needs different handling for a data payload versus
 a close frame, with anything else treated as a keepalive — <code>if let</code>/
 <code>else if let</code> walks through the shapes it actually cares about.</p>
-<pre><code class="rust">enum Frame {
-    Data(Vec&lt;u8&gt;),
-    Close(u16),
-    Ping,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">Frame</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Data</span><span class="tok-punct">(</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Close</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-type">Ping</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn describe(frame: &amp;Frame) -&gt; String {
-    if let Frame::Data(bytes) = frame {
-        // &lt;- `if let` matches the Data shape and binds `bytes`
-        format!("{} bytes of data", bytes.len())
-    } else if let Frame::Close(code) = frame {
-        // &lt;- `else if let` tries the Close shape next
-        format!("closing with code {code}")
-    } else {
-        "ping".to_string()
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-variable">frame</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Frame</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-type">Frame</span><span class="tok-punct">::</span><span class="tok-field">Data</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">frame</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `if let` matches the Data shape and binds `bytes`</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} bytes of data&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-type">Frame</span><span class="tok-punct">::</span><span class="tok-field">Close</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">frame</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `else if let` tries the Close shape next</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;closing with code {code}&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-string">&quot;ping&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Each pattern is tried in order until one matches, which
 reads as "which of these shapes is it" without the ceremony of a <code>match</code>'s
@@ -1077,12 +1078,12 @@ introduces <code>if let</code> for exactly this "only some shapes need code" sit
             <p>Reporting a metrics data point is best-effort: the caller only wants to log
 a failure, not stop the program over it — <code>if let Err(...)</code> isolates just
 that one case.</p>
-<pre><code class="rust">fn report_metric(result: Result&lt;(), String&gt;) {
-    if let Err(reason) = result {
-        // &lt;- only the failure case needs a reaction; success falls through silently
-        eprintln!("metric send failed: {reason}");
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">report_metric</span><span class="tok-punct">(</span><span class="tok-variable">result</span><span class="tok-punct">:</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">reason</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">result</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- only the failure case needs a reaction; success falls through silently</span>
+        <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;metric send failed: {reason}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>When the success case genuinely needs no follow-up, <code>if let Err(...)</code> avoids writing an <code>Ok(()) =&gt; {}</code> arm that would say nothing —
 the same "only one shape matters here" reasoning the
@@ -1096,16 +1097,16 @@ needs handling.</p>
             <p>Looking up a product's stock count only has something useful to say when
 the SKU is known — <code>if let Some(...)</code> handles the found case, with <code>else</code>
 covering an unrecognized SKU.</p>
-<pre><code class="rust">use std::collections::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-fn describe_stock(inventory: &amp;HashMap&lt;String, u32&gt;, sku: &amp;str) -&gt; String {
-    if let Some(&amp;count) = inventory.get(sku) {
-        // &lt;- `if let` handles only the "found" case
-        format!("{sku}: {count} in stock")
-    } else {
-        format!("{sku}: unknown SKU")
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe_stock</span><span class="tok-punct">(</span><span class="tok-variable">inventory</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-variable">sku</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">count</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-variable">sku</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `if let` handles only the &quot;found&quot; case</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{sku}: {count} in stock&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{sku}: unknown SKU&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>HashMap::get</code> returns <code>Option&lt;&amp;V&gt;</code> specifically so a
 missing key is an ordinary value to match on rather than a panic — <code>if let</code>/<code>else</code> gives both outcomes (found, not found) a place to go without
@@ -1137,21 +1138,21 @@ case that matters without a wildcard arm that does nothing.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reading a byte only when one is available</h3>
-            <pre><code class="rust">if let Some(byte) = uart.read() {
-    // &lt;- `if let` handles only the case where a byte is actually available
-    buffer.push(byte);
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">uart</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `if let` handles only the case where a byte is actually available</span>
+    <span class="tok-variable">buffer</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Reacting only to a sensor fault</h3>
-            <pre><code class="rust">fn handle_reading(result: Result&lt;f32, SensorError&gt;) {
-    if let Err(_fault) = result {
-        // &lt;- only the failure case needs a reaction; a good reading falls through silently
-        set_fault_led(true);
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">handle_reading</span><span class="tok-punct">(</span><span class="tok-variable">result</span><span class="tok-punct">:</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-type">f32</span><span class="tok-punct">,</span> <span class="tok-type">SensorError</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">_fault</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">result</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- only the failure case needs a reaction; a good reading falls through silently</span>
+        <span class="tok-call-free">set_fault_led</span><span class="tok-punct">(</span><span class="tok-number">true</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

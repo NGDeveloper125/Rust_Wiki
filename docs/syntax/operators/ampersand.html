@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1009,8 +1010,8 @@ the lexer still produces the single <code>&amp;&amp;</code> token there, and it'
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Creating a shared reference</h3>
-            <pre><code class="rust">let x = 5;
-let r = &amp;x; // &lt;- `&amp;` borrows `x`, producing a shared reference `&amp;i32`
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">r</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">x</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&amp;` borrows `x`, producing a shared reference `&amp;i32`</span>
 </code></pre>
 
           </div>
@@ -1019,24 +1020,24 @@ let r = &amp;x; // &lt;- `&amp;` borrows `x`, producing a shared reference `&amp
             <p>Several parts of a program often need to read the same value without any
 of them taking ownership of it — <code>&amp;</code> lets each function borrow it
 independently.</p>
-<pre><code class="rust">struct Config {
-    name: String,
-    max_connections: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Config</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn print_summary(config: &amp;Config) { // &lt;- `&amp;Config` borrows instead of taking ownership
-    println!("{}: {} conns", config.name, config.max_connections);
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">print_summary</span><span class="tok-punct">(</span><span class="tok-variable">config</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Config</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;Config` borrows instead of taking ownership</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}: {} conns&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-field">name</span><span class="tok-punct">,</span> <span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-field">max_connections</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn is_valid(config: &amp;Config) -&gt; bool { // &lt;- a second, simultaneous shared borrow
-    config.max_connections &gt; 0
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_valid</span><span class="tok-punct">(</span><span class="tok-variable">config</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Config</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- a second, simultaneous shared borrow</span>
+    <span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-field">max_connections</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span>
+<span class="tok-punct">}</span>
 
-let config = Config { name: "primary".into(), max_connections: 10 };
-print_summary(&amp;config);
-if is_valid(&amp;config) {
-    println!("ready");
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-string">&quot;primary&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-number">10</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-call-free">print_summary</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">if</span> <span class="tok-call-free">is_valid</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;ready&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Because <code>&amp;T</code> is read-only, any number of shared borrows
 can coexist safely — per <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">the Book's borrowing chapter</a>,
@@ -1050,18 +1051,18 @@ just to satisfy the borrow checker.</p>
 stack frame with plain <code>&amp;</code>, instead of requiring <code>Arc</code> and <code>move</code>,
 because the scope guarantees every thread finishes before the borrow
 ends.</p>
-<pre><code class="rust">let readings = vec![21.5, 22.0, 21.8, 23.1];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">21.5</span><span class="tok-punct">,</span> <span class="tok-number">22.0</span><span class="tok-punct">,</span> <span class="tok-number">21.8</span><span class="tok-punct">,</span> <span class="tok-number">23.1</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-std::thread::scope(|s| {
-    s.spawn(|| { // &lt;- this closure borrows `&amp;readings`, not an owned copy
-        let avg: f64 = readings.iter().sum::&lt;f64&gt;() / readings.len() as f64;
-        println!("average: {avg}");
-    });
-    s.spawn(|| { // &lt;- a second thread borrowing the same `readings` at once
-        let max = readings.iter().cloned().fold(f64::MIN, f64::max);
-        println!("max: {max}");
-    });
-});
+<span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">scope</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">s</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- this closure borrows `&amp;readings`, not an owned copy</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">avg</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">sum</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">/</span> <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span><span class="tok-punct">;</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;average: {avg}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- a second thread borrowing the same `readings` at once</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">max</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">cloned</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">fold</span><span class="tok-punct">(</span><span class="tok-module">f64</span><span class="tok-punct">::</span><span class="tok-constant">MIN</span><span class="tok-punct">,</span> <span class="tok-module">f64</span><span class="tok-punct">::</span><span class="tok-variable">max</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;max: {max}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><a href="https://doc.rust-lang.org/std/thread/fn.scope.html"><code>std::thread::scope</code></a>
 statically proves the spawned threads can't outlive <code>readings</code>, so the
@@ -1074,20 +1075,20 @@ would demand <code>'static</code> data (typically via <code>Arc</code>).</p>
             <p>A function that only needs to read its argument should accept <code>&amp;T</code>
 rather than an owned <code>T</code> — taking ownership needlessly forces every
 caller to give up or clone their value.</p>
-<pre><code class="rust">struct Order {
-    id: u32,
-    items: Vec&lt;String&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-// PREFER: a shared borrow lets the caller keep using `order` afterward
-fn total_items(order: &amp;Order) -&gt; usize { // &lt;- `&amp;Order`, not `Order`
-    order.items.len()
-}
+<span class="tok-comment">// PREFER: a shared borrow lets the caller keep using `order` afterward</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">total_items</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Order</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;Order`, not `Order`</span>
+    <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-// AVOID: taking `Order` by value forces callers to clone or give it up
-fn total_items_owned(order: Order) -&gt; usize {
-    order.items.len()
-}
+<span class="tok-comment">// AVOID: taking `Order` by value forces callers to clone or give it up</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">total_items_owned</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-type">Order</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The <a href="https://rust-lang.github.io/api-guidelines/flexibility.html">API Guidelines' flexibility guidance</a>
 recommends borrowing over owning in function signatures whenever the
@@ -1130,29 +1131,29 @@ acknowledge it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Testing a status flag before writing to a peripheral</h3>
-            <pre><code class="rust">const USART_SR: *const u32 = 0x4001_3800 as *const u32; // USART1 status register
-const TXE: u32 = 1 &lt;&lt; 7; // transmit-data-register-empty flag
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">USART_SR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_3800</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment">// USART1 status register</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">TXE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">7</span><span class="tok-punct">;</span> <span class="tok-comment">// transmit-data-register-empty flag</span>
 
-fn tx_ready() -&gt; bool {
-    let status = unsafe { core::ptr::read_volatile(USART_SR) };
-    status &amp; TXE != 0 // &lt;- `&amp;` tests the TXE bit; it only reads, it never writes
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">tx_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">status</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">USART_SR</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-variable">status</span> <span class="tok-punct">&amp;</span> <span class="tok-constant">TXE</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span> <span class="tok-comment tok-anno">// &lt;- `&amp;` tests the TXE bit; it only reads, it never writes</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Borrowing a peripheral handle in driver code</h3>
-            <pre><code class="rust">struct Gpio {
-    idr: *const u32, // input data register
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">idr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-comment">// input data register</span>
+<span class="tok-punct">}</span>
 
-fn read_pin(gpio: &amp;Gpio, pin: u8) -&gt; bool { // &lt;- `&amp;Gpio` borrows the handle instead of consuming it
-    let bits = unsafe { core::ptr::read_volatile(gpio.idr) };
-    bits &amp; (1 &lt;&lt; pin) != 0
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_pin</span><span class="tok-punct">(</span><span class="tok-variable">gpio</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Gpio</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;Gpio` borrows the handle instead of consuming it</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">bits</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-variable">gpio</span><span class="tok-punct">.</span><span class="tok-field">idr</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-variable">bits</span> <span class="tok-punct">&amp;</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-variable">pin</span><span class="tok-punct">)</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span>
+<span class="tok-punct">}</span>
 
-let gpio = Gpio { idr: 0x4001_0810 as *const u32 };
-let pressed = read_pin(&amp;gpio, 5); // &lt;- a second call could borrow `&amp;gpio` again at the same time
+<span class="tok-keyword">let</span> <span class="tok-variable">gpio</span> <span class="tok-punct">=</span> <span class="tok-type">Gpio</span> <span class="tok-punct">{</span> <span class="tok-variable">idr</span><span class="tok-punct">:</span> <span class="tok-number">0x4001_0810</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">pressed</span> <span class="tok-punct">=</span> <span class="tok-call-free">read_pin</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">gpio</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a second call could borrow `&amp;gpio` again at the same time</span>
 </code></pre>
 
           </div>

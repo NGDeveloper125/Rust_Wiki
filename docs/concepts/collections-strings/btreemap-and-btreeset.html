@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1005,16 +1006,16 @@ the moment sorted iteration or range queries enter the picture.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::collections::BTreeMap;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">BTreeMap</span><span class="tok-punct">;</span>
 
-let mut scores: BTreeMap&lt;u32, &amp;str&gt; = BTreeMap::new();
-scores.insert(95, "Priya"); // &lt;- kept in sorted-by-key order automatically
-scores.insert(42, "Sam");
-scores.insert(71, "Jordan");
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">scores</span><span class="tok-punct">:</span> <span class="tok-type">BTreeMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">BTreeMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">scores</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">95</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Priya&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- kept in sorted-by-key order automatically</span>
+<span class="tok-variable">scores</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Sam&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">scores</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">71</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Jordan&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-for (score, name) in &amp;scores { // &lt;- always iterates in ascending key order
-    println!("{score}: {name}");
-}
+<span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">score</span><span class="tok-punct">,</span> <span class="tok-variable">name</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">scores</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- always iterates in ascending key order</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{score}: {name}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Restriction:</strong> the key type must implement <code>Ord</code> (a total ordering) —
 a type with only a partial ordering, like <code>f64</code> (<code>NaN</code> compares to
@@ -1037,16 +1038,16 @@ wrapping it in a type that provides a total order.</p>
 for: inserts land in sorted position automatically, and <code>.range()</code>
 answers "everything between these two bounds" without a separate sort
 step.</p>
-<pre><code class="rust">use std::collections::BTreeMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">BTreeMap</span><span class="tok-punct">;</span>
 
-let mut sensor_log: BTreeMap&lt;u64, f64&gt; = BTreeMap::new(); // keyed by unix-timestamp
-sensor_log.insert(1_700_000_030, 21.4);
-sensor_log.insert(1_700_000_010, 20.9);
-sensor_log.insert(1_700_000_020, 21.1);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sensor_log</span><span class="tok-punct">:</span> <span class="tok-type">BTreeMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u64</span><span class="tok-punct">,</span> <span class="tok-type">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">BTreeMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// keyed by unix-timestamp</span>
+<span class="tok-variable">sensor_log</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1_700_000_030</span><span class="tok-punct">,</span> <span class="tok-number">21.4</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sensor_log</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1_700_000_010</span><span class="tok-punct">,</span> <span class="tok-number">20.9</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sensor_log</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1_700_000_020</span><span class="tok-punct">,</span> <span class="tok-number">21.1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-for (timestamp, reading) in sensor_log.range(1_700_000_015..1_700_000_031) { // &lt;- ordered range query, no sorting needed
-    println!("{timestamp}: {reading}");
-}
+<span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">timestamp</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">sensor_log</span><span class="tok-punct">.</span><span class="tok-call-method">range</span><span class="tok-punct">(</span><span class="tok-number">1_700_000_015</span><span class="tok-punct">..</span><span class="tok-number">1_700_000_031</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- ordered range query, no sorting needed</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{timestamp}: {reading}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1065,17 +1066,17 @@ no equivalent operation.</p>
             <p>A struct used as a <code>BTreeMap</code>/<code>BTreeSet</code> key needs <code>Ord</code> (plus
 <code>PartialOrd</code>, <code>Eq</code>, <code>PartialEq</code>), and deriving all four orders fields
 lexicographically in declaration order — put the primary sort key first.</p>
-<pre><code class="rust">use std::collections::BTreeSet;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">BTreeSet</span><span class="tok-punct">;</span>
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)] // &lt;- Ord is what BTreeSet requires; fields compare in this order
-struct RankedPlayer {
-    score: u32,   // primary: higher score first requires reversing at insert/read time
-    name: String, // tie-breaker: alphabetical when scores match
-}
+<span class="tok-attribute">#[derive(PartialEq, Eq, PartialOrd, Ord)]</span> <span class="tok-comment tok-anno">// &lt;- Ord is what BTreeSet requires; fields compare in this order</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">RankedPlayer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">score</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>   <span class="tok-comment">// primary: higher score first requires reversing at insert/read time</span>
+    <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-comment">// tie-breaker: alphabetical when scores match</span>
+<span class="tok-punct">}</span>
 
-let mut leaderboard: BTreeSet&lt;RankedPlayer&gt; = BTreeSet::new();
-leaderboard.insert(RankedPlayer { score: 95, name: "Priya".into() });
-leaderboard.insert(RankedPlayer { score: 95, name: "Alex".into() });
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">leaderboard</span><span class="tok-punct">:</span> <span class="tok-type">BTreeSet</span><span class="tok-punct">&lt;</span><span class="tok-type">RankedPlayer</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">BTreeSet</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">leaderboard</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-type">RankedPlayer</span> <span class="tok-punct">{</span> <span class="tok-variable">score</span><span class="tok-punct">:</span> <span class="tok-number">95</span><span class="tok-punct">,</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Priya&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">leaderboard</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-type">RankedPlayer</span> <span class="tok-punct">{</span> <span class="tok-variable">score</span><span class="tok-punct">:</span> <span class="tok-number">95</span><span class="tok-punct">,</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Alex&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> deriving <code>Ord</code> on a struct compares fields in
@@ -1119,15 +1120,15 @@ same ordered lookup <code>BTreeMap</code> would, using only <code>core</code>.</
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">extern crate alloc;
-use alloc::collections::BTreeMap;
+        <pre><code class="rust-hl"><span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">BTreeMap</span><span class="tok-punct">;</span>
 
-fn build_sensor_log() -&gt; BTreeMap&lt;u64, f32&gt; {
-    let mut log = BTreeMap::new(); // &lt;- behaves exactly like std's BTreeMap once alloc + a #[global_allocator] are configured
-    log.insert(1_700_000_010, 20.9);
-    log.insert(1_700_000_030, 21.4);
-    log
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build_sensor_log</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">BTreeMap</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u64</span><span class="tok-punct">,</span> <span class="tok-type-return">f32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">log</span> <span class="tok-punct">=</span> <span class="tok-type">BTreeMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- behaves exactly like std's BTreeMap once alloc + a #[global_allocator] are configured</span>
+    <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1_700_000_010</span><span class="tok-punct">,</span> <span class="tok-number">20.9</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">log</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1_700_000_030</span><span class="tok-punct">,</span> <span class="tok-number">21.4</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">log</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1147,31 +1148,31 @@ case where reaching for <code>BTreeMap</code> costs a heap allocation for data t
 was already known at compile time; a <code>const</code> sorted array searched with
 <code>.binary_search_by_key()</code> gives the same ordered lookup without ever
 needing an allocator.</p>
-<pre><code class="rust">use alloc::collections::BTreeMap; // AVOID for a fixed, compile-time-known point set: needs alloc + a configured allocator
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">BTreeMap</span><span class="tok-punct">;</span> <span class="tok-comment">// AVOID for a fixed, compile-time-known point set: needs alloc + a configured allocator</span>
 
-fn calibration_lookup_alloc() -&gt; BTreeMap&lt;u16, f32&gt; { // &lt;- BTreeMap: correct, but pays for a heap allocation for 4 fixed points
-    let mut points = BTreeMap::new();
-    points.insert(0, -40.0);
-    points.insert(512, 0.0);
-    points.insert(1024, 20.0);
-    points.insert(2047, 85.0);
-    points
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">calibration_lookup_alloc</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">BTreeMap</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">f32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- BTreeMap: correct, but pays for a heap allocation for 4 fixed points</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">points</span> <span class="tok-punct">=</span> <span class="tok-type">BTreeMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">points</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">40.0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">points</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">512</span><span class="tok-punct">,</span> <span class="tok-number">0.0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">points</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1024</span><span class="tok-punct">,</span> <span class="tok-number">20.0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">points</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">2047</span><span class="tok-punct">,</span> <span class="tok-number">85.0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">points</span>
+<span class="tok-punct">}</span>
 
-// PREFER on a no-heap (or heap-avoiding) target: the same points as a sorted const array
-const CALIBRATION_POINTS: [(u16, f32); 4] = [
-    (0, -40.0),
-    (512, 0.0),
-    (1024, 20.0),
-    (2047, 85.0),
-];
+<span class="tok-comment">// PREFER on a no-heap (or heap-avoiding) target: the same points as a sorted const array</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">CALIBRATION_POINTS</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-type">f32</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">40.0</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">(</span><span class="tok-number">512</span><span class="tok-punct">,</span> <span class="tok-number">0.0</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">(</span><span class="tok-number">1024</span><span class="tok-punct">,</span> <span class="tok-number">20.0</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">(</span><span class="tok-number">2047</span><span class="tok-punct">,</span> <span class="tok-number">85.0</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-fn calibration_lookup_array(raw: u16) -&gt; Option&lt;f32&gt; {
-    CALIBRATION_POINTS
-        .binary_search_by_key(&amp;raw, |&amp;(k, _)| k) // &lt;- binary_search_by_key: the ordered lookup BTreeMap.get() gives, no heap
-        .ok()
-        .map(|i| CALIBRATION_POINTS[i].1)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">calibration_lookup_array</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">CALIBRATION_POINTS</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">binary_search_by_key</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">raw</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-punct">&amp;</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-variable">k</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- binary_search_by_key: the ordered lookup BTreeMap.get() gives, no heap</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">i</span><span class="tok-punct">|</span> <span class="tok-constant">CALIBRATION_POINTS</span><span class="tok-punct">[</span><span class="tok-variable">i</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-number">1</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>BTreeMap</code>'s ordering guarantee is only worth its

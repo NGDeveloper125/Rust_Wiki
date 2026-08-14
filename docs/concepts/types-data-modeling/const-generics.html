@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -994,12 +995,12 @@ checking of what operations on <code>N</code> are actually valid.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn sum&lt;const N: usize&gt;(arr: [i32; N]) -&gt; i32 { // &lt;- N is a value, known at compile time
-    arr.iter().sum()
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">sum</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">arr</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i32</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- N is a value, known at compile time</span>
+    <span class="tok-variable">arr</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-sum([1, 2, 3]);      // N = 3, inferred from the array literal
-sum([1, 2, 3, 4]);    // N = 4, a distinct monomorphized instantiation
+<span class="tok-call-free">sum</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>      <span class="tok-comment">// N = 3, inferred from the array literal</span>
+<span class="tok-call-free">sum</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>    <span class="tok-comment">// N = 4, a distinct monomorphized instantiation</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>N</code> must be resolvable at compile time — it can be a
 literal, a <code>const</code>, or inferred from context, but never a value computed
@@ -1021,23 +1022,23 @@ at runtime (like a <code>Vec</code>'s length).</p>
 catch a capacity mismatch at compile time, and stack-allocate the backing
 array, instead of needing a heap-allocated <code>Vec</code> just to carry a length
 that's actually known up front.</p>
-<pre><code class="rust">struct RingBuffer&lt;const N: usize&gt; { // &lt;- N is part of the type: RingBuffer&lt;8&gt; and RingBuffer&lt;256&gt; differ
-    data: [u8; N],
-    len: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- N is part of the type: RingBuffer&lt;8&gt; and RingBuffer&lt;256&gt; differ</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;const N: usize&gt; RingBuffer&lt;N&gt; {
-    fn new() -&gt; Self {
-        RingBuffer { data: [0; N], len: 0 }
-    }
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">N</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RingBuffer</span> <span class="tok-punct">{</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn capacity(&amp;self) -&gt; usize {
-        N // &lt;- N is an ordinary compile-time constant inside the impl, not a runtime field
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">capacity</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span>
+        <span class="tok-generic-param">N</span> <span class="tok-comment tok-anno">// &lt;- N is an ordinary compile-time constant inside the impl, not a runtime field</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let small: RingBuffer&lt;8&gt; = RingBuffer::new();
-let large: RingBuffer&lt;256&gt; = RingBuffer::new();
+<span class="tok-keyword">let</span> <span class="tok-variable">small</span><span class="tok-punct">:</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-number">8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">large</span><span class="tok-punct">:</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-number">256</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> encoding the capacity in the type itself means passing
@@ -1085,28 +1086,28 @@ the abstraction.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct RxBuffer&lt;const N: usize&gt; { // &lt;- N fixed at compile time: no allocator, no runtime capacity check
-    data: [u8; N],
-    len: usize,
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RxBuffer</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- N fixed at compile time: no allocator, no runtime capacity check</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;const N: usize&gt; RxBuffer&lt;N&gt; {
-    fn new() -&gt; Self {
-        RxBuffer { data: [0; N], len: 0 }
-    }
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-type">RxBuffer</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">N</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RxBuffer</span> <span class="tok-punct">{</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn push_byte(&amp;mut self, byte: u8) -&gt; Result&lt;(), u8&gt; {
-        if self.len == N {
-            return Err(byte); // &lt;- buffer full: caught here, not by overrunning a fixed-size array
-        }
-        self.data[self.len] = byte;
-        self.len += 1;
-        Ok(())
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">push_byte</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">==</span> <span class="tok-generic-param">N</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- buffer full: caught here, not by overrunning a fixed-size array</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">[</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-variable">byte</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut uart_rx: RxBuffer&lt;64&gt; = RxBuffer::new(); // &lt;- 64-byte receive buffer, stack/static storage only
-uart_rx.push_byte(0xAA).ok();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">uart_rx</span><span class="tok-punct">:</span> <span class="tok-type">RxBuffer</span><span class="tok-punct">&lt;</span><span class="tok-number">64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">RxBuffer</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- 64-byte receive buffer, stack/static storage only</span>
+<span class="tok-variable">uart_rx</span><span class="tok-punct">.</span><span class="tok-call-method">push_byte</span><span class="tok-punct">(</span><span class="tok-number">0xAA</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1126,20 +1127,20 @@ case — a console UART might need 256 bytes, a low-rate sensor link only
 16 — so writing the buffer type once, generic over its capacity, avoids
 either hand-duplicating a struct per size or falling back to a heap that
 may not exist on the target at all.</p>
-<pre><code class="rust">struct RingBuffer&lt;const N: usize&gt; { // &lt;- same struct serves every peripheral instance, at whatever size it needs
-    data: [u8; N],
-    head: usize,
-    tail: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- same struct serves every peripheral instance, at whatever size it needs</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">head</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+    <span class="tok-variable">tail</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;const N: usize&gt; RingBuffer&lt;N&gt; {
-    fn new() -&gt; Self {
-        RingBuffer { data: [0; N], head: 0, tail: 0 }
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">N</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">RingBuffer</span> <span class="tok-punct">{</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-generic-param">N</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">head</span><span class="tok-punct">:</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">tail</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let console_rx: RingBuffer&lt;256&gt; = RingBuffer::new(); // &lt;- sized for a chatty console UART
-let sensor_rx: RingBuffer&lt;16&gt; = RingBuffer::new();   // &lt;- sized for a low-rate sensor link, same code
+<span class="tok-keyword">let</span> <span class="tok-variable">console_rx</span><span class="tok-punct">:</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-number">256</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- sized for a chatty console UART</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sensor_rx</span><span class="tok-punct">:</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">&lt;</span><span class="tok-number">16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">RingBuffer</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- sized for a low-rate sensor link, same code</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> each instantiation is monomorphized into its own
@@ -1159,15 +1160,15 @@ hand-written per-size struct wouldn't already need.</p>
 the capacity in the return type itself, so a caller wiring the wrong-size
 buffer into a peripheral expecting a specific length fails to compile
 instead of corrupting a transfer at runtime.</p>
-<pre><code class="rust">fn make_spi_tx_buffer&lt;const N: usize&gt;() -&gt; heapless::Vec&lt;u8, N&gt; {
-    heapless::Vec::new() // &lt;- capacity N is part of the returned type, decided by the caller's type annotation
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">make_spi_tx_buffer</span><span class="tok-punct">&lt;</span><span class="tok-keyword">const</span> <span class="tok-generic-param">N</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-generic-param">N</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- capacity N is part of the returned type, decided by the caller's type annotation</span>
+<span class="tok-punct">}</span>
 
-fn send_frame(bus: &amp;mut impl embedded_hal::spi::SpiBus, frame: heapless::Vec&lt;u8, 32&gt;) {
-    let _ = (bus, frame); // a 32-byte-capacity frame, enforced by the parameter's own type
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">send_frame</span><span class="tok-punct">(</span><span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">SpiBus</span><span class="tok-punct">,</span> <span class="tok-variable">frame</span><span class="tok-punct">:</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">bus</span><span class="tok-punct">,</span> <span class="tok-variable">frame</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// a 32-byte-capacity frame, enforced by the parameter's own type</span>
+<span class="tok-punct">}</span>
 
-let frame: heapless::Vec&lt;u8, 32&gt; = make_spi_tx_buffer(); // &lt;- N inferred as 32 from send_frame's parameter type
+<span class="tok-keyword">let</span> <span class="tok-variable">frame</span><span class="tok-punct">:</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-number">32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-call-free">make_spi_tx_buffer</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- N inferred as 32 from send_frame's parameter type</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> encoding the capacity in the type means a

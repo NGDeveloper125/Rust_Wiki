@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1009,16 +1010,16 @@ dependencies, is what a <a href="../../concepts/modules-crates-visibility/worksp
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">// src/lib.rs — this file is the crate root
-pub fn greet(name: &amp;str) -&gt; String {   // &lt;- part of this crate's public API
-    format!("Hello, {name}!")
-}
+        <pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs — this file is the crate root</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>   <span class="tok-comment tok-anno">// &lt;- part of this crate's public API</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;Hello, {name}!&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-pub mod inventory {
-    pub fn describe() -&gt; String {
-        crate::greet("inventory")      // &lt;- `crate::` names this crate's root, from anywhere inside it
-    }
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">mod</span> <span class="tok-variable">inventory</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">crate</span><span class="tok-punct">::</span><span class="tok-call-assoc">greet</span><span class="tok-punct">(</span><span class="tok-string">&quot;inventory&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment tok-anno">// &lt;- `crate::` names this crate's root, from anywhere inside it</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1036,14 +1037,14 @@ pub mod inventory {
             <p>A library crate's <code>lib.rs</code> is the one file whose top-level items define
 the crate's entire public surface — everything a caller can reach starts
 there, however the implementation is organized underneath.</p>
-<pre><code class="rust">// src/lib.rs
-mod client;                       // &lt;- private: an implementation detail
-mod config;                       // &lt;- private: an implementation detail
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">client</span><span class="tok-punct">;</span>                       <span class="tok-comment tok-anno">// &lt;- private: an implementation detail</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">config</span><span class="tok-punct">;</span>                       <span class="tok-comment tok-anno">// &lt;- private: an implementation detail</span>
 
-pub use client::WeatherClient;    // &lt;- the crate's public API is curated here, not scattered
-pub use config::Config;
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">client</span><span class="tok-punct">::</span><span class="tok-type">WeatherClient</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- the crate's public API is curated here, not scattered</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">config</span><span class="tok-punct">::</span><span class="tok-type">Config</span><span class="tok-punct">;</span>
 
-pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+<span class="tok-keyword">pub</span> <span class="tok-keyword">const</span> <span class="tok-constant">DEFAULT_TIMEOUT_SECS</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">=</span> <span class="tok-number">30</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping the internal modules private and re-exporting a
@@ -1064,22 +1065,22 @@ recommends for a stable public API.</p>
 their own separate crate that depends on the library crate the same way
 an external user would — so they can only exercise what's actually
 <code>pub</code>.</p>
-<pre><code class="rust">// src/lib.rs
-pub fn discount_price(price_cents: u32, percent_off: u8) -&gt; u32 {
-    price_cents - (price_cents * percent_off as u32 / 100)
-}
+<pre><code class="rust-hl"><span class="tok-comment">// src/lib.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">discount_price</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">price_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">price_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn round_to_nearest_cent(value: f64) -&gt; u32 { // &lt;- private: invisible outside this crate
-    value.round() as u32
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">round_to_nearest_cent</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- private: invisible outside this crate</span>
+    <span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">round</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span>
+<span class="tok-punct">}</span>
 
-// tests/pricing.rs — compiled as its own crate, linked against weather_api's public API
-use weather_api::discount_price;              // &lt;- only `pub` items are reachable here
+<span class="tok-comment">// tests/pricing.rs — compiled as its own crate, linked against weather_api's public API</span>
+<span class="tok-keyword">use</span> <span class="tok-module">weather_api</span><span class="tok-punct">::</span><span class="tok-variable">discount_price</span><span class="tok-punct">;</span>              <span class="tok-comment tok-anno">// &lt;- only `pub` items are reachable here</span>
 
-#[test]
-fn applies_discount() {
-    assert_eq!(discount_price(2000, 10), 1800);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">applies_discount</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">discount_price</span><span class="tok-punct">(</span><span class="tok-number">2000</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1800</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> because each file under <code>tests/</code> links against the
@@ -1122,11 +1123,11 @@ convention the ecosystem follows, not a different kind of crate.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">[dependencies]
-stm32f4 = "0.15"              # &lt;- PAC: svd2rust-generated raw register access
-stm32f4xx-hal = "0.21"        # &lt;- HAL: safe wrapper over the PAC
-# an application crate depends on the HAL directly;
-# a board support crate would sit between them, pin-mapped to one board
+        <pre><code class="rust-hl"><span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">stm32f4</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.15&quot;</span>              <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-constant">PAC</span><span class="tok-punct">:</span> <span class="tok-variable">svd2rust</span><span class="tok-punct">-</span><span class="tok-variable">generated</span> <span class="tok-variable">raw</span> <span class="tok-variable">register</span> <span class="tok-variable">access</span>
+<span class="tok-variable">stm32f4xx</span><span class="tok-punct">-</span><span class="tok-variable">hal</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.21&quot;</span>        <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-constant">HAL</span><span class="tok-punct">:</span> <span class="tok-variable">safe</span> <span class="tok-variable">wrapper</span> <span class="tok-variable">over</span> <span class="tok-variable">the</span> <span class="tok-constant">PAC</span>
+<span class="tok-punct">#</span> <span class="tok-variable">an</span> <span class="tok-variable">application</span> <span class="tok-keyword">crate</span> <span class="tok-variable">depends</span> <span class="tok-variable">on</span> <span class="tok-variable">the</span> <span class="tok-constant">HAL</span> <span class="tok-variable">directly</span><span class="tok-punct">;</span>
+<span class="tok-punct">#</span> <span class="tok-variable">a</span> <span class="tok-variable">board</span> <span class="tok-variable">support</span> <span class="tok-keyword">crate</span> <span class="tok-variable">would</span> <span class="tok-variable">sit</span> <span class="tok-variable">between</span> <span class="tok-variable">them</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">-</span><span class="tok-variable">mapped</span> <span class="tok-variable">to</span> <span class="tok-variable">one</span> <span class="tok-variable">board</span>
 </code></pre>
 
       </section>
@@ -1145,20 +1146,20 @@ stm32f4xx-hal = "0.21"        # &lt;- HAL: safe wrapper over the PAC
 a public API that can't be driven into an invalid hardware state, so its
 <code>lib.rs</code> deliberately keeps the PAC import out of its own public
 surface.</p>
-<pre><code class="rust">// hal/src/lib.rs
-use stm32f4::stm32f411 as pac;   // &lt;- private: the PAC is an implementation detail of the HAL
+<pre><code class="rust-hl"><span class="tok-comment">// hal/src/lib.rs</span>
+<span class="tok-keyword">use</span> <span class="tok-module">stm32f4</span><span class="tok-punct">::</span><span class="tok-variable">stm32f411</span> <span class="tok-keyword">as</span> <span class="tok-variable">pac</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- private: the PAC is an implementation detail of the HAL</span>
 
-pub struct Gpio {
-    // ...
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// ...</span>
+<span class="tok-punct">}</span>
 
-impl Gpio {
-    pub fn set_high(&amp;mut self) {
-        // unsafe register write happens here, behind a safe method
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Gpio</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// unsafe register write happens here, behind a safe method</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-pub use self::Gpio as Pin;   // &lt;- curated public name, independent of the PAC's own naming
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-keyword">self</span><span class="tok-punct">::</span><span class="tok-type">Gpio</span> <span class="tok-keyword">as</span> <span class="tok-type">Pin</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- curated public name, independent of the PAC's own naming</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> hiding the PAC dependency behind the HAL's own public
@@ -1178,16 +1179,16 @@ recommends generally, applied here to a hardware boundary.</p>
             <p>A new board support crate needs to depend on both the chip's HAL (for
 the safe peripheral API) and, transitively, its PAC — but application
 code should only ever need to depend on the BSP.</p>
-<pre><code class="rust">// bsp/Cargo.toml
-[dependencies]
-stm32f4xx-hal = "0.21"    # &lt;- BSP depends on the HAL, not the PAC directly
+<pre><code class="rust-hl"><span class="tok-comment">// bsp/Cargo.toml</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">stm32f4xx</span><span class="tok-punct">-</span><span class="tok-variable">hal</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.21&quot;</span>    <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-constant">BSP</span> <span class="tok-variable">depends</span> <span class="tok-variable">on</span> <span class="tok-variable">the</span> <span class="tok-constant">HAL</span><span class="tok-punct">,</span> <span class="tok-variable">not</span> <span class="tok-variable">the</span> <span class="tok-constant">PAC</span> <span class="tok-variable">directly</span>
 
-// bsp/src/lib.rs
-pub use stm32f4xx_hal::gpio::Pin;   // &lt;- re-exports what applications actually need
+<span class="tok-comment">// bsp/src/lib.rs</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">use</span> <span class="tok-module">stm32f4xx_hal</span><span class="tok-punct">::</span><span class="tok-module">gpio</span><span class="tok-punct">::</span><span class="tok-type">Pin</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- re-exports what applications actually need</span>
 
-pub struct Board {
-    pub user_led: Pin,     // &lt;- pin already mapped to this specific board's LED
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Board</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">user_led</span><span class="tok-punct">:</span> <span class="tok-trait">Pin</span><span class="tok-punct">,</span>     <span class="tok-comment tok-anno">// &lt;- pin already mapped to this specific board's LED</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an application depending only on the BSP, not reaching

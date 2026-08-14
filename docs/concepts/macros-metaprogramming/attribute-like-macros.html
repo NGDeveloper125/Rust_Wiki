@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1015,25 +1016,25 @@ kinds.</p>
         <h2 class="section-title">Basic usage example</h2>
         <p>The attribute-like macro's definition, in its own <code>proc-macro = true</code>
 crate:</p>
-<pre><code class="rust">use proc_macro::TokenStream;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">proc_macro</span><span class="tok-punct">::</span><span class="tok-type">TokenStream</span><span class="tok-punct">;</span>
 
-#[proc_macro_attribute] // &lt;- takes the attribute's own arguments AND the item it annotates, as two streams
-pub fn traced(_attr: TokenStream, item: TokenStream) -&gt; TokenStream {
-    item // a real implementation would parse `item` (e.g. with `syn`) and splice in new code
-}
+<span class="tok-attribute">#[proc_macro_attribute]</span> <span class="tok-comment tok-anno">// &lt;- takes the attribute's own arguments AND the item it annotates, as two streams</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">traced</span><span class="tok-punct">(</span><span class="tok-variable">_attr</span><span class="tok-punct">:</span> <span class="tok-type">TokenStream</span><span class="tok-punct">,</span> <span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-type">TokenStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">TokenStream</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">item</span> <span class="tok-comment">// a real implementation would parse `item` (e.g. with `syn`) and splice in new code</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>and the consuming crate that applies it:</p>
-<pre><code class="rust">// Cargo.toml: traced_macro = { path = "../traced_macro" }
-use traced_macro::traced;
+<pre><code class="rust-hl"><span class="tok-comment">// Cargo.toml: traced_macro = { path = &quot;../traced_macro&quot; }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">traced_macro</span><span class="tok-punct">::</span><span class="tok-variable">traced</span><span class="tok-punct">;</span>
 
-#[traced] // &lt;- the attribute macro replaces this function's tokens with whatever `traced` returns
-fn poll_sensor() -&gt; f64 {
-    21.5
-}
+<span class="tok-attribute">#[traced]</span> <span class="tok-comment tok-anno">// &lt;- the attribute macro replaces this function's tokens with whatever `traced` returns</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">poll_sensor</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-number">21.5</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    println!("{}", poll_sensor());
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">poll_sensor</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1051,22 +1052,22 @@ fn main() {
             <p>A web framework attaches routing metadata directly to a handler
 function with an attribute macro, so the route table lives next to the
 code it dispatches to instead of in a separate registration file.</p>
-<pre><code class="rust">// crate "webkit" defines `route` as a #[proc_macro_attribute]
-use webkit::{route, Router};
+<pre><code class="rust-hl"><span class="tok-comment">// crate &quot;webkit&quot; defines `route` as a #[proc_macro_attribute]</span>
+<span class="tok-keyword">use</span> <span class="tok-module">webkit</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">route</span><span class="tok-punct">,</span> <span class="tok-type">Router</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[route(GET, "/sensors/:id")] // &lt;- replaces this fn's tokens with a registered handler + metadata
-async fn get_sensor(id: u32) -&gt; String {
-    format!("sensor {id}")
-}
+<span class="tok-attribute">#[route(GET, &quot;/sensors/:id&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- replaces this fn's tokens with a registered handler + metadata</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">get_sensor</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor {id}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[route(POST, "/sensors")] // &lt;- same macro, different metadata: registers a second handler at compile time
-async fn create_sensor(payload: String) -&gt; String {
-    format!("created: {payload}")
-}
+<span class="tok-attribute">#[route(POST, &quot;/sensors&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- same macro, different metadata: registers a second handler at compile time</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">create_sensor</span><span class="tok-punct">(</span><span class="tok-variable">payload</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;created: {payload}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn app() -&gt; Router {
-    Router::new() // &lt;- both #[route]-annotated functions are already registered by the time this runs
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">app</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Router</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Router</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- both #[route]-annotated functions are already registered by the time this runs</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> attaching the method and path as compile-time metadata
@@ -1087,17 +1088,17 @@ case for reaching for an attribute macro over a plain function call.</p>
             <p>A parameterized-test attribute macro expands one annotated function
 into several ordinary <code>#[test]</code> functions, one per listed case, instead
 of requiring a <code>macro_rules!</code> invocation per case.</p>
-<pre><code class="rust">// crate "testkit" defines `cases` as a #[proc_macro_attribute]
-use testkit::cases;
+<pre><code class="rust-hl"><span class="tok-comment">// crate &quot;testkit&quot; defines `cases` as a #[proc_macro_attribute]</span>
+<span class="tok-keyword">use</span> <span class="tok-module">testkit</span><span class="tok-punct">::</span><span class="tok-variable">cases</span><span class="tok-punct">;</span>
 
-#[cases(20.0, 21.5, -5.0)] // &lt;- expands into one #[test] fn per listed value
-fn parses_valid_reading(input: f64) {
-    assert!(parse_reading(input).is_some());
-}
+<span class="tok-attribute">#[cases(20.0, 21.5, -5.0)]</span> <span class="tok-comment tok-anno">// &lt;- expands into one #[test] fn per listed value</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parses_valid_reading</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">parse_reading</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_some</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn parse_reading(celsius: f64) -&gt; Option&lt;f64&gt; {
-    (-40.0..=125.0).contains(&amp;celsius).then_some(celsius)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_reading</span><span class="tok-punct">(</span><span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">40.0</span><span class="tok-punct">..=</span><span class="tok-number">125.0</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">celsius</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">then_some</span><span class="tok-punct">(</span><span class="tok-variable">celsius</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> each value the macro generates a test for is still an
@@ -1145,15 +1146,15 @@ by inspection alone.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std]
-#![no_main]
+        <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-#[entry] // &lt;- rewrites this function into the shape the reset handler calls; enforces exactly one entry point
-fn main() -&gt; ! {
-    loop {}
-}
+<span class="tok-attribute">#[entry]</span> <span class="tok-comment tok-anno">// &lt;- rewrites this function into the shape the reset handler calls; enforces exactly one entry point</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1172,26 +1173,26 @@ fn main() -&gt; ! {
 uses RTIC's <code>#[app]</code> to get resource-locking and scheduling generated
 from a declarative module, instead of hand-writing a critical-section-
 guarded dispatcher.</p>
-<pre><code class="rust">#[rtic::app(device = pac)] // &lt;- expands this whole module into scheduling + resource-locking code
-mod app {
-    #[shared]
-    struct Shared {
-        counter: u32,
-    }
+<pre><code class="rust-hl"><span class="tok-attribute">#[rtic::app(device = pac)]</span> <span class="tok-comment tok-anno">// &lt;- expands this whole module into scheduling + resource-locking code</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">app</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[shared]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">Shared</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">counter</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
 
-    #[local]
-    struct Local {}
+    <span class="tok-attribute">#[local]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">Local</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-    #[init]
-    fn init(_cx: init::Context) -&gt; (Shared, Local) {
-        (Shared { counter: 0 }, Local {})
-    }
+    <span class="tok-attribute">#[init]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">init</span><span class="tok-punct">(</span><span class="tok-variable">_cx</span><span class="tok-punct">:</span> <span class="tok-module">init</span><span class="tok-punct">::</span><span class="tok-type">Context</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">Shared</span><span class="tok-punct">,</span> <span class="tok-type-return">Local</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">(</span><span class="tok-type">Shared</span> <span class="tok-punct">{</span> <span class="tok-variable">counter</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-type">Local</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
 
-    #[task(binds = TIM2, shared = [counter])]
-    fn on_timer(mut cx: on_timer::Context) {
-        cx.shared.counter.lock(|c| *c += 1); // &lt;- lock/scheduling code is macro-generated, not hand-written
-    }
-}
+    <span class="tok-attribute">#[task(binds = TIM2, shared = [counter])]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_timer</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">cx</span><span class="tok-punct">:</span> <span class="tok-module">on_timer</span><span class="tok-punct">::</span><span class="tok-type">Context</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">cx</span><span class="tok-punct">.</span><span class="tok-field">shared</span><span class="tok-punct">.</span><span class="tok-field">counter</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">c</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-variable">c</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- lock/scheduling code is macro-generated, not hand-written</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the critical-section-guarded dispatcher this expands
@@ -1211,32 +1212,32 @@ tasks and resources are added.</p>
             <p>An <code>#[entry]</code>-annotated function is awkward to unit test directly — it
 never returns and assumes real hardware — so firmware logic is kept in
 ordinary functions the macro-generated entry point calls into.</p>
-<pre><code class="rust">#![no_std]
-#![no_main]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-fn compute_next_state(count: u32) -&gt; u32 { // &lt;- plain function: testable with ordinary #[test] on the host
-    count.wrapping_add(1)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">compute_next_state</span><span class="tok-punct">(</span><span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- plain function: testable with ordinary #[test] on the host</span>
+    <span class="tok-variable">count</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[entry] // &lt;- stays a thin wrapper; the logic worth testing lives outside it
-fn main() -&gt; ! {
-    let mut count = 0;
-    loop {
-        count = compute_next_state(count);
-    }
-}
+<span class="tok-attribute">#[entry]</span> <span class="tok-comment tok-anno">// &lt;- stays a thin wrapper; the logic worth testing lives outside it</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">count</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">count</span> <span class="tok-punct">=</span> <span class="tok-call-free">compute_next_state</span><span class="tok-punct">(</span><span class="tok-variable">count</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::compute_next_state;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-variable">compute_next_state</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn wraps_on_overflow() {
-        assert_eq!(compute_next_state(u32::MAX), 0);
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">wraps_on_overflow</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">compute_next_state</span><span class="tok-punct">(</span><span class="tok-module">u32</span><span class="tok-punct">::</span><span class="tok-constant">MAX</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the attribute macro's rewritten entry point only ever

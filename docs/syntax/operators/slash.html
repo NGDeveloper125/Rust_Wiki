@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -989,7 +990,7 @@ floating-point division by zero instead follows IEEE 754 and produces
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Dividing two integers with truncation</h3>
-            <pre><code class="rust">let quotient = 7 / 2; // &lt;- `/` divides, truncating toward zero
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">quotient</span> <span class="tok-punct">=</span> <span class="tok-number">7</span> <span class="tok-punct">/</span> <span class="tok-number">2</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `/` divides, truncating toward zero</span>
 </code></pre>
 <p><strong>Restriction:</strong> dividing an integer by zero panics unconditionally, even
 in release builds.</p>
@@ -1001,13 +1002,13 @@ in release builds.</p>
 truncation behavior this page's Explanation describes is exactly why
 integer division needs a moment's thought before it's used for anything
 that isn't meant to be a whole number.</p>
-<pre><code class="rust">let total_ms: u32 = 1_205;
-let sample_count: u32 = 4;
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">total_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1_205</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sample_count</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">4</span><span class="tok-punct">;</span>
 
-let average_ms = total_ms / sample_count; // &lt;- `/` truncates: 301, not 301.25
-assert_eq!(average_ms, 301);
+<span class="tok-keyword">let</span> <span class="tok-variable">average_ms</span> <span class="tok-punct">=</span> <span class="tok-variable">total_ms</span> <span class="tok-punct">/</span> <span class="tok-variable">sample_count</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `/` truncates: 301, not 301.25</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">average_ms</span><span class="tok-punct">,</span> <span class="tok-number">301</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let average_ms_f = total_ms as f64 / sample_count as f64; // 301.25, precise
+<span class="tok-keyword">let</span> <span class="tok-variable">average_ms_f</span> <span class="tok-punct">=</span> <span class="tok-variable">total_ms</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span> <span class="tok-punct">/</span> <span class="tok-variable">sample_count</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span><span class="tok-punct">;</span> <span class="tok-comment">// 301.25, precise</span>
 </code></pre>
 <p>Casting to a float before dividing is the standard fix
 when truncation would silently discard a meaningful fraction — integer
@@ -1021,12 +1022,12 @@ spell out against Euclidean division.</p>
             <p>Where the divisor isn't guaranteed to be nonzero — say, an average
 computed over a possibly-empty batch of readings — <code>checked_div</code> turns
 the panic this page warns about into an <code>Option</code> the caller must handle.</p>
-<pre><code class="rust">fn average(total: i32, count: i32) -&gt; Option&lt;i32&gt; {
-    total.checked_div(count) // returns None instead of panicking when count == 0
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">average</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">total</span><span class="tok-punct">.</span><span class="tok-call-method">checked_div</span><span class="tok-punct">(</span><span class="tok-variable">count</span><span class="tok-punct">)</span> <span class="tok-comment">// returns None instead of panicking when count == 0</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(average(100, 4), Some(25));
-assert_eq!(average(100, 0), None); // no panic: an empty batch is a normal case
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">average</span><span class="tok-punct">(</span><span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">25</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">average</span><span class="tok-punct">(</span><span class="tok-number">100</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// no panic: an empty batch is a normal case</span>
 </code></pre>
 <p><code>checked_div</code> makes the zero-divisor case an explicit
 branch instead of an unconditional panic — the
@@ -1073,19 +1074,19 @@ embedded code.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Dividing on a core without a hardware divider</h3>
-            <pre><code class="rust">fn average_temp(total: i32, count: i32) -&gt; i32 {
-    total / count // &lt;- `/` here compiles to a software-division routine on a divider-less Cortex-M0
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">average_temp</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">total</span> <span class="tok-punct">/</span> <span class="tok-variable">count</span> <span class="tok-comment tok-anno">// &lt;- `/` here compiles to a software-division routine on a divider-less Cortex-M0</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Replacing a fixed power-of-two divisor with an explicit shift</h3>
-            <pre><code class="rust">const SAMPLE_RATE_SHIFT: u32 = 10; // sample rate is 1024 Hz == 2^10
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">SAMPLE_RATE_SHIFT</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">10</span><span class="tok-punct">;</span> <span class="tok-comment">// sample rate is 1024 Hz == 2^10</span>
 
-fn ms_from_samples(samples: u32) -&gt; u32 {
-    (samples * 1000) &gt;&gt; SAMPLE_RATE_SHIFT // stands in for `samples * 1000 / 1024`; no divide instruction emitted
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">ms_from_samples</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-variable">samples</span> <span class="tok-punct">*</span> <span class="tok-number">1000</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-constant">SAMPLE_RATE_SHIFT</span> <span class="tok-comment">// stands in for `samples * 1000 / 1024`; no divide instruction emitted</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

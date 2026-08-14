@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1033,13 +1034,13 @@ this page is about the four-level mechanism itself.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Allowing and denying specific lints</h3>
-            <pre><code class="rust">#[allow(dead_code)] // &lt;- silences the unused-code warning for this one function
-fn planned_for_next_release() {}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[allow(dead_code)]</span> <span class="tok-comment tok-anno">// &lt;- silences the unused-code warning for this one function</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">planned_for_next_release</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-#[deny(unused_must_use)] // &lt;- turns this specific lint into a hard error, just for this function
-fn must_check_the_result() -&gt; Result&lt;(), &amp;'static str&gt; {
-    Ok(())
-}
+<span class="tok-attribute">#[deny(unused_must_use)]</span> <span class="tok-comment tok-anno">// &lt;- turns this specific lint into a hard error, just for this function</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">must_check_the_result</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1049,17 +1050,17 @@ fn must_check_the_result() -&gt; Result&lt;(), &amp;'static str&gt; {
 "these are not negotiable" — without denying the open-ended <code>warnings</code>
 group and risking a future toolchain upgrade breaking the build on its
 own.</p>
-<pre><code class="rust">// AVOID: denies every lint any future compiler/Clippy release might add
-// #![deny(warnings)]
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: denies every lint any future compiler/Clippy release might add</span>
+<span class="tok-comment">// #![deny(warnings)]</span>
 
-// PREFER: names exactly the lints this crate treats as non-negotiable
-#![deny(unused_must_use, unsafe_op_in_unsafe_fn)]
-#![warn(missing_docs)] // &lt;- tracked, but not yet a hard error
+<span class="tok-comment">// PREFER: names exactly the lints this crate treats as non-negotiable</span>
+<span class="tok-attribute">#![deny(unused_must_use, unsafe_op_in_unsafe_fn)]</span>
+<span class="tok-attribute">#![warn(missing_docs)]</span> <span class="tok-comment tok-anno">// &lt;- tracked, but not yet a hard error</span>
 
-/// Parses a port number from a configuration string.
-pub fn parse_port(input: &amp;str) -&gt; Result&lt;u16, std::num::ParseIntError&gt; {
-    input.trim().parse()
-}
+<span class="tok-comment">/// Parses a port number from a configuration string.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_port</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Naming specific lints means a compiler or Clippy upgrade
 that introduces a brand-new warn-by-default lint doesn't retroactively
@@ -1076,14 +1077,14 @@ lint must never be silenced by accident, even by a contributor working
 several call-sites deep inside that module — <code>forbid</code> is what makes an
 inner <code>#[allow]</code> on that lint itself a compile error, rather than quietly
 succeeding.</p>
-<pre><code class="rust">#[forbid(unsafe_op_in_unsafe_fn)] // &lt;- stronger than deny: can't be reopened by any nested scope
-mod ffi {
-    pub unsafe fn read_register(address: usize) -&gt; u32 {
-        // AVOID: this inner #[allow] would itself fail to compile under #[forbid] above
-        // #[allow(unsafe_op_in_unsafe_fn)]
-        unsafe { std::ptr::read_volatile(address as *const u32) }
-    }
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[forbid(unsafe_op_in_unsafe_fn)]</span> <span class="tok-comment tok-anno">// &lt;- stronger than deny: can't be reopened by any nested scope</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">ffi</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_register</span><span class="tok-punct">(</span><span class="tok-variable">address</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// AVOID: this inner #[allow] would itself fail to compile under #[forbid] above</span>
+        <span class="tok-comment">// #[allow(unsafe_op_in_unsafe_fn)]</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-variable">address</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>deny</code> alone still allows a nested scope to locally
 <code>allow</code> the same lint back, which is appropriate for most lints but wrong
@@ -1120,13 +1121,13 @@ register modules is standard rather than a sign of neglect.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Allowing unused fields across a generated register module</h3>
-            <pre><code class="rust">#[allow(dead_code)] // &lt;- most fields here are unused by any single application; that's expected in generated PAC code
-pub struct Gpiox {
-    pub moder: u32,
-    pub otyper: u32,
-    pub ospeedr: u32,
-    pub pupdr: u32,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[allow(dead_code)]</span> <span class="tok-comment tok-anno">// &lt;- most fields here are unused by any single application; that's expected in generated PAC code</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Gpiox</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">moder</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">otyper</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">ospeedr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">pupdr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

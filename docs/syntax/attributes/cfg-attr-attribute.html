@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1007,10 +1008,10 @@ the item is written once, and only the extra attribute is conditional.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Conditionally deriving a trait for test builds</h3>
-            <pre><code class="rust">#[cfg_attr(test, derive(Debug))] // &lt;- derives Debug only when compiling for `cargo test`
-struct Reading {
-    celsius: f64,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cfg_attr(test, derive(Debug))]</span> <span class="tok-comment tok-anno">// &lt;- derives Debug only when compiling for `cargo test`</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Reading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1020,27 +1021,27 @@ struct Reading {
 constantly wants it for <code>assert_eq!</code> failure messages and <code>dbg!</code> output —
 <code>cfg_attr</code> adds the derive only where it's actually needed, without a
 second, duplicated struct definition.</p>
-<pre><code class="rust">#[cfg_attr(test, derive(Debug, PartialEq))] // &lt;- Debug/PartialEq only exist in test builds
-pub struct OrderTotal {
-    cents: u64,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg_attr(test, derive(Debug, PartialEq))]</span> <span class="tok-comment tok-anno">// &lt;- Debug/PartialEq only exist in test builds</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">OrderTotal</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl OrderTotal {
-    pub fn new(cents: u64) -&gt; Self {
-        OrderTotal { cents }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">OrderTotal</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">OrderTotal</span> <span class="tok-punct">{</span> <span class="tok-variable">cents</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn totals_compare_equal() {
-        // &lt;- both derives from cfg_attr are what make assert_eq! compile here
-        assert_eq!(OrderTotal::new(500), OrderTotal::new(500));
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">totals_compare_equal</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- both derives from cfg_attr are what make assert_eq! compile here</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">OrderTotal</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">500</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">OrderTotal</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">500</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>assert_eq!</code> needs both <code>Debug</code> (to print the failure
 message) and <code>PartialEq</code> (to compare) on <code>OrderTotal</code>, but a published
@@ -1058,11 +1059,11 @@ without writing the item itself twice.</p>
 crosses an FFI boundary, while other targets are free to let the compiler
 choose its own layout — <code>cfg_attr</code> keeps the one struct definition shared
 across both cases.</p>
-<pre><code class="rust">#[cfg_attr(target_os = "linux", repr(C))] // &lt;- repr(C) applied only when targeting Linux
-pub struct FrameHeader {
-    pub version: u8,
-    pub flags: u8,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg_attr(target_os = &quot;linux&quot;, repr(C))]</span> <span class="tok-comment tok-anno">// &lt;- repr(C) applied only when targeting Linux</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">FrameHeader</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">version</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">flags</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Writing the struct out twice — once <code>#[repr(C)]</code> gated
 to Linux, once without a repr gated to everything else — would risk the
@@ -1107,22 +1108,22 @@ copies of the handler.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Deriving a no_std logging trait only when the defmt feature is enabled</h3>
-            <pre><code class="rust">#[cfg_attr(feature = "defmt", derive(defmt::Format))] // &lt;- adds defmt's Format derive only when the "defmt" feature is on
-#[derive(Debug, Clone, Copy)]
-pub enum SensorError {
-    Timeout,
-    BusFault,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cfg_attr(feature = &quot;defmt&quot;, derive(defmt::Format))]</span> <span class="tok-comment tok-anno">// &lt;- adds defmt's Format derive only when the &quot;defmt&quot; feature is on</span>
+<span class="tok-attribute">#[derive(Debug, Clone, Copy)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">enum</span> <span class="tok-type-def">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Timeout</span><span class="tok-punct">,</span>
+    <span class="tok-type">BusFault</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Relocating an interrupt handler to RAM only on a feature-gated build</h3>
-            <pre><code class="rust">#[cortex_m_rt::interrupt]
-#[cfg_attr(feature = "ram-handlers", link_section = ".data.TIM2")] // &lt;- relocated to RAM only when that feature is on
-fn TIM2() {
-    // handle the timer-2 interrupt
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cortex_m_rt::interrupt]</span>
+<span class="tok-attribute">#[cfg_attr(feature = &quot;ram-handlers&quot;, link_section = &quot;.data.TIM2&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- relocated to RAM only when that feature is on</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">TIM2</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// handle the timer-2 interrupt</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

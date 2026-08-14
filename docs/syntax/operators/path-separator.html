@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1026,9 +1027,9 @@ in expression position, never in a type.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Walking a module path to reach an associated function</h3>
-            <pre><code class="rust">use std::collections::HashMap; // &lt;- `::` walks `std` -&gt; `collections` -&gt; `HashMap`
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `::` walks `std` -&gt; `collections` -&gt; `HashMap`</span>
 
-let scores: HashMap&lt;&amp;str, u32&gt; = HashMap::new(); // &lt;- `::` here reaches `HashMap`'s associated fn `new`
+<span class="tok-keyword">let</span> <span class="tok-variable">scores</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `::` here reaches `HashMap`'s associated fn `new`</span>
 </code></pre>
 
           </div>
@@ -1037,11 +1038,11 @@ let scores: HashMap&lt;&amp;str, u32&gt; = HashMap::new(); // &lt;- `::` here re
             <p>A public function parsing a numeric value out of a string has no other
 type context to infer from, so the call needs turbofish to say which
 type <code>parse</code> should target.</p>
-<pre><code class="rust">pub fn print_doubled(raw: &amp;str) {
-    let n = raw.parse::&lt;i32&gt;().unwrap();
-    // &lt;- `::&lt;i32&gt;`: nothing else in this function fixes `parse`'s target type
-    println!("{}", n * 2);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">print_doubled</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">n</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-comment tok-anno">// &lt;- `::&lt;i32&gt;`: nothing else in this function fixes `parse`'s target type</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">n</span> <span class="tok-punct">*</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>parse</code>'s return type is generic over
 <a href="https://doc.rust-lang.org/std/str/trait.FromStr.html"><code>FromStr</code></a> and
@@ -1057,30 +1058,30 @@ binding.</p>
             <p>A generic function bound by a trait uses a fully qualified path to call
 that trait's method specifically, even though the type also has an
 inherent method of the same name.</p>
-<pre><code class="rust">trait Shape {
-    fn area(&amp;self) -&gt; f64;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct Square {
-    side: f64,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Square</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">side</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Square {
-    fn area(&amp;self) -&gt; f64 { // an inherent method, same name as the trait method
-        self.side * self.side * 1.0
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Square</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-comment">// an inherent method, same name as the trait method</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">side</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">side</span> <span class="tok-punct">*</span> <span class="tok-number">1.0</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Shape for Square {
-    fn area(&amp;self) -&gt; f64 {
-        self.side * self.side
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Shape</span> <span class="tok-keyword">for</span> <span class="tok-type">Square</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">side</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">side</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn trait_area&lt;T: Shape&gt;(shape: &amp;T) -&gt; f64 {
-    &lt;T as Shape&gt;::area(shape)
-    // &lt;- `::` here follows a qualified path, forcing `Shape`'s `area`, not any inherent method
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">trait_area</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Shape</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">shape</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span> <span class="tok-keyword">as</span> <span class="tok-type">Shape</span><span class="tok-punct">&gt;</span><span class="tok-punct">::</span><span class="tok-call-assoc">area</span><span class="tok-punct">(</span><span class="tok-variable">shape</span><span class="tok-punct">)</span>
+    <span class="tok-comment tok-anno">// &lt;- `::` here follows a qualified path, forcing `Shape`'s `area`, not any inherent method</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>&lt;T as Shape&gt;::area(shape)</code> is unambiguous regardless of
 what inherent methods <code>T</code> might also have, which matters in generic code
@@ -1118,21 +1119,21 @@ type a generic HAL function should operate on.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Walking into a peripheral-access crate to reach a register block</h3>
-            <pre><code class="rust">use crate::pac::GPIOA; // &lt;- `::` walks `crate` -&gt; `pac` -&gt; the GPIOA register-block type
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-keyword">crate</span><span class="tok-punct">::</span><span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-constant">GPIOA</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `::` walks `crate` -&gt; `pac` -&gt; the GPIOA register-block type</span>
 
-fn set_pin_high(gpioa: &amp;GPIOA) {
-    gpioa.bsrr.write(|w| w.bs0().set_bit());
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pin_high</span><span class="tok-punct">(</span><span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-constant">GPIOA</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">gpioa</span><span class="tok-punct">.</span><span class="tok-field">bsrr</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">w</span><span class="tok-punct">|</span> <span class="tok-variable">w</span><span class="tok-punct">.</span><span class="tok-call-method">bs0</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">set_bit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Reaching a core peripheral through a HAL crate</h3>
-            <pre><code class="rust">use cortex_m::peripheral::NVIC; // &lt;- `::` walks `cortex_m` -&gt; `peripheral` -&gt; `NVIC`, the interrupt controller
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">cortex_m</span><span class="tok-punct">::</span><span class="tok-module">peripheral</span><span class="tok-punct">::</span><span class="tok-constant">NVIC</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `::` walks `cortex_m` -&gt; `peripheral` -&gt; `NVIC`, the interrupt controller</span>
 
-fn mask_interrupt(nvic: &amp;mut NVIC, interrupt: crate::pac::Interrupt) {
-    NVIC::mask(interrupt); // &lt;- `::` also reaches `NVIC`'s own associated function `mask`
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">mask_interrupt</span><span class="tok-punct">(</span><span class="tok-variable">nvic</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">NVIC</span><span class="tok-punct">,</span> <span class="tok-variable">interrupt</span><span class="tok-punct">:</span> <span class="tok-keyword">crate</span><span class="tok-punct">::</span><span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-type">Interrupt</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">NVIC</span><span class="tok-punct">::</span><span class="tok-call-assoc">mask</span><span class="tok-punct">(</span><span class="tok-variable">interrupt</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `::` also reaches `NVIC`'s own associated function `mask`</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

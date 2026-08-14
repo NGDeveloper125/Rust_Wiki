@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1017,18 +1018,18 @@ ergonomic wrapper around for application code.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::fmt;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fmt</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-struct EmptyQueueError;
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">EmptyQueueError</span><span class="tok-punct">;</span>
 
-impl fmt::Display for EmptyQueueError { // &lt;- Error requires Display for a human-readable message
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        write!(f, "cannot dequeue: the queue is empty")
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">EmptyQueueError</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- Error requires Display for a human-readable message</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;cannot dequeue: the queue is empty&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl std::error::Error for EmptyQueueError {} // &lt;- the trait itself: no methods required beyond its supertraits here
+<span class="tok-keyword">impl</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-trait">Error</span> <span class="tok-keyword">for</span> <span class="tok-type">EmptyQueueError</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- the trait itself: no methods required beyond its supertraits here</span>
 </code></pre>
 
       </section>
@@ -1046,35 +1047,35 @@ impl std::error::Error for EmptyQueueError {} // &lt;- the trait itself: no meth
             <p>A database layer wraps a lower-level I/O failure; implementing <code>Error</code>
 manually (no <code>thiserror</code>) and overriding <code>source()</code> keeps the original
 cause discoverable instead of losing it inside a formatted string.</p>
-<pre><code class="rust">use std::fmt;
-use std::error::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fmt</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-struct QueryError {
-    query: String,
-    cause: std::io::Error,
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">QueryError</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">query</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">cause</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl fmt::Display for QueryError {
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        write!(f, "query failed: {}", self.query)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">QueryError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;query failed: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">query</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Error for QueryError {
-    fn source(&amp;self) -&gt; Option&lt;&amp;(dyn Error + 'static)&gt; {
-        Some(&amp;self.cause) // &lt;- exposes the underlying io::Error as the chained cause
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Error</span> <span class="tok-keyword">for</span> <span class="tok-type">QueryError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">source</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-punct">(</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Error</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">cause</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- exposes the underlying io::Error as the chained cause</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn log_chain(err: &amp;dyn Error) {
-    eprintln!("{err}");
-    let mut cause = err.source();
-    while let Some(inner) = cause {
-        eprintln!("caused by: {inner}");
-        cause = inner.source();
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_chain</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Error</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{err}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">cause</span> <span class="tok-punct">=</span> <span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">source</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">while</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">inner</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">cause</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;caused by: {inner}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">cause</span> <span class="tok-punct">=</span> <span class="tok-variable">inner</span><span class="tok-punct">.</span><span class="tok-call-method">source</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> overriding <code>source()</code> instead of folding the cause's
@@ -1094,14 +1095,14 @@ give for the method.</p>
             <p>A function that can fail for many unrelated reasons — parsing, I/O, a
 third-party crate's own error type — doesn't want to invent one enum
 covering all of them, so it returns a boxed trait object instead.</p>
-<pre><code class="rust">use std::error::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-fn load_and_parse(path: &amp;str) -&gt; Result&lt;u32, Box&lt;dyn Error&gt;&gt; {
-    // &lt;- `Box&lt;dyn Error&gt;`: accepts any concrete error type behind one boundary
-    let contents = std::fs::read_to_string(path)?; // io::Error boxes automatically
-    let value: u32 = contents.trim().parse()?; // ParseIntError boxes automatically too
-    Ok(value)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">load_and_parse</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Error</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `Box&lt;dyn Error&gt;`: accepts any concrete error type behind one boundary</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">contents</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment">// io::Error boxes automatically</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">contents</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment">// ParseIntError boxes automatically too</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Box&lt;dyn Error&gt;</code> is the standard escape hatch for an
@@ -1122,39 +1123,39 @@ for application code under this scenario's crate policy.</p>
             <p>Pairing a manual <code>Error</code> impl with a manual <code>From</code> impl is what lets <code>?</code>
 convert an underlying error into a custom type without a derive macro
 doing it implicitly.</p>
-<pre><code class="rust">use std::fmt;
-use std::error::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">fmt</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-enum CacheError {
-    Backend(std::io::Error),
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">CacheError</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Backend</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl fmt::Display for CacheError {
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        match self {
-            CacheError::Backend(e) =&gt; write!(f, "cache backend failed: {e}"),
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">CacheError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">match</span> <span class="tok-keyword">self</span> <span class="tok-punct">{</span>
+            <span class="tok-type">CacheError</span><span class="tok-punct">::</span><span class="tok-field">Backend</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;cache backend failed: {e}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Error for CacheError {
-    fn source(&amp;self) -&gt; Option&lt;&amp;(dyn Error + 'static)&gt; {
-        match self {
-            CacheError::Backend(e) =&gt; Some(e),
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Error</span> <span class="tok-keyword">for</span> <span class="tok-type">CacheError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">source</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-punct">(</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Error</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">match</span> <span class="tok-keyword">self</span> <span class="tok-punct">{</span>
+            <span class="tok-type">CacheError</span><span class="tok-punct">::</span><span class="tok-field">Backend</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl From&lt;std::io::Error&gt; for CacheError { // &lt;- written by hand, no #[from] derive involved
-    fn from(e: std::io::Error) -&gt; Self {
-        CacheError::Backend(e)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">CacheError</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- written by hand, no #[from] derive involved</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">CacheError</span><span class="tok-punct">::</span><span class="tok-field">Backend</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn read_cache_entry(path: &amp;str) -&gt; Result&lt;String, CacheError&gt; {
-    Ok(std::fs::read_to_string(path)?) // &lt;- `?` uses the hand-written `From` impl above
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_cache_entry</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">,</span> <span class="tok-type-return">CacheError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_to_string</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `?` uses the hand-written `From` impl above</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> writing <code>From</code> by hand alongside a manual <code>Error</code> impl
@@ -1198,21 +1199,21 @@ can return a plain <code>&amp;dyn Error</code> reference instead of a boxed one.
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std]
+        <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-use core::fmt;
-use core::error::Error;
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-variable">fmt</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-struct BusFault;
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BusFault</span><span class="tok-punct">;</span>
 
-impl fmt::Display for BusFault {
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        write!(f, "sensor bus fault")
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">BusFault</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;sensor bus fault&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Error for BusFault {} // &lt;- the real core::error::Error, no shadow trait needed
+<span class="tok-keyword">impl</span> <span class="tok-trait">Error</span> <span class="tok-keyword">for</span> <span class="tok-type">BusFault</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- the real core::error::Error, no shadow trait needed</span>
 </code></pre>
 
       </section>
@@ -1230,36 +1231,36 @@ impl Error for BusFault {} // &lt;- the real core::error::Error, no shadow trait
             <p>A sensor error wraps an underlying bus fault and overrides <code>source()</code> to
 expose it — entirely without <code>Box</code>, so the whole cause chain stays
 allocation-free.</p>
-<pre><code class="rust">use core::fmt;
-use core::error::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-variable">fmt</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-struct BusFault;
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BusFault</span><span class="tok-punct">;</span>
 
-impl fmt::Display for BusFault {
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        write!(f, "bus fault")
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">BusFault</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;bus fault&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Error for BusFault {}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Error</span> <span class="tok-keyword">for</span> <span class="tok-type">BusFault</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-#[derive(Debug)]
-struct SensorError {
-    cause: BusFault,
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">cause</span><span class="tok-punct">:</span> <span class="tok-type">BusFault</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl fmt::Display for SensorError {
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        write!(f, "sensor read failed")
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;sensor read failed&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Error for SensorError {
-    fn source(&amp;self) -&gt; Option&lt;&amp;(dyn Error + 'static)&gt; {
-        Some(&amp;self.cause) // &lt;- a plain reference, not a Box: no alloc needed
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Error</span> <span class="tok-keyword">for</span> <span class="tok-type">SensorError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">source</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-punct">(</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Error</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">cause</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- a plain reference, not a Box: no alloc needed</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> overriding <code>source()</code> with a borrowed reference rather
@@ -1277,41 +1278,41 @@ code without pulling in <code>alloc</code> just for error reporting.</p>
             <p>Pairing a manual <code>Error</code> impl with a manual <code>From</code> impl is what lets <code>?</code>
 convert a display's SPI failure into the driver's own error type, without
 <code>thiserror</code>'s <code>#[from]</code> available to generate it.</p>
-<pre><code class="rust">use core::fmt;
-use core::error::Error;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-variable">fmt</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">error</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-struct SpiFault;
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SpiFault</span><span class="tok-punct">;</span>
 
-#[derive(Debug)]
-enum DisplayError {
-    Spi(SpiFault),
-}
+<span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">DisplayError</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Spi</span><span class="tok-punct">(</span><span class="tok-type">SpiFault</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl fmt::Display for DisplayError {
-    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-        match self {
-            DisplayError::Spi(_) =&gt; write!(f, "display SPI transaction failed"),
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-trait">Display</span> <span class="tok-keyword">for</span> <span class="tok-type">DisplayError</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">fmt</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Formatter</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">match</span> <span class="tok-keyword">self</span> <span class="tok-punct">{</span>
+            <span class="tok-type">DisplayError</span><span class="tok-punct">::</span><span class="tok-field">Spi</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">,</span> <span class="tok-string">&quot;display SPI transaction failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Error for DisplayError {}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Error</span> <span class="tok-keyword">for</span> <span class="tok-type">DisplayError</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-impl From&lt;SpiFault&gt; for DisplayError { // &lt;- written by hand: no #[from] derive without thiserror
-    fn from(e: SpiFault) -&gt; Self {
-        DisplayError::Spi(e)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">SpiFault</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">DisplayError</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- written by hand: no #[from] derive without thiserror</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">:</span> <span class="tok-type">SpiFault</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">DisplayError</span><span class="tok-punct">::</span><span class="tok-field">Spi</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn raw_spi_read() -&gt; Result&lt;u8, SpiFault&gt; {
-    Ok(0x42) // ... perform the actual SPI transfer
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">raw_spi_read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">SpiFault</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-number">0x42</span><span class="tok-punct">)</span> <span class="tok-comment">// ... perform the actual SPI transfer</span>
+<span class="tok-punct">}</span>
 
-fn read_display_id() -&gt; Result&lt;u8, DisplayError&gt; {
-    let id = raw_spi_read()?; // &lt;- `?` converts SpiFault into DisplayError via the From impl above
-    Ok(id)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_display_id</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-type-return">DisplayError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">id</span> <span class="tok-punct">=</span> <span class="tok-call-free">raw_spi_read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` converts SpiFault into DisplayError via the From impl above</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> with <code>thiserror</code> unavailable in a no_std crate, the

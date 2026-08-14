@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1055,11 +1056,11 @@ logic through a third, shared <code>#![no_std]</code> library crate both depend 
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Opting a crate out of the standard library</h3>
-            <pre><code class="rust">#![no_std] // &lt;- opts this crate out of linking std; only `core` is available by default
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span> <span class="tok-comment tok-anno">// &lt;- opts this crate out of linking std; only `core` is available by default</span>
 
-pub fn add(a: i32, b: i32) -&gt; i32 {
-    a + b // ordinary arithmetic needs nothing beyond core
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">add</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">a</span> <span class="tok-punct">+</span> <span class="tok-variable">b</span> <span class="tok-comment">// ordinary arithmetic needs nothing beyond core</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1068,26 +1069,26 @@ pub fn add(a: i32, b: i32) -&gt; i32 {
             <p>A firmware crate for a microcontroller needs the minimal skeleton every
 <code>#![no_std]</code> binary starts from: no heap, a custom entry point, and a
 panic handler, since none of <code>std</code>'s defaults for any of these exist.</p>
-<pre><code class="rust">#![no_std] // &lt;- no OS assumed: only core is available
-#![no_main] // &lt;- no OS means no conventional `main` symbol to call into
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span> <span class="tok-comment tok-anno">// &lt;- no OS assumed: only core is available</span>
+<span class="tok-attribute">#![no_main]</span> <span class="tok-comment tok-anno">// &lt;- no OS means no conventional `main` symbol to call into</span>
 
-use core::panic::PanicInfo;
+<span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">panic</span><span class="tok-punct">::</span><span class="tok-type">PanicInfo</span><span class="tok-punct">;</span>
 
-#[panic_handler] // &lt;- required: replaces std's default panic/backtrace machinery
-fn panic(_info: &amp;PanicInfo) -&gt; ! {
-    loop {} // halt in a known state for a debugger to inspect
-}
+<span class="tok-attribute">#[panic_handler]</span> <span class="tok-comment tok-anno">// &lt;- required: replaces std's default panic/backtrace machinery</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">panic</span><span class="tok-punct">(</span><span class="tok-variable">_info</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">PanicInfo</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// halt in a known state for a debugger to inspect</span>
+<span class="tok-punct">}</span>
 
-#[unsafe(no_mangle)] // &lt;- the linker script's reset vector expects this exact symbol
-pub extern "C" fn _start() -&gt; ! {
-    let result = add(2, 2);
-    let _ = result;
-    loop {}
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span> <span class="tok-comment tok-anno">// &lt;- the linker script's reset vector expects this exact symbol</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">_start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-call-free">add</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">result</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-pub fn add(a: i32, b: i32) -&gt; i32 {
-    a + b // ordinary core-only logic works exactly as it does under std
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">add</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">a</span> <span class="tok-punct">+</span> <span class="tok-variable">b</span> <span class="tok-comment">// ordinary core-only logic works exactly as it does under std</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>This is the minimal shape every <code>#![no_std]</code> binary
 needs — a panic handler and (absent an OS-provided one) a custom entry
@@ -1105,21 +1106,21 @@ by hand as shown here for clarity.</p>
 buffer of recent sensor readings — it opts into <code>alloc</code> explicitly and
 must supply a <code>#[global_allocator]</code>, since neither exists by default
 outside <code>std</code>.</p>
-<pre><code class="rust">#![no_std]
-extern crate alloc; // &lt;- opts back into Vec/Box/String; still not std
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- opts back into Vec/Box/String; still not std</span>
 
-use alloc::vec::Vec;
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">vec</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-pub fn recent_readings(history: &amp;mut Vec&lt;i32&gt;, new_reading: i32) {
-    if history.len() &gt;= 16 {
-        history.remove(0);
-    }
-    history.push(new_reading); // &lt;- ordinary Vec, now available thanks to `alloc`
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">recent_readings</span><span class="tok-punct">(</span><span class="tok-variable">history</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-variable">new_reading</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">history</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">16</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">history</span><span class="tok-punct">.</span><span class="tok-call-method">remove</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">history</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">new_reading</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ordinary Vec, now available thanks to `alloc`</span>
+<span class="tok-punct">}</span>
 
-// A #[global_allocator] static (a bump allocator or a crate like
-// embedded-alloc) must also be defined somewhere in this binary — see
-// the #[global_allocator] page for a complete example.
+<span class="tok-comment">// A #[global_allocator] static (a bump allocator or a crate like</span>
+<span class="tok-comment">// embedded-alloc) must also be defined somewhere in this binary — see</span>
+<span class="tok-comment">// the #[global_allocator] page for a complete example.</span>
 </code></pre>
 <p><code>alloc</code> is a deliberately separate tier between <code>core</code>
 and <code>std</code> precisely so a <code>#![no_std]</code> crate can choose "no heap at all"
@@ -1181,26 +1182,26 @@ doesn't fit is the prevailing idiom, not an afterthought bolted onto it.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Blinking an LED with no heap at all</h3>
-            <pre><code class="rust">#![no_std] // &lt;- no OS, no alloc by default: only core plus whatever HAL crates provide
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span> <span class="tok-comment tok-anno">// &lt;- no OS, no alloc by default: only core plus whatever HAL crates provide</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use panic_halt as _; // pulled in only for the #[panic_handler] it registers
-use cortex_m_rt::entry;
-use nrf52840_hal::{gpio::Level, pac::Peripherals, prelude::*};
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span> <span class="tok-comment">// pulled in only for the #[panic_handler] it registers</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">nrf52840_hal</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-module">gpio</span><span class="tok-punct">::</span><span class="tok-type">Level</span><span class="tok-punct">,</span> <span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-type">Peripherals</span><span class="tok-punct">,</span> <span class="tok-module">prelude</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    let peripherals = Peripherals::take().unwrap();
-    let port0 = nrf52840_hal::gpio::p0::Parts::new(peripherals.P0);
-    let mut led = port0.p0_13.into_push_pull_output(Level::High);
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">peripherals</span> <span class="tok-punct">=</span> <span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">port0</span> <span class="tok-punct">=</span> <span class="tok-module">nrf52840_hal</span><span class="tok-punct">::</span><span class="tok-module">gpio</span><span class="tok-punct">::</span><span class="tok-module">p0</span><span class="tok-punct">::</span><span class="tok-type">Parts</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">peripherals</span><span class="tok-punct">.</span><span class="tok-field">P0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">led</span> <span class="tok-punct">=</span> <span class="tok-variable">port0</span><span class="tok-punct">.</span><span class="tok-field">p0_13</span><span class="tok-punct">.</span><span class="tok-call-method">into_push_pull_output</span><span class="tok-punct">(</span><span class="tok-type">Level</span><span class="tok-punct">::</span><span class="tok-field">High</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    loop {
-        led.set_low().unwrap();
-        cortex_m::asm::delay(8_000_000);
-        led.set_high().unwrap();
-        cortex_m::asm::delay(8_000_000);
-    }
-}
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">led</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-module">cortex_m</span><span class="tok-punct">::</span><span class="tok-module">asm</span><span class="tok-punct">::</span><span class="tok-call-assoc">delay</span><span class="tok-punct">(</span><span class="tok-number">8_000_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">led</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-module">cortex_m</span><span class="tok-punct">::</span><span class="tok-module">asm</span><span class="tok-punct">::</span><span class="tok-call-assoc">delay</span><span class="tok-punct">(</span><span class="tok-number">8_000_000</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Nothing here needs <code>alloc</code> — <code>#![no_std]</code> alone, paired with a runtime
 crate for the entry point and a HAL crate for the pin, is enough for the
@@ -1210,25 +1211,25 @@ in this skeleton because none is needed.</p>
           </div>
         <div class="card">
             <h3 class="scenario-title">Opting into alloc only when a fixed capacity genuinely doesn't fit</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-extern crate alloc; // &lt;- opts back into Vec/Box/String; still not std
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- opts back into Vec/Box/String; still not std</span>
 
-use alloc::collections::VecDeque;
-use panic_halt as _;
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">VecDeque</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    // A #[global_allocator] static must exist somewhere in this binary
-    // before `VecDeque` can allocate — see the #[global_allocator] page
-    // for a complete embedded-alloc example.
-    let mut packet_queue: VecDeque&lt;u8&gt; = VecDeque::new();
-    packet_queue.push_back(0xAA);
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// A #[global_allocator] static must exist somewhere in this binary</span>
+    <span class="tok-comment">// before `VecDeque` can allocate — see the #[global_allocator] page</span>
+    <span class="tok-comment">// for a complete embedded-alloc example.</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">packet_queue</span><span class="tok-punct">:</span> <span class="tok-type">VecDeque</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">VecDeque</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">packet_queue</span><span class="tok-punct">.</span><span class="tok-call-method">push_back</span><span class="tok-punct">(</span><span class="tok-number">0xAA</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    loop {}
-}
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>This is the exception, not the default: reach for <code>alloc</code> once a
 <code>heapless</code>-style fixed-capacity collection is genuinely the wrong fit — a

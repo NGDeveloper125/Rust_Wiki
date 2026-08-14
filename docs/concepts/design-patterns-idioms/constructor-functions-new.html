@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1011,19 +1012,19 @@ the two never drift apart.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct RetryPolicy {
-    max_attempts: u32,
-    backoff_ms: u64,
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">backoff_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RetryPolicy {
-    fn new(max_attempts: u32, backoff_ms: u64) -&gt; Self { // &lt;- constructor: builds and returns Self, always succeeds
-        RetryPolicy { max_attempts, backoff_ms }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">RetryPolicy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">backoff_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- constructor: builds and returns Self, always succeeds</span>
+        <span class="tok-type">RetryPolicy</span> <span class="tok-punct">{</span> <span class="tok-variable">max_attempts</span><span class="tok-punct">,</span> <span class="tok-variable">backoff_ms</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let policy = RetryPolicy::new(3, 250);
-println!("{} attempts", policy.max_attempts);
+<span class="tok-keyword">let</span> <span class="tok-variable">policy</span> <span class="tok-punct">=</span> <span class="tok-type">RetryPolicy</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">250</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} attempts&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">policy</span><span class="tok-punct">.</span><span class="tok-field">max_attempts</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1041,22 +1042,22 @@ println!("{} attempts", policy.max_attempts);
             <p>A connection pool has one truly required input — how many connections to
 keep open — so <code>new</code> takes exactly that and nothing else, leaving room
 for a separate constructor later if more configuration knobs show up.</p>
-<pre><code class="rust">struct ConnectionPool {
-    size: usize,
-    connections: Vec&lt;u32&gt;, // stand-in for real connection handles
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">ConnectionPool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">size</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+    <span class="tok-variable">connections</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment">// stand-in for real connection handles</span>
+<span class="tok-punct">}</span>
 
-impl ConnectionPool {
-    fn new(size: usize) -&gt; Self { // &lt;- new(): the minimal, infallible constructor
-        ConnectionPool {
-            size,
-            connections: (0..size as u32).collect(),
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">ConnectionPool</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">size</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- new(): the minimal, infallible constructor</span>
+        <span class="tok-type">ConnectionPool</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">size</span><span class="tok-punct">,</span>
+            <span class="tok-variable">connections</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-variable">size</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let pool = ConnectionPool::new(8);
-println!("pool has {} connections", pool.connections.len());
+<span class="tok-keyword">let</span> <span class="tok-variable">pool</span> <span class="tok-punct">=</span> <span class="tok-type">ConnectionPool</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;pool has {} connections&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">pool</span><span class="tok-punct">.</span><span class="tok-field">connections</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>new</code> taking only the genuinely required parameters and
@@ -1075,28 +1076,28 @@ book documents this exact shape as the idiomatic Rust constructor.</p>
             <p>A parser can be built from different sources — a file path, a raw
 string, a set of already-parsed tokens — so instead of overloading one
 <code>new</code>, each source gets its own clearly-named constructor.</p>
-<pre><code class="rust">struct Config {
-    entries: Vec&lt;(String, String)&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Config</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Config {
-    fn new() -&gt; Self { // &lt;- new(): the empty, always-valid starting point
-        Config { entries: Vec::new() }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Config</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- new(): the empty, always-valid starting point</span>
+        <span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn from_str(source: &amp;str) -&gt; Self { // &lt;- named for its source, not overloaded under `new`
-        let entries = source
-            .lines()
-            .filter_map(|line| line.split_once('='))
-            .map(|(k, v)| (k.to_string(), v.to_string()))
-            .collect();
-        Config { entries }
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from_str</span><span class="tok-punct">(</span><span class="tok-variable">source</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- named for its source, not overloaded under `new`</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">entries</span> <span class="tok-punct">=</span> <span class="tok-variable">source</span>
+            <span class="tok-punct">.</span><span class="tok-call-method">lines</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+            <span class="tok-punct">.</span><span class="tok-call-method">filter_map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">line</span><span class="tok-punct">|</span> <span class="tok-variable">line</span><span class="tok-punct">.</span><span class="tok-call-method">split_once</span><span class="tok-punct">(</span><span class="tok-string">'='</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+            <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+            <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">entries</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let empty = Config::new();
-let loaded = Config::from_str("host=localhost\nport=8080");
-println!("{} {}", empty.entries.len(), loaded.entries.len());
+<span class="tok-keyword">let</span> <span class="tok-variable">empty</span> <span class="tok-punct">=</span> <span class="tok-type">Config</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">loaded</span> <span class="tok-punct">=</span> <span class="tok-type">Config</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;host=localhost\nport=8080&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">empty</span><span class="tok-punct">.</span><span class="tok-field">entries</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">loaded</span><span class="tok-punct">.</span><span class="tok-field">entries</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> without constructor overloading, giving each
@@ -1144,20 +1145,20 @@ actually there.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct I2c; // stands in for a HAL I2c peripheral handle
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">I2c</span><span class="tok-punct">;</span> <span class="tok-comment">// stands in for a HAL I2c peripheral handle</span>
 
-struct Sensor {
-    i2c: I2c,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Sensor {
-    fn new(i2c: I2c) -&gt; Self { // &lt;- takes ownership of the HAL handle: only one Sensor can exist per bus
-        Sensor { i2c }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-type">I2c</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- takes ownership of the HAL handle: only one Sensor can exist per bus</span>
+        <span class="tok-type">Sensor</span> <span class="tok-punct">{</span> <span class="tok-variable">i2c</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let bus = I2c;
-let sensor = Sensor::new(bus); // &lt;- `bus` is moved; nothing else can construct a driver on it now
+<span class="tok-keyword">let</span> <span class="tok-variable">bus</span> <span class="tok-punct">=</span> <span class="tok-type">I2c</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sensor</span> <span class="tok-punct">=</span> <span class="tok-type">Sensor</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">bus</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `bus` is moved; nothing else can construct a driver on it now</span>
 </code></pre>
 
       </section>
@@ -1176,34 +1177,34 @@ let sensor = Sensor::new(bus); // &lt;- `bus` is moved; nothing else can constru
 driver expects, so its constructor probes for it and reports failure
 instead of silently returning a <code>Sensor</code> that will fail on its first real
 read.</p>
-<pre><code class="rust">struct I2c;
-impl I2c {
-    fn probe(&amp;self, address: u8) -&gt; bool {
-        address == 0x76 // stands in for a real device-ID register check
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">I2c</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-type">I2c</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">probe</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">address</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">address</span> <span class="tok-punct">==</span> <span class="tok-number">0x76</span> <span class="tok-comment">// stands in for a real device-ID register check</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct SensorError;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorError</span><span class="tok-punct">;</span>
 
-struct Sensor {
-    i2c: I2c,
-    address: u8,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span>
+    <span class="tok-variable">address</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Sensor {
-    fn try_new(i2c: I2c, address: u8) -&gt; Result&lt;Self, SensorError&gt; { // &lt;- fallible construction: named accordingly, not called `new`
-        if !i2c.probe(address) {
-            return Err(SensorError);
-        }
-        Ok(Sensor { i2c, address })
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">try_new</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-type">I2c</span><span class="tok-punct">,</span> <span class="tok-variable">address</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">,</span> <span class="tok-type-return">SensorError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- fallible construction: named accordingly, not called `new`</span>
+        <span class="tok-keyword">if</span> <span class="tok-punct">!</span><span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">probe</span><span class="tok-punct">(</span><span class="tok-variable">address</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">SensorError</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Sensor</span> <span class="tok-punct">{</span> <span class="tok-variable">i2c</span><span class="tok-punct">,</span> <span class="tok-variable">address</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let bus = I2c;
-match Sensor::try_new(bus, 0x76) {
-    Ok(sensor) =&gt; println!("sensor ready at 0x{:02x}", sensor.address),
-    Err(_) =&gt; println!("no sensor responded"),
-}
+<span class="tok-keyword">let</span> <span class="tok-variable">bus</span> <span class="tok-punct">=</span> <span class="tok-type">I2c</span><span class="tok-punct">;</span>
+<span class="tok-keyword">match</span> <span class="tok-type">Sensor</span><span class="tok-punct">::</span><span class="tok-call-assoc">try_new</span><span class="tok-punct">(</span><span class="tok-variable">bus</span><span class="tok-punct">,</span> <span class="tok-number">0x76</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor ready at 0x{:02x}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-field">address</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;no sensor responded&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> naming the fallible path <code>try_new</code> instead of <code>new</code>

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1005,11 +1006,11 @@ excluded on purpose.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Skipping a test and documenting why</h3>
-            <pre><code class="rust">#[test]
-#[ignore = "hits a live network endpoint; run explicitly with --include-ignored"] // &lt;- reason shown in test output
-fn fetches_remote_config() {
-    // network call omitted for this example
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[test]</span>
+<span class="tok-attribute">#[ignore = &quot;hits a live network endpoint; run explicitly with --include-ignored&quot;]</span> <span class="tok-comment tok-anno">// &lt;- reason shown in test output</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">fetches_remote_config</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// network call omitted for this example</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1019,30 +1020,30 @@ fn fetches_remote_config() {
 retry-with-backoff path against a simulated flaky connection — and
 running it on every <code>cargo test</code> invocation would make the fast, everyday
 loop noticeably slower for no benefit during normal development.</p>
-<pre><code class="rust">fn retry_with_backoff(max_attempts: u32) -&gt; Result&lt;(), &amp;'static str&gt; {
-    if max_attempts == 0 {
-        Err("exhausted retries")
-    } else {
-        Ok(())
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">retry_with_backoff</span><span class="tok-punct">(</span><span class="tok-variable">max_attempts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">max_attempts</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;exhausted retries&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn succeeds_with_available_retries() {
-        assert!(retry_with_backoff(3).is_ok());
-    }
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">succeeds_with_available_retries</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">retry_with_backoff</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    #[test]
-    #[ignore = "exercises real backoff timing; slow, run explicitly before releases"] // &lt;- documents WHY
-    fn retries_across_simulated_backoff_delays() {
-        // a full run of this test sleeps for real backoff intervals
-        assert!(retry_with_backoff(3).is_ok());
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-attribute">#[ignore = &quot;exercises real backoff timing; slow, run explicitly before releases&quot;]</span> <span class="tok-comment tok-anno">// &lt;- documents WHY</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">retries_across_simulated_backoff_delays</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// a full run of this test sleeps for real backoff intervals</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">retry_with_backoff</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Naming the reason directly in the attribute — rather
 than leaving a bare <code>#[ignore]</code> and a separate comment, or no explanation
@@ -1085,25 +1086,25 @@ common enough in embedded projects to be worth naming directly.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Marking a hardware-in-the-loop host test as ignored by default</h3>
-            <pre><code class="rust">fn parse_frame(bytes: &amp;[u8]) -&gt; Result&lt;u8, &amp;'static str&gt; {
-    bytes.first().copied().ok_or("empty frame")
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_frame</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">first</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok_or</span><span class="tok-punct">(</span><span class="tok-string">&quot;empty frame&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+<span class="tok-attribute">#[cfg(test)]</span>
+<span class="tok-keyword">mod</span> <span class="tok-variable">tests</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-keyword">super</span><span class="tok-punct">::</span><span class="tok-punct">*</span><span class="tok-punct">;</span>
 
-    #[test]
-    fn parses_a_valid_frame() {
-        assert_eq!(parse_frame(&amp;[0x42]), Ok(0x42));
-    }
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parses_a_valid_frame</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">parse_frame</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x42</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-number">0x42</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    #[test]
-    #[ignore = "requires a board attached over probe-rs; run explicitly, not on every host build"] // &lt;- reason shown in output
-    fn round_trips_a_frame_through_real_hardware() {
-        // a full run of this test flashes a target board and reads the response back over the probe
-    }
-}
+    <span class="tok-attribute">#[test]</span>
+    <span class="tok-attribute">#[ignore = &quot;requires a board attached over probe-rs; run explicitly, not on every host build&quot;]</span> <span class="tok-comment tok-anno">// &lt;- reason shown in output</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">round_trips_a_frame_through_real_hardware</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// a full run of this test flashes a target board and reads the response back over the probe</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

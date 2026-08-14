@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1012,20 +1013,20 @@ extensibility guard, with no attribute involved at all.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">pub struct ConnectionConfig {
-    pub host: String,
-    pub port: u16,
-    _reserved: (), // &lt;- private: blocks struct-literal construction from outside the module
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">ConnectionConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">host</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_reserved</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- private: blocks struct-literal construction from outside the module</span>
+<span class="tok-punct">}</span>
 
-impl ConnectionConfig {
-    pub fn new(host: String, port: u16) -&gt; Self {
-        ConnectionConfig { host, port, _reserved: () }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">ConnectionConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">host</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">ConnectionConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">host</span><span class="tok-punct">,</span> <span class="tok-variable">port</span><span class="tok-punct">,</span> <span class="tok-variable">_reserved</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let config = ConnectionConfig::new("db.internal".to_string(), 5432);
-// ConnectionConfig { host: "x".into(), port: 1, _reserved: () } // would fail: _reserved isn't nameable outside the module
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">ConnectionConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-string">&quot;db.internal&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">5432</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// ConnectionConfig { host: &quot;x&quot;.into(), port: 1, _reserved: () } // would fail: _reserved isn't nameable outside the module</span>
 </code></pre>
 
       </section>
@@ -1044,22 +1045,22 @@ let config = ConnectionConfig::new("db.internal".to_string(), 5432);
 knobs today, but its author expects to add more later (a retry policy, a
 proxy setting) — a private field keeps every current field <code>pub</code> for
 convenient reading while still forcing construction through <code>new</code>.</p>
-<pre><code class="rust">pub struct ClientOptions {
-    pub timeout_ms: u64,
-    pub max_retries: u32,
-    _extensible: (), // &lt;- private: exists only to block exhaustive struct-literal construction
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">ClientOptions</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">max_retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_extensible</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- private: exists only to block exhaustive struct-literal construction</span>
+<span class="tok-punct">}</span>
 
-impl ClientOptions {
-    pub fn new(timeout_ms: u64, max_retries: u32) -&gt; Self {
-        ClientOptions { timeout_ms, max_retries, _extensible: () }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">ClientOptions</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">timeout_ms</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span> <span class="tok-variable">max_retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">ClientOptions</span> <span class="tok-punct">{</span> <span class="tok-variable">timeout_ms</span><span class="tok-punct">,</span> <span class="tok-variable">max_retries</span><span class="tok-punct">,</span> <span class="tok-variable">_extensible</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// downstream crate:
-let opts = ClientOptions::new(5_000, 3);
-println!("{} {}", opts.timeout_ms, opts.max_retries);
-// ClientOptions { timeout_ms: 5_000, max_retries: 3 } // would fail to compile: `_extensible` can't be named here
+<span class="tok-comment">// downstream crate:</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">opts</span> <span class="tok-punct">=</span> <span class="tok-type">ClientOptions</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">5_000</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">opts</span><span class="tok-punct">.</span><span class="tok-field">timeout_ms</span><span class="tok-punct">,</span> <span class="tok-variable">opts</span><span class="tok-punct">.</span><span class="tok-field">max_retries</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// ClientOptions { timeout_ms: 5_000, max_retries: 3 } // would fail to compile: `_extensible` can't be named here</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> adding a field to <code>ClientOptions</code> next release — say
@@ -1082,19 +1083,19 @@ private field does the job naturally.</p>
             <p>Because outside code can no longer build <code>ClientOptions</code> directly, <code>new</code>
 isn't just a convenience constructor here — it's the <em>only</em> way to
 produce one, which is exactly the point.</p>
-<pre><code class="rust">pub struct RateLimiter {
-    pub requests_per_sec: u32,
-    _guard: (), // &lt;- private: forces every caller through RateLimiter::new
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RateLimiter</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">requests_per_sec</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_guard</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- private: forces every caller through RateLimiter::new</span>
+<span class="tok-punct">}</span>
 
-impl RateLimiter {
-    pub fn new(requests_per_sec: u32) -&gt; Self { // &lt;- the sole entry point for building this type
-        RateLimiter { requests_per_sec, _guard: () }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">RateLimiter</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">requests_per_sec</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the sole entry point for building this type</span>
+        <span class="tok-type">RateLimiter</span> <span class="tok-punct">{</span> <span class="tok-variable">requests_per_sec</span><span class="tok-punct">,</span> <span class="tok-variable">_guard</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let limiter = RateLimiter::new(100);
-println!("{}", limiter.requests_per_sec);
+<span class="tok-keyword">let</span> <span class="tok-variable">limiter</span> <span class="tok-punct">=</span> <span class="tok-type">RateLimiter</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">limiter</span><span class="tok-punct">.</span><span class="tok-field">requests_per_sec</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> pairing a privacy-for-extensibility field with a
@@ -1137,19 +1138,19 @@ it differs.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">pub struct UartConfig {
-    pub baud_rate: u32,
-    pub stop_bits: u8,
-    _reserved: (), // &lt;- private: blocks struct-literal construction outside the HAL crate
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">UartConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">stop_bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_reserved</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- private: blocks struct-literal construction outside the HAL crate</span>
+<span class="tok-punct">}</span>
 
-impl UartConfig {
-    pub fn new(baud_rate: u32, stop_bits: u8) -&gt; Self {
-        UartConfig { baud_rate, stop_bits, _reserved: () }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">UartConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">baud_rate</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">stop_bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">UartConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">baud_rate</span><span class="tok-punct">,</span> <span class="tok-variable">stop_bits</span><span class="tok-punct">,</span> <span class="tok-variable">_reserved</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let cfg = UartConfig::new(115_200, 1);
+<span class="tok-keyword">let</span> <span class="tok-variable">cfg</span> <span class="tok-punct">=</span> <span class="tok-type">UartConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">115_200</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1168,20 +1169,20 @@ let cfg = UartConfig::new(115_200, 1);
 rev-B silicon adds a hardware chip-select delay the rev-A part doesn't
 have, and the author wants room to add that field next release without
 breaking every rev-A firmware crate's struct literal.</p>
-<pre><code class="rust">pub struct SpiConfig {
-    pub clock_hz: u32,
-    pub mode: u8,
-    _future_fields: (), // &lt;- private: reserves room for a rev-B-only field later
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">SpiConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">clock_hz</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">mode</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_future_fields</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- private: reserves room for a rev-B-only field later</span>
+<span class="tok-punct">}</span>
 
-impl SpiConfig {
-    pub fn new(clock_hz: u32, mode: u8) -&gt; Self {
-        SpiConfig { clock_hz, mode, _future_fields: () }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">SpiConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">clock_hz</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">mode</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">SpiConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">clock_hz</span><span class="tok-punct">,</span> <span class="tok-variable">mode</span><span class="tok-punct">,</span> <span class="tok-variable">_future_fields</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// downstream firmware crate:
-let cfg = SpiConfig::new(1_000_000, 0);
+<span class="tok-comment">// downstream firmware crate:</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">cfg</span> <span class="tok-punct">=</span> <span class="tok-type">SpiConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">1_000_000</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> adding <code>pub cs_delay_cycles: u8</code> for the rev-B part
@@ -1202,18 +1203,18 @@ change between silicon revisions.</p>
             <p>A GPIO pin driver's config struct should be built only through its
 constructor, since a future HAL version is expected to add a pull-up/
 pull-down setting that doesn't exist on today's simplest parts.</p>
-<pre><code class="rust">pub struct PinConfig {
-    pub open_drain: bool,
-    _guard: (), // &lt;- private: forces every caller through PinConfig::new
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">PinConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">open_drain</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_guard</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- private: forces every caller through PinConfig::new</span>
+<span class="tok-punct">}</span>
 
-impl PinConfig {
-    pub fn new(open_drain: bool) -&gt; Self { // &lt;- the sole entry point for building this type
-        PinConfig { open_drain, _guard: () }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">PinConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">open_drain</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the sole entry point for building this type</span>
+        <span class="tok-type">PinConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">open_drain</span><span class="tok-punct">,</span> <span class="tok-variable">_guard</span><span class="tok-punct">:</span> <span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let cfg = PinConfig::new(false);
+<span class="tok-keyword">let</span> <span class="tok-variable">cfg</span> <span class="tok-punct">=</span> <span class="tok-type">PinConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">false</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> pairing the private guard field with a constructor

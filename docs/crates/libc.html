@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink active" href="../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1026,27 +1027,27 @@ built on.</p>
             <p><code>std</code> has no <code>getrlimit</code>. Reading a process's file-descriptor limit means
 declaring the struct, calling the function, and checking the C-style return
 value yourself.</p>
-<pre><code class="rust">#[cfg(unix)]
-fn fd_limit() -&gt; std::io::Result&lt;(u64, u64)&gt; {
-    // SAFETY: getrlimit writes a fully-initialised rlimit through the pointer
-    // when it returns 0; we only read it on that path.
-    let mut limits = std::mem::MaybeUninit::&lt;libc::rlimit&gt;::uninit();
-    let rc = unsafe { libc::getrlimit(libc::RLIMIT_NOFILE, limits.as_mut_ptr()) };
-    if rc != 0 {
-        return Err(std::io::Error::last_os_error()); // &lt;- -1 means "check errno"
-    }
-    let limits = unsafe { limits.assume_init() };
-    Ok((limits.rlim_cur as u64, limits.rlim_max as u64))
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">fd_limit</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-type-return">u64</span><span class="tok-punct">,</span> <span class="tok-type-return">u64</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: getrlimit writes a fully-initialised rlimit through the pointer</span>
+    <span class="tok-comment">// when it returns 0; we only read it on that path.</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">limits</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-type">MaybeUninit</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-variable">rlimit</span><span class="tok-punct">&gt;</span><span class="tok-punct">::</span><span class="tok-call-assoc">uninit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">rc</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">getrlimit</span><span class="tok-punct">(</span><span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">RLIMIT_NOFILE</span><span class="tok-punct">,</span> <span class="tok-variable">limits</span><span class="tok-punct">.</span><span class="tok-call-method">as_mut_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">rc</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">last_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- -1 means &quot;check errno&quot;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">limits</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">limits</span><span class="tok-punct">.</span><span class="tok-call-method">assume_init</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">limits</span><span class="tok-punct">.</span><span class="tok-field">rlim_cur</span> <span class="tok-keyword">as</span> <span class="tok-type">u64</span><span class="tok-punct">,</span> <span class="tok-variable">limits</span><span class="tok-punct">.</span><span class="tok-field">rlim_max</span> <span class="tok-keyword">as</span> <span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-#[cfg(unix)]
-fn main() {
-    let (soft, hard) = fd_limit().unwrap();
-    assert!(soft &lt;= hard);
-}
+<span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">soft</span><span class="tok-punct">,</span> <span class="tok-variable">hard</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-call-free">fd_limit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">soft</span> <span class="tok-punct">&lt;=</span> <span class="tok-variable">hard</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[cfg(not(unix))]
-fn main() {}
+<span class="tok-attribute">#[cfg(not(unix))]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> nothing above <code>libc</code> offers <code>getrlimit</code>, so the alternative is
@@ -1064,26 +1065,26 @@ so other targets still build.</p>
             <p>When you bind to a C library, the signatures have to be written in C's types,
 not Rust's. <code>libc</code> supplies them, so <code>c_int</code> is whatever <code>int</code> is on this
 target rather than a guess.</p>
-<pre><code class="rust">use libc::{c_char, c_int, size_t};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-variable">c_int</span><span class="tok-punct">,</span> <span class="tok-variable">size_t</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-// The C library we're binding to:
-//   int compress(char *dst, size_t *dst_len, const char *src, size_t src_len);
-unsafe extern "C" {
-    fn compress(dst: *mut c_char, dst_len: *mut size_t,
-                src: *const c_char, src_len: size_t) -&gt; c_int;
-}
+<span class="tok-comment">// The C library we're binding to:</span>
+<span class="tok-comment">//   int compress(char *dst, size_t *dst_len, const char *src, size_t src_len);</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">compress</span><span class="tok-punct">(</span><span class="tok-variable">dst</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-variable">dst_len</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-variable">size_t</span><span class="tok-punct">,</span>
+                <span class="tok-variable">src</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-variable">src_len</span><span class="tok-punct">:</span> <span class="tok-variable">size_t</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-variable">c_int</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-// A safe wrapper is the whole point of writing the binding.
-pub fn compressed_len(src: &amp;[u8]) -&gt; Option&lt;usize&gt; {
-    let mut out = vec![0u8; src.len() * 2];
-    let mut out_len: size_t = out.len();
-    // SAFETY: both pointers are valid for the lengths passed alongside them.
-    let rc = unsafe {
-        compress(out.as_mut_ptr().cast(), &amp;mut out_len,
-                 src.as_ptr().cast(), src.len())
-    };
-    (rc == 0).then_some(out_len)
-}
+<span class="tok-comment">// A safe wrapper is the whole point of writing the binding.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">compressed_len</span><span class="tok-punct">(</span><span class="tok-variable">src</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">usize</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">out</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">*</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">out_len</span><span class="tok-punct">:</span> <span class="tok-variable">size_t</span> <span class="tok-punct">=</span> <span class="tok-variable">out</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-comment">// SAFETY: both pointers are valid for the lengths passed alongside them.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">rc</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-call-free">compress</span><span class="tok-punct">(</span><span class="tok-variable">out</span><span class="tok-punct">.</span><span class="tok-call-method">as_mut_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">cast</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">out_len</span><span class="tok-punct">,</span>
+                 <span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">cast</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-punct">(</span><span class="tok-variable">rc</span> <span class="tok-punct">==</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">then_some</span><span class="tok-punct">(</span><span class="tok-variable">out_len</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> <code>c_int</code> is <code>i32</code> on every target Rust supports today, but
@@ -1101,20 +1102,20 @@ machine.</p>
             <p>C reports failure by returning <code>-1</code> and setting a thread-local <code>errno</code>. Getting
 at it portably is fiddly — and you almost never should, because <code>std</code> already
 does it.</p>
-<pre><code class="rust">#[cfg(unix)]
-fn main() {
-    // Provoke a failure: closing a file descriptor that was never open.
-    let rc = unsafe { libc::close(-1) };
-    assert_eq!(rc, -1);
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// Provoke a failure: closing a file descriptor that was never open.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">rc</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">close</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rc</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    // The right way to read errno: std wraps the platform differences.
-    let err = std::io::Error::last_os_error();
-    assert_eq!(err.raw_os_error(), Some(libc::EBADF));
-    assert!(!err.to_string().is_empty()); // &lt;- "Bad file descriptor"
-}
+    <span class="tok-comment">// The right way to read errno: std wraps the platform differences.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">last_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">raw_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">EBADF</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- &quot;Bad file descriptor&quot;</span>
+<span class="tok-punct">}</span>
 
-#[cfg(not(unix))]
-fn main() {}
+<span class="tok-attribute">#[cfg(not(unix))]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> <code>errno</code> is a macro in C, not a variable, and each platform
@@ -1142,14 +1143,14 @@ trust the name to match.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">c_int</code>, <code class="tok-inline">c_uint</code>, <code class="tok-inline">c_long</code></h4>
             <p>Rust names for C's integer types, sized per target.</p>
-<pre><code class="rust">use libc::{c_int, c_long, c_uint};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_int</span><span class="tok-punct">,</span> <span class="tok-variable">c_long</span><span class="tok-punct">,</span> <span class="tok-variable">c_uint</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let status: c_int = -1;
-let flags: c_uint = 0;
-let offset: c_long = 4096;
+<span class="tok-keyword">let</span> <span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-variable">c_int</span> <span class="tok-punct">=</span> <span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">flags</span><span class="tok-punct">:</span> <span class="tok-variable">c_uint</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-variable">c_long</span> <span class="tok-punct">=</span> <span class="tok-number">4096</span><span class="tok-punct">;</span>
 
-assert_eq!(std::mem::size_of::&lt;c_int&gt;(), 4);
-let _ = (status, flags, offset);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-module">size_of</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-variable">c_int</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">,</span> <span class="tok-variable">flags</span><span class="tok-punct">,</span> <span class="tok-variable">offset</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> in every <code>extern "C"</code> signature and every struct crossing
@@ -1162,14 +1163,14 @@ are also in <code>std::ffi</code>, which is preferable when you need nothing els
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">c_char</code> and <code class="tok-inline">c_void</code></h4>
             <p>The character and opaque-pointer types.</p>
-<pre><code class="rust">use libc::{c_char, c_void};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-variable">c_void</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let text = c"hello"; // &lt;- a CStr literal, NUL-terminated
-let ptr: *const c_char = text.as_ptr();
-let opaque: *mut c_void = std::ptr::null_mut();
+<span class="tok-keyword">let</span> <span class="tok-variable">text</span> <span class="tok-punct">=</span> <span class="tok-variable">c</span><span class="tok-string">&quot;hello&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a CStr literal, NUL-terminated</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span> <span class="tok-punct">=</span> <span class="tok-variable">text</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">opaque</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-variable">c_void</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">null_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(unsafe { libc::strlen(ptr) }, 5);
-let _ = opaque;
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">strlen</span><span class="tok-punct">(</span><span class="tok-variable">ptr</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">opaque</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> <code>*const c_char</code> for C strings — pair it with <code>CStr</code>/<code>CString</code>
@@ -1181,13 +1182,13 @@ varies by architecture, so cast through it rather than through <code>i8</code>.<
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">size_t</code> and <code class="tok-inline">ssize_t</code></h4>
             <p>Pointer-width unsigned and signed integers, as C uses for lengths and counts.</p>
-<pre><code class="rust">use libc::{size_t, ssize_t};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">size_t</span><span class="tok-punct">,</span> <span class="tok-variable">ssize_t</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let length: size_t = 4096;
-let result: ssize_t = -1; // &lt;- read/write return a count, or -1
+<span class="tok-keyword">let</span> <span class="tok-variable">length</span><span class="tok-punct">:</span> <span class="tok-variable">size_t</span> <span class="tok-punct">=</span> <span class="tok-number">4096</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">result</span><span class="tok-punct">:</span> <span class="tok-variable">ssize_t</span> <span class="tok-punct">=</span> <span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- read/write return a count, or -1</span>
 
-assert_eq!(std::mem::size_of::&lt;size_t&gt;(), std::mem::size_of::&lt;usize&gt;());
-let _ = (length, result);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-module">size_of</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-variable">size_t</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-module">size_of</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">usize</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">length</span><span class="tok-punct">,</span> <span class="tok-variable">result</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> any C parameter documented as <code>size_t</code>. <code>ssize_t</code> is the
@@ -1204,15 +1205,15 @@ all — a signed count with <code>-1</code> reserved for the error.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">libc::getpid</code></h4>
             <p>A representative no-argument call: the current process id.</p>
-<pre><code class="rust">#[cfg(unix)]
-fn main() {
-    // SAFETY: getpid takes no arguments and cannot fail.
-    let pid = unsafe { libc::getpid() };
-    assert!(pid &gt; 0);
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: getpid takes no arguments and cannot fail.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">pid</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">getpid</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">pid</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[cfg(not(unix))]
-fn main() {}
+<span class="tok-attribute">#[cfg(not(unix))]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> as the shape of every call here — <code>unsafe</code>, a C return type,
@@ -1224,32 +1225,32 @@ first.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">libc::open</code>, <code class="tok-inline">read</code> and <code class="tok-inline">close</code></h4>
             <p>The file trio, showing the raw file-descriptor lifecycle.</p>
-<pre><code class="rust">#[cfg(unix)]
-fn read_first_byte(path: &amp;std::ffi::CStr) -&gt; std::io::Result&lt;Option&lt;u8&gt;&gt; {
-    // SAFETY: path is a valid NUL-terminated string for the duration of the call.
-    let fd = unsafe { libc::open(path.as_ptr(), libc::O_RDONLY) };
-    if fd &lt; 0 {
-        return Err(std::io::Error::last_os_error());
-    }
-    let mut byte = 0u8;
-    // SAFETY: the buffer is one byte and we pass a length of one.
-    let n = unsafe { libc::read(fd, (&amp;raw mut byte).cast(), 1) };
-    // Close before inspecting n, so the descriptor leaks on no path.
-    unsafe { libc::close(fd) };
-    match n {
-        -1 =&gt; Err(std::io::Error::last_os_error()),
-        0 =&gt; Ok(None),
-        _ =&gt; Ok(Some(byte)),
-    }
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_first_byte</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-type">CStr</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: path is a valid NUL-terminated string for the duration of the call.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">fd</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">open</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">O_RDONLY</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">fd</span> <span class="tok-punct">&lt;</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">last_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">byte</span> <span class="tok-punct">=</span> <span class="tok-number">0u8</span><span class="tok-punct">;</span>
+    <span class="tok-comment">// SAFETY: the buffer is one byte and we pass a length of one.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">n</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">read</span><span class="tok-punct">(</span><span class="tok-variable">fd</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">raw</span> <span class="tok-keyword">mut</span> <span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">cast</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-comment">// Close before inspecting n, so the descriptor leaks on no path.</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">close</span><span class="tok-punct">(</span><span class="tok-variable">fd</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">n</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">-</span><span class="tok-number">1</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">last_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-number">0</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[cfg(unix)]
-fn main() {
-    let _ = read_first_byte(c"/etc/hostname");
-}
+<span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-call-free">read_first_byte</span><span class="tok-punct">(</span><span class="tok-variable">c</span><span class="tok-string">&quot;/etc/hostname&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[cfg(not(unix))]
-fn main() {}
+<span class="tok-attribute">#[cfg(not(unix))]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> essentially never — <code>std::fs::File</code> does this safely and
@@ -1261,19 +1262,19 @@ path, including the error ones.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">libc::malloc</code> and <code class="tok-inline">free</code></h4>
             <p>C's allocator, for memory that a C library will take ownership of.</p>
-<pre><code class="rust">use libc::{c_void, size_t};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_void</span><span class="tok-punct">,</span> <span class="tok-variable">size_t</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-fn main() {
-    // SAFETY: malloc returns either null or a block of the requested size.
-    let block = unsafe { libc::malloc(64 as size_t) };
-    assert!(!block.is_null(), "allocation failed");
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: malloc returns either null or a block of the requested size.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">block</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">malloc</span><span class="tok-punct">(</span><span class="tok-number">64</span> <span class="tok-keyword">as</span> <span class="tok-variable">size_t</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-variable">block</span><span class="tok-punct">.</span><span class="tok-call-method">is_null</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;allocation failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    // SAFETY: writing within the 64 bytes we just asked for.
-    unsafe { libc::memset(block, 0, 64) };
+    <span class="tok-comment">// SAFETY: writing within the 64 bytes we just asked for.</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">memset</span><span class="tok-punct">(</span><span class="tok-variable">block</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">64</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-    // SAFETY: block came from malloc and is freed exactly once.
-    unsafe { libc::free(block as *mut c_void) };
-}
+    <span class="tok-comment">// SAFETY: block came from malloc and is freed exactly once.</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">free</span><span class="tok-punct">(</span><span class="tok-variable">block</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-variable">c_void</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> only when a C API will <code>free</code> the pointer itself, or hands
@@ -1291,18 +1292,18 @@ ordinary buffers use <code>Vec</code>.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">libc::timespec</code></h4>
             <p>A C struct laid out exactly as the platform defines it.</p>
-<pre><code class="rust">#[cfg(unix)]
-fn main() {
-    let mut ts = libc::timespec { tv_sec: 0, tv_nsec: 0 };
-    // SAFETY: clock_gettime writes through a valid pointer to timespec.
-    let rc = unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &amp;mut ts) };
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">ts</span> <span class="tok-punct">=</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-variable">timespec</span> <span class="tok-punct">{</span> <span class="tok-variable">tv_sec</span><span class="tok-punct">:</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">tv_nsec</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-comment">// SAFETY: clock_gettime writes through a valid pointer to timespec.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">rc</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clock_gettime</span><span class="tok-punct">(</span><span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">CLOCK_MONOTONIC</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">ts</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-    assert_eq!(rc, 0);
-    assert!(ts.tv_sec &gt; 0 || ts.tv_nsec &gt; 0);
-}
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rc</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">ts</span><span class="tok-punct">.</span><span class="tok-field">tv_sec</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span> <span class="tok-punct">||</span> <span class="tok-variable">ts</span><span class="tok-punct">.</span><span class="tok-field">tv_nsec</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[cfg(not(unix))]
-fn main() {}
+<span class="tok-attribute">#[cfg(not(unix))]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> whenever a call needs a C struct. Build them field by field
@@ -1314,21 +1315,21 @@ substantially between Linux, macOS and the BSDs.</p>
         <div class="card api-entry">
             <h4 class="api-sig">Error and flag constants</h4>
             <p><code>errno</code> values, open flags, signal numbers — the integers C headers define.</p>
-<pre><code class="rust">#[cfg(unix)]
-fn main() {
-    // errno values, for comparing against raw_os_error()
-    assert_ne!(libc::ENOENT, libc::EACCES);
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// errno values, for comparing against raw_os_error()</span>
+    <span class="tok-macro">assert_ne!</span><span class="tok-punct">(</span><span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">ENOENT</span><span class="tok-punct">,</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">EACCES</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    // open(2) flags, combined with |
-    let flags = libc::O_WRONLY | libc::O_CREAT | libc::O_TRUNC;
-    assert_ne!(flags, 0);
+    <span class="tok-comment">// open(2) flags, combined with |</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">flags</span> <span class="tok-punct">=</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">O_WRONLY</span> <span class="tok-punct">|</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">O_CREAT</span> <span class="tok-punct">|</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">O_TRUNC</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_ne!</span><span class="tok-punct">(</span><span class="tok-variable">flags</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    // signal numbers
-    assert_eq!(libc::SIGKILL, 9);
-}
+    <span class="tok-comment">// signal numbers</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">SIGKILL</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[cfg(not(unix))]
-fn main() {}
+<span class="tok-attribute">#[cfg(not(unix))]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> comparing against <code>raw_os_error()</code>, and building flag
@@ -1346,19 +1347,19 @@ why you use the constant rather than the number you saw in a header once.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">std::io::Error::last_os_error</code></h4>
             <p>Not from <code>libc</code>, but the function you should pair with almost every call here.</p>
-<pre><code class="rust">#[cfg(unix)]
-fn main() {
-    let rc = unsafe { libc::close(-1) };
-    assert_eq!(rc, -1);
+<pre><code class="rust-hl"><span class="tok-attribute">#[cfg(unix)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">rc</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-call-assoc">close</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rc</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    let err = std::io::Error::last_os_error();
-    assert_eq!(err.raw_os_error(), Some(libc::EBADF));
-    // Prints the system's message, not a number.
-    assert!(!err.to_string().is_empty());
-}
+    <span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">last_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">raw_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-constant">EBADF</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-comment">// Prints the system's message, not a number.</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-#[cfg(not(unix))]
-fn main() {}
+<span class="tok-attribute">#[cfg(not(unix))]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> immediately after any call that returned <code>-1</code>. It reads
@@ -1371,22 +1372,22 @@ waiting.</p>
             <h4 class="api-sig"><code class="tok-inline">libc::c_int</code> return checking</h4>
             <p>The convention every C function follows, and the discipline that makes a binding
 safe.</p>
-<pre><code class="rust">use libc::c_int;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">libc</span><span class="tok-punct">::</span><span class="tok-variable">c_int</span><span class="tok-punct">;</span>
 
-/// Turn C's -1-means-failure into a Rust Result.
-fn check(rc: c_int) -&gt; std::io::Result&lt;c_int&gt; {
-    if rc &lt; 0 {
-        Err(std::io::Error::last_os_error())
-    } else {
-        Ok(rc)
-    }
-}
+<span class="tok-comment">/// Turn C's -1-means-failure into a Rust Result.</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">check</span><span class="tok-punct">(</span><span class="tok-variable">rc</span><span class="tok-punct">:</span> <span class="tok-variable">c_int</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-variable">c_int</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">rc</span> <span class="tok-punct">&lt;</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">last_os_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">rc</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    assert!(check(0).is_ok());
-    assert!(check(7).is_ok());
-    assert!(check(-1).is_err());
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">check</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">check</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">check</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> write it once per binding crate and route every call through

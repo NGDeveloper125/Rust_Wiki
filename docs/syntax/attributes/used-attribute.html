@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1004,11 +1005,11 @@ in the first place.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Keeping a linker-section static from being stripped</h3>
-            <pre><code class="rust">#[used] // &lt;- keeps this static in the binary even though nothing in Rust reads it
-#[unsafe(link_section = ".init_array")]
-static INIT_ENTRY: extern "C" fn() = init;
+            <pre><code class="rust-hl"><span class="tok-attribute">#[used]</span> <span class="tok-comment tok-anno">// &lt;- keeps this static in the binary even though nothing in Rust reads it</span>
+<span class="tok-attribute">#[unsafe(link_section = &quot;.init_array&quot;)]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">INIT_ENTRY</span><span class="tok-punct">:</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">init</span><span class="tok-punct">;</span>
 
-extern "C" fn init() {}
+<span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">init</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1018,13 +1019,13 @@ extern "C" fn init() {}
 a fixed section so a boot ROM can find and call them; nothing in the Rust
 program itself ever reads that table, so it must be marked <code>#[used]</code> or
 the compiler discards it as dead code.</p>
-<pre><code class="rust">#[used] // &lt;- linker-script-only consumer: the compiler can't see this reference on its own
-#[unsafe(link_section = ".vector_table.reset")]
-static RESET_HANDLER: unsafe extern "C" fn() -&gt; ! = reset_handler;
+<pre><code class="rust-hl"><span class="tok-attribute">#[used]</span> <span class="tok-comment tok-anno">// &lt;- linker-script-only consumer: the compiler can't see this reference on its own</span>
+<span class="tok-attribute">#[unsafe(link_section = &quot;.vector_table.reset&quot;)]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">RESET_HANDLER</span><span class="tok-punct">:</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">=</span> <span class="tok-variable">reset_handler</span><span class="tok-punct">;</span>
 
-unsafe extern "C" fn reset_handler() -&gt; ! {
-    loop {}
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">reset_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The linker script, not any Rust code, is what reads
 <code>RESET_HANDLER</code> by address, so from the compiler's reachability analysis
@@ -1071,31 +1072,31 @@ exists for.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Placing a full vector table, not just one entry</h3>
-            <pre><code class="rust">#[used] // &lt;- the whole table, not only individual entries, has zero Rust-visible readers
-#[unsafe(link_section = ".vector_table.exceptions")]
-static EXCEPTIONS: [Option&lt;unsafe extern "C" fn()&gt;; 14] = [
-    Some(nmi_handler),
-    Some(hard_fault_handler),
-    None, None, None, None, None, None, // reserved entries
-    Some(sv_call_handler),
-    None, None,
-    Some(pend_sv_handler),
-    Some(sys_tick_handler),
-];
+            <pre><code class="rust-hl"><span class="tok-attribute">#[used]</span> <span class="tok-comment tok-anno">// &lt;- the whole table, not only individual entries, has zero Rust-visible readers</span>
+<span class="tok-attribute">#[unsafe(link_section = &quot;.vector_table.exceptions&quot;)]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">EXCEPTIONS</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">;</span> <span class="tok-number">14</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">nmi_handler</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">hard_fault_handler</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-comment">// reserved entries</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">sv_call_handler</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">,</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">pend_sv_handler</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">sys_tick_handler</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-unsafe extern "C" fn nmi_handler() { loop {} }
-unsafe extern "C" fn hard_fault_handler() { loop {} }
-unsafe extern "C" fn sv_call_handler() {}
-unsafe extern "C" fn pend_sv_handler() {}
-unsafe extern "C" fn sys_tick_handler() {}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">nmi_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">hard_fault_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">sv_call_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">pend_sv_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">sys_tick_handler</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Marking a firmware version footer for an OTA updater</h3>
-            <pre><code class="rust">#[used] // &lt;- read only by an external OTA/flashing tool scanning the compiled image, never by Rust
-#[unsafe(link_section = ".fw_metadata")]
-static FIRMWARE_VERSION: [u8; 4] = [1, 4, 0, 0]; // major, minor, patch, reserved
+            <pre><code class="rust-hl"><span class="tok-attribute">#[used]</span> <span class="tok-comment tok-anno">// &lt;- read only by an external OTA/flashing tool scanning the compiled image, never by Rust</span>
+<span class="tok-attribute">#[unsafe(link_section = &quot;.fw_metadata&quot;)]</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">FIRMWARE_VERSION</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span> <span class="tok-comment">// major, minor, patch, reserved</span>
 </code></pre>
 <p>Neither static is ever named by a Rust expression — the vector table is
 read by the CPU's exception hardware directly from its fixed address, and

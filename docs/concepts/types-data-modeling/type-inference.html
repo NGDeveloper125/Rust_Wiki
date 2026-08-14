@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -995,10 +996,10 @@ having to read its body to know what it accepts and returns.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let x = 5; // &lt;- inferred as i32 from context (the default integer type)
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- inferred as i32 from context (the default integer type)</span>
 
-let mut v = Vec::new();
-v.push(3.14); // &lt;- this later use tells the compiler v: Vec&lt;f64&gt;
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">v</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">3.14</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- this later use tells the compiler v: Vec&lt;f64&gt;</span>
 </code></pre>
 <p><strong>Restriction:</strong> inference is local to a function body — parameter and
 return types must always be written explicitly, so
@@ -1021,22 +1022,22 @@ worked out just from how the function is used.</p>
 type, so when nothing downstream pins that down, inference has nothing
 to resolve against — either a turbofish or an annotated binding has to
 supply it.</p>
-<pre><code class="rust">let readings = ["21.5", "22.0", "19.8"];
+<pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">readings</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-string">&quot;21.5&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;22.0&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;19.8&quot;</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-// AVOID: the compiler can't tell which collection collect() should build here
-// let parsed = readings.iter().map(|r| r.parse::&lt;f64&gt;().unwrap()).collect(); // &lt;- ambiguous target type
+<span class="tok-comment">// AVOID: the compiler can't tell which collection collect() should build here</span>
+<span class="tok-comment">// let parsed = readings.iter().map(|r| r.parse::&lt;f64&gt;().unwrap()).collect(); // &lt;- ambiguous target type</span>
 
-// PREFER: turbofish pins the target type at the call site
-let parsed = readings
-    .iter()
-    .map(|r| r.parse::&lt;f64&gt;().unwrap())
-    .collect::&lt;Vec&lt;f64&gt;&gt;(); // &lt;- turbofish disambiguates what collect() should build
+<span class="tok-comment">// PREFER: turbofish pins the target type at the call site</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">parsed</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-field">collect</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- turbofish disambiguates what collect() should build</span>
 
-// PREFER (equivalent): or let the binding's own annotation do the same job
-let parsed_alt: Vec&lt;f64&gt; = readings // &lt;- annotation on the binding instead of the call
-    .iter()
-    .map(|r| r.parse::&lt;f64&gt;().unwrap())
-    .collect();
+<span class="tok-comment">// PREFER (equivalent): or let the binding's own annotation do the same job</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">parsed_alt</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">readings</span> <span class="tok-comment tok-anno">// &lt;- annotation on the binding instead of the call</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">r</span><span class="tok-punct">|</span> <span class="tok-variable">r</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1076,8 +1077,8 @@ type.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let raw_reading = read_adc_register(); // &lt;- inferred as u16 from read_adc_register's return type
-let millivolts: u32 = raw_reading as u32 * 3300 / 4095; // &lt;- annotation here is documentation; inference alone would still resolve u32
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">raw_reading</span> <span class="tok-punct">=</span> <span class="tok-call-free">read_adc_register</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- inferred as u16 from read_adc_register's return type</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">millivolts</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">raw_reading</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">*</span> <span class="tok-number">3300</span> <span class="tok-punct">/</span> <span class="tok-number">4095</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- annotation here is documentation; inference alone would still resolve u32</span>
 </code></pre>
 
       </section>
@@ -1095,15 +1096,15 @@ let millivolts: u32 = raw_reading as u32 * 3300 / 4095; // &lt;- annotation here
             <p>Collecting a bounded, allocation-free <code>heapless::Vec</code> needs its capacity
 pinned down explicitly, the same way <code>std::Vec</code> needs its element type
 pinned down — inference has no default to fall back on for either.</p>
-<pre><code class="rust">use heapless::Vec;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-let raw = [21i16, 22, 19, 23];
+<span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">21i16</span><span class="tok-punct">,</span> <span class="tok-number">22</span><span class="tok-punct">,</span> <span class="tok-number">19</span><span class="tok-punct">,</span> <span class="tok-number">23</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-// AVOID: the compiler can't tell what capacity N to build without more context
-// let samples = raw.iter().copied().collect(); // &lt;- ambiguous: Vec&lt;i16, N&gt; needs N
+<span class="tok-comment">// AVOID: the compiler can't tell what capacity N to build without more context</span>
+<span class="tok-comment">// let samples = raw.iter().copied().collect(); // &lt;- ambiguous: Vec&lt;i16, N&gt; needs N</span>
 
-// PREFER: turbofish (or an annotated binding) pins down both the element type and the capacity
-let samples = raw.iter().copied().collect::&lt;Vec&lt;i16, 8&gt;&gt;(); // &lt;- &lt;i16, 8&gt;: element type AND const-generic capacity
+<span class="tok-comment">// PREFER: turbofish (or an annotated binding) pins down both the element type and the capacity</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">samples</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">collect</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">i16</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- &lt;i16, 8&gt;: element type AND const-generic capacity</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>heapless::Vec&lt;T, N&gt;</code>'s capacity <code>N</code> is just as much a

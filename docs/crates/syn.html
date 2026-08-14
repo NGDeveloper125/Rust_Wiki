@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink active" href="../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1040,24 +1041,24 @@ derive, and it requires Rust 1.71.</p>
             <h3 class="scenario-title">A derive macro reading a struct's fields</h3>
             <p>The archetypal job. <code>DeriveInput</code> is any of the three things a <code>#[derive]</code> can be
 applied to, and matching on its <code>Data</code> gets you to the fields.</p>
-<pre><code class="rust">use syn::{parse_str, Data, DeriveInput, Fields};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Data</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">,</span> <span class="tok-type">Fields</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str(
-    "struct Config { host: String, port: u16 }",
-).unwrap();
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span>
+    <span class="tok-string">&quot;struct Config { host: String, port: u16 }&quot;</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let mut names = Vec::new();
-if let Data::Struct(data) = &amp;input.data {
-    if let Fields::Named(fields) = &amp;data.fields {
-        for field in &amp;fields.named {
-            // Named fields always have an ident.
-            names.push(field.ident.as_ref().unwrap().to_string());
-        }
-    }
-}
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">names</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-type">Data</span><span class="tok-punct">::</span><span class="tok-field">Struct</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">data</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-type">Fields</span><span class="tok-punct">::</span><span class="tok-field">Named</span><span class="tok-punct">(</span><span class="tok-variable">fields</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-field">fields</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">field</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">fields</span><span class="tok-punct">.</span><span class="tok-field">named</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// Named fields always have an ident.</span>
+            <span class="tok-variable">names</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">field</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">.</span><span class="tok-call-method">as_ref</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(input.ident.to_string(), "Config");
-assert_eq!(names, ["host", "port"]);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Config&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">names</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;host&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;port&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> the tree gives you the struct's name, its generics and its
@@ -1075,37 +1076,37 @@ defaults, <code>where</code> clauses.</p>
             <p>Once a derive has options — <code>#[column(name = "id", skip)]</code> — you need to parse
 the attribute's contents. <code>parse_nested_meta</code> walks the comma-separated list and
 hands you each entry, so you never touch a token.</p>
-<pre><code class="rust">use syn::{parse_str, Attribute, DeriveInput, LitStr};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Attribute</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">,</span> <span class="tok-type">LitStr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str(
-    r#"#[column(name = "id", skip)] struct Row;"#,
-).unwrap();
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span>
+    <span class="tok-string">r#&quot;#[column(name = &quot;id&quot;, skip)] struct Row;&quot;#</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let mut name = None;
-let mut skip = false;
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-field">None</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">skip</span> <span class="tok-punct">=</span> <span class="tok-number">false</span><span class="tok-punct">;</span>
 
-for attr in &amp;input.attrs {
-    if !attr.path().is_ident("column") {
-        continue; // &lt;- not ours; leave other macros' attributes alone
-    }
-    attr.parse_nested_meta(|meta| {
-        if meta.path.is_ident("name") {
-            let value: LitStr = meta.value()?.parse()?;
-            name = Some(value.value());
-            Ok(())
-        } else if meta.path.is_ident("skip") {
-            skip = true;
-            Ok(())
-        } else {
-            Err(meta.error("unrecognised column option"))
-        }
-    })
-    .unwrap();
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">attr</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">attrs</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-punct">!</span><span class="tok-variable">attr</span><span class="tok-punct">.</span><span class="tok-call-method">path</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ident</span><span class="tok-punct">(</span><span class="tok-string">&quot;column&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">continue</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- not ours; leave other macros' attributes alone</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">attr</span><span class="tok-punct">.</span><span class="tok-call-method">parse_nested_meta</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">meta</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">meta</span><span class="tok-punct">.</span><span class="tok-field">path</span><span class="tok-punct">.</span><span class="tok-call-method">is_ident</span><span class="tok-punct">(</span><span class="tok-string">&quot;name&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">LitStr</span> <span class="tok-punct">=</span> <span class="tok-variable">meta</span><span class="tok-punct">.</span><span class="tok-call-method">value</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+            <span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">value</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-keyword">if</span> <span class="tok-variable">meta</span><span class="tok-punct">.</span><span class="tok-field">path</span><span class="tok-punct">.</span><span class="tok-call-method">is_ident</span><span class="tok-punct">(</span><span class="tok-string">&quot;skip&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">skip</span> <span class="tok-punct">=</span> <span class="tok-number">true</span><span class="tok-punct">;</span>
+            <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">meta</span><span class="tok-punct">.</span><span class="tok-call-method">error</span><span class="tok-punct">(</span><span class="tok-string">&quot;unrecognised column option&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(name.as_deref(), Some("id"));
-assert!(skip);
-let _: fn(&amp;Attribute) = |_| {};
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">.</span><span class="tok-call-method">as_deref</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-string">&quot;id&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">skip</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span><span class="tok-punct">:</span> <span class="tok-keyword">fn</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Attribute</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> the unknown-option branch produces a real compile error at the
@@ -1122,45 +1123,45 @@ difference between a macro that's pleasant to use and one that isn't.</p>
             <p><code>sql!(SELECT name, id FROM users)</code> isn't Rust, and no amount of syntax-tree
 types will parse it. Implementing <code>Parse</code> lets you define the grammar yourself
 while still borrowing syn's tokenising, lookahead and error reporting.</p>
-<pre><code class="rust">use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{parse_str, Ident, Token};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">parse</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Parse</span><span class="tok-punct">,</span> <span class="tok-type">ParseStream</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">punctuated</span><span class="tok-punct">::</span><span class="tok-type">Punctuated</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-type">Token</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-// `SELECT a, b FROM table`
-struct Select {
-    columns: Punctuated&lt;Ident, Token![,]&gt;,
-    table: Ident,
-}
+<span class="tok-comment">// `SELECT a, b FROM table`</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Select</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">columns</span><span class="tok-punct">:</span> <span class="tok-type">Punctuated</span><span class="tok-punct">&lt;</span><span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-macro">Token!</span><span class="tok-punct">[</span><span class="tok-punct">,</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Parse for Select {
-    fn parse(input: ParseStream) -&gt; syn::Result&lt;Self&gt; {
-        let select: Ident = input.parse()?;
-        if select != "SELECT" {
-            return Err(syn::Error::new(select.span(), "expected SELECT"));
-        }
-        let mut columns = Punctuated::new();
-        loop {
-            columns.push_value(input.parse()?);
-            if input.peek(Token![,]) {
-                columns.push_punct(input.parse()?);
-            } else {
-                break;
-            }
-        }
-        let from: Ident = input.parse()?;
-        if from != "FROM" {
-            return Err(syn::Error::new(from.span(), "expected FROM"));
-        }
-        Ok(Select { columns, table: input.parse()? })
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Parse</span> <span class="tok-keyword">for</span> <span class="tok-type">Select</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">ParseStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">select</span><span class="tok-punct">:</span> <span class="tok-type">Ident</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">select</span> <span class="tok-punct">!=</span> <span class="tok-string">&quot;SELECT&quot;</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">select</span><span class="tok-punct">.</span><span class="tok-call-method">span</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;expected SELECT&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">columns</span> <span class="tok-punct">=</span> <span class="tok-type">Punctuated</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">columns</span><span class="tok-punct">.</span><span class="tok-call-method">push_value</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">if</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">peek</span><span class="tok-punct">(</span><span class="tok-macro">Token!</span><span class="tok-punct">[</span><span class="tok-punct">,</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+                <span class="tok-variable">columns</span><span class="tok-punct">.</span><span class="tok-call-method">push_punct</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">break</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">from</span><span class="tok-punct">:</span> <span class="tok-type">Ident</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">from</span> <span class="tok-punct">!=</span> <span class="tok-string">&quot;FROM&quot;</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">from</span><span class="tok-punct">.</span><span class="tok-call-method">span</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;expected FROM&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Select</span> <span class="tok-punct">{</span> <span class="tok-variable">columns</span><span class="tok-punct">,</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let query: Select = parse_str("SELECT name, id FROM users").unwrap();
-assert_eq!(query.columns.len(), 2);
-assert_eq!(query.table.to_string(), "users");
+<span class="tok-keyword">let</span> <span class="tok-variable">query</span><span class="tok-punct">:</span> <span class="tok-type">Select</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;SELECT name, id FROM users&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">query</span><span class="tok-punct">.</span><span class="tok-field">columns</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">query</span><span class="tok-punct">.</span><span class="tok-field">table</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;users&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Wrong syntax fails with a span, not a panic.
-assert!(parse_str::&lt;Select&gt;("PICK name FROM users").is_err());
+<span class="tok-comment">// Wrong syntax fails with a span, not a panic.</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-module">parse_str</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Select</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">&quot;PICK name FROM users&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> you get a parser combinator library that already understands
@@ -1185,17 +1186,17 @@ inside a real macro the same types arrive through <code>parse_macro_input!</code
             <h4 class="api-sig"><code class="tok-inline">parse_macro_input!</code></h4>
             <p>The entry point inside a <code>#[proc_macro]</code> function. It parses, and on failure
 returns the compile error from your macro instead of panicking.</p>
-<pre><code class="rust">extern crate proc_macro;
+<pre><code class="rust-hl"><span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">proc_macro</span><span class="tok-punct">;</span>
 
-use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput};
+<span class="tok-keyword">use</span> <span class="tok-module">proc_macro</span><span class="tok-punct">::</span><span class="tok-type">TokenStream</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_macro_input</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-// In a crate with `proc-macro = true`, this carries #[proc_macro_derive(MyTrait)].
-pub fn my_trait(input: TokenStream) -&gt; TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let _name = input.ident; // &lt;- a syntax tree from here on
-    TokenStream::new()
-}
+<span class="tok-comment">// In a crate with `proc-macro = true`, this carries #[proc_macro_derive(MyTrait)].</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">my_trait</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">TokenStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">TokenStream</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">input</span> <span class="tok-punct">=</span> <span class="tok-macro">parse_macro_input!</span><span class="tok-punct">(</span><span class="tok-variable">input</span> <span class="tok-keyword">as</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_name</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a syntax tree from here on</span>
+    <span class="tok-type">TokenStream</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> in every macro entry point, and nowhere else — it expands to
@@ -1208,11 +1209,11 @@ an early <code>return</code>, so it only works in a function returning <code>Tok
             <p>Parses a <code>proc_macro2::TokenStream</code>, returning <code>Result</code>. This is what makes a
 macro testable: <code>proc_macro2</code> works outside a compiler invocation, so the parse
 step can be unit tested.</p>
-<pre><code class="rust">use syn::{parse2, DeriveInput};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse2</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let tokens: proc_macro2::TokenStream = "struct S { a: u8 }".parse().unwrap();
-let parsed: DeriveInput = parse2(tokens).unwrap();
-assert_eq!(parsed.ident.to_string(), "S");
+<span class="tok-keyword">let</span> <span class="tok-variable">tokens</span><span class="tok-punct">:</span> <span class="tok-module">proc_macro2</span><span class="tok-punct">::</span><span class="tok-type">TokenStream</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;struct S { a: u8 }&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">parsed</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse2</span><span class="tok-punct">(</span><span class="tok-variable">tokens</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">parsed</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;S&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the workhorse behind <code>parse_macro_input!</code>, and the form to
@@ -1223,10 +1224,10 @@ takes the real <code>proc_macro::TokenStream</code> and therefore only runs insi
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">syn::parse_str</code></h4>
             <p>Parses any syntax-tree node from a <code>&amp;str</code>.</p>
-<pre><code class="rust">use syn::{parse_str, Type};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Type</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let ty: Type = parse_str("Vec&lt;Option&lt;T&gt;&gt;").unwrap();
-assert!(matches!(ty, Type::Path(_)));
+<span class="tok-keyword">let</span> <span class="tok-variable">ty</span><span class="tok-punct">:</span> <span class="tok-type">Type</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;Vec&lt;Option&lt;T&gt;&gt;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">ty</span><span class="tok-punct">,</span> <span class="tok-type">Type</span><span class="tok-punct">::</span><span class="tok-field">Path</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> tests, tooling and code generators that read Rust from
@@ -1238,11 +1239,11 @@ the user's source, so errors point into the string, not their file.</p>
             <h4 class="api-sig"><code class="tok-inline">syn::parse_file</code></h4>
             <p>Parses a whole <code>.rs</code> file, shebang and inner attributes included. Requires the
 <code>full</code> feature.</p>
-<pre><code class="rust">use syn::parse_file;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-variable">parse_file</span><span class="tok-punct">;</span>
 
-let file = parse_file("//! docs\nfn main() {}\n").unwrap();
-assert_eq!(file.items.len(), 1);
-assert_eq!(file.attrs.len(), 1); // &lt;- the inner //! doc comment
+<span class="tok-keyword">let</span> <span class="tok-variable">file</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_file</span><span class="tok-punct">(</span><span class="tok-string">&quot;//! docs\nfn main() {}\n&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">file</span><span class="tok-punct">.</span><span class="tok-field">items</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">file</span><span class="tok-punct">.</span><span class="tok-field">attrs</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the inner //! doc comment</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> linters, codegen and refactoring tools that work over source
@@ -1259,12 +1260,12 @@ files. Not for macros — a macro never sees a whole file.</p>
             <h4 class="api-sig"><code class="tok-inline">DeriveInput</code></h4>
             <p>The parsed form of whatever a derive was applied to: name, visibility,
 generics, attributes and <code>data</code>.</p>
-<pre><code class="rust">use syn::{parse_str, DeriveInput};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str("pub struct Point&lt;T&gt; { x: T }").unwrap();
-assert_eq!(input.ident.to_string(), "Point");
-assert_eq!(input.generics.params.len(), 1);
-assert!(input.attrs.is_empty());
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;pub struct Point&lt;T&gt; { x: T }&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Point&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">generics</span><span class="tok-punct">.</span><span class="tok-field">params</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">attrs</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> as the parse target of every derive macro. For an attribute
@@ -1275,25 +1276,25 @@ macro use <code>ItemFn</code>, <code>ItemStruct</code> or <code>Item</code> inst
             <h4 class="api-sig"><code class="tok-inline">Data</code> and <code class="tok-inline">Fields</code></h4>
             <p><code>Data</code> splits struct from enum from union; <code>Fields</code> splits named from unnamed
 from unit. Both are the matches every derive macro starts with.</p>
-<pre><code class="rust">use syn::{parse_str, Data, DeriveInput, Fields};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Data</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">,</span> <span class="tok-type">Fields</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-fn field_count(src: &amp;str) -&gt; usize {
-    let input: DeriveInput = parse_str(src).unwrap();
-    match &amp;input.data {
-        Data::Struct(data) =&gt; match &amp;data.fields {
-            Fields::Named(f) =&gt; f.named.len(),
-            Fields::Unnamed(f) =&gt; f.unnamed.len(),
-            Fields::Unit =&gt; 0,
-        },
-        Data::Enum(data) =&gt; data.variants.len(),
-        Data::Union(data) =&gt; data.fields.named.len(),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">field_count</span><span class="tok-punct">(</span><span class="tok-variable">src</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-variable">src</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">match</span> <span class="tok-punct">&amp;</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">data</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Data</span><span class="tok-punct">::</span><span class="tok-field">Struct</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">match</span> <span class="tok-punct">&amp;</span><span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-field">fields</span> <span class="tok-punct">{</span>
+            <span class="tok-type">Fields</span><span class="tok-punct">::</span><span class="tok-field">Named</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">f</span><span class="tok-punct">.</span><span class="tok-field">named</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+            <span class="tok-type">Fields</span><span class="tok-punct">::</span><span class="tok-field">Unnamed</span><span class="tok-punct">(</span><span class="tok-variable">f</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">f</span><span class="tok-punct">.</span><span class="tok-field">unnamed</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+            <span class="tok-type">Fields</span><span class="tok-punct">::</span><span class="tok-field">Unit</span> <span class="tok-punct">=&gt;</span> <span class="tok-number">0</span><span class="tok-punct">,</span>
+        <span class="tok-punct">}</span><span class="tok-punct">,</span>
+        <span class="tok-type">Data</span><span class="tok-punct">::</span><span class="tok-field">Enum</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-field">variants</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-type">Data</span><span class="tok-punct">::</span><span class="tok-field">Union</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-field">fields</span><span class="tok-punct">.</span><span class="tok-field">named</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(field_count("struct A { x: u8, y: u8 }"), 2);
-assert_eq!(field_count("struct B(u8);"), 1);
-assert_eq!(field_count("struct C;"), 0);
-assert_eq!(field_count("enum D { X, Y, Z }"), 3);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">field_count</span><span class="tok-punct">(</span><span class="tok-string">&quot;struct A { x: u8, y: u8 }&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">field_count</span><span class="tok-punct">(</span><span class="tok-string">&quot;struct B(u8);&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">field_count</span><span class="tok-punct">(</span><span class="tok-string">&quot;struct C;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">field_count</span><span class="tok-punct">(</span><span class="tok-string">&quot;enum D { X, Y, Z }&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> immediately after parsing, and handle all the arms. A derive
@@ -1305,15 +1306,15 @@ derive.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Field</code></h4>
             <p>One field: its <code>ident</code> (<code>None</code> for tuple fields), <code>ty</code>, <code>vis</code> and <code>attrs</code>.</p>
-<pre><code class="rust">use syn::{parse_str, Data, DeriveInput, Fields};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Data</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">,</span> <span class="tok-type">Fields</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str("struct S { pub name: String }").unwrap();
-let Data::Struct(data) = &amp;input.data else { unreachable!() };
-let Fields::Named(fields) = &amp;data.fields else { unreachable!() };
-let field = fields.named.first().unwrap();
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;struct S { pub name: String }&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-type">Data</span><span class="tok-punct">::</span><span class="tok-field">Struct</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">data</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-macro">unreachable!</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-type">Fields</span><span class="tok-punct">::</span><span class="tok-field">Named</span><span class="tok-punct">(</span><span class="tok-variable">fields</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-field">fields</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-macro">unreachable!</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">field</span> <span class="tok-punct">=</span> <span class="tok-variable">fields</span><span class="tok-punct">.</span><span class="tok-field">named</span><span class="tok-punct">.</span><span class="tok-call-method">first</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(field.ident.as_ref().unwrap().to_string(), "name");
-assert!(matches!(field.vis, syn::Visibility::Public(_)));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">field</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">.</span><span class="tok-call-method">as_ref</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;name&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">field</span><span class="tok-punct">.</span><span class="tok-field">vis</span><span class="tok-punct">,</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type">Visibility</span><span class="tok-punct">::</span><span class="tok-field">Public</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> whenever you generate per-field code. <code>field.attrs</code> is where
@@ -1330,15 +1331,15 @@ helper attributes like <code>#[serde(skip)]</code> live, so it's the pair to
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Attribute::path</code></h4>
             <p>The attribute's path — what you match on to decide whether it is yours.</p>
-<pre><code class="rust">use syn::{parse_str, DeriveInput};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str("#[doc = \"hi\"] #[mine] struct S;").unwrap();
-let paths: Vec&lt;String&gt; = input
-    .attrs
-    .iter()
-    .map(|a| a.path().get_ident().unwrap().to_string())
-    .collect();
-assert_eq!(paths, ["doc", "mine"]);
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;#[doc = \&quot;hi\&quot;] #[mine] struct S;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">paths</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span>
+    <span class="tok-punct">.</span><span class="tok-field">attrs</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">a</span><span class="tok-punct">|</span> <span class="tok-variable">a</span><span class="tok-punct">.</span><span class="tok-call-method">path</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">get_ident</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">paths</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;doc&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;mine&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> first thing in any attribute loop, via
@@ -1350,19 +1351,19 @@ your macro fail on <code>#[doc]</code>, <code>#[cfg]</code> and every other macr
             <h4 class="api-sig"><code class="tok-inline">Attribute::parse_nested_meta</code></h4>
             <p>Parses <code>#[name(a = "x", b, c(1))]</code> — the conventional shape — calling your
 closure once per entry.</p>
-<pre><code class="rust">use syn::{parse_str, DeriveInput, LitStr};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">,</span> <span class="tok-type">LitStr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str(r#"#[opt(rename = "id")] struct S;"#).unwrap();
-let mut rename = None;
-input.attrs[0]
-    .parse_nested_meta(|meta| {
-        if meta.path.is_ident("rename") {
-            rename = Some(meta.value()?.parse::&lt;LitStr&gt;()?.value());
-        }
-        Ok(())
-    })
-    .unwrap();
-assert_eq!(rename.as_deref(), Some("id"));
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;#[opt(rename = &quot;id&quot;)] struct S;&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">rename</span> <span class="tok-punct">=</span> <span class="tok-field">None</span><span class="tok-punct">;</span>
+<span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">attrs</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">parse_nested_meta</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">meta</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">meta</span><span class="tok-punct">.</span><span class="tok-field">path</span><span class="tok-punct">.</span><span class="tok-call-method">is_ident</span><span class="tok-punct">(</span><span class="tok-string">&quot;rename&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">rename</span> <span class="tok-punct">=</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">meta</span><span class="tok-punct">.</span><span class="tok-call-method">value</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">LitStr</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">.</span><span class="tok-call-method">value</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rename</span><span class="tok-punct">.</span><span class="tok-call-method">as_deref</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-string">&quot;id&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> for any attribute following the <code>#[attr(key = value, flag)]</code>
@@ -1373,11 +1374,11 @@ keys so typos are caught at the right span.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">Attribute::parse_args</code></h4>
             <p>Parses the attribute's parenthesised contents as one syntax-tree node.</p>
-<pre><code class="rust">use syn::{parse_str, DeriveInput, Expr};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">,</span> <span class="tok-type">Expr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str("#[guard(x &gt; 3)] struct S;").unwrap();
-let condition: Expr = input.attrs[0].parse_args().unwrap();
-assert!(matches!(condition, Expr::Binary(_)));
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;#[guard(x &gt; 3)] struct S;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">condition</span><span class="tok-punct">:</span> <span class="tok-type">Expr</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">attrs</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-call-method">parse_args</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">condition</span><span class="tok-punct">,</span> <span class="tok-type">Expr</span><span class="tok-punct">::</span><span class="tok-field">Binary</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when the argument is a single thing — an expression, a type,
@@ -1396,26 +1397,26 @@ parser function for anything more involved, such as
             <h4 class="api-sig">The <code class="tok-inline">Parse</code> trait</h4>
             <p><code>fn(ParseStream) -&gt; Result&lt;Self&gt;</code>. Implementing it makes a type usable with
 <code>parse_str</code>, <code>parse2</code>, <code>input.parse()</code> and <code>parse_macro_input!</code>.</p>
-<pre><code class="rust">use syn::parse::{Parse, ParseStream};
-use syn::{parse_str, Ident, Token};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">parse</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Parse</span><span class="tok-punct">,</span> <span class="tok-type">ParseStream</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-type">Token</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct Rename {
-    from: Ident,
-    to: Ident,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Rename</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">from</span><span class="tok-punct">:</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span>
+    <span class="tok-variable">to</span><span class="tok-punct">:</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Parse for Rename {
-    fn parse(input: ParseStream) -&gt; syn::Result&lt;Self&gt; {
-        let from = input.parse()?;
-        input.parse::&lt;Token![=&gt;]&gt;()?; // &lt;- Token! builds the token type
-        let to = input.parse()?;
-        Ok(Rename { from, to })
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Parse</span> <span class="tok-keyword">for</span> <span class="tok-type">Rename</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">ParseStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">from</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+        <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-macro">Token!</span><span class="tok-punct">[</span><span class="tok-punct">=&gt;</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Token! builds the token type</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">to</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Rename</span> <span class="tok-punct">{</span> <span class="tok-variable">from</span><span class="tok-punct">,</span> <span class="tok-variable">to</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let renamed: Rename = parse_str("old =&gt; new").unwrap();
-assert_eq!(renamed.from.to_string(), "old");
-assert_eq!(renamed.to.to_string(), "new");
+<span class="tok-keyword">let</span> <span class="tok-variable">renamed</span><span class="tok-punct">:</span> <span class="tok-type">Rename</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;old =&gt; new&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">renamed</span><span class="tok-punct">.</span><span class="tok-field">from</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;old&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">renamed</span><span class="tok-punct">.</span><span class="tok-field">to</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;new&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> for every custom syntax your macro accepts. Composing
@@ -1427,30 +1428,30 @@ delegates the rest.</p>
             <h4 class="api-sig"><code class="tok-inline">ParseStream::peek</code> and <code class="tok-inline">Lookahead1</code></h4>
             <p><code>peek</code> tests the next token without consuming it. <code>lookahead1</code> does the same but
 remembers everything you tried, so the failure message lists all of it.</p>
-<pre><code class="rust">use syn::parse::{Parse, ParseStream};
-use syn::{parse_str, Ident, LitInt, Token};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">parse</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Parse</span><span class="tok-punct">,</span> <span class="tok-type">ParseStream</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-type">LitInt</span><span class="tok-punct">,</span> <span class="tok-type">Token</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-enum Arg {
-    Name(Ident),
-    Index(LitInt),
-}
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Arg</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Name</span><span class="tok-punct">(</span><span class="tok-type">Ident</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Index</span><span class="tok-punct">(</span><span class="tok-type">LitInt</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Parse for Arg {
-    fn parse(input: ParseStream) -&gt; syn::Result&lt;Self&gt; {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Ident) {
-            Ok(Arg::Name(input.parse()?))
-        } else if lookahead.peek(LitInt) {
-            Ok(Arg::Index(input.parse()?))
-        } else {
-            Err(lookahead.error()) // &lt;- "expected identifier or integer literal"
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Parse</span> <span class="tok-keyword">for</span> <span class="tok-type">Arg</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">ParseStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">lookahead</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">lookahead1</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">lookahead</span><span class="tok-punct">.</span><span class="tok-call-method">peek</span><span class="tok-punct">(</span><span class="tok-type">Ident</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Arg</span><span class="tok-punct">::</span><span class="tok-field">Name</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-keyword">if</span> <span class="tok-variable">lookahead</span><span class="tok-punct">.</span><span class="tok-call-method">peek</span><span class="tok-punct">(</span><span class="tok-type">LitInt</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Arg</span><span class="tok-punct">::</span><span class="tok-field">Index</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">lookahead</span><span class="tok-punct">.</span><span class="tok-call-method">error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- &quot;expected identifier or integer literal&quot;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert!(matches!(parse_str::&lt;Arg&gt;("field").unwrap(), Arg::Name(_)));
-assert!(matches!(parse_str::&lt;Arg&gt;("7").unwrap(), Arg::Index(_)));
-let _: bool = parse_str::&lt;Arg&gt;("'a'").is_err();
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-module">parse_str</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Arg</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">&quot;field&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Arg</span><span class="tok-punct">::</span><span class="tok-field">Name</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-module">parse_str</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Arg</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">&quot;7&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Arg</span><span class="tok-punct">::</span><span class="tok-field">Index</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span><span class="tok-punct">:</span> <span class="tok-type">bool</span> <span class="tok-punct">=</span> <span class="tok-module">parse_str</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Arg</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">&quot;'a'&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> any branch point in a grammar. Prefer <code>lookahead1</code> over bare
@@ -1462,15 +1463,15 @@ which bare <code>peek</code> cannot do.</p>
             <h4 class="api-sig"><code class="tok-inline">Punctuated</code></h4>
             <p>A sequence with separators, keeping both so it can be printed back out.
 <code>parse_terminated</code> accepts an optional trailing separator.</p>
-<pre><code class="rust">use syn::punctuated::Punctuated;
-use syn::{parse_str, Ident, Token};
-use syn::parse::Parser;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">punctuated</span><span class="tok-punct">::</span><span class="tok-type">Punctuated</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-type">Token</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">parse</span><span class="tok-punct">::</span><span class="tok-type">Parser</span><span class="tok-punct">;</span>
 
-let parser = Punctuated::&lt;Ident, Token![,]&gt;::parse_terminated;
-let idents = parser.parse_str("a, b, c,").unwrap(); // &lt;- trailing comma is fine
+<span class="tok-keyword">let</span> <span class="tok-variable">parser</span> <span class="tok-punct">=</span> <span class="tok-type">Punctuated</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-macro">Token!</span><span class="tok-punct">[</span><span class="tok-punct">,</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">::</span><span class="tok-variable">parse_terminated</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">idents</span> <span class="tok-punct">=</span> <span class="tok-variable">parser</span><span class="tok-punct">.</span><span class="tok-call-method">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;a, b, c,&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- trailing comma is fine</span>
 
-assert_eq!(idents.len(), 3);
-assert_eq!(idents.first().unwrap().to_string(), "a");
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">idents</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">idents</span><span class="tok-punct">.</span><span class="tok-call-method">first</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;a&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> every comma-separated list — arguments, fields, generic
@@ -1481,24 +1482,24 @@ separator, for grammars where it would be wrong.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">braced!</code>, <code class="tok-inline">bracketed!</code> and <code class="tok-inline">parenthesized!</code></h4>
             <p>Consume a balanced group and give you a <code>ParseStream</code> over its contents.</p>
-<pre><code class="rust">use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{braced, parse_str, Ident, Token};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">parse</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Parse</span><span class="tok-punct">,</span> <span class="tok-type">ParseStream</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">punctuated</span><span class="tok-punct">::</span><span class="tok-type">Punctuated</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">braced</span><span class="tok-punct">,</span> <span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-type">Token</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct Block {
-    names: Punctuated&lt;Ident, Token![,]&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Block</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">names</span><span class="tok-punct">:</span> <span class="tok-type">Punctuated</span><span class="tok-punct">&lt;</span><span class="tok-type">Ident</span><span class="tok-punct">,</span> <span class="tok-macro">Token!</span><span class="tok-punct">[</span><span class="tok-punct">,</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Parse for Block {
-    fn parse(input: ParseStream) -&gt; syn::Result&lt;Self&gt; {
-        let content;
-        braced!(content in input); // &lt;- content is a ParseStream for the { .. }
-        Ok(Block { names: content.parse_terminated(Ident::parse, Token![,])? })
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Parse</span> <span class="tok-keyword">for</span> <span class="tok-type">Block</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">ParseStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">content</span><span class="tok-punct">;</span>
+        <span class="tok-macro">braced!</span><span class="tok-punct">(</span><span class="tok-variable">content</span> <span class="tok-keyword">in</span> <span class="tok-variable">input</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- content is a ParseStream for the { .. }</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Block</span> <span class="tok-punct">{</span> <span class="tok-variable">names</span><span class="tok-punct">:</span> <span class="tok-variable">content</span><span class="tok-punct">.</span><span class="tok-call-method">parse_terminated</span><span class="tok-punct">(</span><span class="tok-type">Ident</span><span class="tok-punct">::</span><span class="tok-variable">parse</span><span class="tok-punct">,</span> <span class="tok-macro">Token!</span><span class="tok-punct">[</span><span class="tok-punct">,</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">?</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let block: Block = parse_str("{ a, b }").unwrap();
-assert_eq!(block.names.len(), 2);
+<span class="tok-keyword">let</span> <span class="tok-variable">block</span><span class="tok-punct">:</span> <span class="tok-type">Block</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;{ a, b }&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">block</span><span class="tok-punct">.</span><span class="tok-field">names</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> any nested syntax. Because the token stream is already a
@@ -1509,25 +1510,25 @@ brace was rejected before syn ever saw it.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">custom_keyword!</code></h4>
             <p>Defines a keyword that Rust doesn't have, complete with a peekable token type.</p>
-<pre><code class="rust">use syn::parse::{Parse, ParseStream};
-use syn::{custom_keyword, parse_str, Ident};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">parse</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Parse</span><span class="tok-punct">,</span> <span class="tok-type">ParseStream</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">custom_keyword</span><span class="tok-punct">,</span> <span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Ident</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-custom_keyword!(select);
+<span class="tok-macro">custom_keyword!</span><span class="tok-punct">(</span><span class="tok-variable">select</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-struct Query {
-    table: Ident,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Query</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">Ident</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Parse for Query {
-    fn parse(input: ParseStream) -&gt; syn::Result&lt;Self&gt; {
-        input.parse::&lt;select&gt;()?; // &lt;- matches the identifier `select`
-        Ok(Query { table: input.parse()? })
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Parse</span> <span class="tok-keyword">for</span> <span class="tok-type">Query</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">ParseStream</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-variable">select</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- matches the identifier `select`</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Query</span> <span class="tok-punct">{</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let query: Query = parse_str("select users").unwrap();
-assert_eq!(query.table.to_string(), "users");
-assert!(parse_str::&lt;Query&gt;("delete users").is_err());
+<span class="tok-keyword">let</span> <span class="tok-variable">query</span><span class="tok-punct">:</span> <span class="tok-type">Query</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;select users&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">query</span><span class="tok-punct">.</span><span class="tok-field">table</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;users&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-module">parse_str</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Query</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">&quot;delete users&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> for DSL keywords. Better than comparing an <code>Ident</code> to a
@@ -1545,17 +1546,17 @@ produces the right error message.</p>
             <h4 class="api-sig"><code class="tok-inline">Generics::split_for_impl</code></h4>
             <p>Splits a type's generics into the three fragments an <code>impl</code> block needs, so
 generic types don't break your derive.</p>
-<pre><code class="rust">use quote::quote;
-use syn::{parse_str, DeriveInput};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">quote</span><span class="tok-punct">::</span><span class="tok-variable">quote</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str("struct S&lt;T: Clone&gt;(T) where T: Send;").unwrap();
-let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-let name = &amp;input.ident;
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;struct S&lt;T: Clone&gt;(T) where T: Send;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">impl_generics</span><span class="tok-punct">,</span> <span class="tok-variable">ty_generics</span><span class="tok-punct">,</span> <span class="tok-variable">where_clause</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">generics</span><span class="tok-punct">.</span><span class="tok-call-method">split_for_impl</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">;</span>
 
-let expanded = quote! {
-    impl #impl_generics Trait for #name #ty_generics #where_clause {}
-};
-assert!(expanded.to_string().contains("where"));
+<span class="tok-keyword">let</span> <span class="tok-variable">expanded</span> <span class="tok-punct">=</span> <span class="tok-macro">quote!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">impl</span> <span class="tok-punct">#</span><span class="tok-variable">impl_generics</span> <span class="tok-trait">Trait</span> <span class="tok-keyword">for</span> <span class="tok-punct">#</span><span class="tok-variable">name</span> <span class="tok-punct">#</span><span class="tok-variable">ty_generics</span> <span class="tok-punct">#</span><span class="tok-variable">where_clause</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">expanded</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-string">&quot;where&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> in every derive that emits an <code>impl</code>. Writing
@@ -1567,14 +1568,14 @@ the <code>where</code> clause — this is the single most common bug in a first 
             <h4 class="api-sig"><code class="tok-inline">parse_quote!</code></h4>
             <p>Builds a syntax-tree node from quasi-quoted tokens — <code>quote!</code> and a parse in one
 step. Requires the <code>printing</code> feature, which is on by default.</p>
-<pre><code class="rust">use syn::{parse_quote, Type, WherePredicate};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_quote</span><span class="tok-punct">,</span> <span class="tok-type">Type</span><span class="tok-punct">,</span> <span class="tok-type">WherePredicate</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let field: Type = parse_quote!(Vec&lt;String&gt;);
-assert!(matches!(field, Type::Path(_)));
+<span class="tok-keyword">let</span> <span class="tok-variable">field</span><span class="tok-punct">:</span> <span class="tok-type">Type</span> <span class="tok-punct">=</span> <span class="tok-macro">parse_quote!</span><span class="tok-punct">(</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">field</span><span class="tok-punct">,</span> <span class="tok-type">Type</span><span class="tok-punct">::</span><span class="tok-field">Path</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Interpolation works as in quote!.
-let bound: WherePredicate = parse_quote!(#field: Send);
-let _ = bound;
+<span class="tok-comment">// Interpolation works as in quote!.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">bound</span><span class="tok-punct">:</span> <span class="tok-type">WherePredicate</span> <span class="tok-punct">=</span> <span class="tok-macro">parse_quote!</span><span class="tok-punct">(</span><span class="tok-punct">#</span><span class="tok-variable">field</span><span class="tok-punct">:</span> <span class="tok-type">Send</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">bound</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> constructing tree nodes to splice into what you're building
@@ -1592,16 +1593,16 @@ assembling the node's struct literal by hand.</p>
             <h4 class="api-sig"><code class="tok-inline">Error::new_spanned</code></h4>
             <p>Builds an error pointing at an existing piece of syntax, so the compiler
 underlines exactly that token.</p>
-<pre><code class="rust">use syn::{parse_str, Data, DeriveInput, Error};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Data</span><span class="tok-punct">,</span> <span class="tok-type">DeriveInput</span><span class="tok-punct">,</span> <span class="tok-type">Error</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let input: DeriveInput = parse_str("enum E { A }").unwrap();
-let result = match &amp;input.data {
-    Data::Struct(_) =&gt; Ok(()),
-    _ =&gt; Err(Error::new_spanned(&amp;input.ident, "this derive only supports structs")),
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">DeriveInput</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;enum E { A }&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-punct">&amp;</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">data</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Data</span><span class="tok-punct">::</span><span class="tok-field">Struct</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new_spanned</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-field">ident</span><span class="tok-punct">,</span> <span class="tok-string">&quot;this derive only supports structs&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let err = result.unwrap_err();
-assert_eq!(err.to_string(), "this derive only supports structs");
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-variable">result</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;this derive only supports structs&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> every rejection in a macro. <code>Error::new(span, msg)</code> is the
@@ -1613,12 +1614,12 @@ reports at the macro's own call site with no useful location.</p>
             <h4 class="api-sig"><code class="tok-inline">Error::to_compile_error</code></h4>
             <p>Turns the error into tokens that expand to <code>compile_error!</code>, so the macro can
 return it.</p>
-<pre><code class="rust">use syn::Error;
-use proc_macro2::Span;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">proc_macro2</span><span class="tok-punct">::</span><span class="tok-type">Span</span><span class="tok-punct">;</span>
 
-let err = Error::new(Span::call_site(), "unsupported");
-let tokens = err.to_compile_error();
-assert!(tokens.to_string().contains("compile_error"));
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Span</span><span class="tok-punct">::</span><span class="tok-call-assoc">call_site</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;unsupported&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">tokens</span> <span class="tok-punct">=</span> <span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">to_compile_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">tokens</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-string">&quot;compile_error&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> at the top level of a macro, converting <code>Result</code> into the
@@ -1630,13 +1631,13 @@ usually what you want at the end of a chain.</p>
             <h4 class="api-sig"><code class="tok-inline">Error::combine</code></h4>
             <p>Merges another error in, so one compilation reports every problem instead of
 one at a time.</p>
-<pre><code class="rust">use syn::Error;
-use proc_macro2::Span;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">proc_macro2</span><span class="tok-punct">::</span><span class="tok-type">Span</span><span class="tok-punct">;</span>
 
-let mut err = Error::new(Span::call_site(), "first problem");
-err.combine(Error::new(Span::call_site(), "second problem"));
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Span</span><span class="tok-punct">::</span><span class="tok-call-assoc">call_site</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;first problem&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">combine</span><span class="tok-punct">(</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Span</span><span class="tok-punct">::</span><span class="tok-call-assoc">call_site</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;second problem&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(err.into_iter().count(), 2); // &lt;- both surface at once
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">count</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- both surface at once</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when validating a list — every bad field, not just the first.
@@ -1647,15 +1648,15 @@ Users recompile once per error you don't report.</p>
             <h4 class="api-sig"><code class="tok-inline">Spanned::span</code></h4>
             <p>Gets the <code>Span</code> of any syntax-tree node, covering the whole node rather than its
 first token.</p>
-<pre><code class="rust">use syn::spanned::Spanned;
-use syn::{parse_str, Expr};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-module">spanned</span><span class="tok-punct">::</span><span class="tok-type">Spanned</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">parse_str</span><span class="tok-punct">,</span> <span class="tok-type">Expr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let expr: Expr = parse_str("a + b").unwrap();
-let span = expr.span();
-let _ = span.source_text(); // &lt;- Some("a + b") when parsed from real source
+<span class="tok-keyword">let</span> <span class="tok-variable">expr</span><span class="tok-punct">:</span> <span class="tok-type">Expr</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;a + b&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">span</span> <span class="tok-punct">=</span> <span class="tok-variable">expr</span><span class="tok-punct">.</span><span class="tok-call-method">span</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">span</span><span class="tok-punct">.</span><span class="tok-call-method">source_text</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Some(&quot;a + b&quot;) when parsed from real source</span>
 
-let err = syn::Error::new(span, "bad expression");
-assert_eq!(err.to_string(), "bad expression");
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-module">syn</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">span</span><span class="tok-punct">,</span> <span class="tok-string">&quot;bad expression&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;bad expression&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> to point an error at a whole construct — an entire type or

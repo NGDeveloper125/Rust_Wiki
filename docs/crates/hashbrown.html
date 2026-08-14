@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink active" href="../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1031,20 +1032,20 @@ same data structure with one less dependency.</p>
             <p>Firmware, a kernel module, or a WASM target built without <code>std</code> still needs to
 associate keys with values, and <code>std::collections::HashMap</code> isn't reachable.
 hashbrown is <code>#![no_std]</code> and needs only <code>alloc</code>, so it drops straight in.</p>
-<pre><code class="rust">#![no_std]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-extern crate alloc; // &lt;- hashbrown needs an allocator, not std
+<span class="tok-keyword">extern</span> <span class="tok-keyword">crate</span> <span class="tok-variable">alloc</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- hashbrown needs an allocator, not std</span>
 
-use hashbrown::HashMap;
+<span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-/// The latest reading per sensor id, on a target with a heap but no `std`.
-pub fn latest(readings: &amp;[(u16, i32)]) -&gt; HashMap&lt;u16, i32&gt; {
-    let mut latest = HashMap::new();
-    for &amp;(sensor, value) in readings {
-        latest.insert(sensor, value); // &lt;- last reading for a sensor wins
-    }
-    latest
-}
+<span class="tok-comment">/// The latest reading per sensor id, on a target with a heap but no `std`.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">latest</span><span class="tok-punct">(</span><span class="tok-variable">readings</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-type">i32</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">,</span> <span class="tok-type-return">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">latest</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-punct">&amp;</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-variable">readings</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">latest</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- last reading for a sensor wins</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">latest</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> it is the same table <code>std</code> uses, so nothing about performance
@@ -1063,20 +1064,20 @@ normal <code>entry</code> API you must hand over an owned <code>String</code> be
 the key is even present, so a hot loop over repeated words allocates on every
 iteration and throws most of them away. <code>entry_ref</code> takes the borrowed form and
 only calls <code>to_owned</code> when it actually inserts.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-fn word_counts(words: &amp;[&amp;str]) -&gt; HashMap&lt;String, usize&gt; {
-    let mut counts: HashMap&lt;String, usize&gt; = HashMap::new();
-    for word in words {
-        // Allocates a String only the first time each word is seen.
-        *counts.entry_ref(*word).or_insert(0) += 1;
-    }
-    counts
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">word_counts</span><span class="tok-punct">(</span><span class="tok-variable">words</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">,</span> <span class="tok-type-return">usize</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">counts</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">usize</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">word</span> <span class="tok-keyword">in</span> <span class="tok-variable">words</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// Allocates a String only the first time each word is seen.</span>
+        <span class="tok-punct">*</span><span class="tok-variable">counts</span><span class="tok-punct">.</span><span class="tok-call-method">entry_ref</span><span class="tok-punct">(</span><span class="tok-punct">*</span><span class="tok-variable">word</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">or_insert</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">counts</span>
+<span class="tok-punct">}</span>
 
-let counts = word_counts(&amp;["swiss", "table", "swiss"]);
-assert_eq!(counts["swiss"], 2);
-assert_eq!(counts.len(), 2);
+<span class="tok-keyword">let</span> <span class="tok-variable">counts</span> <span class="tok-punct">=</span> <span class="tok-call-free">word_counts</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-string">&quot;swiss&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;table&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;swiss&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">counts</span><span class="tok-punct">[</span><span class="tok-string">&quot;swiss&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">counts</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> the allocation count drops from one per lookup to one per
@@ -1094,39 +1095,39 @@ stable equivalent.</p>
 as the key, once in the arena — is exactly what you were trying to avoid.
 <code>HashTable</code> stores only the element and asks you for the hash and the equality
 test, so the table can hold ids while comparing the strings they point at.</p>
-<pre><code class="rust">use hashbrown::HashTable;
-use std::hash::{BuildHasher, RandomState};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashTable</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">BuildHasher</span><span class="tok-punct">,</span> <span class="tok-type">RandomState</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-struct Interner {
-    strings: Vec&lt;String&gt;,
-    table: HashTable&lt;u32&gt;, // &lt;- ids only; the text lives in `strings`
-    hasher: RandomState,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Interner</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">strings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">HashTable</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- ids only; the text lives in `strings`</span>
+    <span class="tok-variable">hasher</span><span class="tok-punct">:</span> <span class="tok-type">RandomState</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Interner {
-    fn intern(&amp;mut self, text: &amp;str) -&gt; u32 {
-        let hash = self.hasher.hash_one(text);
-        let eq = |id: &amp;u32| self.strings[*id as usize] == text;
-        if let Some(&amp;id) = self.table.find(hash, eq) {
-            return id;
-        }
-        let id = self.strings.len() as u32;
-        self.strings.push(text.to_owned());
-        let strings = &amp;self.strings;
-        let hasher = &amp;self.hasher;
-        self.table
-            .insert_unique(hash, id, |id| hasher.hash_one(&amp;strings[*id as usize]));
-        id
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Interner</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">intern</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">text</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">hash</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">eq</span> <span class="tok-punct">=</span> <span class="tok-punct">|</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">u32</span><span class="tok-punct">|</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">strings</span><span class="tok-punct">[</span><span class="tok-punct">*</span><span class="tok-variable">id</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span><span class="tok-punct">]</span> <span class="tok-punct">==</span> <span class="tok-variable">text</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">id</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">table</span><span class="tok-punct">.</span><span class="tok-call-method">find</span><span class="tok-punct">(</span><span class="tok-variable">hash</span><span class="tok-punct">,</span> <span class="tok-variable">eq</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-variable">id</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">id</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">strings</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">strings</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">.</span><span class="tok-call-method">to_owned</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">strings</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">strings</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">hasher</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">hasher</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">table</span>
+            <span class="tok-punct">.</span><span class="tok-call-method">insert_unique</span><span class="tok-punct">(</span><span class="tok-variable">hash</span><span class="tok-punct">,</span> <span class="tok-variable">id</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">id</span><span class="tok-punct">|</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">strings</span><span class="tok-punct">[</span><span class="tok-punct">*</span><span class="tok-variable">id</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">id</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut interner = Interner {
-    strings: Vec::new(),
-    table: HashTable::new(),
-    hasher: RandomState::new(),
-};
-assert_eq!(interner.intern("swisstable"), 0);
-assert_eq!(interner.intern("swisstable"), 0); // &lt;- same id, no second copy
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">interner</span> <span class="tok-punct">=</span> <span class="tok-type">Interner</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">strings</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">HashTable</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">hasher</span><span class="tok-punct">:</span> <span class="tok-type">RandomState</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">interner</span><span class="tok-punct">.</span><span class="tok-call-method">intern</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">interner</span><span class="tok-punct">.</span><span class="tok-call-method">intern</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same id, no second copy</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> no <code>HashMap</code> can express "the key is derived from somewhere
@@ -1155,11 +1156,11 @@ listed.</p>
             <h4 class="api-sig"><code class="tok-inline">HashMap::new</code></h4>
             <p>An empty map with the default hasher and no allocation until the first insert.
 Requires the <code>default-hasher</code> feature, which is on by default.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map: HashMap&lt;&amp;str, u32&gt; = HashMap::new();
-map.insert("swisstable", 1);
-assert_eq!(map.len(), 1);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the default for internal maps whose keys you control. Where
@@ -1172,11 +1173,11 @@ build with <code>with_hasher</code> and a hasher that targets that threat — <c
             <h4 class="api-sig"><code class="tok-inline">HashMap::with_capacity</code></h4>
             <p>Pre-allocates room for at least <code>capacity</code> elements, so filling the map does no
 rehashing.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map: HashMap&lt;u32, u32&gt; = HashMap::with_capacity(1024);
-map.insert(1, 1);
-assert!(map.capacity() &gt;= 1024);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">with_capacity</span><span class="tok-punct">(</span><span class="tok-number">1024</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">capacity</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">1024</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you know roughly how many entries you're about to
@@ -1188,13 +1189,13 @@ low just costs the rehashes you were avoiding.</p>
             <h4 class="api-sig"><code class="tok-inline">HashMap::with_hasher</code></h4>
             <p>Builds a map over a specific <code>BuildHasher</code>. It is a <code>const fn</code>, so it also
 serves for a map in a <code>static</code>.</p>
-<pre><code class="rust">use hashbrown::HashMap;
-use std::hash::RandomState;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-type">RandomState</span><span class="tok-punct">;</span>
 
-// SipHash-1-3, the same hasher std::collections::HashMap uses.
-let mut map: HashMap&lt;String, u32, RandomState&gt; = HashMap::with_hasher(RandomState::new());
-map.insert("from-the-network".to_owned(), 1);
-assert_eq!(map.len(), 1);
+<span class="tok-comment">// SipHash-1-3, the same hasher std::collections::HashMap uses.</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">RandomState</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">with_hasher</span><span class="tok-punct">(</span><span class="tok-type">RandomState</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;from-the-network&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_owned</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> whenever the map's keys can be chosen by someone else, or
@@ -1212,11 +1213,11 @@ fixed-seed hasher for reproducible iteration in tests).</p>
             <h4 class="api-sig"><code class="tok-inline">HashMap::insert</code></h4>
             <p>Inserts a pair, returning the previous value if the key was already present.
 The stored key is <em>not</em> replaced on overwrite.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map = HashMap::new();
-assert_eq!(map.insert("k", 1), None);
-assert_eq!(map.insert("k", 2), Some(1)); // &lt;- returns the value it displaced
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;k&quot;</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;k&quot;</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- returns the value it displaced</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the default write. When you need to know whether you're
@@ -1227,12 +1228,12 @@ use <code>try_insert</code>.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">HashMap::get</code></h4>
             <p>Looks a key up by any borrowed form of it, returning <code>Option&lt;&amp;V&gt;</code>.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map: HashMap&lt;String, u32&gt; = HashMap::new();
-map.insert("swisstable".to_owned(), 7);
-assert_eq!(map.get("swisstable"), Some(&amp;7)); // &lt;- &amp;str against a String key
-assert_eq!(map.get("absent"), None);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_owned</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- &amp;str against a String key</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;absent&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> any read where a missing key is normal. Reach for
@@ -1243,14 +1244,14 @@ more than what it compares on.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">HashMap::get_mut</code></h4>
             <p>The same lookup, handing back a mutable reference.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map = HashMap::new();
-map.insert("hits", 1u32);
-if let Some(hits) = map.get_mut("hits") {
-    *hits += 1;
-}
-assert_eq!(map["hits"], 2);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;hits&quot;</span><span class="tok-punct">,</span> <span class="tok-number">1u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">hits</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">get_mut</span><span class="tok-punct">(</span><span class="tok-string">&quot;hits&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">*</span><span class="tok-variable">hits</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">[</span><span class="tok-string">&quot;hits&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> to modify a value you know is there. If it might be absent
@@ -1261,12 +1262,12 @@ rather than two.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">HashMap::remove</code></h4>
             <p>Removes a key, returning its value.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map = HashMap::new();
-map.insert("temp", 42);
-assert_eq!(map.remove("temp"), Some(42));
-assert_eq!(map.remove("temp"), None);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;temp&quot;</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;temp&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;temp&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you want the value back. <code>remove_entry</code> returns the key
@@ -1278,18 +1279,18 @@ as well, which matters when the key is an owned allocation you want to reuse.</p
             <p>Inserts only if the key is vacant. On collision it returns an <code>OccupiedError</code>
 carrying both the existing entry and the value you failed to insert, so nothing
 is dropped silently.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map = HashMap::new();
-assert!(map.try_insert("id", 1).is_ok());
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">try_insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;id&quot;</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-match map.try_insert("id", 2) {
-    Ok(_) =&gt; unreachable!(),
-    Err(err) =&gt; {
-        assert_eq!(*err.entry.get(), 1); // &lt;- what was already there
-        assert_eq!(err.value, 2);        // &lt;- what didn't go in
-    }
-}
+<span class="tok-keyword">match</span> <span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">try_insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;id&quot;</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">unreachable!</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">*</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-field">entry</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- what was already there</span>
+        <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>        <span class="tok-comment tok-anno">// &lt;- what didn't go in</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when a duplicate key means a bug — parsing a config with
@@ -1302,17 +1303,17 @@ class of mistake.</p>
             <h4 class="api-sig"><code class="tok-inline">HashMap::get_disjoint_mut</code></h4>
             <p>Takes an array of <code>N</code> keys and returns <code>N</code> independent mutable references,
 checking at runtime that the keys are distinct.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut balances = HashMap::new();
-balances.insert("alice", 100i64);
-balances.insert("bob", 50);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">balances</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">balances</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;alice&quot;</span><span class="tok-punct">,</span> <span class="tok-number">100i64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">balances</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;bob&quot;</span><span class="tok-punct">,</span> <span class="tok-number">50</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-if let [Some(from), Some(to)] = balances.get_disjoint_mut(["alice", "bob"]) {
-    *from -= 25;
-    *to += 25;
-}
-assert_eq!(balances["alice"], 75);
+<span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-punct">[</span><span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">from</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">to</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-variable">balances</span><span class="tok-punct">.</span><span class="tok-call-method">get_disjoint_mut</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;alice&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;bob&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">*</span><span class="tok-variable">from</span> <span class="tok-punct">-=</span> <span class="tok-number">25</span><span class="tok-punct">;</span>
+    <span class="tok-punct">*</span><span class="tok-variable">to</span> <span class="tok-punct">+=</span> <span class="tok-number">25</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">balances</span><span class="tok-punct">[</span><span class="tok-string">&quot;alice&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-number">75</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you need to mutate two entries at once and the borrow
@@ -1332,13 +1333,13 @@ already there.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">HashMap::entry</code></h4>
             <p>Returns an <code>Entry</code> for a key, taking ownership of the key up front.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut totals: HashMap&lt;&amp;str, u32&gt; = HashMap::new();
-for (name, amount) in [("a", 3), ("b", 4), ("a", 5)] {
-    *totals.entry(name).or_insert(0) += amount;
-}
-assert_eq!(totals["a"], 8);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">totals</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">for</span> <span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">,</span> <span class="tok-variable">amount</span><span class="tok-punct">)</span> <span class="tok-keyword">in</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;a&quot;</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;b&quot;</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;a&quot;</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">*</span><span class="tok-variable">totals</span><span class="tok-punct">.</span><span class="tok-call-method">entry</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">or_insert</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-variable">amount</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">totals</span><span class="tok-punct">[</span><span class="tok-string">&quot;a&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the workhorse for accumulating into a map. When the key type
@@ -1350,14 +1351,14 @@ paying for the clone on every miss-free lookup.</p>
             <h4 class="api-sig"><code class="tok-inline">HashMap::entry_ref</code></h4>
             <p>Like <code>entry</code>, but keyed by a borrowed form. The owned key is created with
 <code>to_owned</code> only in the vacant case.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut seen: HashMap&lt;String, u32&gt; = HashMap::new();
-let key: &amp;str = "swisstable";
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">seen</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">;</span>
 
-*seen.entry_ref(key).or_insert(0) += 1; // &lt;- allocates the String
-*seen.entry_ref(key).or_insert(0) += 1; // &lt;- does not
-assert_eq!(seen[key], 2);
+<span class="tok-punct">*</span><span class="tok-variable">seen</span><span class="tok-punct">.</span><span class="tok-call-method">entry_ref</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">or_insert</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- allocates the String</span>
+<span class="tok-punct">*</span><span class="tok-variable">seen</span><span class="tok-punct">.</span><span class="tok-call-method">entry_ref</span><span class="tok-punct">(</span><span class="tok-variable">key</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">or_insert</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- does not</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">seen</span><span class="tok-punct">[</span><span class="tok-variable">key</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> any <code>HashMap&lt;String, _&gt;</code> or <code>HashMap&lt;PathBuf, _&gt;</code> written in
@@ -1369,13 +1370,13 @@ better reasons to depend on hashbrown directly.</p>
             <h4 class="api-sig"><code class="tok-inline">Entry::or_insert_with</code></h4>
             <p>Supplies the default lazily, so an expensive value is only built when the key
 is actually absent.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut cache: HashMap&lt;u32, Vec&lt;u8&gt;&gt; = HashMap::new();
-let entry = cache.entry(7).or_insert_with(|| {
-    vec![0; 4096] // &lt;- only allocated on a miss
-});
-assert_eq!(entry.len(), 4096);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">cache</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">entry</span> <span class="tok-punct">=</span> <span class="tok-variable">cache</span><span class="tok-punct">.</span><span class="tok-call-method">entry</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">or_insert_with</span><span class="tok-punct">(</span><span class="tok-punct">||</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-number">4096</span><span class="tok-punct">]</span> <span class="tok-comment tok-anno">// &lt;- only allocated on a miss</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">entry</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">4096</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> whenever the default costs anything to construct. Prefer
@@ -1387,13 +1388,13 @@ and <code>or_insert_with_key</code> when the default is derived from the key.</p
             <h4 class="api-sig"><code class="tok-inline">Entry::and_modify</code></h4>
             <p>Applies a function to the value if it exists, then chains into an insert if it
 doesn't.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut retries: HashMap&lt;&amp;str, u32&gt; = HashMap::new();
-for _ in 0..3 {
-    retries.entry("job").and_modify(|n| *n += 1).or_insert(1);
-}
-assert_eq!(retries["job"], 3);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">retries</span><span class="tok-punct">.</span><span class="tok-call-method">entry</span><span class="tok-punct">(</span><span class="tok-string">&quot;job&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">and_modify</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">n</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-variable">n</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">or_insert</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">retries</span><span class="tok-punct">[</span><span class="tok-string">&quot;job&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when the update and the initial value differ — incrementing
@@ -1414,10 +1415,10 @@ arena.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">HashTable::new</code></h4>
             <p>An empty table. <code>const fn</code>, and it allocates nothing until the first insert.</p>
-<pre><code class="rust">use hashbrown::HashTable;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashTable</span><span class="tok-punct">;</span>
 
-let table: HashTable&lt;u64&gt; = HashTable::new();
-assert!(table.is_empty());
+<span class="tok-keyword">let</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">HashTable</span><span class="tok-punct">&lt;</span><span class="tok-type">u64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashTable</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> as the backing store for an interner, a cache keyed by a
@@ -1429,16 +1430,16 @@ have to store the key twice with a <code>HashMap</code>, this is the fix.</p>
             <h4 class="api-sig"><code class="tok-inline">HashTable::insert_unique</code></h4>
             <p>Inserts an element you have already established is absent, given its hash and a
 closure that can rehash any element during a resize.</p>
-<pre><code class="rust">use hashbrown::HashTable;
-use std::hash::{BuildHasher, RandomState};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashTable</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">BuildHasher</span><span class="tok-punct">,</span> <span class="tok-type">RandomState</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let hasher = RandomState::new();
-let mut table: HashTable&lt;String&gt; = HashTable::new();
+<span class="tok-keyword">let</span> <span class="tok-variable">hasher</span> <span class="tok-punct">=</span> <span class="tok-type">RandomState</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">HashTable</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashTable</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let value = String::from("swisstable");
-let hash = hasher.hash_one(&amp;value);
-table.insert_unique(hash, value, |v| hasher.hash_one(v)); // &lt;- rehash on grow
-assert_eq!(table.len(), 1);
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">hash</span> <span class="tok-punct">=</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">insert_unique</span><span class="tok-punct">(</span><span class="tok-variable">hash</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">v</span><span class="tok-punct">|</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- rehash on grow</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> after a <code>find</code> that came back empty, or when the data is
@@ -1450,17 +1451,17 @@ disagree about.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">HashTable::find</code></h4>
             <p>Looks up by hash plus an equality closure.</p>
-<pre><code class="rust">use hashbrown::HashTable;
-use std::hash::{BuildHasher, RandomState};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashTable</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">BuildHasher</span><span class="tok-punct">,</span> <span class="tok-type">RandomState</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let hasher = RandomState::new();
-let mut table: HashTable&lt;String&gt; = HashTable::new();
-let value = String::from("swisstable");
-let hash = hasher.hash_one(&amp;value);
-table.insert_unique(hash, value, |v| hasher.hash_one(v));
+<span class="tok-keyword">let</span> <span class="tok-variable">hasher</span> <span class="tok-punct">=</span> <span class="tok-type">RandomState</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">HashTable</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashTable</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">hash</span> <span class="tok-punct">=</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">insert_unique</span><span class="tok-punct">(</span><span class="tok-variable">hash</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">v</span><span class="tok-punct">|</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let found = table.find(hasher.hash_one("swisstable"), |v| v == "swisstable");
-assert_eq!(found.map(String::as_str), Some("swisstable"));
+<span class="tok-keyword">let</span> <span class="tok-variable">found</span> <span class="tok-punct">=</span> <span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">find</span><span class="tok-punct">(</span><span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">v</span><span class="tok-punct">|</span> <span class="tok-variable">v</span> <span class="tok-punct">==</span> <span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">found</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-variable">as_str</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the read side of any <code>HashTable</code>. The hash you pass must
@@ -1472,18 +1473,18 @@ this is the mistake to watch for, because nothing type-checks it.</p>
             <h4 class="api-sig"><code class="tok-inline">HashTable::entry</code></h4>
             <p>The table's entry API: hash, equality closure, and a rehash closure, returning
 an <code>Entry</code> you can fill.</p>
-<pre><code class="rust">use hashbrown::HashTable;
-use std::hash::{BuildHasher, RandomState};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashTable</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">BuildHasher</span><span class="tok-punct">,</span> <span class="tok-type">RandomState</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let hasher = RandomState::new();
-let mut table: HashTable&lt;(u32, u32)&gt; = HashTable::new();
+<span class="tok-keyword">let</span> <span class="tok-variable">hasher</span> <span class="tok-punct">=</span> <span class="tok-type">RandomState</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">HashTable</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashTable</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Count occurrences of 7, keyed on the first tuple field only.
-let entry = table
-    .entry(hasher.hash_one(7u32), |(k, _)| *k == 7, |(k, _)| hasher.hash_one(k))
-    .or_insert((7, 0));
-entry.into_mut().1 += 1;
-assert_eq!(table.len(), 1);
+<span class="tok-comment">// Count occurrences of 7, keyed on the first tuple field only.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">entry</span> <span class="tok-punct">=</span> <span class="tok-variable">table</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">entry</span><span class="tok-punct">(</span><span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-number">7u32</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-variable">k</span> <span class="tok-punct">==</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">or_insert</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">entry</span><span class="tok-punct">.</span><span class="tok-call-method">into_mut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-number">1</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> find-or-insert against a table, in one lookup. The three
@@ -1496,20 +1497,20 @@ actually store the key.</p>
             <p>Finds an element and hands back an <code>OccupiedEntry</code> you can remove through —
 <code>Err</code> carries the table back when there's no match, so nothing is borrowed away
 on a miss.</p>
-<pre><code class="rust">use hashbrown::HashTable;
-use std::hash::{BuildHasher, RandomState};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashTable</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">BuildHasher</span><span class="tok-punct">,</span> <span class="tok-type">RandomState</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-let hasher = RandomState::new();
-let mut table: HashTable&lt;String&gt; = HashTable::new();
-let value = String::from("stale");
-let hash = hasher.hash_one(&amp;value);
-table.insert_unique(hash, value, |v| hasher.hash_one(v));
+<span class="tok-keyword">let</span> <span class="tok-variable">hasher</span> <span class="tok-punct">=</span> <span class="tok-type">RandomState</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">table</span><span class="tok-punct">:</span> <span class="tok-type">HashTable</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashTable</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;stale&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">hash</span> <span class="tok-punct">=</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">insert_unique</span><span class="tok-punct">(</span><span class="tok-variable">hash</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">v</span><span class="tok-punct">|</span> <span class="tok-variable">hasher</span><span class="tok-punct">.</span><span class="tok-call-method">hash_one</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-if let Ok(entry) = table.find_entry(hash, |v| v == "stale") {
-    let (removed, _) = entry.remove();
-    assert_eq!(removed, "stale");
-}
-assert!(table.is_empty());
+<span class="tok-keyword">if</span> <span class="tok-keyword">let</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">entry</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">find_entry</span><span class="tok-punct">(</span><span class="tok-variable">hash</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">v</span><span class="tok-punct">|</span> <span class="tok-variable">v</span> <span class="tok-punct">==</span> <span class="tok-string">&quot;stale&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">removed</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">entry</span><span class="tok-punct">.</span><span class="tok-call-method">remove</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">removed</span><span class="tok-punct">,</span> <span class="tok-string">&quot;stale&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">table</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> removing by lookup, or reading and then deciding to remove.
@@ -1526,14 +1527,14 @@ assert!(table.is_empty());
             <h4 class="api-sig"><code class="tok-inline">HashSet</code></h4>
             <p>The same table with <code>()</code> values, and the same relationship to <code>std</code>: identical
 structure, plus <code>no_std</code> and hashbrown's extra methods.</p>
-<pre><code class="rust">use hashbrown::HashSet;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashSet</span><span class="tok-punct">;</span>
 
-let a: HashSet&lt;u32&gt; = [1, 2, 3].into_iter().collect();
-let b: HashSet&lt;u32&gt; = [2, 3, 4].into_iter().collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">HashSet</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">HashSet</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let mut common: Vec&lt;_&gt; = a.intersection(&amp;b).copied().collect();
-common.sort_unstable();
-assert_eq!(common, vec![2, 3]);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">common</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span><span class="tok-punct">.</span><span class="tok-call-method">intersection</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">common</span><span class="tok-punct">.</span><span class="tok-call-method">sort_unstable</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">common</span><span class="tok-punct">,</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> membership tests and set algebra, exactly as with <code>std</code>'s.
@@ -1545,28 +1546,28 @@ If you need the elements in order, <code>BTreeSet</code> is the one to reach for
             <p>The trait that decides whether a lookup key matches a stored key. It's blanket
 implemented via <code>Borrow</code>, so <code>&amp;str</code> finds <code>String</code> keys for free — implement it
 by hand when the relationship isn't a plain borrow.</p>
-<pre><code class="rust">use hashbrown::{Equivalent, HashMap};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Equivalent</span><span class="tok-punct">,</span> <span class="tok-type">HashMap</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[derive(Hash, PartialEq, Eq)]
-struct Id(String, u32);
+<span class="tok-attribute">#[derive(Hash, PartialEq, Eq)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Id</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Look Id up by its name alone.
-struct ByName&lt;'a&gt;(&amp;'a str);
+<span class="tok-comment">// Look Id up by its name alone.</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ByName</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-type">str</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl std::hash::Hash for ByName&lt;'_&gt; {
-    fn hash&lt;H: std::hash::Hasher&gt;(&amp;self, state: &amp;mut H) {
-        self.0.hash(state);
-    }
-}
-impl Equivalent&lt;String&gt; for ByName&lt;'_&gt; {
-    fn equivalent(&amp;self, key: &amp;String) -&gt; bool {
-        key == self.0
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-trait">Hash</span> <span class="tok-keyword">for</span> <span class="tok-type">ByName</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'_</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">hash</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">H</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hash</span><span class="tok-punct">::</span><span class="tok-type">Hasher</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">state</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">H</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">hash</span><span class="tok-punct">(</span><span class="tok-variable">state</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+<span class="tok-keyword">impl</span> <span class="tok-type">Equivalent</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">ByName</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'_</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">equivalent</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">key</span> <span class="tok-punct">==</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut map: HashMap&lt;String, u32&gt; = HashMap::new();
-map.insert("swisstable".to_owned(), 1);
-assert_eq!(map.get(&amp;ByName("swisstable")), Some(&amp;1));
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_owned</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-field">ByName</span><span class="tok-punct">(</span><span class="tok-string">&quot;swisstable&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when the natural lookup key isn't a <code>Borrow</code> of the stored
@@ -1585,13 +1586,13 @@ or the lookup misses.</p>
             <h4 class="api-sig"><code class="tok-inline">HashMap::try_reserve</code></h4>
             <p>Reserves capacity, returning <code>Err</code> instead of aborting when the allocation
 fails.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map: HashMap&lt;u32, u32&gt; = HashMap::new();
-match map.try_reserve(64) {
-    Ok(()) =&gt; assert!(map.capacity() &gt;= 64),
-    Err(err) =&gt; eprintln!("cannot size the map: {err}"),
-}
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">match</span> <span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">try_reserve</span><span class="tok-punct">(</span><span class="tok-number">64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">capacity</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">eprintln!</span><span class="tok-punct">(</span><span class="tok-string">&quot;cannot size the map: {err}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when the capacity is derived from input you don't control —
@@ -1603,11 +1604,11 @@ which is a poor answer to a malformed header.</p>
             <h4 class="api-sig"><code class="tok-inline">HashMap::allocation_size</code></h4>
             <p>The bytes the table's allocation occupies, excluding anything the keys and
 values own.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut map: HashMap&lt;u64, u64&gt; = HashMap::with_capacity(100);
-map.insert(1, 1);
-assert!(map.allocation_size() &gt; 0);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">map</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u64</span><span class="tok-punct">,</span> <span class="tok-type">u64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">with_capacity</span><span class="tok-punct">(</span><span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">map</span><span class="tok-punct">.</span><span class="tok-call-method">allocation_size</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> accounting for memory in a cache with a byte budget. Note
@@ -1618,13 +1619,13 @@ dwarfs the table, and you have to add it up yourself.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">HashMap::extract_if</code></h4>
             <p>Removes and yields the entries matching a predicate, leaving the rest.</p>
-<pre><code class="rust">use hashbrown::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">hashbrown</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-let mut sessions: HashMap&lt;u32, u64&gt; = [(1, 100), (2, 900), (3, 200)].into_iter().collect();
-let expired: Vec&lt;_&gt; = sessions.extract_if(|_, last_seen| *last_seen &lt; 500).collect();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sessions</span><span class="tok-punct">:</span> <span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">u64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">900</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">200</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-call-method">into_iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">expired</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">sessions</span><span class="tok-punct">.</span><span class="tok-call-method">extract_if</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">,</span> <span class="tok-variable">last_seen</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-variable">last_seen</span> <span class="tok-punct">&lt;</span> <span class="tok-number">500</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(expired.len(), 2);
-assert_eq!(sessions.len(), 1); // &lt;- only session 2 survives
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">expired</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">sessions</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- only session 2 survives</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> when you need the removed entries — expiring cache items you

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -988,9 +989,9 @@ there's no trait to implement to change its behavior for a custom type.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Short-circuiting two conditions</h3>
-            <pre><code class="rust">let a = 3;
-let b = 5;
-let both_positive = a &gt; 0 &amp;&amp; b &gt; 0; // &lt;- `&amp;&amp;` short-circuits: `b &gt; 0` only runs if `a &gt; 0` is true
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-number">3</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">both_positive</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span> <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">b</span> <span class="tok-punct">&gt;</span> <span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `&amp;&amp;` short-circuits: `b &gt; 0` only runs if `a &gt; 0` is true</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>&amp;&amp;</code> only works on <code>bool</code> operands and can't be
 overloaded for custom types — unlike <code>&amp;</code>, there is no trait to implement
@@ -1002,16 +1003,16 @@ to change its behavior.</p>
             <p>Chaining several guard conditions with <code>&amp;&amp;</code> reads as one sentence and
 short-circuits before any check that would panic on data the earlier
 checks already rejected.</p>
-<pre><code class="rust">struct SignupForm {
-    username: String,
-    age: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SignupForm</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">username</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">age</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn is_valid(form: &amp;SignupForm) -&gt; bool {
-    !form.username.is_empty()
-        &amp;&amp; form.username.chars().next().unwrap().is_alphabetic() // &lt;- only runs if username isn't empty
-        &amp;&amp; form.age &gt;= 18                                        // &lt;- `&amp;&amp;` short-circuits before this
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_valid</span><span class="tok-punct">(</span><span class="tok-variable">form</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SignupForm</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">!</span><span class="tok-variable">form</span><span class="tok-punct">.</span><span class="tok-field">username</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+        <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">form</span><span class="tok-punct">.</span><span class="tok-field">username</span><span class="tok-punct">.</span><span class="tok-call-method">chars</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_alphabetic</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- only runs if username isn't empty</span>
+        <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">form</span><span class="tok-punct">.</span><span class="tok-field">age</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">18</span>                                        <span class="tok-comment tok-anno">// &lt;- `&amp;&amp;` short-circuits before this</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Ordering the cheap, panic-free checks first and letting
 <code>&amp;&amp;</code> short-circuit means the <code>unwrap()</code> on the first character never runs
@@ -1048,31 +1049,31 @@ hardware reports ready.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Guarding a retry loop against a non-responsive sensor</h3>
-            <pre><code class="rust">const MAX_RETRIES: u8 = 5;
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">MAX_RETRIES</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
 
-fn sensor_ready() -&gt; bool {
-    false // placeholder: real code polls a status register bit
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sensor_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-number">false</span> <span class="tok-comment">// placeholder: real code polls a status register bit</span>
+<span class="tok-punct">}</span>
 
-fn read_sensor_raw() -&gt; u16 {
-    0
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor_raw</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-number">0</span>
+<span class="tok-punct">}</span>
 
-fn delay_ms(_ms: u32) {}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">delay_ms</span><span class="tok-punct">(</span><span class="tok-variable">_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-fn read_sensor_with_retry() -&gt; Option&lt;u16&gt; {
-    let mut retries = 0;
-    while !sensor_ready() &amp;&amp; retries &lt; MAX_RETRIES {
-        // &lt;- `&amp;&amp;`: `retries` is only checked once `sensor_ready()` has already failed
-        retries += 1;
-        delay_ms(10);
-    }
-    if sensor_ready() {
-        Some(read_sensor_raw())
-    } else {
-        None
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor_with_retry</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">retries</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">while</span> <span class="tok-punct">!</span><span class="tok-call-free">sensor_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">retries</span> <span class="tok-punct">&lt;</span> <span class="tok-constant">MAX_RETRIES</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `&amp;&amp;`: `retries` is only checked once `sensor_ready()` has already failed</span>
+        <span class="tok-variable">retries</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-call-free">delay_ms</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">if</span> <span class="tok-call-free">sensor_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-call-free">read_sensor_raw</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-field">None</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

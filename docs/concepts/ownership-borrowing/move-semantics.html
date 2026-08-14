@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -998,9 +999,9 @@ by convention or discipline.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let a = String::from("hi");
-let b = a; // &lt;- ownership moves from `a` to `b`
-// using `a` here is a compile error: value was moved
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;hi&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-variable">a</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ownership moves from `a` to `b`</span>
+<span class="tok-comment">// using `a` here is a compile error: value was moved</span>
 </code></pre>
 
       </section>
@@ -1018,18 +1019,18 @@ let b = a; // &lt;- ownership moves from `a` to `b`
             <p>A function that consumes a <code>String</code> to build a <code>Report</code> should take it by
 value, not by reference — the report becomes the text's new owner, and
 the signature says so.</p>
-<pre><code class="rust">struct Report {
-    body: String,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Report</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">body</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn finalize(body: String) -&gt; Report { // &lt;- takes ownership: `body` is moved in, not borrowed
-    Report { body }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">finalize</span><span class="tok-punct">(</span><span class="tok-variable">body</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Report</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- takes ownership: `body` is moved in, not borrowed</span>
+    <span class="tok-type">Report</span> <span class="tok-punct">{</span> <span class="tok-variable">body</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let draft = String::from("quarterly summary");
-let report = finalize(draft); // &lt;- `draft` moves here
-// println!("{draft}"); // would fail to compile: draft was moved into finalize
-println!("{}", report.body);
+<span class="tok-keyword">let</span> <span class="tok-variable">draft</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;quarterly summary&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">report</span> <span class="tok-punct">=</span> <span class="tok-call-free">finalize</span><span class="tok-punct">(</span><span class="tok-variable">draft</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `draft` moves here</span>
+<span class="tok-comment">// println!(&quot;{draft}&quot;); // would fail to compile: draft was moved into finalize</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">report</span><span class="tok-punct">.</span><span class="tok-field">body</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> taking <code>String</code> by value instead of <code>&amp;str</code> is the right
@@ -1050,17 +1051,17 @@ sharing.</p>
             <p>Spawning a worker thread that might outlive the function that started it
 means the thread needs to own its input data for its whole lifetime, not
 just borrow it.</p>
-<pre><code class="rust">use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let batch = vec![1, 2, 3, 4, 5];
+<span class="tok-keyword">let</span> <span class="tok-variable">batch</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
 
-let handle = thread::spawn(move || { // &lt;- `move` forces `batch` to move into the closure, not borrow it
-    let sum: i32 = batch.iter().sum();
-    println!("batch sum: {sum}");
-});
+<span class="tok-keyword">let</span> <span class="tok-variable">handle</span> <span class="tok-punct">=</span> <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `move` forces `batch` to move into the closure, not borrow it</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">sum</span><span class="tok-punct">:</span> <span class="tok-type">i32</span> <span class="tok-punct">=</span> <span class="tok-variable">batch</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;batch sum: {sum}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// batch is no longer usable here: ownership moved into the spawned thread
-handle.join().unwrap();
+<span class="tok-comment">// batch is no longer usable here: ownership moved into the spawned thread</span>
+<span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>thread::spawn</code> can't prove the spawned thread finishes
@@ -1109,16 +1110,16 @@ function that created it has returned.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Led { pin: GpioPin }
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Led</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">GpioPin</span> <span class="tok-punct">}</span>
 
-impl Led {
-    fn new(pin: GpioPin) -&gt; Self { // &lt;- takes ownership: the caller can no longer touch `pin` directly
-        Led { pin }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Led</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">GpioPin</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- takes ownership: the caller can no longer touch `pin` directly</span>
+        <span class="tok-type">Led</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let pin = GpioPin::new(5);
-let led = Led::new(pin); // &lt;- `pin` moves into `led`; using `pin` afterward is a compile error
+<span class="tok-keyword">let</span> <span class="tok-variable">pin</span> <span class="tok-punct">=</span> <span class="tok-type">GpioPin</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">led</span> <span class="tok-punct">=</span> <span class="tok-type">Led</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `pin` moves into `led`; using `pin` afterward is a compile error</span>
 </code></pre>
 
       </section>
@@ -1136,23 +1137,23 @@ let led = Led::new(pin); // &lt;- `pin` moves into `led`; using `pin` afterward 
             <p>A UART driver should take ownership of the raw peripheral it wraps in its
 constructor, so nothing else in the program can reconfigure the same
 registers behind the driver's back.</p>
-<pre><code class="rust">struct RawUsart1; // stand-in for a PAC-generated peripheral type
-struct Usart { inner: RawUsart1 }
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RawUsart1</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a PAC-generated peripheral type</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Usart</span> <span class="tok-punct">{</span> <span class="tok-variable">inner</span><span class="tok-punct">:</span> <span class="tok-type">RawUsart1</span> <span class="tok-punct">}</span>
 
-impl Usart {
-    fn new(usart1: RawUsart1) -&gt; Self { // &lt;- ownership moves in: usart1 is now exclusively the driver's
-        // ... configure baud rate, enable the peripheral clock, etc.
-        Usart { inner: usart1 }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">Usart</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">usart1</span><span class="tok-punct">:</span> <span class="tok-type">RawUsart1</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- ownership moves in: usart1 is now exclusively the driver's</span>
+        <span class="tok-comment">// ... configure baud rate, enable the peripheral clock, etc.</span>
+        <span class="tok-type">Usart</span> <span class="tok-punct">{</span> <span class="tok-variable">inner</span><span class="tok-punct">:</span> <span class="tok-variable">usart1</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn write_byte(&amp;mut self, byte: u8) {
-        let _ = (&amp;self.inner, byte); // placeholder for a real register write
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_byte</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">inner</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// placeholder for a real register write</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let usart1 = RawUsart1;
-let mut usart = Usart::new(usart1); // &lt;- usart1 moved; no other code can construct a second Usart from it
-usart.write_byte(b'A');
+<span class="tok-keyword">let</span> <span class="tok-variable">usart1</span> <span class="tok-punct">=</span> <span class="tok-type">RawUsart1</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">usart</span> <span class="tok-punct">=</span> <span class="tok-type">Usart</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">usart1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- usart1 moved; no other code can construct a second Usart from it</span>
+<span class="tok-variable">usart</span><span class="tok-punct">.</span><span class="tok-call-method">write_byte</span><span class="tok-punct">(</span><span class="tok-variable">b</span><span class="tok-string">'A'</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> moving the raw peripheral into the driver's constructor
@@ -1173,20 +1174,20 @@ same registers.</p>
             <p>Spawning an <code>embassy</code> async task to drive a sensor independently of
 <code>main</code> needs the task to own its peripheral handle outright, the same way
 <code>thread::spawn</code> needs owned, <code>'static</code> data on a hosted target.</p>
-<pre><code class="rust">struct AdcChannel; // stand-in for a HAL ADC handle
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">AdcChannel</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a HAL ADC handle</span>
 
-#[embassy_executor::task]
-async fn sample_task(mut adc: AdcChannel) { // &lt;- task owns `adc` for as long as it runs, independent of main
-    loop {
-        // ... await a conversion, publish the reading
-        let _ = &amp;mut adc;
-    }
-}
+<span class="tok-attribute">#[embassy_executor::task]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">sample_task</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">adc</span><span class="tok-punct">:</span> <span class="tok-type">AdcChannel</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- task owns `adc` for as long as it runs, independent of main</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... await a conversion, publish the reading</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">adc</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn spawn_sampling(spawner: embassy_executor::Spawner, adc: AdcChannel) {
-    spawner.spawn(sample_task(adc)).unwrap(); // &lt;- `adc` moves into the task here
-    // using `adc` in `main` after this point is a compile error
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">spawn_sampling</span><span class="tok-punct">(</span><span class="tok-variable">spawner</span><span class="tok-punct">:</span> <span class="tok-module">embassy_executor</span><span class="tok-punct">::</span><span class="tok-type">Spawner</span><span class="tok-punct">,</span> <span class="tok-variable">adc</span><span class="tok-punct">:</span> <span class="tok-type">AdcChannel</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">spawner</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">sample_task</span><span class="tok-punct">(</span><span class="tok-variable">adc</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `adc` moves into the task here</span>
+    <span class="tok-comment">// using `adc` in `main` after this point is a compile error</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an async task or interrupt handler can outlive the

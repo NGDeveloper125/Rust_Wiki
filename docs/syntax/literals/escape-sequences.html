@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1003,8 +1004,8 @@ see <a href="../../syntax/literals/raw-string-literal.html">raw string literal</
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Embedding escape sequences in a string</h3>
-            <pre><code class="rust">let s = "tab\tnewline\n";
-//          ^^ ^^ escape sequences, processed at compile time
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">s</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;tab\tnewline\n&quot;</span><span class="tok-punct">;</span>
+<span class="tok-comment">//          ^^ ^^ escape sequences, processed at compile time</span>
 </code></pre>
 <p>A <code>\xNN</code> byte escape inside a <code>char</code>/<code>str</code> context is
 limited to <code>\x00</code>–<code>\x7F</code> (7-bit) — the full 8-bit range <code>\x00</code>–<code>\xFF</code> is
@@ -1015,11 +1016,11 @@ only legal inside a byte (<code>b'...'</code>/<code>b"..."</code>) literal.</p>
             <h3 class="scenario-title">Working with text</h3>
             <p>Embedding <code>\n</code>/<code>\t</code> directly inside one string literal keeps a short
 multi-line template as a single readable value.</p>
-<pre><code class="rust">fn format_receipt(item: &amp;str, qty: u32, price_cents: u32) -&gt; String {
-    format!("{item}\n  qty: {qty}\n  price: ${price_cents}\n") // &lt;- `\n` escape sequences: line breaks in one literal
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">format_receipt</span><span class="tok-punct">(</span><span class="tok-variable">item</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">qty</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{item}\n  qty: {qty}\n  price: ${price_cents}\n&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `\n` escape sequences: line breaks in one literal</span>
+<span class="tok-punct">}</span>
 
-print!("{}", format_receipt("widget", 3, 499));
+<span class="tok-macro">print!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">format_receipt</span><span class="tok-punct">(</span><span class="tok-string">&quot;widget&quot;</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">499</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Embedding <code>\n</code>/<code>\t</code> inside one literal keeps the
 template readable as "the shape of the output" in one place, rather than
@@ -1032,14 +1033,14 @@ compile time, into the exact bytes the string holds.</p>
             <p>Rust's compile-time escape rules and JSON's runtime string-escaping rules
 look similar but aren't identical — worth knowing before hand-building
 any JSON text.</p>
-<pre><code class="rust">// Rust's `\u{...}` escape (braced, variable-length hex) is *literal* syntax,
-// resolved by rustc at compile time -- it is not the same thing as JSON's escape.
-let heart: char = '\u{2764}'; // &lt;- Rust escape sequence: braced hex, resolved when this file compiles
+<pre><code class="rust-hl"><span class="tok-comment">// Rust's `\u{...}` escape (braced, variable-length hex) is *literal* syntax,</span>
+<span class="tok-comment">// resolved by rustc at compile time -- it is not the same thing as JSON's escape.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">heart</span><span class="tok-punct">:</span> <span class="tok-type">char</span> <span class="tok-punct">=</span> <span class="tok-string">'\u{2764}'</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- Rust escape sequence: braced hex, resolved when this file compiles</span>
 
-// JSON escapes the same code point as `❤` -- exactly four hex digits, no braces --
-// and that escaping is *data*, checked by a JSON parser at runtime, not by rustc.
-// The raw string below holds that JSON text verbatim; rustc never interprets the `❤`.
-let json_fragment = r#"{"symbol": "❤"}"#; // &lt;- `❤` here is JSON syntax, untouched by Rust
+<span class="tok-comment">// JSON escapes the same code point as `❤` -- exactly four hex digits, no braces --</span>
+<span class="tok-comment">// and that escaping is *data*, checked by a JSON parser at runtime, not by rustc.</span>
+<span class="tok-comment">// The raw string below holds that JSON text verbatim; rustc never interprets the `❤`.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">json_fragment</span> <span class="tok-punct">=</span> <span class="tok-string">r#&quot;{&quot;symbol&quot;: &quot;❤&quot;}&quot;#</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `❤` here is JSON syntax, untouched by Rust</span>
 </code></pre>
 <p>Rust's escape rules and JSON's string-escape rules
 differ in small but real ways (braced vs unbraced <code>\u</code>, no <code>\x</code> byte
@@ -1077,15 +1078,15 @@ on a serial terminal from firmware logging code.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Sending an ANSI color code over a serial terminal</h3>
-            <pre><code class="rust">fn log_error(uart: &amp;mut impl core::fmt::Write, message: &amp;str) {
-    let _ = write!(uart, "\x1B[31m{message}\x1B[0m\r\n"); // &lt;- `\x1B` escape: ANSI red-text, then reset, then CRLF line ending
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">log_error</span><span class="tok-punct">(</span><span class="tok-variable">uart</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Write</span><span class="tok-punct">,</span> <span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-macro">write!</span><span class="tok-punct">(</span><span class="tok-variable">uart</span><span class="tok-punct">,</span> <span class="tok-string">&quot;\x1B[31m{message}\x1B[0m\r\n&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `\x1B` escape: ANSI red-text, then reset, then CRLF line ending</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Framing a boot banner for a terminal that expects CRLF</h3>
-            <pre><code class="rust">const READY_BANNER: &amp;str = "boot ok\r\n"; // &lt;- `\r\n` escape sequence: CRLF line ending a serial terminal expects
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">READY_BANNER</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;boot ok\r\n&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `\r\n` escape sequence: CRLF line ending a serial terminal expects</span>
 </code></pre>
 
           </div>

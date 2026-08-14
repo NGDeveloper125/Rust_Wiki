@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1010,30 +1011,30 @@ undone (send this specific order). Both lean on the same <code>&amp;dyn Trait</c
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait PaymentStrategy {
-    fn pay(&amp;self, amount_cents: u64) -&gt; String;
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">PaymentStrategy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pay</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct CreditCard;
-impl PaymentStrategy for CreditCard {
-    fn pay(&amp;self, amount_cents: u64) -&gt; String {
-        format!("Charged {amount_cents} cents to credit card")
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">CreditCard</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">PaymentStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">CreditCard</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pay</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;Charged {amount_cents} cents to credit card&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct PayPal;
-impl PaymentStrategy for PayPal {
-    fn pay(&amp;self, amount_cents: u64) -&gt; String {
-        format!("Charged {amount_cents} cents via PayPal")
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PayPal</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">PaymentStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">PayPal</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pay</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;Charged {amount_cents} cents via PayPal&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn checkout(strategy: &amp;dyn PaymentStrategy, amount_cents: u64) { // &lt;- behavior is chosen by the caller, not hard-coded here
-    println!("{}", strategy.pay(amount_cents));
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">checkout</span><span class="tok-punct">(</span><span class="tok-variable">strategy</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">PaymentStrategy</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- behavior is chosen by the caller, not hard-coded here</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">strategy</span><span class="tok-punct">.</span><span class="tok-call-method">pay</span><span class="tok-punct">(</span><span class="tok-variable">amount_cents</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-checkout(&amp;CreditCard, 1999);
-checkout(&amp;PayPal, 2499);
+<span class="tok-call-free">checkout</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">CreditCard</span><span class="tok-punct">,</span> <span class="tok-number">1999</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-call-free">checkout</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">PayPal</span><span class="tok-punct">,</span> <span class="tok-number">2499</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1051,29 +1052,29 @@ checkout(&amp;PayPal, 2499);
             <p>An online checkout doesn't know which payment method a customer picked
 until the request arrives, so the concrete strategy has to be selected
 and stored at runtime, not chosen at compile time.</p>
-<pre><code class="rust">trait PaymentStrategy {
-    fn pay(&amp;self, amount_cents: u64) -&gt; String;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">PaymentStrategy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pay</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct CreditCard;
-impl PaymentStrategy for CreditCard {
-    fn pay(&amp;self, amount_cents: u64) -&gt; String { format!("card: {amount_cents}") }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">CreditCard</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">PaymentStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">CreditCard</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pay</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;card: {amount_cents}&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct PayPal;
-impl PaymentStrategy for PayPal {
-    fn pay(&amp;self, amount_cents: u64) -&gt; String { format!("paypal: {amount_cents}") }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PayPal</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">PaymentStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">PayPal</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">pay</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;paypal: {amount_cents}&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn select_strategy(method: &amp;str) -&gt; Box&lt;dyn PaymentStrategy&gt; { // &lt;- concrete type decided at runtime, from request data
-    match method {
-        "paypal" =&gt; Box::new(PayPal),
-        _ =&gt; Box::new(CreditCard),
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">select_strategy</span><span class="tok-punct">(</span><span class="tok-variable">method</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">PaymentStrategy</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- concrete type decided at runtime, from request data</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">method</span> <span class="tok-punct">{</span>
+        <span class="tok-string">&quot;paypal&quot;</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">PayPal</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">CreditCard</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let strategy = select_strategy("paypal");
-println!("{}", strategy.pay(500));
+<span class="tok-keyword">let</span> <span class="tok-variable">strategy</span> <span class="tok-punct">=</span> <span class="tok-call-free">select_strategy</span><span class="tok-punct">(</span><span class="tok-string">&quot;paypal&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">strategy</span><span class="tok-punct">.</span><span class="tok-call-method">pay</span><span class="tok-punct">(</span><span class="tok-number">500</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the payment method isn't known until the request
@@ -1094,27 +1095,27 @@ fixes the type at compile time.</p>
 discount strategy per build (a "clearance" binary vs. a "regular" one),
 so a generic parameter gets the same pluggability with zero dispatch
 cost.</p>
-<pre><code class="rust">trait DiscountStrategy {
-    fn discount(&amp;self, price_cents: u32) -&gt; u32;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">DiscountStrategy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">discount</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct NoDiscount;
-impl DiscountStrategy for NoDiscount {
-    fn discount(&amp;self, price_cents: u32) -&gt; u32 { price_cents }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">NoDiscount</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">DiscountStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">NoDiscount</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">discount</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-variable">price_cents</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct PercentOff(u32);
-impl DiscountStrategy for PercentOff {
-    fn discount(&amp;self, price_cents: u32) -&gt; u32 {
-        price_cents - (price_cents * self.0 / 100)
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PercentOff</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">DiscountStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">PercentOff</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">discount</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">price_cents</span> <span class="tok-punct">-</span> <span class="tok-punct">(</span><span class="tok-variable">price_cents</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn final_price&lt;S: DiscountStrategy&gt;(price_cents: u32, strategy: &amp;S) -&gt; u32 { // &lt;- monomorphized per strategy type: no vtable, no allocation
-    strategy.discount(price_cents)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">final_price</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">DiscountStrategy</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">strategy</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">S</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- monomorphized per strategy type: no vtable, no allocation</span>
+    <span class="tok-variable">strategy</span><span class="tok-punct">.</span><span class="tok-call-method">discount</span><span class="tok-punct">(</span><span class="tok-variable">price_cents</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-println!("{}", final_price(2000, &amp;PercentOff(10)));
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">final_price</span><span class="tok-punct">(</span><span class="tok-number">2000</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-field">PercentOff</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> when the concrete strategy is fixed at each call site,
@@ -1161,23 +1162,23 @@ dynamic dispatch</a> idiom) covers it.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">trait DelayStrategy {
-    fn delay_half_bit(&amp;self);
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">DelayStrategy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">delay_half_bit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct BusyWaitDelay;
-impl DelayStrategy for BusyWaitDelay {
-    fn delay_half_bit(&amp;self) {
-        for _ in 0..1000 {} // stand-in for a calibrated busy-wait loop
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BusyWaitDelay</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">DelayStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">BusyWaitDelay</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">delay_half_bit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">1000</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// stand-in for a calibrated busy-wait loop</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn bit_bang_write&lt;D: DelayStrategy&gt;(bit: bool, delay: &amp;D) { // &lt;- monomorphized per delay strategy: no vtable
-    let _ = bit;
-    delay.delay_half_bit();
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bit_bang_write</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">D</span><span class="tok-punct">:</span> <span class="tok-trait">DelayStrategy</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">bit</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span> <span class="tok-variable">delay</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">D</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- monomorphized per delay strategy: no vtable</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">bit</span><span class="tok-punct">;</span>
+    <span class="tok-variable">delay</span><span class="tok-punct">.</span><span class="tok-call-method">delay_half_bit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-bit_bang_write(true, &amp;BusyWaitDelay);
+<span class="tok-call-free">bit_bang_write</span><span class="tok-punct">(</span><span class="tok-number">true</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-type">BusyWaitDelay</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1196,37 +1197,37 @@ bit_bang_write(true, &amp;BusyWaitDelay);
 board — decided by which delay source that board's build actually has
 wired up — so a generic bound picks the strategy once, at compile time,
 with zero runtime dispatch cost.</p>
-<pre><code class="rust">trait DelayStrategy {
-    fn delay_half_bit(&amp;self);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">DelayStrategy</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">delay_half_bit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct TimerDelay; // backed by a hardware timer peripheral
-impl DelayStrategy for TimerDelay {
-    fn delay_half_bit(&amp;self) {
-        // wait on a hardware timer's compare match
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">TimerDelay</span><span class="tok-punct">;</span> <span class="tok-comment">// backed by a hardware timer peripheral</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">DelayStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">TimerDelay</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">delay_half_bit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// wait on a hardware timer's compare match</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct BusyWaitDelay; // backed by a calibrated busy-wait loop
-impl DelayStrategy for BusyWaitDelay {
-    fn delay_half_bit(&amp;self) {
-        for _ in 0..1000 {}
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BusyWaitDelay</span><span class="tok-punct">;</span> <span class="tok-comment">// backed by a calibrated busy-wait loop</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">DelayStrategy</span> <span class="tok-keyword">for</span> <span class="tok-type">BusyWaitDelay</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">delay_half_bit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">1000</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct BitBangI2c&lt;D: DelayStrategy&gt; { // &lt;- monomorphized per delay strategy: compiled into one specialized function
-    delay: D,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">BitBangI2c</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">D</span><span class="tok-punct">:</span> <span class="tok-trait">DelayStrategy</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- monomorphized per delay strategy: compiled into one specialized function</span>
+    <span class="tok-variable">delay</span><span class="tok-punct">:</span> <span class="tok-generic-param">D</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;D: DelayStrategy&gt; BitBangI2c&lt;D&gt; {
-    fn write_bit(&amp;self, bit: bool) {
-        let _ = bit;
-        self.delay.delay_half_bit();
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">D</span><span class="tok-punct">:</span> <span class="tok-trait">DelayStrategy</span><span class="tok-punct">&gt;</span> <span class="tok-type">BitBangI2c</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">D</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_bit</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">bit</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">bit</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">delay</span><span class="tok-punct">.</span><span class="tok-call-method">delay_half_bit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let bus = BitBangI2c { delay: TimerDelay };
-bus.write_bit(true);
+<span class="tok-keyword">let</span> <span class="tok-variable">bus</span> <span class="tok-punct">=</span> <span class="tok-type">BitBangI2c</span> <span class="tok-punct">{</span> <span class="tok-variable">delay</span><span class="tok-punct">:</span> <span class="tok-type">TimerDelay</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">bus</span><span class="tok-punct">.</span><span class="tok-call-method">write_bit</span><span class="tok-punct">(</span><span class="tok-number">true</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> when a board's timing source is fixed at build time,
@@ -1249,32 +1250,32 @@ a direct-register-write path for one detected chip revision versus an
 indirect page-select path for another — but which revision is on the
 board is only known after probing an ID register at startup, so the
 strategy has to be selected at runtime.</p>
-<pre><code class="rust">trait RegisterAccess {
-    fn write_register(&amp;self, addr: u8, value: u8);
-}
+<pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">RegisterAccess</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_register</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-struct DirectAccess;
-impl RegisterAccess for DirectAccess {
-    fn write_register(&amp;self, addr: u8, value: u8) {
-        let _ = (addr, value); // direct register write
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">DirectAccess</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">RegisterAccess</span> <span class="tok-keyword">for</span> <span class="tok-type">DirectAccess</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_register</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// direct register write</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-struct PagedAccess;
-impl RegisterAccess for PagedAccess {
-    fn write_register(&amp;self, addr: u8, value: u8) {
-        let _ = (addr, value); // select page, then write
-    }
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">PagedAccess</span><span class="tok-punct">;</span>
+<span class="tok-keyword">impl</span> <span class="tok-trait">RegisterAccess</span> <span class="tok-keyword">for</span> <span class="tok-type">PagedAccess</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_register</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">addr</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// select page, then write</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn select_strategy(chip_id: u8) -&gt; &amp;'static dyn RegisterAccess { // &lt;- decided at runtime, from a probed chip ID
-    static DIRECT: DirectAccess = DirectAccess;
-    static PAGED: PagedAccess = PagedAccess;
-    if chip_id == 0x42 { &amp;PAGED } else { &amp;DIRECT }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">select_strategy</span><span class="tok-punct">(</span><span class="tok-variable">chip_id</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-keyword">dyn</span> <span class="tok-trait">RegisterAccess</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- decided at runtime, from a probed chip ID</span>
+    <span class="tok-keyword">static</span> <span class="tok-constant">DIRECT</span><span class="tok-punct">:</span> <span class="tok-type">DirectAccess</span> <span class="tok-punct">=</span> <span class="tok-type">DirectAccess</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">static</span> <span class="tok-constant">PAGED</span><span class="tok-punct">:</span> <span class="tok-type">PagedAccess</span> <span class="tok-punct">=</span> <span class="tok-type">PagedAccess</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">chip_id</span> <span class="tok-punct">==</span> <span class="tok-number">0x42</span> <span class="tok-punct">{</span> <span class="tok-punct">&amp;</span><span class="tok-constant">PAGED</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-punct">&amp;</span><span class="tok-constant">DIRECT</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let access = select_strategy(0x42);
-access.write_register(0x10, 0xFF);
+<span class="tok-keyword">let</span> <span class="tok-variable">access</span> <span class="tok-punct">=</span> <span class="tok-call-free">select_strategy</span><span class="tok-punct">(</span><span class="tok-number">0x42</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">access</span><span class="tok-punct">.</span><span class="tok-call-method">write_register</span><span class="tok-punct">(</span><span class="tok-number">0x10</span><span class="tok-punct">,</span> <span class="tok-number">0xFF</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the chip revision isn't known until it's probed at

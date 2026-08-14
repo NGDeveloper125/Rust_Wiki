@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1031,14 +1032,14 @@ doesn't paste an identifier directly against one of these characters.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Triggering the reserved-prefix and reserved-guard errors</h3>
-            <pre><code class="rust">// 2021 edition and later:
-let z = 1;
-// z"hey";   // error: prefix `z` is unknown (reserved syntax)
-let ok = "hey"; // fine: no adjacency between an identifier and a quote
+            <pre><code class="rust-hl"><span class="tok-comment">// 2021 edition and later:</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">z</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+<span class="tok-comment">// z&quot;hey&quot;;   // error: prefix `z` is unknown (reserved syntax)</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ok</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;hey&quot;</span><span class="tok-punct">;</span> <span class="tok-comment">// fine: no adjacency between an identifier and a quote</span>
 
-// 2024 edition and later:
-// #"literal"   // error: invalid string literal (reserved guard syntax)
-let ok2 = "literal"; // fine: an ordinary string literal, no leading `#"`
+<span class="tok-comment">// 2024 edition and later:</span>
+<span class="tok-comment">// #&quot;literal&quot;   // error: invalid string literal (reserved guard syntax)</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ok2</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;literal&quot;</span><span class="tok-punct">;</span> <span class="tok-comment">// fine: an ordinary string literal, no leading `#&quot;`</span>
 </code></pre>
 
           </div>
@@ -1048,16 +1049,16 @@ let ok2 = "literal"; // fine: an ordinary string literal, no leading `#"`
 literal string, generated through a macro, can accidentally produce a
 reserved-prefix shape if the macro pastes tokens together with no
 separator.</p>
-<pre><code class="rust">macro_rules! log_event {
-    ($tag:ident, $message:expr) =&gt; {
-        println!("[{}] {}", stringify!($tag), $message)
-        // AVOID: concat!(stringify!($tag), $message) risks pasting an
-        // identifier directly against a string literal if $message ever
-        // arrives as a literal token rather than an already-formatted value.
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">log_event</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">tag</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">message</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[{}] {}&quot;</span><span class="tok-punct">,</span> <span class="tok-macro">stringify!</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">tag</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">message</span><span class="tok-punct">)</span>
+        <span class="tok-comment">// AVOID: concat!(stringify!($tag), $message) risks pasting an</span>
+        <span class="tok-comment">// identifier directly against a string literal if $message ever</span>
+        <span class="tok-comment">// arrives as a literal token rather than an already-formatted value.</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-log_event!(order_placed, "customer checkout completed");
+<span class="tok-macro">log_event!</span><span class="tok-punct">(</span><span class="tok-variable">order_placed</span><span class="tok-punct">,</span> <span class="tok-string">&quot;customer checkout completed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Keeping the identifier and the string as two separate
 arguments passed through <code>println!</code>/<code>format!</code>, rather than concatenating
@@ -1075,17 +1076,17 @@ literal prefixes for a domain-specific string (as some other languages
 allow) needs to know upfront that this space is walled off, not merely
 unfashionable — writing <code>sql!("SELECT ...")</code> as an ordinary macro call
 is the available alternative today.</p>
-<pre><code class="rust">macro_rules! sql {
-    ($query:expr) =&gt; {
-        $query // a real implementation would validate/parse $query here
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">sql</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">query</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">$</span><span class="tok-variable">query</span> <span class="tok-comment">// a real implementation would validate/parse $query here</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let query = sql!("SELECT id FROM orders WHERE status = 'shipped'");
-// A prefix-literal spelling like sql"SELECT ..." is not available:
-// `ident"..."` adjacency is reserved syntax since the 2021 edition,
-// specifically so a *future* edition — not a third-party macro — can
-// claim new prefixes like this.
+<span class="tok-keyword">let</span> <span class="tok-variable">query</span> <span class="tok-punct">=</span> <span class="tok-macro">sql!</span><span class="tok-punct">(</span><span class="tok-string">&quot;SELECT id FROM orders WHERE status = 'shipped'&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// A prefix-literal spelling like sql&quot;SELECT ...&quot; is not available:</span>
+<span class="tok-comment">// `ident&quot;...&quot;` adjacency is reserved syntax since the 2021 edition,</span>
+<span class="tok-comment">// specifically so a *future* edition — not a third-party macro — can</span>
+<span class="tok-comment">// claim new prefixes like this.</span>
 </code></pre>
 <p>The reserved-prefix rule exists precisely to keep
 <code>letters"..."</code> available for the <em>language</em> to standardize later, not
@@ -1123,21 +1124,21 @@ in the peripheral-access crates svd2rust generates from a chip's SVD file
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A register-definition macro that avoids the reserved-prefix trap</h3>
-            <pre><code class="rust">macro_rules! define_register {
-    ($name:ident, $addr:expr) =&gt; {
-        const $name: u32 = $addr; // &lt;- kept as two separate tokens, never pasted into an ident"..." shape
-    };
-}
+            <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">define_register</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- kept as two separate tokens, never pasted into an ident&quot;...&quot; shape</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-define_register!(GPIOA_BASE, 0x4001_0800);
+<span class="tok-macro">define_register!</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">,</span> <span class="tok-number">0x4001_0800</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">What triggers the error in a hypothetical device-crate macro</h3>
-            <pre><code class="rust">// 2021 edition and later:
-// let reg = mmio"0x4001_0800"; // error: prefix `mmio` is unknown (reserved syntax)
-let reg = 0x4001_0800u32; // fine: an ordinary literal, no ident-quote adjacency
+            <pre><code class="rust-hl"><span class="tok-comment">// 2021 edition and later:</span>
+<span class="tok-comment">// let reg = mmio&quot;0x4001_0800&quot;; // error: prefix `mmio` is unknown (reserved syntax)</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">reg</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_0800u32</span><span class="tok-punct">;</span> <span class="tok-comment">// fine: an ordinary literal, no ident-quote adjacency</span>
 </code></pre>
 
           </div>

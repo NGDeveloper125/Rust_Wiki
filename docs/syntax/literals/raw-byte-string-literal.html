@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -986,7 +987,7 @@ want interpreted as escapes.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Representing a file path as raw bytes</h3>
-            <pre><code class="rust">let path: &amp;[u8] = br"D:\logs\out"; // &lt;- `br"..."`: raw (no escapes) + byte string (&amp;[u8; N])
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-string">br&quot;D:\logs\out&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `br&quot;...&quot;`: raw (no escapes) + byte string (&amp;[u8; N])</span>
 </code></pre>
 <p><strong>Restriction:</strong> like any raw literal, if the content itself needs a
 <code>"</code>, it must be wrapped in matching <code>#</code> delimiters — <code>br#"..."#</code> — with
@@ -997,13 +998,13 @@ enough <code>#</code>s to avoid ambiguity.</p>
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p>A byte sequence that's naturally full of backslashes — a Windows-style
 path embedded as bytes — reads far better as a raw byte string.</p>
-<pre><code class="rust">// AVOID: every backslash needs doubling, and this is a byte string on top of that
-let escaped: &amp;[u8] = b"C:\\Windows\\System32\\drivers\\etc\\hosts";
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: every backslash needs doubling, and this is a byte string on top of that</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">escaped</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-variable">b</span><span class="tok-string">&quot;C:\\Windows\\System32\\drivers\\etc\\hosts&quot;</span><span class="tok-punct">;</span>
 
-// PREFER: raw byte string, backslashes are literal bytes, not escapes
-let raw: &amp;[u8] = br"C:\Windows\System32\drivers\etc\hosts"; // &lt;- raw byte string literal: no escape processing
+<span class="tok-comment">// PREFER: raw byte string, backslashes are literal bytes, not escapes</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-string">br&quot;C:\Windows\System32\drivers\etc\hosts&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- raw byte string literal: no escape processing</span>
 
-assert_eq!(escaped, raw);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">escaped</span><span class="tok-punct">,</span> <span class="tok-variable">raw</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>A raw byte string avoids doubling every backslash in a
 byte sequence that's naturally full of them — see
@@ -1041,11 +1042,11 @@ hand-written literal at all.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A device command sequence that happens to contain literal backslash bytes</h3>
-            <pre><code class="rust">// AVOID: every 0x5C (backslash) byte needs doubling in an ordinary byte string
-let escaped: &amp;[u8] = b"\\CFG\\SET\\baud=115200";
+            <pre><code class="rust-hl"><span class="tok-comment">// AVOID: every 0x5C (backslash) byte needs doubling in an ordinary byte string</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">escaped</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-variable">b</span><span class="tok-string">&quot;\\CFG\\SET\\baud=115200&quot;</span><span class="tok-punct">;</span>
 
-// PREFER: raw byte string, backslash bytes are literal, no escaping needed
-let cmd: &amp;[u8] = br"\CFG\SET\baud=115200"; // &lt;- raw byte string literal: backslash bytes taken literally
+<span class="tok-comment">// PREFER: raw byte string, backslash bytes are literal, no escaping needed</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">cmd</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-string">br&quot;\CFG\SET\baud=115200&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- raw byte string literal: backslash bytes taken literally</span>
 </code></pre>
 
           </div>

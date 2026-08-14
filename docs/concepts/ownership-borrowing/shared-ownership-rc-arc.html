@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -993,12 +994,12 @@ which is why they're so often combined with
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::rc::Rc;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">rc</span><span class="tok-punct">::</span><span class="tok-type">Rc</span><span class="tok-punct">;</span>
 
-let a = Rc::new(String::from("shared"));
-let b = Rc::clone(&amp;a); // &lt;- increments the reference count, no deep copy
-println!("count = {}", Rc::strong_count(&amp;a));
-println!("{a} {b}");
+<span class="tok-keyword">let</span> <span class="tok-variable">a</span> <span class="tok-punct">=</span> <span class="tok-type">Rc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;shared&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">b</span> <span class="tok-punct">=</span> <span class="tok-type">Rc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">a</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- increments the reference count, no deep copy</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;count = {}&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Rc</span><span class="tok-punct">::</span><span class="tok-call-assoc">strong_count</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">a</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{a} {b}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1016,23 +1017,23 @@ println!("{a} {b}");
             <p>A UI-style panel tree needs several panels to read the same theme config,
 with no single panel a natural sole owner of it — a job for <code>Rc</code>, not for
 threading a reference through every constructor.</p>
-<pre><code class="rust">use std::rc::Rc;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">rc</span><span class="tok-punct">::</span><span class="tok-type">Rc</span><span class="tok-punct">;</span>
 
-struct Theme {
-    background: String,
-    accent: String,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Theme</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">background</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">accent</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-struct Panel {
-    theme: Rc&lt;Theme&gt;, // &lt;- shared ownership: several panels reference the same Theme
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Panel</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">theme</span><span class="tok-punct">:</span> <span class="tok-type">Rc</span><span class="tok-punct">&lt;</span><span class="tok-type">Theme</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- shared ownership: several panels reference the same Theme</span>
+<span class="tok-punct">}</span>
 
-let theme = Rc::new(Theme { background: "#111".into(), accent: "#0af".into() });
+<span class="tok-keyword">let</span> <span class="tok-variable">theme</span> <span class="tok-punct">=</span> <span class="tok-type">Rc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Theme</span> <span class="tok-punct">{</span> <span class="tok-variable">background</span><span class="tok-punct">:</span> <span class="tok-string">&quot;#111&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">accent</span><span class="tok-punct">:</span> <span class="tok-string">&quot;#0af&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let sidebar = Panel { theme: Rc::clone(&amp;theme) }; // &lt;- increments the count, no deep copy
-let toolbar = Panel { theme: Rc::clone(&amp;theme) };
+<span class="tok-keyword">let</span> <span class="tok-variable">sidebar</span> <span class="tok-punct">=</span> <span class="tok-type">Panel</span> <span class="tok-punct">{</span> <span class="tok-variable">theme</span><span class="tok-punct">:</span> <span class="tok-type">Rc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">theme</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- increments the count, no deep copy</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">toolbar</span> <span class="tok-punct">=</span> <span class="tok-type">Panel</span> <span class="tok-punct">{</span> <span class="tok-variable">theme</span><span class="tok-punct">:</span> <span class="tok-type">Rc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">theme</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-println!("live owners: {}", Rc::strong_count(&amp;theme)); // theme + sidebar + toolbar
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;live owners: {}&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Rc</span><span class="tok-punct">::</span><span class="tok-call-assoc">strong_count</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">theme</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// theme + sidebar + toolbar</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Rc</code> is the right tool exactly when no single struct is
@@ -1052,21 +1053,21 @@ else.</p>
             <p>The same shared-config pattern, read from multiple OS threads instead of
 multiple panels, needs <code>Arc</code> rather than <code>Rc</code> — <code>Rc</code>'s reference count
 isn't safe to update from more than one thread.</p>
-<pre><code class="rust">use std::sync::Arc;
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-type">Arc</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let config = Arc::new(String::from("max_connections=100"));
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;max_connections=100&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let handles: Vec&lt;_&gt; = (0..3).map(|i| {
-    let config = Arc::clone(&amp;config); // &lt;- cheap, atomic increment; each thread gets its own handle
-    thread::spawn(move || {
-        println!("worker {i} sees: {config}");
-    })
-}).collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">handles</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">i</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- cheap, atomic increment; each thread gets its own handle</span>
+    <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;worker {i} sees: {config}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-for h in handles {
-    h.join().unwrap();
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">h</span> <span class="tok-keyword">in</span> <span class="tok-variable">handles</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">h</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Rc</code>'s reference count isn't updated atomically, so
@@ -1120,18 +1121,18 @@ sharing state with an interrupt handler.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use core::cell::RefCell;
-use critical_section::Mutex;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
 
-// The idiomatic embedded default for state shared across the interrupt
-// boundary: no alloc, no reference counting, one static owner.
-static CONFIG: Mutex&lt;RefCell&lt;u32&gt;&gt; = Mutex::new(RefCell::new(9600)); // &lt;- 'static value, not an Rc/Arc
+<span class="tok-comment">// The idiomatic embedded default for state shared across the interrupt</span>
+<span class="tok-comment">// boundary: no alloc, no reference counting, one static owner.</span>
+<span class="tok-keyword">static</span> <span class="tok-constant">CONFIG</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">9600</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- 'static value, not an Rc/Arc</span>
 
-fn set_baud(new_baud: u32) {
-    critical_section::with(|cs| {
-        *CONFIG.borrow_ref_mut(cs) = new_baud;
-    });
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_baud</span><span class="tok-punct">(</span><span class="tok-variable">new_baud</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">*</span><span class="tok-constant">CONFIG</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_ref_mut</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">new_baud</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1150,21 +1151,21 @@ fn set_baud(new_baud: u32) {
 interrupt handler looks like a job for shared ownership, but it's a
 <code>'static</code> value with two access points, not several genuine owners — the
 <code>alloc</code>-free answer is a <code>critical_section::Mutex</code>, not <code>Rc</code>.</p>
-<pre><code class="rust">use core::cell::RefCell;
-use critical_section::Mutex;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">RefCell</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
 
-static BAUD_RATE: Mutex&lt;RefCell&lt;u32&gt;&gt; = Mutex::new(RefCell::new(9600)); // &lt;- one static owner, not a reference count
+<span class="tok-keyword">static</span> <span class="tok-constant">BAUD_RATE</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">RefCell</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">RefCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">9600</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- one static owner, not a reference count</span>
 
-#[interrupt]
-fn CONFIG_UPDATE() {
-    critical_section::with(|cs| {
-        *BAUD_RATE.borrow_ref_mut(cs) = 115_200;
-    });
-}
+<span class="tok-attribute">#[interrupt]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">CONFIG_UPDATE</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">*</span><span class="tok-constant">BAUD_RATE</span><span class="tok-punct">.</span><span class="tok-call-method">borrow_ref_mut</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-number">115_200</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn main_loop_read() -&gt; u32 {
-    critical_section::with(|cs| *BAUD_RATE.borrow(cs))
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main_loop_read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-module">critical_section</span><span class="tok-punct">::</span><span class="tok-call-assoc">with</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">cs</span><span class="tok-punct">|</span> <span class="tok-punct">*</span><span class="tok-constant">BAUD_RATE</span><span class="tok-punct">.</span><span class="tok-call-method">borrow</span><span class="tok-punct">(</span><span class="tok-variable">cs</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>main</code> and <code>CONFIG_UPDATE</code> aren't two independent
@@ -1189,21 +1190,21 @@ with <code>alloc</code> configured and OS-level threads — FreeRTOS via
 <code>freertos-rust</code>, or ESP-IDF's <code>std</code> support on Xtensa/RISC-V — <code>Arc</code> earns
 its keep exactly the way it does on a hosted target, because the
 OS-thread-based use case it was built for genuinely exists there.</p>
-<pre><code class="rust">// Illustrative: an RTOS/std-capable embedded target (e.g. ESP-IDF with std support)
-use std::sync::{Arc, Mutex};
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-comment">// Illustrative: an RTOS/std-capable embedded target (e.g. ESP-IDF with std support)</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Arc</span><span class="tok-punct">,</span> <span class="tok-type">Mutex</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-let shared_reading = Arc::new(Mutex::new(0.0_f32));
+<span class="tok-keyword">let</span> <span class="tok-variable">shared_reading</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0.0_f32</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let worker = {
-    let shared_reading = Arc::clone(&amp;shared_reading); // &lt;- genuine second owner: a real OS thread
-    thread::spawn(move || {
-        *shared_reading.lock().unwrap() = 21.4;
-    })
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">worker</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">shared_reading</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">shared_reading</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- genuine second owner: a real OS thread</span>
+    <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">*</span><span class="tok-variable">shared_reading</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-number">21.4</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-worker.join().unwrap();
-println!("{}", *shared_reading.lock().unwrap());
+<span class="tok-variable">worker</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">*</span><span class="tok-variable">shared_reading</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> this only applies on the subset of embedded targets

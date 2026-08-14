@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink active" href="../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -985,20 +986,20 @@ complaint.</p>
 and the operations still compile to <code>|</code>, <code>&amp;</code> and <code>^</code>, but the type is now
 <code>Permissions</code>, its set operations are named, and <code>Debug</code> prints
 <code>READ | WRITE</code> rather than <code>3</code>.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct Permissions: u32 {
-        const READ = 0b001;
-        const WRITE = 0b010;
-        const EXEC = 0b100;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">Permissions</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">READ</span> <span class="tok-punct">=</span> <span class="tok-number">0b001</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">WRITE</span> <span class="tok-punct">=</span> <span class="tok-number">0b010</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">EXEC</span> <span class="tok-punct">=</span> <span class="tok-number">0b100</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let p = Permissions::READ | Permissions::WRITE;
-assert!(p.contains(Permissions::READ));
-assert_eq!(format!("{p:?}"), "Permissions(READ | WRITE)");
+<span class="tok-keyword">let</span> <span class="tok-variable">p</span> <span class="tok-punct">=</span> <span class="tok-type">Permissions</span><span class="tok-punct">::</span><span class="tok-constant">READ</span> <span class="tok-punct">|</span> <span class="tok-type">Permissions</span><span class="tok-punct">::</span><span class="tok-constant">WRITE</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">p</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">Permissions</span><span class="tok-punct">::</span><span class="tok-constant">READ</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{p:?}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Permissions(READ | WRITE)&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Two things to know before you write your first one, both of which bite people
 coming from version 1:</p>
@@ -1038,28 +1039,28 @@ formatting for nothing saved.</p>
             <p>A function taking <code>u32</code> of options invites the caller to pass the wrong <code>u32</code>.
 Making it a flags type means the wrong value doesn't compile, and the set is
 documented by its own definition.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub struct OpenFlags: u8 {
-        const READ   = 1 &lt;&lt; 0;
-        const WRITE  = 1 &lt;&lt; 1;
-        const CREATE = 1 &lt;&lt; 2;
-        const APPEND = 1 &lt;&lt; 3;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">OpenFlags</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">READ</span>   <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">WRITE</span>  <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">CREATE</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">APPEND</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">3</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn open(path: &amp;str, flags: OpenFlags) -&gt; String {
-    let mut how = String::from(path);
-    if flags.contains(OpenFlags::WRITE | OpenFlags::APPEND) {
-        how.push_str(" (appending)");
-    }
-    how
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">open</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-variable">flags</span><span class="tok-punct">:</span> <span class="tok-trait">OpenFlags</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">how</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">flags</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">OpenFlags</span><span class="tok-punct">::</span><span class="tok-constant">WRITE</span> <span class="tok-punct">|</span> <span class="tok-type">OpenFlags</span><span class="tok-punct">::</span><span class="tok-constant">APPEND</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">how</span><span class="tok-punct">.</span><span class="tok-call-method">push_str</span><span class="tok-punct">(</span><span class="tok-string">&quot; (appending)&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">how</span>
+<span class="tok-punct">}</span>
 
-let opened = open("log.txt", OpenFlags::WRITE | OpenFlags::APPEND);
-assert_eq!(opened, "log.txt (appending)");
+<span class="tok-keyword">let</span> <span class="tok-variable">opened</span> <span class="tok-punct">=</span> <span class="tok-call-free">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;log.txt&quot;</span><span class="tok-punct">,</span> <span class="tok-type">OpenFlags</span><span class="tok-punct">::</span><span class="tok-constant">WRITE</span> <span class="tok-punct">|</span> <span class="tok-type">OpenFlags</span><span class="tok-punct">::</span><span class="tok-constant">APPEND</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">opened</span><span class="tok-punct">,</span> <span class="tok-string">&quot;log.txt (appending)&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> <code>open("log.txt", 3)</code> no longer compiles, and neither does
@@ -1076,29 +1077,29 @@ still one register-wide value at runtime.</p>
             <p>A header byte from a file or a device is exactly a flags value, and it may
 contain bits your version doesn't know about. Which of the three constructors
 you use <em>is</em> the compatibility decision.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct Header: u8 {
-        const COMPRESSED = 0b0000_0001;
-        const ENCRYPTED  = 0b0000_0010;
-        const SIGNED     = 0b0000_0100;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">Header</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">COMPRESSED</span> <span class="tok-punct">=</span> <span class="tok-number">0b0000_0001</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">ENCRYPTED</span>  <span class="tok-punct">=</span> <span class="tok-number">0b0000_0010</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">SIGNED</span>     <span class="tok-punct">=</span> <span class="tok-number">0b0000_0100</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let byte = 0b0000_1011; // COMPRESSED | ENCRYPTED, plus an unknown bit 3
+<span class="tok-keyword">let</span> <span class="tok-variable">byte</span> <span class="tok-punct">=</span> <span class="tok-number">0b0000_1011</span><span class="tok-punct">;</span> <span class="tok-comment">// COMPRESSED | ENCRYPTED, plus an unknown bit 3</span>
 
-// Strict: refuse anything we don't understand.
-assert_eq!(Header::from_bits(byte), None);
+<span class="tok-comment">// Strict: refuse anything we don't understand.</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">Header</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Lenient: ignore what we don't understand.
-let seen = Header::from_bits_truncate(byte);
-assert!(seen.contains(Header::COMPRESSED | Header::ENCRYPTED));
+<span class="tok-comment">// Lenient: ignore what we don't understand.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">seen</span> <span class="tok-punct">=</span> <span class="tok-type">Header</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits_truncate</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">seen</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">Header</span><span class="tok-punct">::</span><span class="tok-constant">COMPRESSED</span> <span class="tok-punct">|</span> <span class="tok-type">Header</span><span class="tok-punct">::</span><span class="tok-constant">ENCRYPTED</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Faithful: keep the unknown bit so it survives a round trip.
-let kept = Header::from_bits_retain(byte);
-assert_eq!(kept.bits(), byte);
+<span class="tok-comment">// Faithful: keep the unknown bit so it survives a round trip.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">kept</span> <span class="tok-punct">=</span> <span class="tok-type">Header</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits_retain</span><span class="tok-punct">(</span><span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">kept</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> the three functions make an implicit decision explicit. A
@@ -1114,27 +1115,27 @@ discards information; a retaining one can write the file back unchanged.</p>
             <h3 class="scenario-title">Accumulating state as a program runs</h3>
             <p>Flags are a compact way to track which of several independent things have
 happened, with set operations reading better than a pile of booleans.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct Checks: u8 {
-        const PARSED    = 1 &lt;&lt; 0;
-        const VALIDATED = 1 &lt;&lt; 1;
-        const RESOLVED  = 1 &lt;&lt; 2;
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">Checks</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">PARSED</span>    <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">VALIDATED</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">RESOLVED</span>  <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
 
-        // A named combination, built from the others.
-        const READY = Self::PARSED.bits() | Self::VALIDATED.bits() | Self::RESOLVED.bits();
-    }
-}
+        <span class="tok-comment">// A named combination, built from the others.</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">READY</span> <span class="tok-punct">=</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-constant">PARSED</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">|</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-constant">VALIDATED</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">|</span> <span class="tok-keyword">Self</span><span class="tok-punct">::</span><span class="tok-constant">RESOLVED</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut done = Checks::empty();
-done.insert(Checks::PARSED);
-done.insert(Checks::VALIDATED);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">done</span> <span class="tok-punct">=</span> <span class="tok-type">Checks</span><span class="tok-punct">::</span><span class="tok-call-assoc">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">done</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-type">Checks</span><span class="tok-punct">::</span><span class="tok-constant">PARSED</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">done</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-type">Checks</span><span class="tok-punct">::</span><span class="tok-constant">VALIDATED</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert!(!done.contains(Checks::READY));
-let missing = Checks::READY.difference(done);
-assert_eq!(missing, Checks::RESOLVED); // &lt;- exactly what is left to do
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-variable">done</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">Checks</span><span class="tok-punct">::</span><span class="tok-constant">READY</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">missing</span> <span class="tok-punct">=</span> <span class="tok-type">Checks</span><span class="tok-punct">::</span><span class="tok-constant">READY</span><span class="tok-punct">.</span><span class="tok-call-method">difference</span><span class="tok-punct">(</span><span class="tok-variable">done</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">missing</span><span class="tok-punct">,</span> <span class="tok-type">Checks</span><span class="tok-punct">::</span><span class="tok-constant">RESOLVED</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exactly what is left to do</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why it fits:</strong> <code>difference</code> answers "what is still outstanding" in one
@@ -1161,18 +1162,18 @@ imported to be used; those say so.</p>
             <h4 class="api-sig"><code class="tok-inline">bitflags!</code></h4>
             <p>The macro. It takes a struct definition whose "fields" are the named bits, and
 generates the type, its constants and its operations.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    pub struct Style: u16 {
-        const BOLD      = 1 &lt;&lt; 0;
-        const ITALIC    = 1 &lt;&lt; 1;
-        const UNDERLINE = 1 &lt;&lt; 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Style</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">BOLD</span>      <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">ITALIC</span>    <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">UNDERLINE</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(Style::BOLD.bits(), 1);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">Style</span><span class="tok-punct">::</span><span class="tok-constant">BOLD</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> any time a set of independent on/off options travels
@@ -1190,20 +1191,20 @@ be declared in one macro invocation.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">empty</code> and <code class="tok-inline">all</code></h4>
             <p>The two extremes: no bits set, and every <em>named</em> bit set.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(F::empty().bits(), 0);
-assert_eq!(F::all().bits(), 0b11);
-assert!(F::empty().is_empty());
-assert!(F::all().is_all());
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">all</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0b11</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">all</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_all</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> <code>empty()</code> as the starting point for accumulation and as a
@@ -1214,18 +1215,18 @@ bits. Both are <code>const</code>, so they work in constant definitions.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">from_bits</code></h4>
             <p>Builds a value from a raw integer, returning <code>None</code> if any bit isn't named.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 0b01;
-        const B = 0b10;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">0b01</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">0b10</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(F::from_bits(0b11), Some(F::A | F::B));
-assert_eq!(F::from_bits(0b100), None); // &lt;- bit 2 is not defined
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits</span><span class="tok-punct">(</span><span class="tok-number">0b11</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits</span><span class="tok-punct">(</span><span class="tok-number">0b100</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- bit 2 is not defined</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> validating input where an unknown bit means the data is
@@ -1237,18 +1238,18 @@ untrusted.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">from_bits_truncate</code></h4>
             <p>Keeps the bits it knows and discards the rest.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 0b01;
-        const B = 0b10;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">0b01</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">0b10</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let value = F::from_bits_truncate(0b111);
-assert_eq!(value, F::A | F::B); // &lt;- bit 2 dropped
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits_truncate</span><span class="tok-punct">(</span><span class="tok-number">0b111</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- bit 2 dropped</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> forward compatibility, where a newer writer may set bits
@@ -1259,18 +1260,18 @@ discarded bit may have meant "this record is encrypted".</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">from_bits_retain</code></h4>
             <p>Keeps every bit, named or not.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 0b01;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">0b01</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let value = F::from_bits_retain(0b101);
-assert_eq!(value.bits(), 0b101);
-assert!(value.contains(F::A));
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits_retain</span><span class="tok-punct">(</span><span class="tok-number">0b101</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">0b101</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> round-tripping data you must not damage — reading a header,
@@ -1282,18 +1283,18 @@ them again when you're done.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">from_name</code></h4>
             <p>Looks a flag up by the name it was declared with.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const READ = 1;
-        const WRITE = 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">READ</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">WRITE</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(F::from_name("WRITE"), Some(F::WRITE));
-assert_eq!(F::from_name("write"), None); // &lt;- exact, case-sensitive
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_name</span><span class="tok-punct">(</span><span class="tok-string">&quot;WRITE&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-constant">WRITE</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_name</span><span class="tok-punct">(</span><span class="tok-string">&quot;write&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exact, case-sensitive</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> mapping configuration or CLI strings onto flags. It matches
@@ -1309,21 +1310,21 @@ one name only; for a whole <code>"READ | WRITE"</code> string use the <code>From
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">contains</code></h4>
             <p>True when <em>every</em> bit of the argument is present.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-        const C = 4;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">C</span> <span class="tok-punct">=</span> <span class="tok-number">4</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let value = F::A | F::B;
-assert!(value.contains(F::A));
-assert!(value.contains(F::A | F::B)); // &lt;- all of them
-assert!(!value.contains(F::A | F::C));
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- all of them</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">C</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the standard "is this option on" test, and for requiring a
@@ -1334,20 +1335,20 @@ mixing them up is the most common bug with this crate.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">intersects</code></h4>
             <p>True when <em>any</em> bit overlaps.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-        const C = 4;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">C</span> <span class="tok-punct">=</span> <span class="tok-number">4</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let value = F::A;
-assert!(value.intersects(F::A | F::C)); // &lt;- A is enough
-assert!(!value.intersects(F::B | F::C));
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">intersects</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">C</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- A is enough</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">intersects</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">C</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> "does this have any of these" — checking whether a change
@@ -1358,18 +1359,18 @@ permission.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">bits</code></h4>
             <p>The raw integer, for handing to a syscall, writing to a file, or comparing.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u32 {
-        const A = 0b01;
-        const B = 0b10;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">0b01</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">0b10</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let raw: u32 = (F::A | F::B).bits();
-assert_eq!(raw, 3);
+<span class="tok-keyword">let</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> at the boundary where the typed value has to become a
@@ -1380,22 +1381,22 @@ the typed value; converting early throws away everything the crate bought you.</
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">iter</code> and <code class="tok-inline">iter_names</code></h4>
             <p>Walk the individual flags in a value; <code>iter_names</code> yields the name alongside.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const READ = 1;
-        const WRITE = 2;
-        const EXEC = 4;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">READ</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">WRITE</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">EXEC</span> <span class="tok-punct">=</span> <span class="tok-number">4</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let value = F::READ | F::EXEC;
-let names: Vec&lt;&amp;str&gt; = value.iter_names().map(|(name, _)| name).collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-constant">READ</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-constant">EXEC</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">names</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">iter_names</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-variable">name</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-assert_eq!(names, ["READ", "EXEC"]);
-assert_eq!(value.iter().count(), 2);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">names</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;READ&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;EXEC&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">count</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> logging, error messages and building human-readable output —
@@ -1412,17 +1413,17 @@ of the same type, so it composes with the rest of the iterator toolkit.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">union</code> and <code class="tok-inline">|</code></h4>
             <p>Every bit from either side. The operator and the method are the same thing.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(F::A | F::B, F::A.union(F::B));
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">.</span><span class="tok-keyword">union</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> the operator in ordinary code; the method when you need
@@ -1433,22 +1434,22 @@ better.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">intersection</code> and <code class="tok-inline">difference</code></h4>
             <p>The bits in both, and the bits in the first but not the second.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-        const C = 4;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">C</span> <span class="tok-punct">=</span> <span class="tok-number">4</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let granted = F::A | F::B;
-let required = F::B | F::C;
+<span class="tok-keyword">let</span> <span class="tok-variable">granted</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">required</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">C</span><span class="tok-punct">;</span>
 
-assert_eq!(granted.intersection(required), F::B);
-assert_eq!(required.difference(granted), F::C); // &lt;- what's missing
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">granted</span><span class="tok-punct">.</span><span class="tok-call-method">intersection</span><span class="tok-punct">(</span><span class="tok-variable">required</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">required</span><span class="tok-punct">.</span><span class="tok-call-method">difference</span><span class="tok-punct">(</span><span class="tok-variable">granted</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">C</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- what's missing</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> <code>difference</code> is the one that earns its keep — "which
@@ -1460,23 +1461,23 @@ states.</p>
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">insert</code>, <code class="tok-inline">remove</code> and <code class="tok-inline">toggle</code></h4>
             <p>In-place mutation of a flags value.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut value = F::empty();
-value.insert(F::A);
-value.toggle(F::B);
-assert_eq!(value, F::A | F::B);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">toggle</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-value.remove(F::A);
-assert_eq!(value, F::B);
+<span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">remove</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> building a value up over several steps. <code>set(flag, bool)</code>
@@ -1487,18 +1488,18 @@ is the form to reach for when a condition decides it —
         <div class="card api-entry">
             <h4 class="api-sig"><code class="tok-inline">complement</code> and <code class="tok-inline">!</code></h4>
             <p>Every named bit that isn't set.</p>
-<pre><code class="rust">use bitflags::bitflags;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-variable">bitflags</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(!F::A, F::B);
-assert_eq!(F::A.complement(), F::B);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span><span class="tok-punct">.</span><span class="tok-call-method">complement</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> inverting a mask. It only covers <em>named</em> bits — the result
@@ -1517,29 +1518,29 @@ never contains an undefined bit — which is why <code>!F::A</code> is <code>F::
             <p>Text conversion, as <code>READ | WRITE</code>. Note that the macro does <strong>not</strong> implement
 <code>Display</code> or <code>FromStr</code> on your type — these free functions are the API, and you
 write the trait impls yourself if you want them.</p>
-<pre><code class="rust">use bitflags::{bitflags, parser};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">bitflags</span><span class="tok-punct">,</span> <span class="tok-variable">parser</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const READ = 1;
-        const WRITE = 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">READ</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-constant">WRITE</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let value = F::READ | F::WRITE;
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-constant">READ</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-constant">WRITE</span><span class="tok-punct">;</span>
 
-let mut text = String::new();
-parser::to_writer(&amp;value, &amp;mut text).unwrap();
-assert_eq!(text, "READ | WRITE");
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">text</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-module">parser</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_writer</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">text</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">,</span> <span class="tok-string">&quot;READ | WRITE&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let parsed: F = parser::from_str("READ | WRITE").unwrap();
-assert_eq!(parsed, value);
+<span class="tok-keyword">let</span> <span class="tok-variable">parsed</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span> <span class="tok-punct">=</span> <span class="tok-module">parser</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;READ | WRITE&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">parsed</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Unknown bits survive as hex rather than being silently lost.
-let mut odd = String::new();
-parser::to_writer(&amp;F::from_bits_retain(0b101), &amp;mut odd).unwrap();
-assert_eq!(odd, "READ | 0x4");
+<span class="tok-comment">// Unknown bits survive as hex rather than being silently lost.</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">odd</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-module">parser</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_writer</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits_retain</span><span class="tok-punct">(</span><span class="tok-number">0b101</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">odd</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">odd</span><span class="tok-punct">,</span> <span class="tok-string">&quot;READ | 0x4&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> configuration files, CLI arguments and logs, where a name
@@ -1554,27 +1555,27 @@ doesn't dictate the text format of your type. <code>from_str_strict</code> and
             <p>The trait behind the generated methods. Importing it adds a few operations the
 inherent methods don't expose, and lets you write code generic over any flags
 type.</p>
-<pre><code class="rust">use bitflags::{bitflags, Flags};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">bitflags</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">bitflags</span><span class="tok-punct">,</span> <span class="tok-type">Flags</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    struct F: u8 {
-        const A = 1;
-        const B = 2;
-    }
-}
+<span class="tok-macro">bitflags!</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+    <span class="tok-keyword">struct</span> <span class="tok-type-def">F</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">A</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">const</span> <span class="tok-generic-param">B</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-// Generic over any flags type, not just this one.
-fn describe&lt;T: Flags&gt;(value: &amp;T) -&gt; Vec&lt;&amp;'static str&gt; {
-    value.iter_names().map(|(name, _)| name).collect()
-}
+<span class="tok-comment">// Generic over any flags type, not just this one.</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">Flags</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">iter_names</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-variable">name</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(describe(&amp;(F::A | F::B)), ["A", "B"]);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">describe</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">(</span><span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;A&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;B&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// Trait-only: drop any bits that aren't named.
-let mut loose = F::from_bits_retain(0b111);
-loose.truncate();
-assert_eq!(loose, F::A | F::B);
+<span class="tok-comment">// Trait-only: drop any bits that aren't named.</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">loose</span> <span class="tok-punct">=</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_bits_retain</span><span class="tok-punct">(</span><span class="tok-number">0b111</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">loose</span><span class="tok-punct">.</span><span class="tok-call-method">truncate</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">loose</span><span class="tok-punct">,</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">A</span> <span class="tok-punct">|</span> <span class="tok-type">F</span><span class="tok-punct">::</span><span class="tok-field">B</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>When to use it:</strong> writing a helper that works across several flags types, and

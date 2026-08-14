@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -995,12 +996,12 @@ expression position, e.g. <code>let x = if cond { return; } else { 5 };</code>.<
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Exiting a function early with `return`</h3>
-            <pre><code class="rust">fn abs(x: i32) -&gt; i32 {
-    if x &lt; 0 {
-        return -x; // &lt;- exits the function immediately with `-x`
-    }
-    x
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">abs</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">x</span> <span class="tok-punct">&lt;</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-punct">-</span><span class="tok-variable">x</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits the function immediately with `-x`</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">x</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Convention:</strong> <code>return</code> is rarely used for a function's final value —
 the last expression in the body (no trailing <code>;</code>) is returned implicitly,
@@ -1013,13 +1014,13 @@ branch above. A trailing <code>return x;</code> is perfectly legal, just unidiom
             <p>Inside a single <code>match</code> arm that needs to diverge from the rest of the
 function, <code>return</code> is often clearer than restructuring the whole function
 around <code>?</code>.</p>
-<pre><code class="rust">fn parse_temperature(raw: &amp;str) -&gt; Result&lt;f64, String&gt; {
-    let value = match raw.trim().parse::&lt;f64&gt;() {
-        Ok(v) =&gt; v,
-        Err(e) =&gt; return Err(format!("invalid temperature {raw:?}: {e}")), // &lt;- exits the function early with the error
-    };
-    Ok(value)
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_temperature</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">,</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-keyword">match</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">parse</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">v</span><span class="tok-punct">,</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-variable">e</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid temperature {raw:?}: {e}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- exits the function early with the error</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>When the error needs to be reformatted rather than
 passed straight through, <code>return</code> inside the failing arm reads more
@@ -1032,12 +1033,12 @@ directly than threading a <code>map_err</code> into a <code>?</code> chain — s
             <p>A guard clause at the top of a function checks for invalid input and
 <code>return</code>s immediately, so the rest of the function can assume the value
 is valid.</p>
-<pre><code class="rust">fn set_fan_speed(percent: i32) -&gt; Result&lt;(), String&gt; {
-    if !(0..=100).contains(&amp;percent) {
-        return Err(format!("fan speed {percent}% out of range")); // &lt;- guard clause: bail out before doing any real work
-    }
-    Ok(())
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">set_fan_speed</span><span class="tok-punct">(</span><span class="tok-variable">percent</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-punct">!</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..=</span><span class="tok-number">100</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">percent</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;fan speed {percent}% out of range&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- guard clause: bail out before doing any real work</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Checking the invalid case first and returning keeps the
 rest of the function at a single indentation level instead of nesting the
@@ -1073,22 +1074,22 @@ sugar for an early <code>return Err(...)</code> on failure.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Exiting a driver function early on invalid input</h3>
-            <pre><code class="rust">fn set_prescaler(timer: &amp;mut Timer, value: u16) -&gt; Result&lt;(), &amp;'static str&gt; {
-    if value == 0 {
-        return Err("prescaler must be nonzero"); // &lt;- exits the function immediately with the error
-    }
-    timer.psc().write(|w| w.psc().bits(value));
-    Ok(())
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">set_prescaler</span><span class="tok-punct">(</span><span class="tok-variable">timer</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Timer</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">value</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;prescaler must be nonzero&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exits the function immediately with the error</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">timer</span><span class="tok-punct">.</span><span class="tok-call-method">psc</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">w</span><span class="tok-punct">|</span> <span class="tok-variable">w</span><span class="tok-punct">.</span><span class="tok-call-method">psc</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">bits</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Composing with `?` in a Result-returning driver function</h3>
-            <pre><code class="rust">fn init_sensor(i2c: &amp;mut I2c) -&gt; Result&lt;(), Error&gt; {
-    i2c.write(SENSOR_ADDR, &amp;[REG_CONFIG, CONFIG_DEFAULT])?; // &lt;- `?` returns early on failure, same as an explicit `return`
-    Ok(())
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">init_sensor</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">I2c</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-constant">SENSOR_ADDR</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-constant">REG_CONFIG</span><span class="tok-punct">,</span> <span class="tok-constant">CONFIG_DEFAULT</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` returns early on failure, same as an explicit `return`</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

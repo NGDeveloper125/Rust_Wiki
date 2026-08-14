@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1017,17 +1018,17 @@ exactly the limitation that pushes authors toward a derive macro instead.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">macro_rules! max_of { // &lt;- defines a declarative macro via pattern matching on token trees
-    ($x:expr) =&gt; { $x };
-    ($x:expr, $($rest:expr),+) =&gt; {
-        std::cmp::max($x, max_of!($($rest),+))
-    };
-}
+        <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">max_of</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- defines a declarative macro via pattern matching on token trees</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">x</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-punct">$</span><span class="tok-variable">x</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">x</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">rest</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">+</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">cmp</span><span class="tok-punct">::</span><span class="tok-call-assoc">max</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">x</span><span class="tok-punct">,</span> <span class="tok-macro">max_of!</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">rest</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">+</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn main() {
-    let biggest = max_of!(3, 7, 2, 9, 4); // &lt;- expands recursively into nested std::cmp::max calls
-    println!("{biggest}");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">biggest</span> <span class="tok-punct">=</span> <span class="tok-macro">max_of!</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands recursively into nested std::cmp::max calls</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{biggest}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1046,25 +1047,25 @@ fn main() {
 needs the same <code>From&lt;u64&gt;</code> conversion on each one — a <code>macro_rules!</code>
 macro turns three hand-written impls into one macro definition plus one
 invocation.</p>
-<pre><code class="rust">struct OrderId(u64);
-struct UserId(u64);
-struct SensorId(u64);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">OrderId</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">UserId</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">SensorId</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-macro_rules! impl_id_from_u64 { // &lt;- one macro definition stands in for three hand-written impls
-    ($($id:ident),+ $(,)?) =&gt; {
-        $(
-            impl From&lt;u64&gt; for $id {
-                fn from(value: u64) -&gt; Self {
-                    $id(value)
-                }
-            }
-        )+
-    };
-}
+<span class="tok-macro">macro_rules!</span> <span class="tok-variable">impl_id_from_u64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one macro definition stands in for three hand-written impls</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">id</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">)</span><span class="tok-punct">,</span><span class="tok-punct">+</span> <span class="tok-punct">$</span><span class="tok-punct">(</span><span class="tok-punct">,</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">$</span><span class="tok-punct">(</span>
+            <span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">u64</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-punct">$</span><span class="tok-variable">id</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+                    <span class="tok-punct">$</span><span class="tok-call-free">id</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span>
+                <span class="tok-punct">}</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">)</span><span class="tok-punct">+</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-impl_id_from_u64!(OrderId, UserId, SensorId); // &lt;- expands to three separate `impl From&lt;u64&gt;` blocks
+<span class="tok-macro">impl_id_from_u64!</span><span class="tok-punct">(</span><span class="tok-type">OrderId</span><span class="tok-punct">,</span> <span class="tok-type">UserId</span><span class="tok-punct">,</span> <span class="tok-type">SensorId</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands to three separate `impl From&lt;u64&gt;` blocks</span>
 
-let order: OrderId = 42.into();
+<span class="tok-keyword">let</span> <span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-type">OrderId</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a family of near-identical trait impls is exactly the
@@ -1084,22 +1085,22 @@ across more than a couple of types.</p>
             <p>A parsing function for sensor temperature readings needs several
 similar test cases; a <code>macro_rules!</code> macro turns each case into a
 one-line invocation that expands into a full <code>#[test]</code> function.</p>
-<pre><code class="rust">fn parse_temperature(input: &amp;str) -&gt; Option&lt;f64&gt; {
-    input.strip_suffix('C')?.trim().parse().ok()
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_temperature</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">strip_suffix</span><span class="tok-punct">(</span><span class="tok-string">'C'</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-macro_rules! temperature_test { // &lt;- one macro call generates one #[test] function per case
-    ($name:ident, $input:expr, $expected:expr) =&gt; {
-        #[test]
-        fn $name() {
-            assert_eq!(parse_temperature($input), $expected);
-        }
-    };
-}
+<span class="tok-macro">macro_rules!</span> <span class="tok-variable">temperature_test</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one macro call generates one #[test] function per case</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">input</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">expected</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-attribute">#[test]</span>
+        <span class="tok-keyword">fn</span> <span class="tok-punct">$</span><span class="tok-call-free">name</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">parse_temperature</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">input</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">expected</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-temperature_test!(parses_whole_degree, "21C", Some(21.0));
-temperature_test!(parses_with_space, "21 C", Some(21.0));
-temperature_test!(rejects_missing_unit, "21", None);
+<span class="tok-macro">temperature_test!</span><span class="tok-punct">(</span><span class="tok-variable">parses_whole_degree</span><span class="tok-punct">,</span> <span class="tok-string">&quot;21C&quot;</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">21.0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">temperature_test!</span><span class="tok-punct">(</span><span class="tok-variable">parses_with_space</span><span class="tok-punct">,</span> <span class="tok-string">&quot;21 C&quot;</span><span class="tok-punct">,</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-number">21.0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">temperature_test!</span><span class="tok-punct">(</span><span class="tok-variable">rejects_missing_unit</span><span class="tok-punct">,</span> <span class="tok-string">&quot;21&quot;</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> each generated function is still an ordinary <code>#[test]</code>
@@ -1153,19 +1154,19 @@ register- and peripheral-facing embedded code.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">macro_rules! gpio_output_pin { // &lt;- one macro definition stands in for many hand-written pin wrappers
-    ($name:ident, $bit:expr) =&gt; {
-        struct $name;
-        impl $name {
-            fn set_high(&amp;self, odr: &amp;mut u32) {
-                *odr |= 1 &lt;&lt; $bit;
-            }
-        }
-    };
-}
+        <pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">gpio_output_pin</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one macro definition stands in for many hand-written pin wrappers</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">bit</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">struct</span> <span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">impl</span> <span class="tok-punct">$</span><span class="tok-variable">name</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">odr</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+                <span class="tok-punct">*</span><span class="tok-variable">odr</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-punct">$</span><span class="tok-variable">bit</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-gpio_output_pin!(Pa5, 5); // &lt;- expands into a full `Pa5` type with its own `set_high`
-gpio_output_pin!(Pa6, 6);
+<span class="tok-macro">gpio_output_pin!</span><span class="tok-punct">(</span><span class="tok-type">Pa5</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- expands into a full `Pa5` type with its own `set_high`</span>
+<span class="tok-macro">gpio_output_pin!</span><span class="tok-punct">(</span><span class="tok-type">Pa6</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1183,19 +1184,19 @@ gpio_output_pin!(Pa6, 6);
             <p>A driver needs a <code>set</code>/<code>clear</code> pair of bit-level accessors for every GPIO
 pin on a port, each pin differing only in which bit of the output-data
 register it touches.</p>
-<pre><code class="rust">macro_rules! gpio_bit { // &lt;- generates one set/clear pair per pin, differing only in $bit
-    ($set_fn:ident, $clear_fn:ident, $bit:expr) =&gt; {
-        fn $set_fn(odr: &amp;mut u32) {
-            *odr |= 1 &lt;&lt; $bit; // &lt;- $bit is the only thing that changes between pins
-        }
-        fn $clear_fn(odr: &amp;mut u32) {
-            *odr &amp;= !(1 &lt;&lt; $bit);
-        }
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">gpio_bit</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generates one set/clear pair per pin, differing only in $bit</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">set_fn</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">clear_fn</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">bit</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">fn</span> <span class="tok-punct">$</span><span class="tok-call-free">set_fn</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-punct">*</span><span class="tok-variable">odr</span> <span class="tok-punct">|</span><span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-punct">$</span><span class="tok-variable">bit</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- $bit is the only thing that changes between pins</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-keyword">fn</span> <span class="tok-punct">$</span><span class="tok-call-free">clear_fn</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-punct">*</span><span class="tok-variable">odr</span> <span class="tok-punct">&amp;</span><span class="tok-punct">=</span> <span class="tok-punct">!</span><span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-punct">$</span><span class="tok-variable">bit</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-gpio_bit!(set_pa5, clear_pa5, 5);
-gpio_bit!(set_pa6, clear_pa6, 6);
+<span class="tok-macro">gpio_bit!</span><span class="tok-punct">(</span><span class="tok-variable">set_pa5</span><span class="tok-punct">,</span> <span class="tok-variable">clear_pa5</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">gpio_bit!</span><span class="tok-punct">(</span><span class="tok-variable">set_pa6</span><span class="tok-punct">,</span> <span class="tok-variable">clear_pa6</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> writing the mask/shift logic once and substituting only
@@ -1215,20 +1216,20 @@ describes for register access, whether written by hand or generated.</p>
             <p>A small HAL exposes a consistent constructor-plus-accessor shape for
 several peripheral instances (UART1, UART2, UART3) sitting at different
 base addresses; the macro is the single source of truth for that shape.</p>
-<pre><code class="rust">macro_rules! uart_peripheral { // &lt;- one definition; the API shape can't drift between instances
-    ($ty:ident, $base:expr) =&gt; {
-        pub struct $ty;
-        impl $ty {
-            pub fn new() -&gt; Self { $ty }
-            pub fn status(&amp;self) -&gt; u32 {
-                unsafe { core::ptr::read_volatile(($base + 0x00) as *const u32) }
-            }
-        }
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">uart_peripheral</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- one definition; the API shape can't drift between instances</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">ty</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">base</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-punct">$</span><span class="tok-variable">ty</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">impl</span> <span class="tok-punct">$</span><span class="tok-variable">ty</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-punct">$</span><span class="tok-variable">ty</span> <span class="tok-punct">}</span>
+            <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">status</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">base</span> <span class="tok-punct">+</span> <span class="tok-number">0x00</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-uart_peripheral!(Uart1, 0x4001_3800);
-uart_peripheral!(Uart2, 0x4000_4400);
+<span class="tok-macro">uart_peripheral!</span><span class="tok-punct">(</span><span class="tok-type">Uart1</span><span class="tok-punct">,</span> <span class="tok-number">0x4001_3800</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">uart_peripheral!</span><span class="tok-punct">(</span><span class="tok-type">Uart2</span><span class="tok-punct">,</span> <span class="tok-number">0x4000_4400</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> expanding every instance from one macro guarantees

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1029,11 +1030,11 @@ combinations.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Requesting a C-compatible layout</h3>
-            <pre><code class="rust">#[repr(C)] // &lt;- requests a stable, C-compatible layout instead of the default repr(Rust)
-struct Point {
-    x: f32,
-    y: f32,
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span> <span class="tok-comment tok-anno">// &lt;- requests a stable, C-compatible layout instead of the default repr(Rust)</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Point</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-type">f32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1042,18 +1043,18 @@ struct Point {
             <p>A struct shared with a C library often needs more than one layout
 guarantee at once — here, a C-compatible field order plus zero padding,
 because the C header packs its struct tightly.</p>
-<pre><code class="rust">#[repr(C, packed)] // &lt;- two modifiers in one attribute: C field order AND no padding
-#[derive(Clone, Copy)]
-struct FrameHeader {
-    version: u8,
-    flags: u8,
-    payload_len: u16,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(C, packed)]</span> <span class="tok-comment tok-anno">// &lt;- two modifiers in one attribute: C field order AND no padding</span>
+<span class="tok-attribute">#[derive(Clone, Copy)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">FrameHeader</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">version</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">flags</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">payload_len</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn payload_len(header: &amp;FrameHeader) -&gt; u16 {
-    let header_copy = *header; // read the whole packed value by copy first...
-    header_copy.payload_len // &lt;- ...then access: avoids ever taking a reference into packed, misaligned data
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">payload_len</span><span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">FrameHeader</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">header_copy</span> <span class="tok-punct">=</span> <span class="tok-punct">*</span><span class="tok-variable">header</span><span class="tok-punct">;</span> <span class="tok-comment">// read the whole packed value by copy first...</span>
+    <span class="tok-variable">header_copy</span><span class="tok-punct">.</span><span class="tok-field">payload_len</span> <span class="tok-comment tok-anno">// &lt;- ...then access: avoids ever taking a reference into packed, misaligned data</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#[repr(C, packed)]</code> combines both modifiers in a
 single attribute — writing <code>#[repr(C)] #[repr(packed)]</code> as two separate
@@ -1071,14 +1072,14 @@ this reason.</p>
 discriminant width with an integer repr, alongside explicit discriminant
 values, keeps the enum's on-the-wire representation an exact match for
 the byte the protocol defines.</p>
-<pre><code class="rust">#[repr(u8)] // &lt;- fixes the discriminant to exactly one byte
-enum LinkStatus {
-    Down = 0,        // &lt;- explicit discriminants alongside the repr, not required but common together
-    Negotiating = 1,
-    Up = 2,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(u8)]</span> <span class="tok-comment tok-anno">// &lt;- fixes the discriminant to exactly one byte</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">LinkStatus</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Down</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">,</span>        <span class="tok-comment tok-anno">// &lt;- explicit discriminants alongside the repr, not required but common together</span>
+    <span class="tok-type">Negotiating</span> <span class="tok-punct">=</span> <span class="tok-number">1</span><span class="tok-punct">,</span>
+    <span class="tok-type">Up</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let byte: u8 = LinkStatus::Up as u8; // &lt;- `as` reads the u8 discriminant `#[repr(u8)]` guarantees
+<span class="tok-keyword">let</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-type">LinkStatus</span><span class="tok-punct">::</span><span class="tok-field">Up</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `as` reads the u8 discriminant `#[repr(u8)]` guarantees</span>
 </code></pre>
 <p>Without an integer repr, the compiler is free to pick
 whatever discriminant width it wants for a field-less enum — the
@@ -1093,8 +1094,8 @@ versions.</p>
             <p>A newtype wrapper meant to cross an ABI boundary as if it were its inner
 type needs <code>#[repr(transparent)]</code> specifically — not <code>#[repr(C)]</code>, which
 doesn't make the same single-field guarantee.</p>
-<pre><code class="rust">#[repr(transparent)] // &lt;- guarantees identical layout to the single u32 field; repr(C) alone would not
-pub struct SensorId(u32);
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(transparent)]</span> <span class="tok-comment tok-anno">// &lt;- guarantees identical layout to the single u32 field; repr(C) alone would not</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">SensorId</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>#[repr(C)]</code> on a single-field tuple struct happens to
 produce the same layout in practice, but only <code>#[repr(transparent)]</code>
@@ -1155,32 +1156,32 @@ padding.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A peripheral register block laid out to match a datasheet's memory map</h3>
-            <pre><code class="rust">#[repr(C)] // &lt;- pins field order/offsets to match the GPIOA register block's documented layout
-pub struct GpioARegisterBlock {
-    pub moder: u32,   // offset 0x00
-    pub otyper: u32,  // offset 0x04
-    pub ospeedr: u32, // offset 0x08
-    pub idr: u32,     // offset 0x10
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[repr(C)]</span> <span class="tok-comment tok-anno">// &lt;- pins field order/offsets to match the GPIOA register block's documented layout</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">GpioARegisterBlock</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">moder</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>   <span class="tok-comment">// offset 0x00</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">otyper</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>  <span class="tok-comment">// offset 0x04</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">ospeedr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-comment">// offset 0x08</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">idr</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>     <span class="tok-comment">// offset 0x10</span>
+<span class="tok-punct">}</span>
 
-const GPIOA_BASE: usize = 0x4002_0000;
+<span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">:</span> <span class="tok-type">usize</span> <span class="tok-punct">=</span> <span class="tok-number">0x4002_0000</span><span class="tok-punct">;</span>
 
-fn gpioa() -&gt; &amp;'static mut GpioARegisterBlock {
-    unsafe { &amp;mut *(GPIOA_BASE as *mut GpioARegisterBlock) }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">gpioa</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-keyword">mut</span> <span class="tok-type-return">GpioARegisterBlock</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">*</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_BASE</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">GpioARegisterBlock</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">A zero-cost newtype around a raw register value</h3>
-            <pre><code class="rust">#[repr(transparent)] // &lt;- guarantees identical layout/ABI to the inner u16, zero cost over the raw value
-pub struct AdcReading(u16);
+            <pre><code class="rust-hl"><span class="tok-attribute">#[repr(transparent)]</span> <span class="tok-comment tok-anno">// &lt;- guarantees identical layout/ABI to the inner u16, zero cost over the raw value</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">AdcReading</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl AdcReading {
-    pub fn millivolts(self, vref_mv: u32) -&gt; u32 {
-        (self.0 as u32 * vref_mv) / 4095
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">AdcReading</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">millivolts</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">vref_mv</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">*</span> <span class="tok-variable">vref_mv</span><span class="tok-punct">)</span> <span class="tok-punct">/</span> <span class="tok-number">4095</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

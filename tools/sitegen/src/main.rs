@@ -2,10 +2,13 @@ mod articles;
 mod bodylinks;
 mod conversations;
 mod crates;
+mod highlight;
 mod links;
 mod markdown;
 mod model;
+mod more;
 mod nav;
+mod palette;
 mod parse;
 mod render;
 mod search;
@@ -101,8 +104,14 @@ fn main() {
     let assets_dir = docs_root.join("assets");
     std::fs::create_dir_all(&assets_dir).expect("create docs/assets");
 
-    std::fs::copy(templates_root.join("site.css"), assets_dir.join("site.css"))
-        .expect("copy site.css");
+    // The stylesheet is the template plus the generated palette, so a colour
+    // change in palette.rs reaches every code block on the site.
+    let base_css = std::fs::read_to_string(templates_root.join("site.css")).expect("read site.css");
+    std::fs::write(
+        assets_dir.join("site.css"),
+        format!("{base_css}\n{}", palette::stylesheet()),
+    )
+    .expect("write site.css");
     std::fs::copy(templates_root.join("site.js"), assets_dir.join("site.js"))
         .expect("copy site.js");
 
@@ -126,6 +135,8 @@ fn main() {
     articles::build(&pages_root, &docs_root, &articles, &pages);
 
     crates::build(&docs_root, &crate_pages, &pages);
+
+    more::build(&docs_root, &pages);
 
     // Best-effort GitHub Discussions mirror. Never fails the build.
     let conversation_urls = conversations::build(&repo_root, &docs_root, &pages);

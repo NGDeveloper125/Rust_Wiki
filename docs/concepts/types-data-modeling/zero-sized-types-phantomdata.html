@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -991,14 +992,14 @@ compiled binary as actual bytes.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::marker::PhantomData;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">marker</span><span class="tok-punct">::</span><span class="tok-type">PhantomData</span><span class="tok-punct">;</span>
 
-struct Typed&lt;T&gt; {
-    value: u32,
-    _marker: PhantomData&lt;T&gt;, // &lt;- no T is stored, but the compiler treats this as "owning" a T
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Typed</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_marker</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- no T is stored, but the compiler treats this as &quot;owning&quot; a T</span>
+<span class="tok-punct">}</span>
 
-let x: Typed&lt;f64&gt; = Typed { value: 1, _marker: PhantomData };
+<span class="tok-keyword">let</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">Typed</span><span class="tok-punct">&lt;</span><span class="tok-type">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Typed</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">_marker</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 <p><strong>Restriction:</strong> <code>PhantomData&lt;T&gt;</code> contributes zero bytes to the struct's
 size, but it isn't purely decorative — it still affects variance and
@@ -1020,27 +1021,27 @@ whether certain lifetime or drop patterns compile.</p>
             <p>A typestate-style marker parameter lets a generic type encode which
 state a value is in — so operations invalid for that state simply don't
 exist as callable methods — at zero bytes of runtime cost.</p>
-<pre><code class="rust">use std::marker::PhantomData;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">marker</span><span class="tok-punct">::</span><span class="tok-type">PhantomData</span><span class="tok-punct">;</span>
 
-struct Open;   // &lt;- zero-sized marker types
-struct Closed;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Open</span><span class="tok-punct">;</span>   <span class="tok-comment tok-anno">// &lt;- zero-sized marker types</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Closed</span><span class="tok-punct">;</span>
 
-struct Connection&lt;State&gt; {
-    socket_fd: i32,
-    _state: PhantomData&lt;State&gt;, // &lt;- costs 0 bytes; only tracked at compile time
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Connection</span><span class="tok-punct">&lt;</span><span class="tok-type">State</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">socket_fd</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_state</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span><span class="tok-punct">&lt;</span><span class="tok-type">State</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- costs 0 bytes; only tracked at compile time</span>
+<span class="tok-punct">}</span>
 
-impl Connection&lt;Closed&gt; {
-    fn open(self) -&gt; Connection&lt;Open&gt; { // &lt;- consumes a Closed connection, returns an Open one
-        Connection { socket_fd: self.socket_fd, _state: PhantomData }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Connection</span><span class="tok-punct">&lt;</span><span class="tok-type">Closed</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">open</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Connection</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Open</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- consumes a Closed connection, returns an Open one</span>
+        <span class="tok-type">Connection</span> <span class="tok-punct">{</span> <span class="tok-variable">socket_fd</span><span class="tok-punct">:</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">socket_fd</span><span class="tok-punct">,</span> <span class="tok-variable">_state</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Connection&lt;Open&gt; {
-    fn send(&amp;self, data: &amp;[u8]) { /* ... */ }
-    // send() simply doesn't exist on Connection&lt;Closed&gt; -- calling it on a
-    // closed connection is a compile error, not a runtime panic
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Connection</span><span class="tok-punct">&lt;</span><span class="tok-type">Open</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">send</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* ... */</span> <span class="tok-punct">}</span>
+    <span class="tok-comment">// send() simply doesn't exist on Connection&lt;Closed&gt; -- calling it on a</span>
+    <span class="tok-comment">// closed connection is a compile error, not a runtime panic</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> this typestate pattern, covered in the
@@ -1085,17 +1086,17 @@ nice-to-have — it's the only way the typestate pattern is viable at all.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use core::marker::PhantomData;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">marker</span><span class="tok-punct">::</span><span class="tok-type">PhantomData</span><span class="tok-punct">;</span>
 
-struct Input;
-struct Output;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Input</span><span class="tok-punct">;</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Output</span><span class="tok-punct">;</span>
 
-struct Pin&lt;MODE&gt; {
-    pin_number: u8,
-    _mode: PhantomData&lt;MODE&gt;, // &lt;- zero bytes; MODE is tracked only by the compiler
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pin</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pin_number</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_mode</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- zero bytes; MODE is tracked only by the compiler</span>
+<span class="tok-punct">}</span>
 
-let led: Pin&lt;Output&gt; = Pin { pin_number: 5, _mode: PhantomData };
+<span class="tok-keyword">let</span> <span class="tok-variable">led</span><span class="tok-punct">:</span> <span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Pin</span> <span class="tok-punct">{</span> <span class="tok-variable">pin_number</span><span class="tok-punct">:</span> <span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-variable">_mode</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1113,25 +1114,25 @@ let led: Pin&lt;Output&gt; = Pin { pin_number: 5, _mode: PhantomData };
             <p>Converting a pin from one mode to another consumes the old typed value
 and returns a new one carrying a different <code>PhantomData</code> marker — the
 conversion is real at compile time and free at runtime.</p>
-<pre><code class="rust">use core::marker::PhantomData;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">marker</span><span class="tok-punct">::</span><span class="tok-type">PhantomData</span><span class="tok-punct">;</span>
 
-struct Input;
-struct Output;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Input</span><span class="tok-punct">;</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Output</span><span class="tok-punct">;</span>
 
-struct Pin&lt;MODE&gt; {
-    pin_number: u8,
-    _mode: PhantomData&lt;MODE&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pin</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pin_number</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_mode</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Pin&lt;Input&gt; {
-    fn into_output(self) -&gt; Pin&lt;Output&gt; { // &lt;- consumes an Input pin, returns an Output pin
-        Pin { pin_number: self.pin_number, _mode: PhantomData }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-type">Input</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">into_output</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Pin</span><span class="tok-punct">&lt;</span><span class="tok-type-return">Output</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- consumes an Input pin, returns an Output pin</span>
+        <span class="tok-type">Pin</span> <span class="tok-punct">{</span> <span class="tok-variable">pin_number</span><span class="tok-punct">:</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pin_number</span><span class="tok-punct">,</span> <span class="tok-variable">_mode</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Pin&lt;Output&gt; {
-    fn set_high(&amp;mut self) { /* write to the ODR register here */ }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* write to the ODR register here */</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>into_output</code> takes <code>self</code> by value, so the old
@@ -1152,21 +1153,21 @@ describes for monomorphized generic code in general.</p>
 that only exists on <code>Pin&lt;Analog&gt;</code> — makes calling it on the wrong mode a
 compile error instead of a runtime error code the caller has to remember
 to check.</p>
-<pre><code class="rust">use core::marker::PhantomData;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">marker</span><span class="tok-punct">::</span><span class="tok-type">PhantomData</span><span class="tok-punct">;</span>
 
-struct Analog;
-struct Digital;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Analog</span><span class="tok-punct">;</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Digital</span><span class="tok-punct">;</span>
 
-struct Pin&lt;MODE&gt; {
-    pin_number: u8,
-    _mode: PhantomData&lt;MODE&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pin</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pin_number</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_mode</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Pin&lt;Analog&gt; {
-    fn read_raw(&amp;self) -&gt; u16 { 0 /* real code reads the ADC register here */ }
-    // read_raw() simply doesn't exist on Pin&lt;Digital&gt; -- the method isn't
-    // callable at all, rather than returning an error code at runtime
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-type">Analog</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span> <span class="tok-number">0</span> <span class="tok-comment">/* real code reads the ADC register here */</span> <span class="tok-punct">}</span>
+    <span class="tok-comment">// read_raw() simply doesn't exist on Pin&lt;Digital&gt; -- the method isn't</span>
+    <span class="tok-comment">// callable at all, rather than returning an error code at runtime</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an ADC read on a pin that isn't wired to the analog
@@ -1185,27 +1186,27 @@ zero-cost <code>PhantomData</code> marker, is strictly stronger than a runtime
             <p>An <code>embedded-hal</code> trait like <code>OutputPin</code> is typically implemented only
 for the mode where it's physically valid, so a generic function bounded
 by that trait only ever compiles against a correctly-configured pin.</p>
-<pre><code class="rust">use core::marker::PhantomData;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">marker</span><span class="tok-punct">::</span><span class="tok-type">PhantomData</span><span class="tok-punct">;</span>
 
-struct Output;
-struct Input;
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Output</span><span class="tok-punct">;</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Input</span><span class="tok-punct">;</span>
 
-struct Pin&lt;MODE&gt; {
-    pin_number: u8,
-    _mode: PhantomData&lt;MODE&gt;,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pin</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">pin_number</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_mode</span><span class="tok-punct">:</span> <span class="tok-type">PhantomData</span><span class="tok-punct">&lt;</span><span class="tok-constant">MODE</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-trait OutputPin {
-    fn set_high(&amp;mut self);
-}
+<span class="tok-keyword">trait</span> <span class="tok-type-def">OutputPin</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-impl OutputPin for Pin&lt;Output&gt; { // &lt;- only Pin&lt;Output&gt; gets this impl; Pin&lt;Input&gt; does not
-    fn set_high(&amp;mut self) { /* write to the ODR register here */ }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">OutputPin</span> <span class="tok-keyword">for</span> <span class="tok-type">Pin</span><span class="tok-punct">&lt;</span><span class="tok-type">Output</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- only Pin&lt;Output&gt; gets this impl; Pin&lt;Input&gt; does not</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment">/* write to the ODR register here */</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn blink&lt;P: OutputPin&gt;(pin: &amp;mut P) { // &lt;- generic over any type that implements OutputPin
-    pin.set_high();
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-generic-param">P</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic over any type that implements OutputPin</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> implementing the trait only for <code>Pin&lt;Output&gt;</code> means

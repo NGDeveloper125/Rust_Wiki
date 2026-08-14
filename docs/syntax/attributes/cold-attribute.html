@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1002,17 +1003,17 @@ into the function actually being optimized for the common case.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Marking a rarely-called function as cold</h3>
-            <pre><code class="rust">#[cold] // &lt;- hints that this function is rarely called; keeps it out of the hot path's inlining
-fn report_out_of_range(value: i32) -&gt; ! {
-    panic!("value {value} out of range");
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cold]</span> <span class="tok-comment tok-anno">// &lt;- hints that this function is rarely called; keeps it out of the hot path's inlining</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">report_out_of_range</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;value {value} out of range&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn clamp_index(value: i32, len: usize) -&gt; usize {
-    if value &lt; 0 || value as usize &gt;= len {
-        report_out_of_range(value); // rarely taken
-    }
-    value as usize
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">clamp_index</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">value</span> <span class="tok-punct">&lt;</span> <span class="tok-number">0</span> <span class="tok-punct">||</span> <span class="tok-variable">value</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span> <span class="tok-punct">&gt;=</span> <span class="tok-variable">len</span> <span class="tok-punct">{</span>
+        <span class="tok-call-free">report_out_of_range</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// rarely taken</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">value</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1023,20 +1024,20 @@ failure path that builds a detailed error message — splitting the error
 construction into a separate <code>#[cold]</code> function keeps the success path
 lean, since the compiler no longer needs to consider inlining the
 message-formatting logic into it.</p>
-<pre><code class="rust">#[derive(Debug)]
-struct ValidationError(String);
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">ValidationError</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-#[cold] // &lt;- marks the failure path as unlikely, keeping it out of the hot path's codegen
-fn invalid_order_total(total_cents: i64) -&gt; ValidationError {
-    ValidationError(format!("order total {total_cents} is negative"))
-}
+<span class="tok-attribute">#[cold]</span> <span class="tok-comment tok-anno">// &lt;- marks the failure path as unlikely, keeping it out of the hot path's codegen</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">invalid_order_total</span><span class="tok-punct">(</span><span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">ValidationError</span> <span class="tok-punct">{</span>
+    <span class="tok-field">ValidationError</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;order total {total_cents} is negative&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn validate_order_total(total_cents: i64) -&gt; Result&lt;(), ValidationError&gt; {
-    if total_cents &lt; 0 {
-        return Err(invalid_order_total(total_cents)); // &lt;- rare branch, delegated to a #[cold] fn
-    }
-    Ok(())
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">validate_order_total</span><span class="tok-punct">(</span><span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">ValidationError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">total_cents</span> <span class="tok-punct">&lt;</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">return</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-call-free">invalid_order_total</span><span class="tok-punct">(</span><span class="tok-variable">total_cents</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- rare branch, delegated to a #[cold] fn</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>#[cold]</code> communicates a likelihood the compiler can't
 infer purely from control flow — that this particular branch is expected
@@ -1079,35 +1080,35 @@ instead of a general-purpose style preference.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Keeping an ADC interrupt handler's fault path cold</h3>
-            <pre><code class="rust">#[cold] // &lt;- rare fault path stays out of the ISR's hot, latency-sensitive body
-fn handle_adc_overrun() {
-    // log or count the overrun; a real handler might set a fault flag
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cold]</span> <span class="tok-comment tok-anno">// &lt;- rare fault path stays out of the ISR's hot, latency-sensitive body</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">handle_adc_overrun</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// log or count the overrun; a real handler might set a fault flag</span>
+<span class="tok-punct">}</span>
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ADC1_2() {
-    let overrun = false; // stand-in for a real overrun-flag register read
-    if overrun {
-        handle_adc_overrun(); // rarely taken
-    }
-    // ordinary sample read continues here, uninterrupted by the fault-handling code above
-}
+<span class="tok-attribute">#[unsafe(no_mangle)]</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">ADC1_2</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">overrun</span> <span class="tok-punct">=</span> <span class="tok-number">false</span><span class="tok-punct">;</span> <span class="tok-comment">// stand-in for a real overrun-flag register read</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">overrun</span> <span class="tok-punct">{</span>
+        <span class="tok-call-free">handle_adc_overrun</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// rarely taken</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-comment">// ordinary sample read continues here, uninterrupted by the fault-handling code above</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Marking an allocator's out-of-memory path cold</h3>
-            <pre><code class="rust">#[cold] // &lt;- keeps the common allocation path lean; OOM is the rare branch
-fn report_alloc_failure() -&gt; ! {
-    panic!("heap exhausted");
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[cold]</span> <span class="tok-comment tok-anno">// &lt;- keeps the common allocation path lean; OOM is the rare branch</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">report_alloc_failure</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;heap exhausted&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn alloc_or_halt(remaining: usize, requested: usize) -&gt; usize {
-    if requested &gt; remaining {
-        report_alloc_failure();
-    }
-    remaining - requested
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">alloc_or_halt</span><span class="tok-punct">(</span><span class="tok-variable">remaining</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span> <span class="tok-variable">requested</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">usize</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">requested</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">remaining</span> <span class="tok-punct">{</span>
+        <span class="tok-call-free">report_alloc_failure</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">remaining</span> <span class="tok-punct">-</span> <span class="tok-variable">requested</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Both examples split a rare, larger branch into its own <code>#[cold]</code> function
 for the same underlying reason as the classic case — the optimizer stops

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -987,8 +988,8 @@ implement <code>!=</code> separately from <code>==</code>.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Testing for inequality</h3>
-            <pre><code class="rust">let state = 3;
-let ready = state != 0; // &lt;- `!=` tests for inequality
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">state</span> <span class="tok-punct">=</span> <span class="tok-number">3</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ready</span> <span class="tok-punct">=</span> <span class="tok-variable">state</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `!=` tests for inequality</span>
 </code></pre>
 
           </div>
@@ -997,16 +998,16 @@ let ready = state != 0; // &lt;- `!=` tests for inequality
             <p>A guard clause that rejects a sentinel or placeholder value reads more
 directly with <code>!=</code> than with a negated <code>==</code>, and is a common first line
 of defense before an input is used.</p>
-<pre><code class="rust">fn set_channel(channel: u8) -&gt; Result&lt;(), &amp;'static str&gt; {
-    if channel != 0 { // &lt;- `!=` guards against the reserved "unset" sentinel
-        Ok(())
-    } else {
-        Err("channel 0 is reserved and cannot be assigned")
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">set_channel</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">channel</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `!=` guards against the reserved &quot;unset&quot; sentinel</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;channel 0 is reserved and cannot be assigned&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert!(set_channel(0).is_err());
-assert!(set_channel(4).is_ok());
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">set_channel</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-call-free">set_channel</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>channel != 0</code> reads as "channel is set" more directly
 than <code>!(channel == 0)</code>, and the compiler treats them identically since
@@ -1041,23 +1042,23 @@ tight loop rather than once at startup.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Detecting an unexpected device on the bus</h3>
-            <pre><code class="rust">const EXPECTED_CHIP_ID: u8 = 0xD4;
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">EXPECTED_CHIP_ID</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0xD4</span><span class="tok-punct">;</span>
 
-fn is_unexpected_chip(chip_id_reg: u8) -&gt; bool {
-    chip_id_reg != EXPECTED_CHIP_ID // &lt;- `!=` flags any chip ID that doesn't match what this driver expects
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_unexpected_chip</span><span class="tok-punct">(</span><span class="tok-variable">chip_id_reg</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">chip_id_reg</span> <span class="tok-punct">!=</span> <span class="tok-constant">EXPECTED_CHIP_ID</span> <span class="tok-comment tok-anno">// &lt;- `!=` flags any chip ID that doesn't match what this driver expects</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Polling a busy bit until it clears</h3>
-            <pre><code class="rust">const BUSY_BIT: u8 = 0x80;
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">BUSY_BIT</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0x80</span><span class="tok-punct">;</span>
 
-fn wait_until_ready(read_status: impl Fn() -&gt; u8) {
-    while read_status() &amp; BUSY_BIT != 0 { // &lt;- `!=` keeps polling until the busy bit clears
-        // spin until the peripheral reports it's no longer busy
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">wait_until_ready</span><span class="tok-punct">(</span><span class="tok-variable">read_status</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">while</span> <span class="tok-call-free">read_status</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;</span> <span class="tok-constant">BUSY_BIT</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `!=` keeps polling until the busy bit clears</span>
+        <span class="tok-comment">// spin until the peripheral reports it's no longer busy</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1013,11 +1014,11 @@ all, so it always implements all three automatically.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn apply_twice&lt;F: Fn(i32) -&gt; i32&gt;(value: i32, f: F) -&gt; i32 { // &lt;- `Fn`: `f` may be called more than once here
-    f(f(value))
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">apply_twice</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">F</span><span class="tok-punct">:</span> <span class="tok-field">Fn</span><span class="tok-punct">(</span><span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type-return">i32</span><span class="tok-punct">,</span> <span class="tok-variable">f</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `Fn`: `f` may be called more than once here</span>
+    <span class="tok-call-free">f</span><span class="tok-punct">(</span><span class="tok-call-free">f</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let doubled_twice = apply_twice(5, |n| n * 2);
+<span class="tok-keyword">let</span> <span class="tok-variable">doubled_twice</span> <span class="tok-punct">=</span> <span class="tok-call-free">apply_twice</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-punct">|</span><span class="tok-variable">n</span><span class="tok-punct">|</span> <span class="tok-variable">n</span> <span class="tok-punct">*</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1035,24 +1036,24 @@ let doubled_twice = apply_twice(5, |n| n * 2);
             <p>A retry helper calls its closure repeatedly and needs it to mutate a
 captured attempt counter between calls, which rules out <code>Fn</code> and requires
 <code>FnMut</code>.</p>
-<pre><code class="rust">fn retry_until_success&lt;F: FnMut() -&gt; bool&gt;(mut attempt: F, max_tries: u32) -&gt; bool {
-    // &lt;- `FnMut`: called repeatedly, and needs `&amp;mut` access to its captures
-    for _ in 0..max_tries {
-        if attempt() {
-            return true;
-        }
-    }
-    false
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">retry_until_success</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">F</span><span class="tok-punct">:</span> <span class="tok-field">FnMut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">attempt</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span><span class="tok-punct">,</span> <span class="tok-variable">max_tries</span><span class="tok-punct">:</span> <span class="tok-type-return">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `FnMut`: called repeatedly, and needs `&amp;mut` access to its captures</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-variable">max_tries</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-call-free">attempt</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-number">true</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-number">false</span>
+<span class="tok-punct">}</span>
 
-let mut tries_used = 0;
-let succeeded = retry_until_success(
-    || {
-        tries_used += 1; // &lt;- mutates a captured variable, so this closure only satisfies `FnMut`, not `Fn`
-        tries_used &gt;= 3
-    },
-    5,
-);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">tries_used</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">succeeded</span> <span class="tok-punct">=</span> <span class="tok-call-free">retry_until_success</span><span class="tok-punct">(</span>
+    <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">tries_used</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutates a captured variable, so this closure only satisfies `FnMut`, not `Fn`</span>
+        <span class="tok-variable">tries_used</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">3</span>
+    <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-number">5</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1071,17 +1072,17 @@ than defaulting to the most permissive-looking one.</p>
             <p><code>thread::spawn</code> calls its closure exactly once, on the new thread, so it
 only requires <code>FnOnce</code> — a stricter bound like <code>Fn</code> would needlessly
 reject closures that consume what they captured.</p>
-<pre><code class="rust">use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-fn run_in_background&lt;F: FnOnce() + Send + 'static&gt;(job: F) {
-    // &lt;- `FnOnce`: `thread::spawn` calls the closure exactly one time
-    thread::spawn(job);
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">run_in_background</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">F</span><span class="tok-punct">:</span> <span class="tok-field">FnOnce</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-type">Send</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `FnOnce`: `thread::spawn` calls the closure exactly one time</span>
+    <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-let payload = String::from("order-42");
-run_in_background(move || {
-    println!("processing {payload}"); // &lt;- consumes `payload`, which is why only `FnOnce` is required
-});
+<span class="tok-keyword">let</span> <span class="tok-variable">payload</span> <span class="tok-punct">=</span> <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;order-42&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-call-free">run_in_background</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;processing {payload}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- consumes `payload`, which is why only `FnOnce` is required</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1100,25 +1101,25 @@ consume its captures.</p>
             <p>An event-driven <code>Button</code> needs to run its click handler on every click,
 and the handler often needs to mutate something it captured (a counter,
 a log) — so the field's type is bounded by <code>FnMut</code>, not <code>Fn</code> or <code>FnOnce</code>.</p>
-<pre><code class="rust">struct Button {
-    on_click: Box&lt;dyn FnMut()&gt;, // &lt;- `FnMut`: may run on every click, and may mutate captured state each time
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Button</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">on_click</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-field">FnMut</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `FnMut`: may run on every click, and may mutate captured state each time</span>
+<span class="tok-punct">}</span>
 
-impl Button {
-    fn click(&amp;mut self) {
-        (self.on_click)();
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Button</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">click</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">on_click</span><span class="tok-punct">)</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut click_count = 0;
-let mut button = Button {
-    on_click: Box::new(move || {
-        click_count += 1;
-        println!("clicked {click_count} times");
-    }),
-};
-button.click();
-button.click();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">click_count</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">button</span> <span class="tok-punct">=</span> <span class="tok-type">Button</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">on_click</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">click_count</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;clicked {click_count} times&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-variable">button</span><span class="tok-punct">.</span><span class="tok-call-method">click</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">button</span><span class="tok-punct">.</span><span class="tok-call-method">click</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> requiring the least restrictive trait a callback API
@@ -1158,14 +1159,14 @@ generic/reference-based use of them, never allocate.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Sensor;
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Sensor</span><span class="tok-punct">;</span>
 
-impl Sensor {
-    fn on_data_ready&lt;F: FnMut(u16)&gt;(&amp;mut self, mut callback: F) {
-        // &lt;- `FnMut`: the driver may call `callback` again on every new sample
-        callback(0x01A3);
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Sensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_data_ready</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">F</span><span class="tok-punct">:</span> <span class="tok-field">FnMut</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-keyword">mut</span> <span class="tok-variable">callback</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `FnMut`: the driver may call `callback` again on every new sample</span>
+        <span class="tok-call-free">callback</span><span class="tok-punct">(</span><span class="tok-number">0x01A3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1184,21 +1185,21 @@ impl Sensor {
 reading arrives over I2C, and callers commonly want to accumulate or
 mutate state on each call — so the callback parameter is bounded by
 <code>FnMut</code>, not the stricter <code>Fn</code> or the single-call <code>FnOnce</code>.</p>
-<pre><code class="rust">struct HumiditySensor;
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">HumiditySensor</span><span class="tok-punct">;</span>
 
-impl HumiditySensor {
-    fn on_data_ready&lt;F: FnMut(u16)&gt;(&amp;mut self, mut callback: F) {
-        // &lt;- `FnMut`: called once per sample, for as long as the sensor keeps producing readings
-        for sample in [412u16, 418, 405] { // stand-in for successive register reads
-            callback(sample);
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">HumiditySensor</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_data_ready</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">F</span><span class="tok-punct">:</span> <span class="tok-field">FnMut</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-keyword">mut</span> <span class="tok-variable">callback</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-comment tok-anno">// &lt;- `FnMut`: called once per sample, for as long as the sensor keeps producing readings</span>
+        <span class="tok-keyword">for</span> <span class="tok-variable">sample</span> <span class="tok-keyword">in</span> <span class="tok-punct">[</span><span class="tok-number">412u16</span><span class="tok-punct">,</span> <span class="tok-number">418</span><span class="tok-punct">,</span> <span class="tok-number">405</span><span class="tok-punct">]</span> <span class="tok-punct">{</span> <span class="tok-comment">// stand-in for successive register reads</span>
+            <span class="tok-call-free">callback</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-fn run(sensor: &amp;mut HumiditySensor) {
-    let mut total: u32 = 0;
-    sensor.on_data_ready(|sample| total += u32::from(sample)); // &lt;- mutates a captured accumulator each call
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">run</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">HumiditySensor</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+    <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-call-method">on_data_ready</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">sample</span><span class="tok-punct">|</span> <span class="tok-variable">total</span> <span class="tok-punct">+=</span> <span class="tok-module">u32</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutates a captured accumulator each call</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> requiring <code>FnMut</code> rather than <code>Fn</code> admits callbacks that
@@ -1220,24 +1221,24 @@ applies to choosing between the three traits.</p>
 loop that calls its closure repeatedly and needs it to mutate a captured
 attempt counter, so the polling helper is generic over <code>FnMut</code>, exactly
 like a hosted retry loop would be.</p>
-<pre><code class="rust">fn poll_until_ready&lt;F: FnMut() -&gt; bool&gt;(mut attempt: F, max_polls: u32) -&gt; bool {
-    // &lt;- `FnMut`: called on every polling iteration, and needs `&amp;mut` access to its captures
-    for _ in 0..max_polls {
-        if attempt() {
-            return true;
-        }
-    }
-    false
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">poll_until_ready</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">F</span><span class="tok-punct">:</span> <span class="tok-field">FnMut</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">attempt</span><span class="tok-punct">:</span> <span class="tok-generic-param">F</span><span class="tok-punct">,</span> <span class="tok-variable">max_polls</span><span class="tok-punct">:</span> <span class="tok-type-return">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- `FnMut`: called on every polling iteration, and needs `&amp;mut` access to its captures</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-variable">max_polls</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-call-free">attempt</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">return</span> <span class="tok-number">true</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-number">false</span>
+<span class="tok-punct">}</span>
 
-let mut polls_used = 0;
-let ready = poll_until_ready(
-    || {
-        polls_used += 1; // &lt;- mutates a captured counter, so this closure only satisfies `FnMut`
-        polls_used &gt;= 3 // stand-in for reading a status register's ready bit
-    },
-    10,
-);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">polls_used</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ready</span> <span class="tok-punct">=</span> <span class="tok-call-free">poll_until_ready</span><span class="tok-punct">(</span>
+    <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">polls_used</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- mutates a captured counter, so this closure only satisfies `FnMut`</span>
+        <span class="tok-variable">polls_used</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">3</span> <span class="tok-comment">// stand-in for reading a status register's ready bit</span>
+    <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-number">10</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a bare-metal polling loop is one of the most common

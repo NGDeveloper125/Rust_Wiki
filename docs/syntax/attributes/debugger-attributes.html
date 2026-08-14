@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1014,12 +1015,12 @@ day-to-day application code.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Attributing a macro's expanded code to its call site</h3>
-            <pre><code class="rust">#[collapse_debuginfo(yes)] // &lt;- attributes this macro's expanded code to each call site, not its own definition
-macro_rules! double {
-    ($value:expr) =&gt; {
-        $value * 2
-    };
-}
+            <pre><code class="rust-hl"><span class="tok-attribute">#[collapse_debuginfo(yes)]</span> <span class="tok-comment tok-anno">// &lt;- attributes this macro's expanded code to each call site, not its own definition</span>
+<span class="tok-macro">macro_rules!</span> <span class="tok-variable">double</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">value</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-punct">$</span><span class="tok-variable">value</span> <span class="tok-punct">*</span> <span class="tok-number">2</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1029,16 +1030,16 @@ macro_rules! double {
 plumbing; without <code>#[collapse_debuginfo]</code>, stepping through a call to it
 in a debugger can drop the user into the macro's own definition rather
 than staying at the call site the developer actually cares about.</p>
-<pre><code class="rust">#[collapse_debuginfo(yes)] // &lt;- keeps single-stepping at the call site, not inside the macro's own expansion
-macro_rules! log_event {
-    ($msg:expr) =&gt; {
-        println!("[event] {}", $msg)
-    };
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[collapse_debuginfo(yes)]</span> <span class="tok-comment tok-anno">// &lt;- keeps single-stepping at the call site, not inside the macro's own expansion</span>
+<span class="tok-macro">macro_rules!</span> <span class="tok-variable">log_event</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">msg</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;[event] {}&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">msg</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn process_order(order_id: u32) {
-    log_event!(format!("processing order {order_id}")); // &lt;- debugger steps through this line, not the macro body
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">process_order</span><span class="tok-punct">(</span><span class="tok-variable">order_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">log_event!</span><span class="tok-punct">(</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;processing order {order_id}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- debugger steps through this line, not the macro body</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>A caller stepping through <code>process_order</code> is almost
 always interested in their own control flow, not in re-deriving how
@@ -1085,28 +1086,28 @@ variable-inspection view at all.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Why a Natvis visualizer doesn't help a probe-rs/GDB debugging session</h3>
-            <pre><code class="rust">// AVOID relying on this alone for embedded debugging — Natvis is Visual-Studio-specific:
-#[debugger_visualizer(natvis_file = "RingBuffer.natvis")] // &lt;- has no effect when debugging via GDB over a probe
-pub struct RingBuffer {
-    head: usize,
-    data: [u8; 64],
-}
+            <pre><code class="rust-hl"><span class="tok-comment">// AVOID relying on this alone for embedded debugging — Natvis is Visual-Studio-specific:</span>
+<span class="tok-attribute">#[debugger_visualizer(natvis_file = &quot;RingBuffer.natvis&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- has no effect when debugging via GDB over a probe</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RingBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">head</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Reaching for defmt/RTT instead of a visualizer for on-target inspection</h3>
-            <pre><code class="rust">use defmt::Format;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-type">Format</span><span class="tok-punct">;</span>
 
-#[derive(Format)] // &lt;- defmt's own derive, not debugger_visualizer: formats this type for RTT logging
-pub struct RingBuffer {
-    head: usize,
-    data: [u8; 64],
-}
+<span class="tok-attribute">#[derive(Format)]</span> <span class="tok-comment tok-anno">// &lt;- defmt's own derive, not debugger_visualizer: formats this type for RTT logging</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RingBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">head</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">64</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn log_state(buf: &amp;RingBuffer) {
-    defmt::info!("ring buffer state: {:?}", buf); // &lt;- printed over RTT, read by probe-rs on the host
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_state</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">RingBuffer</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-module">defmt</span><span class="tok-punct">::</span><span class="tok-macro">info!</span><span class="tok-punct">(</span><span class="tok-string">&quot;ring buffer state: {:?}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- printed over RTT, read by probe-rs on the host</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

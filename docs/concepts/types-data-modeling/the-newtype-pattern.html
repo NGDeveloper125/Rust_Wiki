@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -996,14 +997,14 @@ signature idioms rather than a niche trick.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Meters(f64); // &lt;- a distinct type, not just another name for f64
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Meters</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- a distinct type, not just another name for f64</span>
 
-fn print_distance(d: Meters) {
-    println!("{} m", d.0); // &lt;- the wrapped value is accessed via .0
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">print_distance</span><span class="tok-punct">(</span><span class="tok-variable">d</span><span class="tok-punct">:</span> <span class="tok-type">Meters</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} m&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">d</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the wrapped value is accessed via .0</span>
+<span class="tok-punct">}</span>
 
-print_distance(Meters(5.0));
-// print_distance(5.0); // &lt;- would not compile: f64 is not a Meters
+<span class="tok-call-free">print_distance</span><span class="tok-punct">(</span><span class="tok-field">Meters</span><span class="tok-punct">(</span><span class="tok-number">5.0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// print_distance(5.0); // &lt;- would not compile: f64 is not a Meters</span>
 </code></pre>
 <p><strong>Restriction:</strong> the wrapper gets no behavior for free — arithmetic
 operators, trait impls, and methods that <code>f64</code> has don't automatically
@@ -1026,15 +1027,15 @@ explicitly (e.g. <code>impl Add for Meters</code>).</p>
 shape that invites an accidental argument swap that compiles cleanly and
 misbehaves at runtime. Wrapping each in its own newtype turns that swap
 into a compile error.</p>
-<pre><code class="rust">struct UserId(u64);  // &lt;- distinct from OrderId even though both wrap u64
-struct OrderId(u64);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">UserId</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment tok-anno">// &lt;- distinct from OrderId even though both wrap u64</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">OrderId</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn refund(user: UserId, order: OrderId) { // &lt;- swapping the argument order is now a compile error
-    println!("refunding order {} for user {}", order.0, user.0);
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">refund</span><span class="tok-punct">(</span><span class="tok-variable">user</span><span class="tok-punct">:</span> <span class="tok-type">UserId</span><span class="tok-punct">,</span> <span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-type">OrderId</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- swapping the argument order is now a compile error</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;refunding order {} for user {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">user</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-refund(UserId(42), OrderId(1001));
-// refund(OrderId(1001), UserId(42)); // &lt;- would not compile: types don't match
+<span class="tok-call-free">refund</span><span class="tok-punct">(</span><span class="tok-field">UserId</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">OrderId</span><span class="tok-punct">(</span><span class="tok-number">1001</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// refund(OrderId(1001), UserId(42)); // &lt;- would not compile: types don't match</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <a href="https://effective-rust.com/">Effective Rust</a> covers
@@ -1052,22 +1053,22 @@ newtypes as a primary defense against this exact class of bug — two
             <p>Implementing <code>From</code>/<code>Into</code> in both directions gives a newtype
 conventional wrapping and unwrapping, instead of an ad-hoc method name
 every newtype in the codebase would otherwise invent independently.</p>
-<pre><code class="rust">struct UserId(u64);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">UserId</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl From&lt;u64&gt; for UserId {
-    fn from(raw: u64) -&gt; Self { // &lt;- wrapping goes through From, not a custom method name
-        UserId(raw)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">u64</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">UserId</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- wrapping goes through From, not a custom method name</span>
+        <span class="tok-field">UserId</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl From&lt;UserId&gt; for u64 {
-    fn from(id: UserId) -&gt; Self { // &lt;- unwrapping is just as conventional as wrapping
-        id.0
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">UserId</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">UserId</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- unwrapping is just as conventional as wrapping</span>
+        <span class="tok-variable">id</span><span class="tok-punct">.</span><span class="tok-number">0</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let id: UserId = 42.into();  // &lt;- wrap
-let raw: u64 = id.into();    // &lt;- unwrap
+<span class="tok-keyword">let</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">UserId</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment tok-anno">// &lt;- wrap</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">=</span> <span class="tok-variable">id</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>    <span class="tok-comment tok-anno">// &lt;- unwrap</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the API Guidelines'
@@ -1117,15 +1118,15 @@ routinely wrapped in newtypes for exactly this reason.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct Millivolts(u16); // &lt;- distinct from a raw ADC count, even though both are u16 underneath
-struct AdcCount(u16);
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Millivolts</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- distinct from a raw ADC count, even though both are u16 underneath</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">AdcCount</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn to_millivolts(raw: AdcCount, vref_mv: u16) -&gt; Millivolts {
-    Millivolts((raw.0 as u32 * vref_mv as u32 / 4095) as u16)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">to_millivolts</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">AdcCount</span><span class="tok-punct">,</span> <span class="tok-variable">vref_mv</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Millivolts</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Millivolts</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">*</span> <span class="tok-variable">vref_mv</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">/</span> <span class="tok-number">4095</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u16</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-let reading = to_millivolts(AdcCount(2048), 3300);
-// print_voltage(AdcCount(2048)); // &lt;- would not compile: an AdcCount is not a Millivolts
+<span class="tok-keyword">let</span> <span class="tok-variable">reading</span> <span class="tok-punct">=</span> <span class="tok-call-free">to_millivolts</span><span class="tok-punct">(</span><span class="tok-field">AdcCount</span><span class="tok-punct">(</span><span class="tok-number">2048</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">3300</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// print_voltage(AdcCount(2048)); // &lt;- would not compile: an AdcCount is not a Millivolts</span>
 </code></pre>
 
       </section>
@@ -1144,15 +1145,15 @@ let reading = to_millivolts(AdcCount(2048), 3300);
 delay, say — is exactly the shape that invites an accidental swap;
 wrapping each in its own newtype turns the swap into a compile error
 instead of a hardware misconfiguration.</p>
-<pre><code class="rust">struct PinNumber(u8);  // &lt;- distinct from DebounceMs even though both wrap small integers
-struct DebounceMs(u16);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">PinNumber</span><span class="tok-punct">(</span><span class="tok-type">u8</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment tok-anno">// &lt;- distinct from DebounceMs even though both wrap small integers</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">DebounceMs</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn configure_button(pin: PinNumber, debounce: DebounceMs) { // &lt;- swapping the argument order is now a compile error
-    let _ = (pin.0, debounce.0);
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">configure_button</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">PinNumber</span><span class="tok-punct">,</span> <span class="tok-variable">debounce</span><span class="tok-punct">:</span> <span class="tok-type">DebounceMs</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- swapping the argument order is now a compile error</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">debounce</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-configure_button(PinNumber(4), DebounceMs(20));
-// configure_button(DebounceMs(20), PinNumber(4)); // &lt;- would not compile: types don't match
+<span class="tok-call-free">configure_button</span><span class="tok-punct">(</span><span class="tok-field">PinNumber</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">DebounceMs</span><span class="tok-punct">(</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-comment">// configure_button(DebounceMs(20), PinNumber(4)); // &lt;- would not compile: types don't match</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <a href="https://effective-rust.com/">Effective Rust</a> covers
@@ -1172,16 +1173,16 @@ reaches the board.</p>
 place in the code; implementing <code>From</code> for that conversion keeps wrapping
 and unwrapping conventional instead of inventing a one-off method name
 per newtype.</p>
-<pre><code class="rust">struct AdcCount(u16);
-struct Millivolts(u32);
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">AdcCount</span><span class="tok-punct">(</span><span class="tok-type">u16</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Millivolts</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl From&lt;AdcCount&gt; for Millivolts {
-    fn from(raw: AdcCount) -&gt; Self { // &lt;- calibration math lives in one conventional place
-        Millivolts(raw.0 as u32 * 3300 / 4095)
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">AdcCount</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">Millivolts</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">AdcCount</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- calibration math lives in one conventional place</span>
+        <span class="tok-field">Millivolts</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">*</span> <span class="tok-number">3300</span> <span class="tok-punct">/</span> <span class="tok-number">4095</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let voltage: Millivolts = AdcCount(2048).into(); // &lt;- .into() reads as "convert", not a custom method name
+<span class="tok-keyword">let</span> <span class="tok-variable">voltage</span><span class="tok-punct">:</span> <span class="tok-type">Millivolts</span> <span class="tok-punct">=</span> <span class="tok-field">AdcCount</span><span class="tok-punct">(</span><span class="tok-number">2048</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- .into() reads as &quot;convert&quot;, not a custom method name</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> using the standard <code>From</code>/<code>Into</code> traits rather than a
@@ -1201,20 +1202,20 @@ Guidelines'
 bit-testing methods live on a type that documents what the bits mean,
 instead of scattering raw shifts and masks across the code that reads the
 register.</p>
-<pre><code class="rust">#[repr(transparent)] // &lt;- zero-cost: identical layout to the raw u32 register value
-struct StatusRegister(u32);
+<pre><code class="rust-hl"><span class="tok-attribute">#[repr(transparent)]</span> <span class="tok-comment tok-anno">// &lt;- zero-cost: identical layout to the raw u32 register value</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">StatusRegister</span><span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-impl StatusRegister {
-    fn is_busy(&amp;self) -&gt; bool {
-        self.0 &amp; 0b1 != 0 // &lt;- bit 0: busy flag
-    }
-    fn has_error(&amp;self) -&gt; bool {
-        self.0 &amp; 0b10 != 0 // &lt;- bit 1: error flag
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">StatusRegister</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">is_busy</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b1</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span> <span class="tok-comment tok-anno">// &lt;- bit 0: busy flag</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">has_error</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b10</span> <span class="tok-punct">!=</span> <span class="tok-number">0</span> <span class="tok-comment tok-anno">// &lt;- bit 1: error flag</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let status = StatusRegister(0b10); // read from a memory-mapped register in real code
-assert!(status.has_error());
+<span class="tok-keyword">let</span> <span class="tok-variable">status</span> <span class="tok-punct">=</span> <span class="tok-field">StatusRegister</span><span class="tok-punct">(</span><span class="tok-number">0b10</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// read from a memory-mapped register in real code</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">.</span><span class="tok-call-method">has_error</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> naming the bit-testing operations as methods on the

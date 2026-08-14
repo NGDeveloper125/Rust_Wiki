@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -986,8 +987,8 @@ overloadable via <code>std::ops::BitXorAssign</code>. A classic use is toggling 
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Toggling bits in place</h3>
-            <pre><code class="rust">let mut flags = 0b1010u8;
-flags ^= 0b0011; // &lt;- toggles the bits set in the mask, in place
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">flags</span> <span class="tok-punct">=</span> <span class="tok-number">0b1010u8</span><span class="tok-punct">;</span>
+<span class="tok-variable">flags</span> <span class="tok-punct">^</span><span class="tok-punct">=</span> <span class="tok-number">0b0011</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- toggles the bits set in the mask, in place</span>
 </code></pre>
 <p><strong>Restriction:</strong> the left-hand side must be a mutable binding
 (<code>let mut</code>) — <code>^=</code> assigns in place.</p>
@@ -997,13 +998,13 @@ flags ^= 0b0011; // &lt;- toggles the bits set in the mask, in place
             <h3 class="scenario-title">Bit manipulation and flags</h3>
             <p><code>^=</code> flips a specific bit without needing to know its current state
 first — XOR-ing a bit in twice restores the original value.</p>
-<pre><code class="rust">const FLAG_NOTIFY: u8 = 0b0001;
-const FLAG_MUTED: u8  = 0b0010;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">FLAG_NOTIFY</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0b0001</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">FLAG_MUTED</span><span class="tok-punct">:</span> <span class="tok-type">u8</span>  <span class="tok-punct">=</span> <span class="tok-number">0b0010</span><span class="tok-punct">;</span>
 
-let mut settings: u8 = FLAG_NOTIFY;
-settings ^= FLAG_MUTED; // &lt;- toggles the MUTED bit on, leaving NOTIFY untouched
-settings ^= FLAG_MUTED; // toggling the same bit again restores the original value
-assert_eq!(settings, FLAG_NOTIFY);
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">settings</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-constant">FLAG_NOTIFY</span><span class="tok-punct">;</span>
+<span class="tok-variable">settings</span> <span class="tok-punct">^</span><span class="tok-punct">=</span> <span class="tok-constant">FLAG_MUTED</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- toggles the MUTED bit on, leaving NOTIFY untouched</span>
+<span class="tok-variable">settings</span> <span class="tok-punct">^</span><span class="tok-punct">=</span> <span class="tok-constant">FLAG_MUTED</span><span class="tok-punct">;</span> <span class="tok-comment">// toggling the same bit again restores the original value</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">settings</span><span class="tok-punct">,</span> <span class="tok-constant">FLAG_NOTIFY</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Toggling with <code>^=</code> is the documented idiom on
 <a href="https://doc.rust-lang.org/std/ops/trait.BitXorAssign.html"><code>BitXorAssign</code></a>
@@ -1040,16 +1041,16 @@ per timer tick.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Toggling an LED pin via a read-modify-write</h3>
-            <pre><code class="rust">const GPIOA_ODR: *mut u32 = 0x4001_080C as *mut u32; // GPIOA output data register
-const LED_PIN: u32 = 1 &lt;&lt; 5;
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_080C</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment">// GPIOA output data register</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">LED_PIN</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
 
-fn toggle_led() {
-    unsafe {
-        let mut odr = core::ptr::read_volatile(GPIOA_ODR);
-        odr ^= LED_PIN; // &lt;- flips only the LED bit, in place
-        core::ptr::write_volatile(GPIOA_ODR, odr);
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">toggle_led</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">odr</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-variable">odr</span> <span class="tok-punct">^</span><span class="tok-punct">=</span> <span class="tok-constant">LED_PIN</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- flips only the LED bit, in place</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">,</span> <span class="tok-variable">odr</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

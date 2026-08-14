@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1005,12 +1006,12 @@ covered in
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Panicking with a formatted message</h3>
-            <pre><code class="rust">fn set_volume(level: u8) {
-    if level &gt; 100 {
-        panic!("volume {level} exceeds the maximum of 100"); // &lt;- formatted message, same grammar as format!/println!
-    }
-    // ...
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">set_volume</span><span class="tok-punct">(</span><span class="tok-variable">level</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">level</span> <span class="tok-punct">&gt;</span> <span class="tok-number">100</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;volume {level} exceeds the maximum of 100&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- formatted message, same grammar as format!/println!</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-comment">// ...</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1020,21 +1021,21 @@ covered in
 precondition — the amount must already have been validated as positive by
 the caller — and panics with a formatted message naming exactly which
 value violated it, rather than silently clamping or returning a sentinel.</p>
-<pre><code class="rust">struct PaymentGateway;
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">PaymentGateway</span><span class="tok-punct">;</span>
 
-impl PaymentGateway {
-    /// Panics if `amount_cents` is not positive — callers are expected to
-    /// validate user input before reaching this point.
-    fn charge(&amp;self, amount_cents: i64) {
-        if amount_cents &lt;= 0 {
-            panic!("charge amount must be positive, got {amount_cents} cents"); // &lt;- names the exact bad value in the message
-        }
-        // ... submit the charge
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">PaymentGateway</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// Panics if `amount_cents` is not positive — callers are expected to</span>
+    <span class="tok-comment">/// validate user input before reaching this point.</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">charge</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">amount_cents</span><span class="tok-punct">:</span> <span class="tok-type">i64</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">amount_cents</span> <span class="tok-punct">&lt;=</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;charge amount must be positive, got {amount_cents} cents&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- names the exact bad value in the message</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-comment">// ... submit the charge</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let gateway = PaymentGateway;
-gateway.charge(1999);
+<span class="tok-keyword">let</span> <span class="tok-variable">gateway</span> <span class="tok-punct">=</span> <span class="tok-type">PaymentGateway</span><span class="tok-punct">;</span>
+<span class="tok-variable">gateway</span><span class="tok-punct">.</span><span class="tok-call-method">charge</span><span class="tok-punct">(</span><span class="tok-number">1999</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>The message is written for the developer who trips this
 precondition during development, not an end user, so it names the
@@ -1050,24 +1051,24 @@ other way.</p>
             <p>A <code>should_panic</code> test locks in that the exact formatted message from a
 <code>panic!</code> call names the field that failed validation, so a future
 refactor can't silently change what's reported without the test noticing.</p>
-<pre><code class="rust">struct DeviceConfig {
-    channel: u8,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">DeviceConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl DeviceConfig {
-    fn new(channel: u8) -&gt; Self {
-        if channel == 0 {
-            panic!("channel must be nonzero, got {channel}"); // &lt;- exact wording asserted against below
-        }
-        DeviceConfig { channel }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">DeviceConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">channel</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;channel must be nonzero, got {channel}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exact wording asserted against below</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-type">DeviceConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">channel</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[test]
-#[should_panic(expected = "channel must be nonzero")]
-fn rejects_zero_channel() {
-    DeviceConfig::new(0);
-}
+<span class="tok-attribute">#[test]</span>
+<span class="tok-attribute">#[should_panic(expected = &quot;channel must be nonzero&quot;)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_zero_channel</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-type">DeviceConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The
 <a href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html#checking-for-panics-with-should_panic">Book's testing chapter</a>
@@ -1123,31 +1124,31 @@ for the unwind-vs-abort distinction itself.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Panicking on an out-of-range peripheral configuration</h3>
-            <pre><code class="rust">fn set_pwm_duty(percent: u8) {
-    if percent &gt; 100 {
-        panic!("PWM duty {percent}% exceeds 100%"); // &lt;- same formatted-message grammar as hosted Rust
-    }
-    // ... write the duty cycle to the timer's compare register
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pwm_duty</span><span class="tok-punct">(</span><span class="tok-variable">percent</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">percent</span> <span class="tok-punct">&gt;</span> <span class="tok-number">100</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;PWM duty {percent}% exceeds 100%&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same formatted-message grammar as hosted Rust</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-comment">// ... write the duty cycle to the timer's compare register</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Selecting a panic handler for a bare-metal binary</h3>
-            <pre><code class="rust">#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-use panic_halt as _; // &lt;- pulled in only for the #[panic_handler] it registers; this is what runs when panic! fires
-use cortex_m_rt::entry;
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- pulled in only for the #[panic_handler] it registers; this is what runs when panic! fires</span>
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    let sensor_ok = false;
-    if !sensor_ok {
-        panic!("sensor init failed"); // &lt;- with no OS to unwind into, this hands control straight to panic-halt's handler
-    }
-    loop {}
-}
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">sensor_ok</span> <span class="tok-punct">=</span> <span class="tok-number">false</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-punct">!</span><span class="tok-variable">sensor_ok</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor init failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- with no OS to unwind into, this hands control straight to panic-halt's handler</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

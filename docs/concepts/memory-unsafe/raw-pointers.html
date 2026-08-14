@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1010,14 +1011,14 @@ for the owning side of that relationship.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">let x = 10;
-let ptr: *const i32 = &amp;x; // &lt;- creating a raw pointer is always safe
+        <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">10</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">i32</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">x</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- creating a raw pointer is always safe</span>
 
-unsafe {
-    // SAFETY: `ptr` was derived from the live reference `&amp;x` on the line
-    // above, so it points to a valid, initialized i32.
-    println!("{}", *ptr); // &lt;- dereferencing requires unsafe
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: `ptr` was derived from the live reference `&amp;x` on the line</span>
+    <span class="tok-comment">// above, so it points to a valid, initialized i32.</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">*</span><span class="tok-variable">ptr</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- dereferencing requires unsafe</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1035,19 +1036,19 @@ unsafe {
             <p>C APIs express "pointer to a mutable buffer" and "pointer to read-only
 data" as <code>*mut T</code>/<code>*const T</code>, so any Rust function calling into one has
 to convert its safe references at the boundary.</p>
-<pre><code class="rust">unsafe extern "C" {
-    fn memcpy(dest: *mut u8, src: *const u8, n: usize) -&gt; *mut u8;
-}
+<pre><code class="rust-hl"><span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">memcpy</span><span class="tok-punct">(</span><span class="tok-variable">dest</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">src</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type-return">u8</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-fn copy_sensor_frame(src: &amp;[u8], dest: &amp;mut [u8]) {
-    assert!(dest.len() &gt;= src.len());
-    unsafe {
-        // SAFETY: both slices are valid Rust references for their full
-        // length, `dest` is at least as long as `src`, and neither
-        // aliases the other since they come from two distinct bindings.
-        memcpy(dest.as_mut_ptr(), src.as_ptr(), src.len()); // &lt;- *mut u8 / *const u8 cross the FFI boundary
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">copy_sensor_frame</span><span class="tok-punct">(</span><span class="tok-variable">src</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">dest</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">dest</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;=</span> <span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: both slices are valid Rust references for their full</span>
+        <span class="tok-comment">// length, `dest` is at least as long as `src`, and neither</span>
+        <span class="tok-comment">// aliases the other since they come from two distinct bindings.</span>
+        <span class="tok-call-free">memcpy</span><span class="tok-punct">(</span><span class="tok-variable">dest</span><span class="tok-punct">.</span><span class="tok-call-method">as_mut_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">src</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- *mut u8 / *const u8 cross the FFI boundary</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> C has no concept of a Rust reference, so <code>as_ptr()</code>/
@@ -1067,19 +1068,19 @@ invariants the C function assumes.</p>
             <p>Handing a heap allocation to code that will hold onto it outside of
 Rust's ownership tracking — a C callback registry, a manually managed
 cache slot — means converting the <code>Box</code> into a raw pointer and back.</p>
-<pre><code class="rust">struct SensorConfig {
-    sample_rate_hz: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorConfig</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">sample_rate_hz</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let boxed = Box::new(SensorConfig { sample_rate_hz: 200 });
-let raw: *mut SensorConfig = Box::into_raw(boxed); // &lt;- ownership becomes a raw pointer; no Drop runs yet
+<span class="tok-keyword">let</span> <span class="tok-variable">boxed</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">SensorConfig</span> <span class="tok-punct">{</span> <span class="tok-variable">sample_rate_hz</span><span class="tok-punct">:</span> <span class="tok-number">200</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">SensorConfig</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">into_raw</span><span class="tok-punct">(</span><span class="tok-variable">boxed</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- ownership becomes a raw pointer; no Drop runs yet</span>
 
-unsafe {
-    // SAFETY: `raw` came from `Box::into_raw` above, was never freed in
-    // between, and is reclaimed here exactly once.
-    let reclaimed = Box::from_raw(raw); // &lt;- raw pointer converted back into an owning Box
-    println!("{} Hz", reclaimed.sample_rate_hz);
-} // reclaimed drops here, freeing the allocation
+<span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// SAFETY: `raw` came from `Box::into_raw` above, was never freed in</span>
+    <span class="tok-comment">// between, and is reclaimed here exactly once.</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">reclaimed</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_raw</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- raw pointer converted back into an owning Box</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{} Hz&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">reclaimed</span><span class="tok-punct">.</span><span class="tok-field">sample_rate_hz</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span> <span class="tok-comment">// reclaimed drops here, freeing the allocation</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>Box::into_raw</code> suspends automatic cleanup so the
@@ -1100,39 +1101,39 @@ calling it twice double-frees and never calling it leaks.</p>
             <p>A safe wrapper around a raw-pointer-based structure should never let a
 caller construct or dereference the pointer directly — the invariant
 lives entirely inside the module.</p>
-<pre><code class="rust">pub struct RingBuffer {
-    data: *mut u8, // &lt;- raw pointer stays private; never exposed to callers
-    capacity: usize,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RingBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- raw pointer stays private; never exposed to callers</span>
+    <span class="tok-variable">capacity</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RingBuffer {
-    pub fn new(capacity: usize) -&gt; Self {
-        let mut buf = vec![0u8; capacity].into_boxed_slice();
-        let data = buf.as_mut_ptr();
-        std::mem::forget(buf); // ownership transferred to this struct's Drop impl
-        Self { data, capacity }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">RingBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">capacity</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buf</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-variable">capacity</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-call-method">into_boxed_slice</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">data</span> <span class="tok-punct">=</span> <span class="tok-variable">buf</span><span class="tok-punct">.</span><span class="tok-call-method">as_mut_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">mem</span><span class="tok-punct">::</span><span class="tok-call-assoc">forget</span><span class="tok-punct">(</span><span class="tok-variable">buf</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment">// ownership transferred to this struct's Drop impl</span>
+        <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">data</span><span class="tok-punct">,</span> <span class="tok-variable">capacity</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn write_byte(&amp;mut self, offset: usize, value: u8) {
-        assert!(offset &lt; self.capacity);
-        unsafe {
-            // SAFETY: `offset &lt; self.capacity` was just checked, and
-            // `data` was allocated with exactly `capacity` bytes in `new`.
-            *self.data.add(offset) = value; // &lt;- pointer arithmetic + write, both require unsafe
-        }
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">write_byte</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">offset</span> <span class="tok-punct">&lt;</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">capacity</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: `offset &lt; self.capacity` was just checked, and</span>
+            <span class="tok-comment">// `data` was allocated with exactly `capacity` bytes in `new`.</span>
+            <span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- pointer arithmetic + write, both require unsafe</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-impl Drop for RingBuffer {
-    fn drop(&amp;mut self) {
-        unsafe {
-            // SAFETY: `data`/`capacity` describe exactly the allocation
-            // `new` created via `into_boxed_slice`, and this reconstructs
-            // it exactly once, on the only path that frees it.
-            drop(Box::from_raw(std::slice::from_raw_parts_mut(self.data, self.capacity)));
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-trait">Drop</span> <span class="tok-keyword">for</span> <span class="tok-type">RingBuffer</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">drop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: `data`/`capacity` describe exactly the allocation</span>
+            <span class="tok-comment">// `new` created via `into_boxed_slice`, and this reconstructs</span>
+            <span class="tok-comment">// it exactly once, on the only path that frees it.</span>
+            <span class="tok-call-free">drop</span><span class="tok-punct">(</span><span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_raw</span><span class="tok-punct">(</span><span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">slice</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_raw_parts_mut</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">capacity</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping the pointer field private means the only code
@@ -1192,15 +1193,15 @@ momentarily exclusive.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">const GPIOA_IDR: *const u32 = 0x4001_0800 as *const u32; // &lt;- fixed peripheral register address, from the datasheet
+        <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_IDR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_0800</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- fixed peripheral register address, from the datasheet</span>
 
-fn read_port_a() -&gt; u32 {
-    unsafe {
-        // SAFETY: GPIOA_IDR is a valid, always-mapped peripheral register
-        // on this chip; a plain volatile read has no aliasing concerns.
-        core::ptr::read_volatile(GPIOA_IDR) // &lt;- volatile: the optimizer must not cache or elide this read
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_port_a</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: GPIOA_IDR is a valid, always-mapped peripheral register</span>
+        <span class="tok-comment">// on this chip; a plain volatile read has no aliasing concerns.</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_IDR</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- volatile: the optimizer must not cache or elide this read</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1219,16 +1220,16 @@ fn read_port_a() -&gt; u32 {
 neighbors is a read-modify-write through a raw pointer — every step
 needs <code>unsafe</code>, and every access needs to be volatile or the compiler is
 free to fold the read and write together.</p>
-<pre><code class="rust">const GPIOA_ODR: *mut u32 = 0x4001_0814 as *mut u32; // &lt;- output data register
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_0814</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- output data register</span>
 
-fn set_pin5_high() {
-    unsafe {
-        // SAFETY: GPIOA_ODR is a valid, word-aligned peripheral register;
-        // read-modify-write is the documented way to flip one bit.
-        let current = core::ptr::read_volatile(GPIOA_ODR); // &lt;- must observe the register's real current state
-        core::ptr::write_volatile(GPIOA_ODR, current | (1 &lt;&lt; 5)); // &lt;- must actually reach hardware, not get optimized away
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pin5_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: GPIOA_ODR is a valid, word-aligned peripheral register;</span>
+        <span class="tok-comment">// read-modify-write is the documented way to flip one bit.</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">current</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- must observe the register's real current state</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">,</span> <span class="tok-variable">current</span> <span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- must actually reach hardware, not get optimized away</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a non-volatile <code>*GPIOA_ODR</code> read/write pair is legal
@@ -1249,27 +1250,27 @@ reason.</p>
             <p>A GPIO peripheral's raw base address should never leak past the module
 that owns it — a safe wrapper takes the address once, and every caller
 afterward only sees typed, safe methods.</p>
-<pre><code class="rust">pub struct GpioA {
-    base: *mut u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">GpioA</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">base</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl GpioA {
-    /// # Safety
-    /// Caller must guarantee no other `GpioA` exists for this peripheral.
-    pub unsafe fn new(base_address: usize) -&gt; Self {
-        Self { base: base_address as *mut u32 }
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">GpioA</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// # Safety</span>
+    <span class="tok-comment">/// Caller must guarantee no other `GpioA` exists for this peripheral.</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">base_address</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">base</span><span class="tok-punct">:</span> <span class="tok-variable">base_address</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    pub fn set_pin_high(&amp;self, pin: u8) {
-        unsafe {
-            // SAFETY: `self.base` was validated as the peripheral's real
-            // address when this GpioA was constructed.
-            let odr = self.base.add(0x14 / 4); // &lt;- pointer arithmetic to the ODR register's offset
-            let current = core::ptr::read_volatile(odr);
-            core::ptr::write_volatile(odr, current | (1 &lt;&lt; pin));
-        }
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pin_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: `self.base` was validated as the peripheral's real</span>
+            <span class="tok-comment">// address when this GpioA was constructed.</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">odr</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">base</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-number">0x14</span> <span class="tok-punct">/</span> <span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- pointer arithmetic to the ODR register's offset</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">current</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">,</span> <span class="tok-variable">current</span> <span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-variable">pin</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping <code>base</code> private and the constructor <code>unsafe</code>
@@ -1289,16 +1290,16 @@ literal itself.</p>
 of its registers — the address itself is a <code>*const u8</code> converted to the
 integer the peripheral's register expects, not a value the DMA hardware
 understands as a Rust type.</p>
-<pre><code class="rust">const DMA_SRC_ADDR_REG: *mut u32 = 0x4002_6000 as *mut u32;
+<pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">DMA_SRC_ADDR_REG</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4002_6000</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span>
 
-fn start_transfer(buffer: &amp;[u8]) {
-    let src_addr = buffer.as_ptr() as u32; // &lt;- raw pointer collapsed to the integer the DMA register stores
-    unsafe {
-        // SAFETY: `buffer` outlives the DMA transfer this starts, and the
-        // DMA controller is idle before this write per the caller's contract.
-        core::ptr::write_volatile(DMA_SRC_ADDR_REG, src_addr);
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">start_transfer</span><span class="tok-punct">(</span><span class="tok-variable">buffer</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">src_addr</span> <span class="tok-punct">=</span> <span class="tok-variable">buffer</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- raw pointer collapsed to the integer the DMA register stores</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// SAFETY: `buffer` outlives the DMA transfer this starts, and the</span>
+        <span class="tok-comment">// DMA controller is idle before this write per the caller's contract.</span>
+        <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-constant">DMA_SRC_ADDR_REG</span><span class="tok-punct">,</span> <span class="tok-variable">src_addr</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the DMA peripheral has no concept of a Rust slice or

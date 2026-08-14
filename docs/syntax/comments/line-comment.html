@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -987,11 +988,11 @@ the line regardless of what characters follow.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Standalone and trailing comments</h3>
-            <pre><code class="rust">fn main() {
-    // &lt;- this is a line comment: everything from `//` to the end of the line
-    let x = 5; // comments can also trail code on the same line
-    println!("{x}");
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- this is a line comment: everything from `//` to the end of the line</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">x</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span> <span class="tok-comment">// comments can also trail code on the same line</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{x}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1001,13 +1002,13 @@ the line regardless of what characters follow.</p>
 input is being checked, so a future reader (including yourself in six
 months) doesn't have to reverse-engineer the intent from the assertion
 alone.</p>
-<pre><code class="rust">#[test]
-fn rejects_empty_username() {
-    // regression test for #142: an empty string used to pass validation
-    // &lt;- this comment survives in source but never reaches compiled output
-    let result = validate_username("");
-    assert!(result.is_err());
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[test]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">rejects_empty_username</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// regression test for #142: an empty string used to pass validation</span>
+    <span class="tok-comment tok-anno">// &lt;- this comment survives in source but never reaches compiled output</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">result</span> <span class="tok-punct">=</span> <span class="tok-call-free">validate_username</span><span class="tok-punct">(</span><span class="tok-string">&quot;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">result</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>The comment explains <em>why</em> the test exists, not <em>what</em>
 the code does — the assertion already says what; only the ticket/context
@@ -1019,20 +1020,20 @@ behind an easy-to-delete-looking test case is worth spelling out.</p>
             <p><code>//</code> and <code>///</code> look almost identical but serve opposite audiences: <code>//</code>
 is for the next person reading the source, <code>///</code> is for the next person
 <em>calling</em> the function who may never open the source at all.</p>
-<pre><code class="rust">pub struct ParseError;
+<pre><code class="rust-hl"><span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">ParseError</span><span class="tok-punct">;</span>
 
-/// Parses a duration string like "5s" or "10m" into seconds.
-pub fn parse_duration(input: &amp;str) -&gt; Result&lt;u64, ParseError&gt; {
-    // AVOID: burying caller-relevant info in a // comment nobody sees
-    // the trailing unit character determines the multiplier
-    let (digits, unit) = input.split_at(input.len() - 1);
-    let n: u64 = digits.parse().map_err(|_| ParseError)?;
-    match unit {
-        "s" =&gt; Ok(n),
-        "m" =&gt; Ok(n * 60),
-        _ =&gt; Err(ParseError),
-    }
-}
+<span class="tok-comment">/// Parses a duration string like &quot;5s&quot; or &quot;10m&quot; into seconds.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_duration</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u64</span><span class="tok-punct">,</span> <span class="tok-type-return">ParseError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">// AVOID: burying caller-relevant info in a // comment nobody sees</span>
+    <span class="tok-comment">// the trailing unit character determines the multiplier</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">digits</span><span class="tok-punct">,</span> <span class="tok-variable">unit</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">split_at</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">=</span> <span class="tok-variable">digits</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-type">ParseError</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">unit</span> <span class="tok-punct">{</span>
+        <span class="tok-string">&quot;s&quot;</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-string">&quot;m&quot;</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">n</span> <span class="tok-punct">*</span> <span class="tok-number">60</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-type">ParseError</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Anything the caller needs to know (accepted formats,
 error conditions, examples) belongs in a <code>///</code> doc comment — see
@@ -1069,24 +1070,24 @@ is.</p>
             <p>A raw register write is only meaningful with the datasheet fact that
 justifies it — the kind of context that belongs beside the code, not in a
 public API doc.</p>
-<pre><code class="rust">#![no_std]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
-const GPIOA_BASE: u32 = 0x4001_0800;
-const ODR_OFFSET: u32 = 0x14;
+<span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_0800</span><span class="tok-punct">;</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">ODR_OFFSET</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x14</span><span class="tok-punct">;</span>
 
-unsafe fn set_pin_5(gpioa: *mut u32) {
-    // &lt;- datasheet ref: RM0090 §8.4.6 — ODR bit 5 drives PA5 output high
-    let odr = gpioa.byte_add(ODR_OFFSET as usize);
-    odr.write_volatile(odr.read_volatile() | (1 &lt;&lt; 5));
-}
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_pin_5</span><span class="tok-punct">(</span><span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-comment tok-anno">// &lt;- datasheet ref: RM0090 §8.4.6 — ODR bit 5 drives PA5 output high</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">odr</span> <span class="tok-punct">=</span> <span class="tok-variable">gpioa</span><span class="tok-punct">.</span><span class="tok-call-method">byte_add</span><span class="tok-punct">(</span><span class="tok-constant">ODR_OFFSET</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">odr</span><span class="tok-punct">.</span><span class="tok-call-method">write_volatile</span><span class="tok-punct">(</span><span class="tok-variable">odr</span><span class="tok-punct">.</span><span class="tok-call-method">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Explaining a timing constant</h3>
-            <pre><code class="rust">// the sensor's datasheet requires &gt;= 2ms after power-on before the first
-// read; 5ms is used here for margin against clock-source startup jitter
-const POWER_ON_DELAY_MS: u32 = 5;
+            <pre><code class="rust-hl"><span class="tok-comment">// the sensor's datasheet requires &gt;= 2ms after power-on before the first</span>
+<span class="tok-comment">// read; 5ms is used here for margin against clock-source startup jitter</span>
+<span class="tok-keyword">const</span> <span class="tok-constant">POWER_ON_DELAY_MS</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>//</code> carries exactly the same weight here as in hosted code — a note for
 the next firmware engineer, never emitted into the compiled binary — but

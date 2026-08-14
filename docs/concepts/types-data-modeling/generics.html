@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -999,17 +1000,17 @@ concrete type ends up substituted in.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn largest&lt;T: PartialOrd&gt;(items: &amp;[T]) -&gt; &amp;T {
-//        ^^^^^^^^^^^^^^ T is a generic type, constrained to types that support `&gt;`
-    let mut best = &amp;items[0];
-    for item in items {
-        if item &gt; best { best = item; }
-    }
-    best
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">largest</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">PartialOrd</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-generic-param">T</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">T</span> <span class="tok-punct">{</span>
+<span class="tok-comment">//        ^^^^^^^^^^^^^^ T is a generic type, constrained to types that support `&gt;`</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">best</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">items</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">item</span> <span class="tok-keyword">in</span> <span class="tok-variable">items</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">item</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">best</span> <span class="tok-punct">{</span> <span class="tok-variable">best</span> <span class="tok-punct">=</span> <span class="tok-variable">item</span><span class="tok-punct">;</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">best</span>
+<span class="tok-punct">}</span>
 
-largest(&amp;[3, 7, 2]);       // T = i32 here
-largest(&amp;[1.5, 0.2]);      // T = f64 here, same function definition
+<span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>       <span class="tok-comment">// T = i32 here</span>
+<span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">1.5</span><span class="tok-punct">,</span> <span class="tok-number">0.2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>      <span class="tok-comment">// T = f64 here, same function definition</span>
 </code></pre>
 
       </section>
@@ -1027,19 +1028,19 @@ largest(&amp;[1.5, 0.2]);      // T = f64 here, same function definition
             <p>The trait bounds on a generic parameter should ask for exactly the
 operations the function body uses — no more — so the function stays
 usable with the widest reasonable range of types.</p>
-<pre><code class="rust">fn largest&lt;T: PartialOrd + Copy&gt;(items: &amp;[T]) -&gt; T {
-//        ^^^^^^^^^^^^^^^^^^^^^ bounded to only what the body needs: ordering and cheap copies
-    let mut best = items[0];
-    for &amp;item in &amp;items[1..] {
-        if item &gt; best {
-            best = item;
-        }
-    }
-    best
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">largest</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-trait">PartialOrd</span> <span class="tok-punct">+</span> <span class="tok-type">Copy</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-generic-param">T</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span>
+<span class="tok-comment">//        ^^^^^^^^^^^^^^^^^^^^^ bounded to only what the body needs: ordering and cheap copies</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">best</span> <span class="tok-punct">=</span> <span class="tok-variable">items</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-punct">&amp;</span><span class="tok-variable">item</span> <span class="tok-keyword">in</span> <span class="tok-punct">&amp;</span><span class="tok-variable">items</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">..</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">if</span> <span class="tok-variable">item</span> <span class="tok-punct">&gt;</span> <span class="tok-variable">best</span> <span class="tok-punct">{</span>
+            <span class="tok-variable">best</span> <span class="tok-punct">=</span> <span class="tok-variable">item</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+    <span class="tok-variable">best</span>
+<span class="tok-punct">}</span>
 
-let highest_temp = largest(&amp;[21.5, 19.0, 24.3]);  // T = f64
-let highest_score = largest(&amp;[88, 95, 72]);        // T = i32, same function body
+<span class="tok-keyword">let</span> <span class="tok-variable">highest_temp</span> <span class="tok-punct">=</span> <span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">21.5</span><span class="tok-punct">,</span> <span class="tok-number">19.0</span><span class="tok-punct">,</span> <span class="tok-number">24.3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>  <span class="tok-comment">// T = f64</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">highest_score</span> <span class="tok-punct">=</span> <span class="tok-call-free">largest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">88</span><span class="tok-punct">,</span> <span class="tok-number">95</span><span class="tok-punct">,</span> <span class="tok-number">72</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>        <span class="tok-comment">// T = i32, same function body</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1059,22 +1060,22 @@ no benefit.</p>
             <p>A small generic wrapper type, written once, can back many different
 key/value pairings without duplicating the struct or its methods per
 concrete type.</p>
-<pre><code class="rust">struct Cache&lt;K, V&gt; { // &lt;- generic over both the key and value types, defined once
-    entries: Vec&lt;(K, V)&gt;,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Cache</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic over both the key and value types, defined once</span>
+    <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">)</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;K: PartialEq, V&gt; Cache&lt;K, V&gt; {
-    fn new() -&gt; Self {
-        Cache { entries: Vec::new() }
-    }
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">:</span> <span class="tok-trait">PartialEq</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span> <span class="tok-type">Cache</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">K</span><span class="tok-punct">,</span> <span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Cache</span> <span class="tok-punct">{</span> <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
 
-    fn get(&amp;self, key: &amp;K) -&gt; Option&lt;&amp;V&gt; {
-        self.entries.iter().find(|(k, _)| k == key).map(|(_, v)| v)
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">get</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">K</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-generic-param">V</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">entries</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">find</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">k</span><span class="tok-punct">,</span> <span class="tok-variable">_</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-variable">k</span> <span class="tok-punct">==</span> <span class="tok-variable">key</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-punct">(</span><span class="tok-variable">_</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">|</span> <span class="tok-variable">v</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut sensors: Cache&lt;&amp;str, f64&gt; = Cache::new();
-sensors.entries.push(("temp-1", 21.5));
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sensors</span><span class="tok-punct">:</span> <span class="tok-type">Cache</span><span class="tok-punct">&lt;</span><span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">,</span> <span class="tok-type">f64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Cache</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">sensors</span><span class="tok-punct">.</span><span class="tok-field">entries</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-string">&quot;temp-1&quot;</span><span class="tok-punct">,</span> <span class="tok-number">21.5</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the
@@ -1129,15 +1130,15 @@ tradeoff made explicitly for that reason, not a default either way.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use embedded_hal::digital::OutputPin;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-type">OutputPin</span><span class="tok-punct">;</span>
 
-fn blink&lt;PIN: OutputPin&gt;(pin: &amp;mut PIN) { // &lt;- generic over any HAL's concrete GPIO output pin type
-    pin.set_high().ok();
-    pin.set_low().ok();
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">&lt;</span><span class="tok-constant">PIN</span><span class="tok-punct">:</span> <span class="tok-trait">OutputPin</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-constant">PIN</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic over any HAL's concrete GPIO output pin type</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_low</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-// Called identically whether `pin` is an stm32f4xx-hal, nrf52840-hal, or rp2040-hal pin type --
-// `blink` never names a specific vendor, and monomorphizes to one specialized copy per type used.
+<span class="tok-comment">// Called identically whether `pin` is an stm32f4xx-hal, nrf52840-hal, or rp2040-hal pin type --</span>
+<span class="tok-comment">// `blink` never names a specific vendor, and monomorphizes to one specialized copy per type used.</span>
 </code></pre>
 
       </section>
@@ -1156,20 +1157,20 @@ fn blink&lt;PIN: OutputPin&gt;(pin: &amp;mut PIN) { // &lt;- generic over any HA
 writes — has nothing to do with which vendor's I2C peripheral it runs on;
 writing it generic over <code>embedded_hal::i2c::I2c</code> lets the same driver
 crate compile against any HAL that implements the trait.</p>
-<pre><code class="rust">use embedded_hal::i2c::I2c;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">;</span>
 
-struct TempSensor&lt;BUS&gt; { // &lt;- generic over the bus type, not any one vendor's concrete I2C peripheral
-    bus: BUS,
-    address: u8,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">TempSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">BUS</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- generic over the bus type, not any one vendor's concrete I2C peripheral</span>
+    <span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-constant">BUS</span><span class="tok-punct">,</span>
+    <span class="tok-variable">address</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl&lt;BUS: I2c&gt; TempSensor&lt;BUS&gt; {
-    fn read_celsius(&amp;mut self) -&gt; Result&lt;f32, BUS::Error&gt; {
-        let mut raw = [0u8; 2];
-        self.bus.write_read(self.address, &amp;[0x00], &amp;mut raw)?;
-        Ok(i16::from_be_bytes(raw) as f32 / 256.0)
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-constant">BUS</span><span class="tok-punct">:</span> <span class="tok-trait">I2c</span><span class="tok-punct">&gt;</span> <span class="tok-type">TempSensor</span><span class="tok-punct">&lt;</span><span class="tok-constant">BUS</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_celsius</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f32</span><span class="tok-punct">,</span> <span class="tok-constant">BUS</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">bus</span><span class="tok-punct">.</span><span class="tok-call-method">write_read</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">address</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x00</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">raw</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-module">i16</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_be_bytes</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">f32</span> <span class="tok-punct">/</span> <span class="tok-number">256.0</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> bounding <code>BUS</code> to exactly <code>embedded_hal::i2c::I2c</code> — no
@@ -1189,17 +1190,17 @@ essentially every driver crate published for <code>embedded-hal</code>.</p>
 needs, not over a specific board's HAL type, and should weigh
 monomorphized flash cost against <code>dyn Trait</code>'s runtime indirection
 deliberately rather than defaulting to generics out of habit.</p>
-<pre><code class="rust">use embedded_hal::spi::SpiBus;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">spi</span><span class="tok-punct">::</span><span class="tok-type">SpiBus</span><span class="tok-punct">;</span>
 
-// PREFER (most drivers): generic + monomorphized -- zero call overhead, cost paid in flash per instantiation
-pub struct FlashChip&lt;BUS: SpiBus&gt; {
-    bus: BUS,
-}
+<span class="tok-comment">// PREFER (most drivers): generic + monomorphized -- zero call overhead, cost paid in flash per instantiation</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">FlashChip</span><span class="tok-punct">&lt;</span><span class="tok-constant">BUS</span><span class="tok-punct">:</span> <span class="tok-trait">SpiBus</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-constant">BUS</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-// AVOID unless flash budget forces it: dyn Trait -- one shared code path, but every call is now indirect
-pub struct FlashChipDyn&lt;'a&gt; {
-    bus: &amp;'a mut dyn SpiBus&lt;Error = core::convert::Infallible&gt;,
-}
+<span class="tok-comment">// AVOID unless flash budget forces it: dyn Trait -- one shared code path, but every call is now indirect</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">FlashChipDyn</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'a</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">bus</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'a</span> <span class="tok-keyword">mut</span> <span class="tok-keyword">dyn</span> <span class="tok-trait">SpiBus</span><span class="tok-punct">&lt;</span><span class="tok-type">Error</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">convert</span><span class="tok-punct">::</span><span class="tok-type">Infallible</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> most embedded driver crates default to the generic

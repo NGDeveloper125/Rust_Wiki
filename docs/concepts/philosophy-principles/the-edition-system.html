@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1028,10 +1029,10 @@ didn't ask for."</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">[package]
-name = "telemetry-agent"
-version = "0.3.0"
-edition = "2024" # &lt;- opts this crate into 2024-edition syntax and defaults; every dependency keeps its own edition
+        <pre><code class="rust-hl"><span class="tok-punct">[</span><span class="tok-variable">package</span><span class="tok-punct">]</span>
+<span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;telemetry-agent&quot;</span>
+<span class="tok-variable">version</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.3.0&quot;</span>
+<span class="tok-variable">edition</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;2024&quot;</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">opts</span> <span class="tok-variable">this</span> <span class="tok-keyword">crate</span> <span class="tok-variable">into</span> <span class="tok-number">2024</span><span class="tok-punct">-</span><span class="tok-variable">edition</span> <span class="tok-variable">syntax</span> <span class="tok-variable">and</span> <span class="tok-variable">defaults</span><span class="tok-punct">;</span> <span class="tok-variable">every</span> <span class="tok-variable">dependency</span> <span class="tok-variable">keeps</span> <span class="tok-variable">its</span> <span class="tok-variable">own</span> <span class="tok-variable">edition</span>
 </code></pre>
 
       </section>
@@ -1050,17 +1051,17 @@ edition = "2024" # &lt;- opts this crate into 2024-edition syntax and defaults; 
 migration is mechanical and which changes actual runtime behavior — the
 2021 edition's disjoint closure captures is a real, edition-gated change
 in what a closure captures, not just new syntax.</p>
-<pre><code class="rust">// Cargo.toml declares: edition = "2021" (or later) — that setting is what enables the capture below
+<pre><code class="rust-hl"><span class="tok-comment">// Cargo.toml declares: edition = &quot;2021&quot; (or later) — that setting is what enables the capture below</span>
 
-struct Sensor { id: u32, reading: f64 }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 
-fn log_reading(sensor: Sensor) {
-    let print_id = move || println!("sensor {}", sensor.id); // &lt;- 2021+: captures only sensor.id, not all of `sensor`
-    print_id();
-    println!("{}", sensor.reading); // &lt;- compiles under 2021+: sensor.reading was never moved into the closure
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-type">Sensor</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">print_id</span> <span class="tok-punct">=</span> <span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-field">id</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- 2021+: captures only sensor.id, not all of `sensor`</span>
+    <span class="tok-call-free">print_id</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">sensor</span><span class="tok-punct">.</span><span class="tok-field">reading</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- compiles under 2021+: sensor.reading was never moved into the closure</span>
+<span class="tok-punct">}</span>
 
-log_reading(Sensor { id: 7, reading: 21.4 });
+<span class="tok-call-free">log_reading</span><span class="tok-punct">(</span><span class="tok-type">Sensor</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-variable">reading</span><span class="tok-punct">:</span> <span class="tok-number">21.4</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> under the 2018 edition and earlier, <code>move</code> captured the
@@ -1109,13 +1110,13 @@ nothing to add beyond a pointer to it.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">[package]
-name = "sensor-driver"
-version = "0.1.0"
-edition = "2024" # &lt;- same field, same meaning, whether the crate targets an OS or bare metal
+        <pre><code class="rust-hl"><span class="tok-punct">[</span><span class="tok-variable">package</span><span class="tok-punct">]</span>
+<span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;sensor-driver&quot;</span>
+<span class="tok-variable">version</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.1.0&quot;</span>
+<span class="tok-variable">edition</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;2024&quot;</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">same</span> <span class="tok-variable">field</span><span class="tok-punct">,</span> <span class="tok-variable">same</span> <span class="tok-variable">meaning</span><span class="tok-punct">,</span> <span class="tok-variable">whether</span> <span class="tok-variable">the</span> <span class="tok-keyword">crate</span> <span class="tok-variable">targets</span> <span class="tok-variable">an</span> <span class="tok-constant">OS</span> <span class="tok-variable">or</span> <span class="tok-variable">bare</span> <span class="tok-variable">metal</span>
 
-[dependencies]
-cortex-m-rt = "0.7"
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">cortex</span><span class="tok-punct">-</span><span class="tok-variable">m</span><span class="tok-punct">-</span><span class="tok-variable">rt</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;0.7&quot;</span>
 </code></pre>
 
       </section>
@@ -1135,13 +1136,13 @@ to keep pasting identifiers, addresses, and bit-mask literals together
 without ever producing a 2021-reserved <code>ident"..."</code> shape — the fix is the
 same mechanical one that applies outside embedded code, just more likely
 to come up here given how much of a PAC's source is macro-generated.</p>
-<pre><code class="rust">macro_rules! define_register {
-    ($name:ident, $addr:expr) =&gt; {
-        const $name: u32 = $addr; // &lt;- kept as two separate tokens, never pasted into an ident"..." shape
-    };
-}
+<pre><code class="rust-hl"><span class="tok-macro">macro_rules!</span> <span class="tok-variable">define_register</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span><span class="tok-variable">ident</span><span class="tok-punct">,</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">:</span><span class="tok-variable">expr</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">const</span> <span class="tok-punct">$</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-punct">$</span><span class="tok-variable">addr</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- kept as two separate tokens, never pasted into an ident&quot;...&quot; shape</span>
+    <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-define_register!(GPIOA_BASE, 0x4001_0800);
+<span class="tok-macro">define_register!</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_BASE</span><span class="tok-punct">,</span> <span class="tok-number">0x4001_0800</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> this is the same register-definition example covered on

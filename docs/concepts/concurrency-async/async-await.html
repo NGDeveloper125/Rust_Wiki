@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1019,14 +1020,14 @@ onto a thread rather than letting it starve the async task scheduler.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">async fn fetch_greeting() -&gt; String { // &lt;- async fn: calling it returns a Future, body doesn't run yet
-    String::from("hello")
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">fetch_greeting</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- async fn: calling it returns a Future, body doesn't run yet</span>
+    <span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;hello&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-async fn greet() {
-    let greeting = fetch_greeting().await; // &lt;- .await suspends `greet` until the inner future resolves
-    println!("{greeting}");
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">greet</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">greeting</span> <span class="tok-punct">=</span> <span class="tok-call-free">fetch_greeting</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- .await suspends `greet` until the inner future resolves</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{greeting}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><strong>Note:</strong> this compiles on its own, but nothing above actually <em>runs</em>
 <code>greet</code>'s body — an <code>async fn</code> only produces a <code>Future</code>; driving it to
@@ -1047,26 +1048,26 @@ completion needs an <a href="../../concepts/concurrency-async/async-runtimes.htm
             <p>A monitoring service polling several independent sensors should spawn one
 async task per sensor rather than awaiting them one after another, so a
 slow sensor doesn't hold up the others.</p>
-<pre><code class="rust">// [dependencies] tokio = { version = "1", features = ["full"] }
-use std::time::Duration;
+<pre><code class="rust-hl"><span class="tok-comment">// [dependencies] tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Duration</span><span class="tok-punct">;</span>
 
-async fn read_sensor(id: u32) -&gt; f64 { // &lt;- async fn: returns a Future when called
-    tokio::time::sleep(Duration::from_millis(50)).await; // &lt;- suspends this task, frees the thread meanwhile
-    21.0 + id as f64 * 0.1
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- async fn: returns a Future when called</span>
+    <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-call-assoc">sleep</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">50</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- suspends this task, frees the thread meanwhile</span>
+    <span class="tok-number">21.0</span> <span class="tok-punct">+</span> <span class="tok-variable">id</span> <span class="tok-keyword">as</span> <span class="tok-type">f64</span> <span class="tok-punct">*</span> <span class="tok-number">0.1</span>
+<span class="tok-punct">}</span>
 
-#[tokio::main]
-async fn main() {
-    let mut tasks = Vec::new();
-    for id in 0..3 {
-        tasks.push(tokio::spawn(read_sensor(id))); // &lt;- each sensor read runs as its own concurrent task
-    }
+<span class="tok-attribute">#[tokio::main]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">tasks</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">for</span> <span class="tok-variable">id</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">tasks</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">read_sensor</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- each sensor read runs as its own concurrent task</span>
+    <span class="tok-punct">}</span>
 
-    for task in tasks {
-        let reading = task.await.unwrap(); // &lt;- .await here waits only for this task's result
-        println!("sensor reading: {reading:.1}");
-    }
-}
+    <span class="tok-keyword">for</span> <span class="tok-variable">task</span> <span class="tok-keyword">in</span> <span class="tok-variable">tasks</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">reading</span> <span class="tok-punct">=</span> <span class="tok-variable">task</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- .await here waits only for this task's result</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;sensor reading: {reading:.1}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> spawning each sensor read as its own task lets the
@@ -1087,17 +1088,17 @@ independent tasks as the standard way to run async work concurrently.</p>
 operator exactly like a synchronous one — <code>async</code>/<code>.await</code> doesn't change
 how errors propagate, it only changes how the function's control flow
 suspends.</p>
-<pre><code class="rust">use std::num::ParseIntError;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type">ParseIntError</span><span class="tok-punct">;</span>
 
-async fn parse_timeout(raw: &amp;str) -&gt; Result&lt;u32, ParseIntError&gt; {
-    let timeout: u32 = raw.parse()?; // &lt;- `?` propagates the parse error, same as outside async
-    Ok(timeout)
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_timeout</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">timeout</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `?` propagates the parse error, same as outside async</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">timeout</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-async fn load_settings(raw_timeout: &amp;str) -&gt; Result&lt;u32, ParseIntError&gt; {
-    let timeout = parse_timeout(raw_timeout).await?; // &lt;- await the Future, then `?` the Result it yields
-    Ok(timeout)
-}
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">load_settings</span><span class="tok-punct">(</span><span class="tok-variable">raw_timeout</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">timeout</span> <span class="tok-punct">=</span> <span class="tok-call-free">parse_timeout</span><span class="tok-punct">(</span><span class="tok-variable">raw_timeout</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- await the Future, then `?` the Result it yields</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">timeout</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>.await</code> simply unwraps the <code>Future</code> to get its output,
@@ -1152,21 +1153,21 @@ task on embassy's executor just as it would on <code>tokio</code>'s.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use embassy_executor::Spawner;
-use embassy_time::{Duration, Timer};
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embassy_executor</span><span class="tok-punct">::</span><span class="tok-type">Spawner</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">embassy_time</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Duration</span><span class="tok-punct">,</span> <span class="tok-type">Timer</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[embassy_executor::task]
-async fn blink() { // &lt;- async fn: same grammar as hosted Rust, driven by embassy's executor instead of tokio's
-    loop {
-        // ... toggle an LED pin here
-        Timer::after(Duration::from_millis(500)).await; // &lt;- suspends only this task; the executor runs others meanwhile
-    }
-}
+<span class="tok-attribute">#[embassy_executor::task]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">blink</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- async fn: same grammar as hosted Rust, driven by embassy's executor instead of tokio's</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... toggle an LED pin here</span>
+        <span class="tok-type">Timer</span><span class="tok-punct">::</span><span class="tok-call-assoc">after</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">500</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- suspends only this task; the executor runs others meanwhile</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[embassy_executor::main]
-async fn main(spawner: Spawner) {
-    spawner.spawn(blink()).unwrap();
-}
+<span class="tok-attribute">#[embassy_executor::main]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-variable">spawner</span><span class="tok-punct">:</span> <span class="tok-type">Spawner</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">spawner</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">blink</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1186,30 +1187,30 @@ button for a debounced press should run both as separate embassy tasks
 rather than interleaving the two jobs by hand in one loop — each task
 just <code>.await</code>s the event it cares about, and embassy's executor handles
 interleaving them.</p>
-<pre><code class="rust">use embassy_executor::Spawner;
-use embassy_time::{Duration, Timer};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">embassy_executor</span><span class="tok-punct">::</span><span class="tok-type">Spawner</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">embassy_time</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Duration</span><span class="tok-punct">,</span> <span class="tok-type">Timer</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-#[embassy_executor::task]
-async fn sample_sensor() { // &lt;- async fn: one independent job, expressed as straight-line code
-    loop {
-        // ... trigger an ADC read here
-        Timer::after(Duration::from_millis(200)).await; // &lt;- suspends this task only
-    }
-}
+<span class="tok-attribute">#[embassy_executor::task]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">sample_sensor</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- async fn: one independent job, expressed as straight-line code</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... trigger an ADC read here</span>
+        <span class="tok-type">Timer</span><span class="tok-punct">::</span><span class="tok-call-assoc">after</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- suspends this task only</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[embassy_executor::task]
-async fn watch_button() {
-    loop {
-        // ... await a GPIO edge future here (debounced by the HAL/driver)
-        Timer::after(Duration::from_millis(20)).await; // &lt;- suspends this task only
-    }
-}
+<span class="tok-attribute">#[embassy_executor::task]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">watch_button</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// ... await a GPIO edge future here (debounced by the HAL/driver)</span>
+        <span class="tok-type">Timer</span><span class="tok-punct">::</span><span class="tok-call-assoc">after</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- suspends this task only</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-#[embassy_executor::main]
-async fn main(spawner: Spawner) {
-    spawner.spawn(sample_sensor()).unwrap(); // &lt;- both tasks run concurrently on one core, no RTOS involved
-    spawner.spawn(watch_button()).unwrap();
-}
+<span class="tok-attribute">#[embassy_executor::main]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-variable">spawner</span><span class="tok-punct">:</span> <span class="tok-type">Spawner</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">spawner</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">sample_sensor</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- both tasks run concurrently on one core, no RTOS involved</span>
+    <span class="tok-variable">spawner</span><span class="tok-punct">.</span><span class="tok-call-method">spawn</span><span class="tok-punct">(</span><span class="tok-call-free">watch_button</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> writing the sensor-sampling and button-watching logic as
@@ -1232,19 +1233,19 @@ command parser) shouldn't force the CPU-bound work onto the same
 cooperative executor as the waiting tasks — that's the one case embedded
 async doesn't help with, and it's still a job for a thread (or the second
 core, on a dual-core target) rather than another embassy task.</p>
-<pre><code class="rust">// AVOID: a CPU-bound loop inside an async task never reaches an `.await`,
-// so it starves every other task on embassy's single-threaded executor.
-#[embassy_executor::task]
-async fn run_filter_bad(samples: [i16; 256]) {
-    let _ = heavy_dsp_compute(&amp;samples); // &lt;- no `.await` anywhere: blocks the whole executor until done
-}
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: a CPU-bound loop inside an async task never reaches an `.await`,</span>
+<span class="tok-comment">// so it starves every other task on embassy's single-threaded executor.</span>
+<span class="tok-attribute">#[embassy_executor::task]</span>
+<span class="tok-keyword">async</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">run_filter_bad</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">256</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-call-free">heavy_dsp_compute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">samples</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- no `.await` anywhere: blocks the whole executor until done</span>
+<span class="tok-punct">}</span>
 
-// PREFER: run genuinely CPU-bound work on its own thread/core (e.g. via a
-// second core's executor, or an RTOS task) and hand results back through
-// a channel, keeping the async executor free to service waiting tasks.
-fn heavy_dsp_compute(samples: &amp;[i16; 256]) -&gt; i16 {
-    samples.iter().copied().sum::&lt;i16&gt;() / samples.len() as i16
-}
+<span class="tok-comment">// PREFER: run genuinely CPU-bound work on its own thread/core (e.g. via a</span>
+<span class="tok-comment">// second core's executor, or an RTOS task) and hand results back through</span>
+<span class="tok-comment">// a channel, keeping the async executor free to service waiting tasks.</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">heavy_dsp_compute</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">i16</span><span class="tok-punct">;</span> <span class="tok-number">256</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">copied</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">sum</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">i16</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">/</span> <span class="tok-variable">samples</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">i16</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> embassy's default executor is cooperative and typically

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1022,13 +1023,13 @@ from within a module, meaning "look in this same module"), though <code>use {sel
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reading a value through `&amp;self`</h3>
-            <pre><code class="rust">struct Order { total_cents: u64 }
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span> <span class="tok-variable">total_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">}</span>
 
-impl Order {
-    fn total(&amp;self) -&gt; u64 { // &lt;- `&amp;self`: reads the receiver, caller keeps ownership
-        self.total_cents
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">total</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;self`: reads the receiver, caller keeps ownership</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">total_cents</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1038,25 +1039,25 @@ impl Order {
 returning the modified builder each step, while a plain inspection method
 takes <code>&amp;self</code> — the receiver form is chosen per method, based on what
 that method actually does.</p>
-<pre><code class="rust">struct RequestBuilder {
-    url: String,
-    retries: u32,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">RequestBuilder</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">url</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl RequestBuilder {
-    fn retries(mut self, n: u32) -&gt; Self { // &lt;- `self` by value: consumes and returns the builder
-        self.retries = n;
-        self
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">RequestBuilder</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">retries</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `self` by value: consumes and returns the builder</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">retries</span> <span class="tok-punct">=</span> <span class="tok-variable">n</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">self</span>
+    <span class="tok-punct">}</span>
 
-    fn url(&amp;self) -&gt; &amp;str { // &lt;- `&amp;self`: read-only, caller keeps using the builder afterward
-        &amp;self.url
-    }
-}
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">url</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-type-return">str</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;self`: read-only, caller keeps using the builder afterward</span>
+        <span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">url</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let builder = RequestBuilder { url: "https://api.example.com".into(), retries: 0 };
-let builder = builder.retries(3); // &lt;- consumes the old `builder` binding, returns a new one
-println!("{}", builder.url());
+<span class="tok-keyword">let</span> <span class="tok-variable">builder</span> <span class="tok-punct">=</span> <span class="tok-type">RequestBuilder</span> <span class="tok-punct">{</span> <span class="tok-variable">url</span><span class="tok-punct">:</span> <span class="tok-string">&quot;https://api.example.com&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">builder</span> <span class="tok-punct">=</span> <span class="tok-variable">builder</span><span class="tok-punct">.</span><span class="tok-call-method">retries</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- consumes the old `builder` binding, returns a new one</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">builder</span><span class="tok-punct">.</span><span class="tok-call-method">url</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>An owned <code>self</code> receiver is what makes fluent method
 chaining possible — each call consumes the previous builder state and
@@ -1072,15 +1073,15 @@ covers exactly this choice among <code>self</code>, <code>&amp;self</code>, and 
 path-position sense of <code>self</code> — a distinct meaning from the receiver, but
 still governed by its position (inside a <code>use</code> group, not a method
 signature).</p>
-<pre><code class="rust">use std::io::{self, Read, Write}; // &lt;- `self` here imports the `io` module itself, alongside two items from it
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `self` here imports the `io` module itself, alongside two items from it</span>
 
-fn describe_error(err: &amp;io::Error) -&gt; String { // &lt;- reachable because `self` imported the `io` module name
-    format!("io error: {err}")
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">describe_error</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type">Error</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- reachable because `self` imported the `io` module name</span>
+    <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;io error: {err}&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn copy_all(mut source: impl Read, mut sink: impl Write) -&gt; io::Result&lt;u64&gt; {
-    std::io::copy(&amp;mut source, &amp;mut sink)
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">copy_all</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">source</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Read</span><span class="tok-punct">,</span> <span class="tok-keyword">mut</span> <span class="tok-variable">sink</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u64</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">io</span><span class="tok-punct">::</span><span class="tok-call-assoc">copy</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">source</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">sink</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Without the <code>self</code> in the group, <code>io::Error</code> and
 <code>io::Result</code> would be unreachable unless the module was imported
@@ -1115,13 +1116,13 @@ runtime cost from the hosted case.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">A driver method taking `&amp;mut self` to talk to a peripheral</h3>
-            <pre><code class="rust">struct Led&lt;P&gt; { pin: P }
+            <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Led</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-variable">pin</span><span class="tok-punct">:</span> <span class="tok-generic-param">P</span> <span class="tok-punct">}</span>
 
-impl&lt;P: embedded_hal::digital::OutputPin&gt; Led&lt;P&gt; {
-    fn toggle_on(&amp;mut self) -&gt; Result&lt;(), P::Error&gt; { // &lt;- `&amp;mut self`: mutates the driver's peripheral state
-        self.pin.set_high()
-    }
-}
+<span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">:</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">digital</span><span class="tok-punct">::</span><span class="tok-type">OutputPin</span><span class="tok-punct">&gt;</span> <span class="tok-type">Led</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">P</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">toggle_on</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">P</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;mut self`: mutates the driver's peripheral state</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">pin</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

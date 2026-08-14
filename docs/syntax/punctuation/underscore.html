@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1018,12 +1019,12 @@ sits.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Using `_` as a match catch-all</h3>
-            <pre><code class="rust">let result: Result&lt;i32, String&gt; = Err("disk full".to_string());
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">result</span><span class="tok-punct">:</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;disk full&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-match result {
-    Ok(value) =&gt; println!("got {value}"),
-    _ =&gt; println!("something went wrong"), // &lt;- `_` matches any value here without binding it
-}
+<span class="tok-keyword">match</span> <span class="tok-variable">result</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;got {value}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;something went wrong&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `_` matches any value here without binding it</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1032,23 +1033,23 @@ match result {
             <p>Not every discarded <code>Result</code> is the same: a best-effort cleanup can safely
 ignore its outcome, but a genuinely important operation should never be
 silenced the same way.</p>
-<pre><code class="rust">fn cleanup_temp_file(path: &amp;str) {
-    let _ = std::fs::remove_file(path); // &lt;- `_`: best-effort cleanup, fine to ignore any failure
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">cleanup_temp_file</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fs</span><span class="tok-punct">::</span><span class="tok-call-assoc">remove_file</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `_`: best-effort cleanup, fine to ignore any failure</span>
+<span class="tok-punct">}</span>
 
-// AVOID: discarding a Result whose failure is exactly what the caller needs to know about
-fn submit_order_avoid(order_id: u32) {
-    let _ = process_order(order_id); // &lt;- silently masks a failed order as if it succeeded
-}
+<span class="tok-comment">// AVOID: discarding a Result whose failure is exactly what the caller needs to know about</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">submit_order_avoid</span><span class="tok-punct">(</span><span class="tok-variable">order_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-call-free">process_order</span><span class="tok-punct">(</span><span class="tok-variable">order_id</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- silently masks a failed order as if it succeeded</span>
+<span class="tok-punct">}</span>
 
-// PREFER: propagate it instead, since a failed submission is not safe to ignore
-fn submit_order(order_id: u32) -&gt; Result&lt;(), String&gt; {
-    process_order(order_id)
-}
+<span class="tok-comment">// PREFER: propagate it instead, since a failed submission is not safe to ignore</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">submit_order</span><span class="tok-punct">(</span><span class="tok-variable">order_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">process_order</span><span class="tok-punct">(</span><span class="tok-variable">order_id</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 
-fn process_order(order_id: u32) -&gt; Result&lt;(), String&gt; {
-    if order_id == 0 { Err("invalid order id".to_string()) } else { Ok(()) }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">process_order</span><span class="tok-punct">(</span><span class="tok-variable">order_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">order_id</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-string">&quot;invalid order id&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p><code>let _ = ...</code> is Clippy's documented way to intentionally
 silence the
@@ -1062,16 +1063,16 @@ why <code>submit_order_avoid</code> above is a defect, not a stylistic choice.</
             <h3 class="scenario-title">Branching on data (pattern matching)</h3>
             <p>A process exit code only has a handful of well-known meanings; every other
 value still needs somewhere to go.</p>
-<pre><code class="rust">fn describe_exit_code(code: i32) -&gt; &amp;'static str {
-    match code {
-        0 =&gt; "success",
-        1 =&gt; "general error",
-        127 =&gt; "command not found",
-        _ =&gt; "unknown exit code", // &lt;- `_` catches every other i32 value
-    }
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">describe_exit_code</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">code</span> <span class="tok-punct">{</span>
+        <span class="tok-number">0</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;success&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-number">1</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;general error&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-number">127</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;command not found&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;unknown exit code&quot;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `_` catches every other i32 value</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-println!("{}", describe_exit_code(127));
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-call-free">describe_exit_code</span><span class="tok-punct">(</span><span class="tok-number">127</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p><code>i32</code> has far more values than any list of literals could
 enumerate, so a <code>_</code> catch-all is the only way this compiles at all — the
@@ -1105,22 +1106,22 @@ enumerating values that should never occur.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Catching every other bit pattern in a status register</h3>
-            <pre><code class="rust">fn decode_status(reg: u8) -&gt; &amp;'static str {
-    match reg &amp; 0b0000_0011 {
-        0b00 =&gt; "idle",
-        0b01 =&gt; "receiving",
-        0b10 =&gt; "transmitting",
-        _ =&gt; "reserved", // &lt;- `_` catches the one remaining 2-bit pattern
-    }
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">decode_status</span><span class="tok-punct">(</span><span class="tok-variable">reg</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">reg</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b0000_0011</span> <span class="tok-punct">{</span>
+        <span class="tok-number">0b00</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;idle&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b01</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;receiving&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b10</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;transmitting&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-string">&quot;reserved&quot;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- `_` catches the one remaining 2-bit pattern</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Discarding a fallible peripheral write</h3>
-            <pre><code class="rust">fn set_led_high(gpioa: &amp;pac::GPIOA) {
-    let _ = gpioa.bsrr.write(|w| w.bs5().set_bit()); // &lt;- `_`: this write can't fail in practice, ok to discard
-}
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">set_led_high</span><span class="tok-punct">(</span><span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-module">pac</span><span class="tok-punct">::</span><span class="tok-constant">GPIOA</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">gpioa</span><span class="tok-punct">.</span><span class="tok-field">bsrr</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">w</span><span class="tok-punct">|</span> <span class="tok-variable">w</span><span class="tok-punct">.</span><span class="tok-call-method">bs5</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">set_bit</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `_`: this write can't fail in practice, ok to discard</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

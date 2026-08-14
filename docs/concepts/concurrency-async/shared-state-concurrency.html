@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1008,16 +1009,16 @@ scope as short as possible — rather than holding it across unrelated work
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">use std::sync::Mutex;
+        <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-type">Mutex</span><span class="tok-punct">;</span>
 
-let counter = Mutex::new(0);
+<span class="tok-keyword">let</span> <span class="tok-variable">counter</span> <span class="tok-punct">=</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-{
-    let mut guard = counter.lock().unwrap(); // &lt;- blocks until the lock is free, returns a guard
-    *guard += 1;
-} // guard drops here, releasing the lock
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">guard</span> <span class="tok-punct">=</span> <span class="tok-variable">counter</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- blocks until the lock is free, returns a guard</span>
+    <span class="tok-punct">*</span><span class="tok-variable">guard</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span> <span class="tok-comment">// guard drops here, releasing the lock</span>
 
-println!("{}", *counter.lock().unwrap());
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">*</span><span class="tok-variable">counter</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1035,27 +1036,27 @@ println!("{}", *counter.lock().unwrap());
             <p>A metrics collector needs several worker threads to increment shared
 counters concurrently — wrapping the counters in <code>Arc&lt;Mutex&lt;T&gt;&gt;</code> lets
 every thread hold its own cheap handle to the same underlying data.</p>
-<pre><code class="rust">use std::sync::{Arc, Mutex};
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Arc</span><span class="tok-punct">,</span> <span class="tok-type">Mutex</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-struct Metrics { requests_handled: u64, errors: u64 }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Metrics</span> <span class="tok-punct">{</span> <span class="tok-variable">requests_handled</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span> <span class="tok-variable">errors</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">}</span>
 
-let metrics = Arc::new(Mutex::new(Metrics { requests_handled: 0, errors: 0 }));
-let mut handles = Vec::new();
+<span class="tok-keyword">let</span> <span class="tok-variable">metrics</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Metrics</span> <span class="tok-punct">{</span> <span class="tok-variable">requests_handled</span><span class="tok-punct">:</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">errors</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">handles</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-for _ in 0..4 {
-    let metrics = Arc::clone(&amp;metrics);
-    handles.push(thread::spawn(move || {
-        let mut m = metrics.lock().unwrap(); // &lt;- exclusive access to Metrics for this scope only
-        m.requests_handled += 1;
-    })); // &lt;- guard drops at end of closure, releasing the lock immediately
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">_</span> <span class="tok-keyword">in</span> <span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">4</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">metrics</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">metrics</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">handles</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">m</span> <span class="tok-punct">=</span> <span class="tok-variable">metrics</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exclusive access to Metrics for this scope only</span>
+        <span class="tok-variable">m</span><span class="tok-punct">.</span><span class="tok-field">requests_handled</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- guard drops at end of closure, releasing the lock immediately</span>
+<span class="tok-punct">}</span>
 
-for handle in handles {
-    handle.join().unwrap();
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">handle</span> <span class="tok-keyword">in</span> <span class="tok-variable">handles</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">handle</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-println!("{}", metrics.lock().unwrap().requests_handled);
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">metrics</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-field">requests_handled</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping the locked scope limited to just the field
@@ -1075,29 +1076,29 @@ state across threads.</p>
             <p>A read-heavy in-memory config cache, refreshed occasionally but read
 constantly by request-handling threads, is a better fit for <code>RwLock</code> than
 <code>Mutex</code> — concurrent readers don't need to block each other.</p>
-<pre><code class="rust">use std::sync::{Arc, RwLock};
-use std::thread;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Arc</span><span class="tok-punct">,</span> <span class="tok-type">RwLock</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-variable">thread</span><span class="tok-punct">;</span>
 
-struct Config { max_connections: u32 }
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span>
 
-let config = Arc::new(RwLock::new(Config { max_connections: 100 }));
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">RwLock</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">max_connections</span><span class="tok-punct">:</span> <span class="tok-number">100</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-let readers: Vec&lt;_&gt; = (0..3).map(|_| {
-    let config = Arc::clone(&amp;config);
-    thread::spawn(move || {
-        let cfg = config.read().unwrap(); // &lt;- multiple readers may hold this concurrently
-        println!("max_connections = {}", cfg.max_connections);
-    })
-}).collect();
+<span class="tok-keyword">let</span> <span class="tok-variable">readers</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-variable">_</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">clone</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-module">thread</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">move</span> <span class="tok-punct">||</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-variable">cfg</span> <span class="tok-punct">=</span> <span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-call-method">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- multiple readers may hold this concurrently</span>
+        <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;max_connections = {}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">cfg</span><span class="tok-punct">.</span><span class="tok-field">max_connections</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-{
-    let mut cfg = config.write().unwrap(); // &lt;- exclusive: waits for all readers to finish first
-    cfg.max_connections = 200;
-}
+<span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">cfg</span> <span class="tok-punct">=</span> <span class="tok-variable">config</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- exclusive: waits for all readers to finish first</span>
+    <span class="tok-variable">cfg</span><span class="tok-punct">.</span><span class="tok-field">max_connections</span> <span class="tok-punct">=</span> <span class="tok-number">200</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 
-for reader in readers {
-    reader.join().unwrap();
-}
+<span class="tok-keyword">for</span> <span class="tok-variable">reader</span> <span class="tok-keyword">in</span> <span class="tok-variable">readers</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">reader</span><span class="tok-punct">.</span><span class="tok-call-method">join</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>RwLock</code> lets read-only threads proceed in parallel
@@ -1116,25 +1117,25 @@ recommend it for this read-heavy access pattern over a plain <code>Mutex</code>.
             <p>A type that wraps shared, mutable state internally should keep the lock
 as a private implementation detail, exposing only methods that lock,
 mutate, and unlock in one step — callers should never see a raw guard.</p>
-<pre><code class="rust">use std::sync::{Arc, Mutex};
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">sync</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Arc</span><span class="tok-punct">,</span> <span class="tok-type">Mutex</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-pub struct JobQueue {
-    jobs: Mutex&lt;Vec&lt;String&gt;&gt;, // &lt;- private: the lock is an implementation detail, not part of the API
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">JobQueue</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">jobs</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">&lt;</span><span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- private: the lock is an implementation detail, not part of the API</span>
+<span class="tok-punct">}</span>
 
-impl JobQueue {
-    pub fn new() -&gt; Arc&lt;Self&gt; {
-        Arc::new(JobQueue { jobs: Mutex::new(Vec::new()) })
-    }
+<span class="tok-keyword">impl</span> <span class="tok-type">JobQueue</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Arc</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-type">Arc</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">JobQueue</span> <span class="tok-punct">{</span> <span class="tok-variable">jobs</span><span class="tok-punct">:</span> <span class="tok-type">Mutex</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
 
-    pub fn push(&amp;self, job: String) { // &lt;- locks, mutates, unlocks — caller never touches the Mutex directly
-        self.jobs.lock().unwrap().push(job);
-    }
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">job</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- locks, mutates, unlocks — caller never touches the Mutex directly</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">jobs</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    pub fn pop(&amp;self) -&gt; Option&lt;String&gt; {
-        self.jobs.lock().unwrap().pop()
-    }
-}
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">pop</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">jobs</span><span class="tok-punct">.</span><span class="tok-call-method">lock</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">pop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> hiding the <code>Mutex</code> behind methods that lock only for the

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -999,8 +1000,8 @@ assignment.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Reassigning a mutable binding</h3>
-            <pre><code class="rust">let mut count = 0;
-count = 5; // &lt;- `=` assigns 5 to `count`
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">count</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
+<span class="tok-variable">count</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `=` assigns 5 to `count`</span>
 </code></pre>
 <p><strong>Restriction:</strong> reassigning with <code>=</code> requires the binding to be
 declared <code>mut</code> — <code>let x = 0; x = 1;</code> without <code>mut</code> is a compile error.</p>
@@ -1011,14 +1012,14 @@ declared <code>mut</code> — <code>let x = 0; x = 1;</code> without <code>mut</
             <p>Reassigning a mutable binding with <code>=</code> replaces its value wholesale,
 which keeps the binding always representing one complete, valid state
 rather than a half-updated one.</p>
-<pre><code class="rust">enum ConnectionState {
-    Disconnected,
-    Connected,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">enum</span> <span class="tok-type-def">ConnectionState</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Disconnected</span><span class="tok-punct">,</span>
+    <span class="tok-type">Connected</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let mut state = ConnectionState::Disconnected;
-// ... connection succeeds ...
-state = ConnectionState::Connected; // &lt;- `=` replaces the old value entirely, not piecemeal
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">state</span> <span class="tok-punct">=</span> <span class="tok-type">ConnectionState</span><span class="tok-punct">::</span><span class="tok-field">Disconnected</span><span class="tok-punct">;</span>
+<span class="tok-comment">// ... connection succeeds ...</span>
+<span class="tok-variable">state</span> <span class="tok-punct">=</span> <span class="tok-type">ConnectionState</span><span class="tok-punct">::</span><span class="tok-field">Connected</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `=` replaces the old value entirely, not piecemeal</span>
 </code></pre>
 <p>Replacing the whole binding in one <code>=</code> avoids any
 window where <code>state</code> is partially updated, echoing the "make invalid
@@ -1030,12 +1031,12 @@ applied to a plain mutable variable rather than a struct's fields.</p>
             <h3 class="scenario-title">Creating a new object</h3>
             <p>The <code>=</code> in a <code>let</code> binds a new value to a new name; unlike a later
 reassignment, this occurrence never requires <code>mut</code>.</p>
-<pre><code class="rust">struct Reading {
-    sensor_id: u32,
-    celsius: f64,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Reading</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">sensor_id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-let reading = Reading { sensor_id: 7, celsius: 21.4 }; // &lt;- `=` binds the new value to `reading`
+<span class="tok-keyword">let</span> <span class="tok-variable">reading</span> <span class="tok-punct">=</span> <span class="tok-type">Reading</span> <span class="tok-punct">{</span> <span class="tok-variable">sensor_id</span><span class="tok-punct">:</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-variable">celsius</span><span class="tok-punct">:</span> <span class="tok-number">21.4</span> <span class="tok-punct">}</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `=` binds the new value to `reading`</span>
 </code></pre>
 <p>Per the <a href="https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html">Book's variables chapter</a>,
 bindings are immutable by default — add <code>mut</code> only once a binding is
@@ -1077,27 +1078,27 @@ the programmer promising it via <code>unsafe</code>.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Assigning into a `static mut` shared with an interrupt handler</h3>
-            <pre><code class="rust">static mut TICK_COUNT: u32 = 0;
+            <pre><code class="rust-hl"><span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">TICK_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
 
-// Called only from the timer interrupt handler.
-unsafe fn on_timer_tick() {
-    TICK_COUNT = TICK_COUNT + 1; // &lt;- `=` assigns the new value; `unsafe` is required just to touch a `static mut`
-}
+<span class="tok-comment">// Called only from the timer interrupt handler.</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">on_timer_tick</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">TICK_COUNT</span> <span class="tok-punct">=</span> <span class="tok-constant">TICK_COUNT</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `=` assigns the new value; `unsafe` is required just to touch a `static mut`</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">The safer alternative: assigning through a `Cell`-wrapped static</h3>
-            <pre><code class="rust">use core::cell::Cell;
+            <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">Cell</span><span class="tok-punct">;</span>
 
-struct TickCounter(Cell&lt;u32&gt;);
-unsafe impl Sync for TickCounter {} // sound only because access here is single-threaded (main + one interrupt)
+<span class="tok-keyword">struct</span> <span class="tok-type-def">TickCounter</span><span class="tok-punct">(</span><span class="tok-type">Cell</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">unsafe</span> <span class="tok-keyword">impl</span> <span class="tok-trait">Sync</span> <span class="tok-keyword">for</span> <span class="tok-type">TickCounter</span> <span class="tok-punct">{</span><span class="tok-punct">}</span> <span class="tok-comment">// sound only because access here is single-threaded (main + one interrupt)</span>
 
-static TICK_COUNT: TickCounter = TickCounter(Cell::new(0));
+<span class="tok-keyword">static</span> <span class="tok-constant">TICK_COUNT</span><span class="tok-punct">:</span> <span class="tok-type">TickCounter</span> <span class="tok-punct">=</span> <span class="tok-field">TickCounter</span><span class="tok-punct">(</span><span class="tok-type">Cell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-fn on_timer_tick() {
-    TICK_COUNT.0.set(TICK_COUNT.0.get() + 1); // &lt;- still an `=`-style replacement of the whole value, now via `Cell::set`
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">on_timer_tick</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-constant">TICK_COUNT</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">set</span><span class="tok-punct">(</span><span class="tok-constant">TICK_COUNT</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- still an `=`-style replacement of the whole value, now via `Cell::set`</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1003,16 +1004,16 @@ built and locked together, not what a crate is.</p>
 just the member list — and each member still has its own ordinary
 <code>Cargo.toml</code>. This example shows plain TOML/directory-layout content, not
 Rust code.</p>
-<pre><code class="rust"># Cargo.toml (workspace root)
-[workspace]
-members = [
-    "app",            # &lt;- binary crate: the CLI front-end
-    "weather-api",    # &lt;- library crate: shared logic
-]
+<pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-call-method">toml</span> <span class="tok-punct">(</span><span class="tok-variable">workspace</span> <span class="tok-variable">root</span><span class="tok-punct">)</span>
+<span class="tok-punct">[</span><span class="tok-variable">workspace</span><span class="tok-punct">]</span>
+<span class="tok-variable">members</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-string">&quot;app&quot;</span><span class="tok-punct">,</span>            <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">binary</span> <span class="tok-keyword">crate</span><span class="tok-punct">:</span> <span class="tok-variable">the</span> <span class="tok-constant">CLI</span> <span class="tok-variable">front</span><span class="tok-punct">-</span><span class="tok-variable">end</span>
+    <span class="tok-string">&quot;weather-api&quot;</span><span class="tok-punct">,</span>    <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">library</span> <span class="tok-keyword">crate</span><span class="tok-punct">:</span> <span class="tok-variable">shared</span> <span class="tok-variable">logic</span>
+<span class="tok-punct">]</span>
 
-# app/Cargo.toml
-[dependencies]
-weather-api = { path = "../weather-api" } # &lt;- workspace member depended on by local path
+<span class="tok-punct">#</span> <span class="tok-variable">app</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">weather</span><span class="tok-punct">-</span><span class="tok-variable">api</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../weather-api&quot;</span> <span class="tok-punct">}</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">workspace</span> <span class="tok-variable">member</span> <span class="tok-variable">depended</span> <span class="tok-variable">on</span> <span class="tok-variable">by</span> <span class="tok-variable">local</span> <span class="tok-variable">path</span>
 </code></pre>
 
       </section>
@@ -1032,22 +1033,22 @@ an HTTP client plus response parsing — that a second binary, a
 background sync daemon, also needs; moving that core into its own
 workspace member lets both binaries share it without duplicating code or
 publishing anything externally yet.</p>
-<pre><code class="rust"># Cargo.toml (workspace root)
-[workspace]
-resolver = "2"
-members = [
-    "weather-cli",    # &lt;- existing binary crate
-    "weather-sync",   # &lt;- new binary: a background sync daemon
-    "weather-core",   # &lt;- new library crate: logic shared by both binaries
-]
+<pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-call-method">toml</span> <span class="tok-punct">(</span><span class="tok-variable">workspace</span> <span class="tok-variable">root</span><span class="tok-punct">)</span>
+<span class="tok-punct">[</span><span class="tok-variable">workspace</span><span class="tok-punct">]</span>
+<span class="tok-variable">resolver</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;2&quot;</span>
+<span class="tok-variable">members</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-string">&quot;weather-cli&quot;</span><span class="tok-punct">,</span>    <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">existing</span> <span class="tok-variable">binary</span> <span class="tok-keyword">crate</span>
+    <span class="tok-string">&quot;weather-sync&quot;</span><span class="tok-punct">,</span>   <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">new</span> <span class="tok-variable">binary</span><span class="tok-punct">:</span> <span class="tok-variable">a</span> <span class="tok-variable">background</span> <span class="tok-variable">sync</span> <span class="tok-variable">daemon</span>
+    <span class="tok-string">&quot;weather-core&quot;</span><span class="tok-punct">,</span>   <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">new</span> <span class="tok-variable">library</span> <span class="tok-keyword">crate</span><span class="tok-punct">:</span> <span class="tok-variable">logic</span> <span class="tok-variable">shared</span> <span class="tok-variable">by</span> <span class="tok-variable">both</span> <span class="tok-variable">binaries</span>
+<span class="tok-punct">]</span>
 
-# weather-cli/Cargo.toml
-[dependencies]
-weather-core = { path = "../weather-core" } # &lt;- depends on the shared crate by path, no version needed yet
+<span class="tok-punct">#</span> <span class="tok-variable">weather</span><span class="tok-punct">-</span><span class="tok-variable">cli</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">weather</span><span class="tok-punct">-</span><span class="tok-variable">core</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../weather-core&quot;</span> <span class="tok-punct">}</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">depends</span> <span class="tok-variable">on</span> <span class="tok-variable">the</span> <span class="tok-variable">shared</span> <span class="tok-keyword">crate</span> <span class="tok-variable">by</span> <span class="tok-variable">path</span><span class="tok-punct">,</span> <span class="tok-variable">no</span> <span class="tok-variable">version</span> <span class="tok-variable">needed</span> <span class="tok-variable">yet</span>
 
-# weather-sync/Cargo.toml
-[dependencies]
-weather-core = { path = "../weather-core" } # &lt;- same shared crate, second consumer
+<span class="tok-punct">#</span> <span class="tok-variable">weather</span><span class="tok-punct">-</span><span class="tok-variable">sync</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">weather</span><span class="tok-punct">-</span><span class="tok-variable">core</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../weather-core&quot;</span> <span class="tok-punct">}</span> <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">same</span> <span class="tok-variable">shared</span> <span class="tok-keyword">crate</span><span class="tok-punct">,</span> <span class="tok-variable">second</span> <span class="tok-variable">consumer</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> splitting reusable logic into its own focused crate
@@ -1085,17 +1086,17 @@ exactly as described above for any workspace.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust"># Cargo.toml (workspace root)
-[workspace]
-members = [
-    "pac",     # &lt;- svd2rust-generated peripheral access crate
-    "hal",     # &lt;- safe wrapper over the PAC
-    "app",     # &lt;- firmware application crate
-]
+        <pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-call-method">toml</span> <span class="tok-punct">(</span><span class="tok-variable">workspace</span> <span class="tok-variable">root</span><span class="tok-punct">)</span>
+<span class="tok-punct">[</span><span class="tok-variable">workspace</span><span class="tok-punct">]</span>
+<span class="tok-variable">members</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-string">&quot;pac&quot;</span><span class="tok-punct">,</span>     <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">svd2rust</span><span class="tok-punct">-</span><span class="tok-variable">generated</span> <span class="tok-variable">peripheral</span> <span class="tok-variable">access</span> <span class="tok-keyword">crate</span>
+    <span class="tok-string">&quot;hal&quot;</span><span class="tok-punct">,</span>     <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">safe</span> <span class="tok-variable">wrapper</span> <span class="tok-variable">over</span> <span class="tok-variable">the</span> <span class="tok-constant">PAC</span>
+    <span class="tok-string">&quot;app&quot;</span><span class="tok-punct">,</span>     <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">firmware</span> <span class="tok-variable">application</span> <span class="tok-keyword">crate</span>
+<span class="tok-punct">]</span>
 
-# hal/Cargo.toml
-[dependencies]
-pac = { path = "../pac" }   # &lt;- workspace member depended on by local path
+<span class="tok-punct">#</span> <span class="tok-variable">hal</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">pac</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../pac&quot;</span> <span class="tok-punct">}</span>   <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">workspace</span> <span class="tok-variable">member</span> <span class="tok-variable">depended</span> <span class="tok-variable">on</span> <span class="tok-variable">by</span> <span class="tok-variable">local</span> <span class="tok-variable">path</span>
 </code></pre>
 
       </section>
@@ -1114,18 +1115,18 @@ pac = { path = "../pac" }   # &lt;- workspace member depended on by local path
 the HAL built on it, and the application logic developed and versioned
 together in one repository, without publishing the PAC or HAL to
 crates.io just to let the application depend on them.</p>
-<pre><code class="rust"># Cargo.toml (workspace root)
-[workspace]
-resolver = "2"
-members = [
-    "pac",      # &lt;- register access, regenerated from the chip's SVD file when it changes
-    "hal",      # &lt;- safe driver API built on the PAC
-    "app",      # &lt;- application firmware
-]
+<pre><code class="rust-hl"><span class="tok-punct">#</span> <span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-call-method">toml</span> <span class="tok-punct">(</span><span class="tok-variable">workspace</span> <span class="tok-variable">root</span><span class="tok-punct">)</span>
+<span class="tok-punct">[</span><span class="tok-variable">workspace</span><span class="tok-punct">]</span>
+<span class="tok-variable">resolver</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;2&quot;</span>
+<span class="tok-variable">members</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span>
+    <span class="tok-string">&quot;pac&quot;</span><span class="tok-punct">,</span>      <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">register</span> <span class="tok-variable">access</span><span class="tok-punct">,</span> <span class="tok-variable">regenerated</span> <span class="tok-variable">from</span> <span class="tok-variable">the</span> <span class="tok-variable">chip</span><span class="tok-lifetime">'s</span> <span class="tok-constant">SVD</span> <span class="tok-variable">file</span> <span class="tok-variable">when</span> <span class="tok-variable">it</span> <span class="tok-variable">changes</span>
+    <span class="tok-string">&quot;hal&quot;</span><span class="tok-punct">,</span>      <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">safe</span> <span class="tok-variable">driver</span> <span class="tok-constant">API</span> <span class="tok-variable">built</span> <span class="tok-variable">on</span> <span class="tok-variable">the</span> <span class="tok-constant">PAC</span>
+    <span class="tok-string">&quot;app&quot;</span><span class="tok-punct">,</span>      <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">application</span> <span class="tok-variable">firmware</span>
+<span class="tok-punct">]</span>
 
-# app/Cargo.toml
-[dependencies]
-hal = { path = "../hal" }   # &lt;- depends on the HAL by path, not a published version
+<span class="tok-punct">#</span> <span class="tok-variable">app</span><span class="tok-punct">/</span><span class="tok-type">Cargo</span><span class="tok-punct">.</span><span class="tok-field">toml</span>
+<span class="tok-punct">[</span><span class="tok-variable">dependencies</span><span class="tok-punct">]</span>
+<span class="tok-variable">hal</span> <span class="tok-punct">=</span> <span class="tok-punct">{</span> <span class="tok-variable">path</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;../hal&quot;</span> <span class="tok-punct">}</span>   <span class="tok-punct">#</span> <span class="tok-punct">&lt;</span><span class="tok-punct">-</span> <span class="tok-variable">depends</span> <span class="tok-variable">on</span> <span class="tok-variable">the</span> <span class="tok-constant">HAL</span> <span class="tok-variable">by</span> <span class="tok-variable">path</span><span class="tok-punct">,</span> <span class="tok-variable">not</span> <span class="tok-variable">a</span> <span class="tok-variable">published</span> <span class="tok-variable">version</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a shared <code>Cargo.lock</code> across <code>pac</code>, <code>hal</code>, and <code>app</code>

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1018,18 +1019,18 @@ compile code that forgets a variant. That exhaustiveness is what makes
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">fn find_user_email(id: u32) -&gt; Option&lt;String&gt; { // &lt;- explicit "maybe absent" return type
-    if id == 1 {
-        Some(String::from("admin@example.com"))
-    } else {
-        None
-    }
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">find_user_email</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- explicit &quot;maybe absent&quot; return type</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">id</span> <span class="tok-punct">==</span> <span class="tok-number">1</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">::</span><span class="tok-call-assoc">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;admin@example.com&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-field">None</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-match find_user_email(2) {
-    Some(email) =&gt; println!("found: {email}"),
-    None =&gt; println!("no email on file"),
-}
+<span class="tok-keyword">match</span> <span class="tok-call-free">find_user_email</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">email</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;found: {email}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;no email on file&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1047,23 +1048,23 @@ match find_user_email(2) {
             <p>A warehouse inventory keyed by SKU may or may not have a given item, so
 looking it up returns <code>Option&lt;u32&gt;</code> rather than panicking or returning a
 sentinel like <code>-1</code>.</p>
-<pre><code class="rust">use std::collections::HashMap;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">collections</span><span class="tok-punct">::</span><span class="tok-type">HashMap</span><span class="tok-punct">;</span>
 
-struct Stock {
-    quantity: u32,
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Stock</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn check_stock(inventory: &amp;HashMap&lt;String, Stock&gt;, sku: &amp;str) -&gt; Option&lt;u32&gt; {
-    inventory.get(sku).map(|stock| stock.quantity) // &lt;- HashMap::get returns Option&lt;&amp;Stock&gt;
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">check_stock</span><span class="tok-punct">(</span><span class="tok-variable">inventory</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">HashMap</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Stock</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-variable">sku</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-variable">sku</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">stock</span><span class="tok-punct">|</span> <span class="tok-variable">stock</span><span class="tok-punct">.</span><span class="tok-field">quantity</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- HashMap::get returns Option&lt;&amp;Stock&gt;</span>
+<span class="tok-punct">}</span>
 
-let mut inventory = HashMap::new();
-inventory.insert("SKU-100".to_string(), Stock { quantity: 42 });
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">inventory</span> <span class="tok-punct">=</span> <span class="tok-type">HashMap</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">inventory</span><span class="tok-punct">.</span><span class="tok-call-method">insert</span><span class="tok-punct">(</span><span class="tok-string">&quot;SKU-100&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Stock</span> <span class="tok-punct">{</span> <span class="tok-variable">quantity</span><span class="tok-punct">:</span> <span class="tok-number">42</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-match check_stock(&amp;inventory, "SKU-404") {
-    Some(qty) =&gt; println!("{qty} in stock"),
-    None =&gt; println!("SKU not found"), // &lt;- absence handled, not a crash
-}
+<span class="tok-keyword">match</span> <span class="tok-call-free">check_stock</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">inventory</span><span class="tok-punct">,</span> <span class="tok-string">&quot;SKU-404&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">qty</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{qty} in stock&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;SKU not found&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- absence handled, not a crash</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>HashMap::get</code> returns <code>Option&lt;&amp;V&gt;</code> instead of
@@ -1081,26 +1082,26 @@ case rather than a runtime error — see the
             <p>A signup form's middle name field is genuinely optional, so the parsed
 struct stores it as <code>Option&lt;String&gt;</code> instead of an empty string standing
 in for "not provided."</p>
-<pre><code class="rust">struct SignupForm {
-    first_name: String,
-    middle_name: Option&lt;String&gt;, // &lt;- absence is explicit, not an empty-string convention
-    last_name: String,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SignupForm</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">first_name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">middle_name</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- absence is explicit, not an empty-string convention</span>
+    <span class="tok-variable">last_name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn parse_middle_name(raw: &amp;str) -&gt; Option&lt;String&gt; {
-    let trimmed = raw.trim();
-    if trimmed.is_empty() {
-        None // &lt;- blank field means "not provided," not an empty String
-    } else {
-        Some(trimmed.to_string())
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_middle_name</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">String</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">trimmed</span> <span class="tok-punct">=</span> <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">trim</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">trimmed</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+        <span class="tok-field">None</span> <span class="tok-comment tok-anno">// &lt;- blank field means &quot;not provided,&quot; not an empty String</span>
+    <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">trimmed</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let form = SignupForm {
-    first_name: "Ada".to_string(),
-    middle_name: parse_middle_name(""),
-    last_name: "Lovelace".to_string(),
-};
+<span class="tok-keyword">let</span> <span class="tok-variable">form</span> <span class="tok-punct">=</span> <span class="tok-type">SignupForm</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">first_name</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Ada&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">middle_name</span><span class="tok-punct">:</span> <span class="tok-call-free">parse_middle_name</span><span class="tok-punct">(</span><span class="tok-string">&quot;&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">last_name</span><span class="tok-punct">:</span> <span class="tok-string">&quot;Lovelace&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> an empty string and "no value" are different facts a
@@ -1119,24 +1120,24 @@ makes the distinction explicit in the type, an application of
             <p>An order may or may not have a discount applied; branching on the
 <code>Option</code> decides which price to display, with the compiler guaranteeing
 both cases are handled.</p>
-<pre><code class="rust">struct Discount {
-    percent_off: u8,
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Discount</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">percent_off</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-struct Order {
-    subtotal_cents: u64,
-    discount: Option&lt;Discount&gt;, // &lt;- an order either has a discount applied or it doesn't
-}
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Order</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">subtotal_cents</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-variable">discount</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">Discount</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- an order either has a discount applied or it doesn't</span>
+<span class="tok-punct">}</span>
 
-fn final_price_cents(order: &amp;Order) -&gt; u64 {
-    match &amp;order.discount {
-        Some(discount) =&gt; { // &lt;- exhaustive match forces both cases to be handled
-            let off = order.subtotal_cents * discount.percent_off as u64 / 100;
-            order.subtotal_cents - off
-        }
-        None =&gt; order.subtotal_cents,
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">final_price_cents</span><span class="tok-punct">(</span><span class="tok-variable">order</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Order</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-punct">&amp;</span><span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">discount</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">discount</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- exhaustive match forces both cases to be handled</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">off</span> <span class="tok-punct">=</span> <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">subtotal_cents</span> <span class="tok-punct">*</span> <span class="tok-variable">discount</span><span class="tok-punct">.</span><span class="tok-field">percent_off</span> <span class="tok-keyword">as</span> <span class="tok-type">u64</span> <span class="tok-punct">/</span> <span class="tok-number">100</span><span class="tok-punct">;</span>
+            <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">subtotal_cents</span> <span class="tok-punct">-</span> <span class="tok-variable">off</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">order</span><span class="tok-punct">.</span><span class="tok-field">subtotal_cents</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> matching exhaustively on <code>Option</code> means adding a new
@@ -1178,22 +1179,22 @@ convention (like a zeroed heap page) to make that accidentally harmless.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">struct SensorCache {
-    last_reading: Option&lt;f32&gt;, // &lt;- None until the first interrupt-driven read arrives
-}
+        <pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">SensorCache</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">f32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- None until the first interrupt-driven read arrives</span>
+<span class="tok-punct">}</span>
 
-impl SensorCache {
-    fn latest(&amp;self) -&gt; Option&lt;f32&gt; {
-        self.last_reading
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">SensorCache</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">latest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">f32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">last_reading</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let cache = SensorCache { last_reading: None };
+<span class="tok-keyword">let</span> <span class="tok-variable">cache</span> <span class="tok-punct">=</span> <span class="tok-type">SensorCache</span> <span class="tok-punct">{</span> <span class="tok-variable">last_reading</span><span class="tok-punct">:</span> <span class="tok-field">None</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
 
-match cache.latest() {
-    Some(value) =&gt; { let _ = value; } // handle the cached reading
-    None =&gt; {}                        // no reading yet this cycle: skip
-}
+<span class="tok-keyword">match</span> <span class="tok-variable">cache</span><span class="tok-punct">.</span><span class="tok-call-method">latest</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">value</span><span class="tok-punct">;</span> <span class="tok-punct">}</span> <span class="tok-comment">// handle the cached reading</span>
+    <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>                        <span class="tok-comment">// no reading yet this cycle: skip</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1211,19 +1212,19 @@ match cache.latest() {
             <p>A fixed-capacity <code>heapless::Vec</code> buffers received CAN frame IDs; popping
 the most recent one returns <code>Option&lt;u16&gt;</code> since the queue can legitimately
 be empty between frames.</p>
-<pre><code class="rust">use heapless::Vec;
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">heapless</span><span class="tok-punct">::</span><span class="tok-type">Vec</span><span class="tok-punct">;</span>
 
-fn pop_latest(queue: &amp;mut Vec&lt;u16, 16&gt;) -&gt; Option&lt;u16&gt; {
-    queue.pop() // &lt;- heapless::Vec::pop mirrors std's Option&lt;T&gt; return, no allocator needed
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">pop_latest</span><span class="tok-punct">(</span><span class="tok-variable">queue</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">queue</span><span class="tok-punct">.</span><span class="tok-call-method">pop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- heapless::Vec::pop mirrors std's Option&lt;T&gt; return, no allocator needed</span>
+<span class="tok-punct">}</span>
 
-let mut queue: Vec&lt;u16, 16&gt; = Vec::new();
-queue.push(0x100).ok();
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">queue</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Vec</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">queue</span><span class="tok-punct">.</span><span class="tok-call-method">push</span><span class="tok-punct">(</span><span class="tok-number">0x100</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-match pop_latest(&amp;mut queue) {
-    Some(id) =&gt; { let _ = id; } // handle the CAN id
-    None =&gt; {}                  // queue empty this cycle
-}
+<span class="tok-keyword">match</span> <span class="tok-call-free">pop_latest</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">queue</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span> <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">id</span><span class="tok-punct">;</span> <span class="tok-punct">}</span> <span class="tok-comment">// handle the CAN id</span>
+    <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>                  <span class="tok-comment">// queue empty this cycle</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> <code>heapless</code> collections mirror std's <code>Option</code>-returning
@@ -1242,21 +1243,21 @@ reasoning as <code>HashMap::get</code> on the classic page.</p>
 the two reserved bit patterns by returning <code>None</code>, rather than quietly
 picking a default rate for an encoding the hardware doesn't actually
 define.</p>
-<pre><code class="rust">#[derive(Debug, PartialEq)]
-enum SampleRate {
-    Hz100,
-    Hz200,
-}
+<pre><code class="rust-hl"><span class="tok-attribute">#[derive(Debug, PartialEq)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">SampleRate</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Hz100</span><span class="tok-punct">,</span>
+    <span class="tok-type">Hz200</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-fn decode_sample_rate(bits: u8) -&gt; Option&lt;SampleRate&gt; {
-    match bits &amp; 0b11 {
-        0b00 =&gt; Some(SampleRate::Hz100),
-        0b01 =&gt; Some(SampleRate::Hz200),
-        _ =&gt; None, // &lt;- reserved encodings: absence, not a made-up default rate
-    }
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">decode_sample_rate</span><span class="tok-punct">(</span><span class="tok-variable">bits</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">SampleRate</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">match</span> <span class="tok-variable">bits</span> <span class="tok-punct">&amp;</span> <span class="tok-number">0b11</span> <span class="tok-punct">{</span>
+        <span class="tok-number">0b00</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">SampleRate</span><span class="tok-punct">::</span><span class="tok-field">Hz100</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-number">0b01</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">SampleRate</span><span class="tok-punct">::</span><span class="tok-field">Hz200</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+        <span class="tok-variable">_</span> <span class="tok-punct">=&gt;</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- reserved encodings: absence, not a made-up default rate</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-assert_eq!(decode_sample_rate(0b10), None);
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-call-free">decode_sample_rate</span><span class="tok-punct">(</span><span class="tok-number">0b10</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-field">None</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> returning <code>None</code> for a reserved bit pattern keeps a
@@ -1274,18 +1275,18 @@ idiom the classic page applies to a blank form field.</p>
             <p>A calibration offset is loaded once from nonvolatile config at boot;
 matching on the <code>Option</code> keeps a genuine zero offset from being confused
 with "not calibrated yet."</p>
-<pre><code class="rust">struct Device {
-    calibration_offset: Option&lt;i16&gt;, // &lt;- None until load_calibration() runs at boot
-}
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">Device</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">calibration_offset</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">i16</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- None until load_calibration() runs at boot</span>
+<span class="tok-punct">}</span>
 
-impl Device {
-    fn apply(&amp;self, raw: i16) -&gt; i16 {
-        match self.calibration_offset {
-            Some(offset) =&gt; raw + offset, // &lt;- exhaustive match: both states are handled
-            None =&gt; raw,                  // &lt;- uncalibrated: pass the raw reading through unmodified
-        }
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Device</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">apply</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">match</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">calibration_offset</span> <span class="tok-punct">{</span>
+            <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">)</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">raw</span> <span class="tok-punct">+</span> <span class="tok-variable">offset</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- exhaustive match: both states are handled</span>
+            <span class="tok-field">None</span> <span class="tok-punct">=&gt;</span> <span class="tok-variable">raw</span><span class="tok-punct">,</span>                  <span class="tok-comment tok-anno">// &lt;- uncalibrated: pass the raw reading through unmodified</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> modeling "not yet calibrated" as <code>None</code> rather than a

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1006,12 +1007,12 @@ Cargo existed.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Setting the crate type and name without Cargo</h3>
-            <pre><code class="rust">#![crate_type = "lib"] // &lt;- rustc-only: produces an rlib without a surrounding Cargo project
-#![crate_name = "telemetry_core"] // &lt;- names the crate explicitly rather than deriving it from the filename
+            <pre><code class="rust-hl"><span class="tok-attribute">#![crate_type = &quot;lib&quot;]</span> <span class="tok-comment tok-anno">// &lt;- rustc-only: produces an rlib without a surrounding Cargo project</span>
+<span class="tok-attribute">#![crate_name = &quot;telemetry_core&quot;]</span> <span class="tok-comment tok-anno">// &lt;- names the crate explicitly rather than deriving it from the filename</span>
 
-pub fn version() -&gt; &amp;'static str {
-    "0.1.0"
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">version</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span> <span class="tok-punct">{</span>
+    <span class="tok-string">&quot;0.1.0&quot;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>
@@ -1021,12 +1022,12 @@ pub fn version() -&gt; &amp;'static str {
 custom build pipeline, with no <code>Cargo.toml</code> in the picture — the crate
 name and output kind have to come from somewhere, so they're declared in
 the source itself.</p>
-<pre><code class="rust">#![crate_type = "bin"] // &lt;- produces an executable; no Cargo.toml present to say so otherwise
-#![crate_name = "log_rotator"]
+<pre><code class="rust-hl"><span class="tok-attribute">#![crate_type = &quot;bin&quot;]</span> <span class="tok-comment tok-anno">// &lt;- produces an executable; no Cargo.toml present to say so otherwise</span>
+<span class="tok-attribute">#![crate_name = &quot;log_rotator&quot;]</span>
 
-fn main() {
-    println!("rotating logs");
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;rotating logs&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>In an ordinary Cargo-managed project, <code>[lib] crate-type</code> and the package <code>name</code> in <code>Cargo.toml</code> are the idiomatic,
 single source of truth for both of these, and duplicating them into
@@ -1069,22 +1070,22 @@ nuance to add beyond "still applies, and still rarely written by hand."</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Why a firmware crate doesn't usually write these attributes at all</h3>
-            <pre><code class="rust">// src/main.rs — no #![crate_type]/#![crate_name] needed here:
-#![no_std]
-#![no_main]
+            <pre><code class="rust-hl"><span class="tok-comment">// src/main.rs — no #![crate_type]/#![crate_name] needed here:</span>
+<span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![no_main]</span>
 
-// Cargo.toml supplies crate-type/name (defaults to "bin" from [[bin]], name from [package]);
-// .cargo/config.toml supplies the target instead:
-//   [build]
-//   target = "thumbv7em-none-eabihf"
+<span class="tok-comment">// Cargo.toml supplies crate-type/name (defaults to &quot;bin&quot; from [[bin]], name from [package]);</span>
+<span class="tok-comment">// .cargo/config.toml supplies the target instead:</span>
+<span class="tok-comment">//   [build]</span>
+<span class="tok-comment">//   target = &quot;thumbv7em-none-eabihf&quot;</span>
 
-use cortex_m_rt::entry;
-use panic_halt as _;
+<span class="tok-keyword">use</span> <span class="tok-module">cortex_m_rt</span><span class="tok-punct">::</span><span class="tok-variable">entry</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-variable">panic_halt</span> <span class="tok-keyword">as</span> <span class="tok-variable">_</span><span class="tok-punct">;</span>
 
-#[entry]
-fn main() -&gt; ! {
-    loop {}
-}
+<span class="tok-attribute">#[entry]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">main</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">!</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">loop</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
           </div>

@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1005,11 +1006,11 @@ missed) in code review by eye.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![warn(clippy::all)] // &lt;- enables clippy's default lint group for this crate
+        <pre><code class="rust-hl"><span class="tok-attribute">#![warn(clippy::all)]</span> <span class="tok-comment tok-anno">// &lt;- enables clippy's default lint group for this crate</span>
 
-fn double(x: i32) -&gt; i32 {
-    x * 2
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">double</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">x</span> <span class="tok-punct">*</span> <span class="tok-number">2</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1027,15 +1028,15 @@ fn double(x: i32) -&gt; i32 {
             <p>Clippy's <code>unwrap_used</code> lint flags a public function that panics on bad
 input via <code>.unwrap()</code>, pushing the design toward a <code>Result</code>-returning
 signature that lets the caller decide how to handle failure instead.</p>
-<pre><code class="rust">// AVOID: panics inside a public function whenever parsing fails
-pub fn parse_config_avoid(raw: &amp;str) -&gt; u32 {
-    raw.parse().unwrap() // &lt;- clippy::unwrap_used flags this in library code
-}
+<pre><code class="rust-hl"><span class="tok-comment">// AVOID: panics inside a public function whenever parsing fails</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_config_avoid</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- clippy::unwrap_used flags this in library code</span>
+<span class="tok-punct">}</span>
 
-// PREFER: the caller gets to decide what a bad value means
-pub fn parse_config(raw: &amp;str) -&gt; Result&lt;u32, std::num::ParseIntError&gt; {
-    raw.parse() // &lt;- no unwrap: failure is part of the signature, not a panic
-}
+<span class="tok-comment">// PREFER: the caller gets to decide what a bad value means</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">parse_config</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">num</span><span class="tok-punct">::</span><span class="tok-type-return">ParseIntError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- no unwrap: failure is part of the signature, not a panic</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> a panic buried inside a library function takes the
@@ -1055,14 +1056,14 @@ crates) exists specifically to surface this before it ships.</p>
 alongside clippy's own lints) turns "this public item has no <code>///</code>
 comment" into a build warning, catching undocumented API surface before
 it reaches a published crate.</p>
-<pre><code class="rust">#![warn(missing_docs)] // &lt;- every public item below now needs a /// comment
+<pre><code class="rust-hl"><span class="tok-attribute">#![warn(missing_docs)]</span> <span class="tok-comment tok-anno">// &lt;- every public item below now needs a /// comment</span>
 
-/// The total price of an order, in whole cents.
-pub struct OrderTotal(pub u32); // &lt;- documented: satisfies the lint
+<span class="tok-comment">/// The total price of an order, in whole cents.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">OrderTotal</span><span class="tok-punct">(</span><span class="tok-keyword">pub</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- documented: satisfies the lint</span>
 
-pub struct ShippingAddress { // &lt;- missing_docs warns: no /// comment on this public item
-    pub line1: String,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">ShippingAddress</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- missing_docs warns: no /// comment on this public item</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">line1</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> letting undocumented public items compile silently is
@@ -1082,13 +1083,13 @@ rather than relying on reviewers to notice a missing comment.</p>
 values — a comparison that looks correct but is fragile because
 arithmetic on floats rarely produces exactly the bit pattern a reader
 expects.</p>
-<pre><code class="rust">fn readings_match_avoid(a: f64, b: f64) -&gt; bool {
-    a == b // AVOID: clippy::float_cmp — exact equality on floats is rarely what's intended
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">readings_match_avoid</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">a</span> <span class="tok-punct">==</span> <span class="tok-variable">b</span> <span class="tok-comment">// AVOID: clippy::float_cmp — exact equality on floats is rarely what's intended</span>
+<span class="tok-punct">}</span>
 
-fn readings_match(a: f64, b: f64, tolerance: f64) -&gt; bool {
-    (a - b).abs() &lt;= tolerance // PREFER: compare within a tolerance instead
-}
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">readings_match</span><span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">,</span> <span class="tok-variable">tolerance</span><span class="tok-punct">:</span> <span class="tok-type">f64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-variable">a</span> <span class="tok-punct">-</span> <span class="tok-variable">b</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">abs</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&lt;=</span> <span class="tok-variable">tolerance</span> <span class="tok-comment">// PREFER: compare within a tolerance instead</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> floating-point rounding means two values that are
@@ -1133,12 +1134,12 @@ difference in what the tools themselves do.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">#![no_std]
-#![warn(clippy::arithmetic_side_effects)] // &lt;- an ordinary clippy lint; runs the same under any --target
+        <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![warn(clippy::arithmetic_side_effects)]</span> <span class="tok-comment tok-anno">// &lt;- an ordinary clippy lint; runs the same under any --target</span>
 
-pub fn scale_reading(raw: u16, factor: u16) -&gt; u16 {
-    raw.saturating_mul(factor) // &lt;- avoids the panic-on-overflow arithmetic the lint flags
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">scale_reading</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">factor</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">saturating_mul</span><span class="tok-punct">(</span><span class="tok-variable">factor</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- avoids the panic-on-overflow arithmetic the lint flags</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
       </section>
@@ -1158,18 +1159,18 @@ overflow; <code>clippy::arithmetic_side_effects</code> flags it the same way it
 would in any hosted crate, but the consequence of leaving it unfixed is
 more severe on a target where an overflow panic resets the device rather
 than getting caught by a supervising process.</p>
-<pre><code class="rust">#![no_std]
-#![warn(clippy::arithmetic_side_effects)]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![warn(clippy::arithmetic_side_effects)]</span>
 
-// AVOID: an overflowing add here panics, and on target that means a reset, not a caught error
-fn calibrate_avoid(raw: u16, offset: u16) -&gt; u16 {
-    raw + offset // &lt;- clippy::arithmetic_side_effects flags this
-}
+<span class="tok-comment">// AVOID: an overflowing add here panics, and on target that means a reset, not a caught error</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">calibrate_avoid</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span> <span class="tok-punct">+</span> <span class="tok-variable">offset</span> <span class="tok-comment tok-anno">// &lt;- clippy::arithmetic_side_effects flags this</span>
+<span class="tok-punct">}</span>
 
-// PREFER: overflow is handled explicitly instead of panicking
-fn calibrate(raw: u16, offset: u16) -&gt; u16 {
-    raw.saturating_add(offset)
-}
+<span class="tok-comment">// PREFER: overflow is handled explicitly instead of panicking</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">calibrate</span><span class="tok-punct">(</span><span class="tok-variable">raw</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">raw</span><span class="tok-punct">.</span><span class="tok-call-method">saturating_add</span><span class="tok-punct">(</span><span class="tok-variable">offset</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the lint itself is not embedded-specific — it fires
@@ -1191,18 +1192,18 @@ in the clippy lint list.</p>
 failure leaves a firmware author with only a reset to recover from;
 <code>clippy::unwrap_used</code> flags this exactly as it would in hosted code,
 pushing the driver toward a <code>Result</code>-returning constructor instead.</p>
-<pre><code class="rust">#![no_std]
-#![warn(clippy::unwrap_used)]
+<pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
+<span class="tok-attribute">#![warn(clippy::unwrap_used)]</span>
 
-// AVOID: any I2C failure here panics the whole firmware
-fn init_sensor_avoid(i2c: &amp;mut impl embedded_hal::i2c::I2c) {
-    i2c.write(0x76, &amp;[0x00]).unwrap(); // &lt;- clippy::unwrap_used flags this in library code
-}
+<span class="tok-comment">// AVOID: any I2C failure here panics the whole firmware</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init_sensor_avoid</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-number">0x76</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x00</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- clippy::unwrap_used flags this in library code</span>
+<span class="tok-punct">}</span>
 
-// PREFER: the caller decides how to handle an init failure
-fn init_sensor(i2c: &amp;mut impl embedded_hal::i2c::I2c) -&gt; Result&lt;(), embedded_hal::i2c::ErrorKind&gt; {
-    i2c.write(0x76, &amp;[0x00]).map_err(|_| embedded_hal::i2c::ErrorKind::Other)
-}
+<span class="tok-comment">// PREFER: the caller decides how to handle an init failure</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">init_sensor</span><span class="tok-punct">(</span><span class="tok-variable">i2c</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">impl</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">I2c</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type-return">ErrorKind</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">i2c</span><span class="tok-punct">.</span><span class="tok-call-method">write</span><span class="tok-punct">(</span><span class="tok-number">0x76</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x00</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-module">embedded_hal</span><span class="tok-punct">::</span><span class="tok-module">i2c</span><span class="tok-punct">::</span><span class="tok-type">ErrorKind</span><span class="tok-punct">::</span><span class="tok-field">Other</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the lint is the same one described in this page's

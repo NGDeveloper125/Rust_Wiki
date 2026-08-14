@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -996,7 +997,7 @@ indices and lengths.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Pinning a port number's type</h3>
-            <pre><code class="rust">let port = 8080u16; // &lt;- `u16` suffix pins the literal's type explicitly
+            <pre><code class="rust-hl"><span class="tok-keyword">let</span> <span class="tok-variable">port</span> <span class="tok-punct">=</span> <span class="tok-number">8080u16</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `u16` suffix pins the literal's type explicitly</span>
 </code></pre>
 <p><strong>Restriction:</strong> the literal's value must fit within the suffixed
 type's range — <code>300u8</code> is a compile error since <code>u8</code> maxes out at 255.</p>
@@ -1007,17 +1008,17 @@ type's range — <code>300u8</code> is a compile error since <code>u8</code> max
             <p>Without a suffix, a bare integer literal defaults to <code>i32</code> — which is
 wrong the moment the value needs to be wider, and can fail to compile
 outright (<code>1 &lt;&lt; 40</code> overflows <code>i32</code> at compile time).</p>
-<pre><code class="rust">fn file_offset(block: u64, block_size: u64) -&gt; u64 {
-    block * block_size
-}
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">file_offset</span><span class="tok-punct">(</span><span class="tok-variable">block</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span> <span class="tok-variable">block_size</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">block</span> <span class="tok-punct">*</span> <span class="tok-variable">block_size</span>
+<span class="tok-punct">}</span>
 
-// AVOID: bare literal defaults to i32, then needs a cast at the call site
-let bad_size = 4096;
-let offset_bad = file_offset(3, bad_size as u64);
+<span class="tok-comment">// AVOID: bare literal defaults to i32, then needs a cast at the call site</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">bad_size</span> <span class="tok-punct">=</span> <span class="tok-number">4096</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">offset_bad</span> <span class="tok-punct">=</span> <span class="tok-call-free">file_offset</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-variable">bad_size</span> <span class="tok-keyword">as</span> <span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-// PREFER: suffix the literal once, right where inference would otherwise guess i32
-let block_size = 4096u64; // &lt;- `u64` suffix: matches `file_offset`'s parameter type, no cast needed
-let offset = file_offset(3, block_size);
+<span class="tok-comment">// PREFER: suffix the literal once, right where inference would otherwise guess i32</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">block_size</span> <span class="tok-punct">=</span> <span class="tok-number">4096u64</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `u64` suffix: matches `file_offset`'s parameter type, no cast needed</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">offset</span> <span class="tok-punct">=</span> <span class="tok-call-free">file_offset</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-variable">block_size</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 <p>Suffixing the literal at its definition removes the
 need for an <code>as</code> cast later — casts are exactly where
@@ -1031,12 +1032,12 @@ the whole class of bug.</p>
             <p>A public constant's type is part of its contract with downstream crates —
 suffixing the literal documents the exact intended width at the
 definition site.</p>
-<pre><code class="rust">/// Maximum payload size accepted by this protocol version, in bytes.
-pub const MAX_PAYLOAD_BYTES: u16 = 1024u16; // &lt;- suffix pins the exact width consumers can rely on
+<pre><code class="rust-hl"><span class="tok-comment">/// Maximum payload size accepted by this protocol version, in bytes.</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">const</span> <span class="tok-constant">MAX_PAYLOAD_BYTES</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">=</span> <span class="tok-number">1024u16</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- suffix pins the exact width consumers can rely on</span>
 
-pub fn check_payload(len: usize) -&gt; bool {
-    len &lt;= MAX_PAYLOAD_BYTES as usize
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">check_payload</span><span class="tok-punct">(</span><span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">len</span> <span class="tok-punct">&lt;=</span> <span class="tok-constant">MAX_PAYLOAD_BYTES</span> <span class="tok-keyword">as</span> <span class="tok-type">usize</span>
+<span class="tok-punct">}</span>
 </code></pre>
 <p>Matching the literal's suffix to the constant's
 declared type keeps the intended width visible even if the value is ever
@@ -1080,14 +1081,14 @@ sometimes 16-bit on very small parts — so it's worth not assuming
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Pinning a constant to the exact width of a peripheral register</h3>
-            <pre><code class="rust">const ADC_MAX: u16 = 4095u16; // &lt;- `u16` suffix: matches the ADC's 12-bit result register width exactly
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">ADC_MAX</span><span class="tok-punct">:</span> <span class="tok-type">u16</span> <span class="tok-punct">=</span> <span class="tok-number">4095u16</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `u16` suffix: matches the ADC's 12-bit result register width exactly</span>
 </code></pre>
 
           </div>
         <div class="card">
             <h3 class="scenario-title">Catching an out-of-range register value at compile time</h3>
-            <pre><code class="rust">const GPIO_PIN_MASK: u8 = 0b1111_1111u8; // &lt;- `u8` suffix: this MCU's GPIO data register is only 8 bits wide
-// const BAD_MASK: u8 = 300u8; // would be a compile error: 300 doesn't fit in a u8
+            <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">GPIO_PIN_MASK</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">0b1111_1111u8</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `u8` suffix: this MCU's GPIO data register is only 8 bits wide</span>
+<span class="tok-comment">// const BAD_MASK: u8 = 300u8; // would be a compile error: 300 doesn't fit in a u8</span>
 </code></pre>
 
           </div>

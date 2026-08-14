@@ -58,6 +58,7 @@
       <a class="nav-toplink" href="../../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
       <a class="nav-toplink" href="../../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
       <a class="nav-toplink" href="../../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
     </div>
 
     <div class="nav-section-label">Syntax</div>
@@ -1016,35 +1017,35 @@ writes <code>unsafe</code> at all.</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">mod counter {
-    use std::cell::UnsafeCell;
+        <pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">counter</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">cell</span><span class="tok-punct">::</span><span class="tok-type">UnsafeCell</span><span class="tok-punct">;</span>
 
-    pub struct FastCounter { // &lt;- the only public item; every unsafe detail stays inside this module
-        value: UnsafeCell&lt;u32&gt;,
-    }
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">FastCounter</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- the only public item; every unsafe detail stays inside this module</span>
+        <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">UnsafeCell</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
 
-    impl FastCounter {
-        pub fn new() -&gt; Self {
-            Self { value: UnsafeCell::new(0) }
-        }
+    <span class="tok-keyword">impl</span> <span class="tok-type">FastCounter</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">UnsafeCell</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
 
-        pub fn increment(&amp;self) {
-            unsafe {
-                // SAFETY: called only through `&amp;self` from single-threaded code in this example;
-                // no other reference to `value` is live at the same time.
-                *self.value.get() += 1;
-            }
-        }
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">increment</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+                <span class="tok-comment">// SAFETY: called only through `&amp;self` from single-threaded code in this example;</span>
+                <span class="tok-comment">// no other reference to `value` is live at the same time.</span>
+                <span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">+=</span> <span class="tok-number">1</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
 
-        pub fn get(&amp;self) -&gt; u32 {
-            unsafe { *self.value.get() }
-        }
-    }
-}
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">get</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-punct">*</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let counter = counter::FastCounter::new();
-counter.increment();
-println!("{}", counter.get());
+<span class="tok-keyword">let</span> <span class="tok-variable">counter</span> <span class="tok-punct">=</span> <span class="tok-module">counter</span><span class="tok-punct">::</span><span class="tok-type">FastCounter</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">counter</span><span class="tok-punct">.</span><span class="tok-call-method">increment</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">counter</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
       </section>
@@ -1063,33 +1064,33 @@ println!("{}", counter.get());
 every pointer-arithmetic operation stays inside the module, and the
 public API only ever returns safe references tied to the arena's own
 lifetime.</p>
-<pre><code class="rust">mod arena {
-    pub struct Arena {
-        buffer: Vec&lt;u8&gt;,
-        used: usize,
-    }
+<pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">arena</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Arena</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">buffer</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+        <span class="tok-variable">used</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">,</span>
+    <span class="tok-punct">}</span>
 
-    impl Arena {
-        pub fn new(capacity: usize) -&gt; Self {
-            Self { buffer: vec![0; capacity], used: 0 }
-        }
+    <span class="tok-keyword">impl</span> <span class="tok-type">Arena</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">new</span><span class="tok-punct">(</span><span class="tok-variable">capacity</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">buffer</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-variable">capacity</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">used</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
 
-        pub fn alloc(&amp;mut self, bytes: usize) -&gt; &amp;mut [u8] {
-            assert!(self.used + bytes &lt;= self.buffer.len(), "arena exhausted");
-            let start = self.used;
-            self.used += bytes;
-            unsafe {
-                // SAFETY: `start..start + bytes` was just checked to be within
-                // `self.buffer`'s bounds, and no other slice into `buffer` is live.
-                std::slice::from_raw_parts_mut(self.buffer.as_mut_ptr().add(start), bytes) // &lt;- the module's one raw-pointer operation
-            }
-        }
-    }
-}
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">alloc</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">bytes</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-punct">[</span><span class="tok-type-return">u8</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+            <span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">used</span> <span class="tok-punct">+</span> <span class="tok-variable">bytes</span> <span class="tok-punct">&lt;=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">buffer</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;arena exhausted&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">start</span> <span class="tok-punct">=</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">used</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">used</span> <span class="tok-punct">+=</span> <span class="tok-variable">bytes</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+                <span class="tok-comment">// SAFETY: `start..start + bytes` was just checked to be within</span>
+                <span class="tok-comment">// `self.buffer`'s bounds, and no other slice into `buffer` is live.</span>
+                <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">slice</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_raw_parts_mut</span><span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">buffer</span><span class="tok-punct">.</span><span class="tok-call-method">as_mut_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">add</span><span class="tok-punct">(</span><span class="tok-variable">start</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">bytes</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- the module's one raw-pointer operation</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let mut arena = arena::Arena::new(64);
-let slot = arena.alloc(8); // &lt;- caller only ever sees a safe `&amp;mut [u8]`, never a raw pointer
-slot[0] = 42;
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">arena</span> <span class="tok-punct">=</span> <span class="tok-module">arena</span><span class="tok-punct">::</span><span class="tok-type">Arena</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">slot</span> <span class="tok-punct">=</span> <span class="tok-variable">arena</span><span class="tok-punct">.</span><span class="tok-call-method">alloc</span><span class="tok-punct">(</span><span class="tok-number">8</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- caller only ever sees a safe `&amp;mut [u8]`, never a raw pointer</span>
+<span class="tok-variable">slot</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span> <span class="tok-punct">=</span> <span class="tok-number">42</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> the only place <code>Arena</code>'s bounds invariant could be
@@ -1109,26 +1110,26 @@ buffer.</p>
             <p>Wrapping a C standard library function so the single <code>unsafe extern</code>
 call and its safety justification live in one place, with the rest of
 the crate only ever seeing a safe, callable type.</p>
-<pre><code class="rust">mod libm {
-    unsafe extern "C" {
-        fn abs(input: i32) -&gt; i32;
-    }
+<pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">libm</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">fn</span> <span class="tok-fn-def">abs</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    pub struct SafeAbs; // &lt;- the module's only public item
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">SafeAbs</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the module's only public item</span>
 
-    impl SafeAbs {
-        pub fn compute(&amp;self, input: i32) -&gt; i32 {
-            unsafe {
-                // SAFETY: `abs` from the C standard library is a pure function
-                // with no preconditions on its i32 argument.
-                abs(input) // &lt;- the only place in the crate this raw FFI call is allowed to happen
-            }
-        }
-    }
-}
+    <span class="tok-keyword">impl</span> <span class="tok-type">SafeAbs</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">compute</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+                <span class="tok-comment">// SAFETY: `abs` from the C standard library is a pure function</span>
+                <span class="tok-comment">// with no preconditions on its i32 argument.</span>
+                <span class="tok-call-free">abs</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- the only place in the crate this raw FFI call is allowed to happen</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let calculator = libm::SafeAbs;
-println!("{}", calculator.compute(-7));
+<span class="tok-keyword">let</span> <span class="tok-variable">calculator</span> <span class="tok-punct">=</span> <span class="tok-module">libm</span><span class="tok-punct">::</span><span class="tok-type">SafeAbs</span><span class="tok-punct">;</span>
+<span class="tok-macro">println!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">calculator</span><span class="tok-punct">.</span><span class="tok-call-method">compute</span><span class="tok-punct">(</span><span class="tok-punct">-</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> keeping the single point where the program vouches for
@@ -1200,25 +1201,25 @@ handle at all."</p>
 
       <section class="doc" data-tab="basic">
         <h2 class="section-title">Basic usage example</h2>
-        <pre><code class="rust">mod led {
-    const GPIOA_ODR: *mut u32 = 0x4001_0814 as *mut u32; // &lt;- stays private to this module
+        <pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">led</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">const</span> <span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">0x4001_0814</span> <span class="tok-keyword">as</span> <span class="tok-punct">*</span><span class="tok-keyword">mut</span> <span class="tok-type">u32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- stays private to this module</span>
 
-    pub struct Led; // &lt;- the only public item; every raw register detail stays inside `led`
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Led</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the only public item; every raw register detail stays inside `led`</span>
 
-    impl Led {
-        pub fn set_high(&amp;self) {
-            unsafe {
-                // SAFETY: see Raw pointers (Embedded) for the volatile-access rationale this
-                // module relies on; contained here, this is the crate's only touch of GPIOA_ODR.
-                let current = core::ptr::read_volatile(GPIOA_ODR);
-                core::ptr::write_volatile(GPIOA_ODR, current | (1 &lt;&lt; 5));
-            }
-        }
-    }
-}
+    <span class="tok-keyword">impl</span> <span class="tok-type">Led</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">set_high</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+                <span class="tok-comment">// SAFETY: see Raw pointers (Embedded) for the volatile-access rationale this</span>
+                <span class="tok-comment">// module relies on; contained here, this is the crate's only touch of GPIOA_ODR.</span>
+                <span class="tok-keyword">let</span> <span class="tok-variable">current</span> <span class="tok-punct">=</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_volatile</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+                <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ptr</span><span class="tok-punct">::</span><span class="tok-call-assoc">write_volatile</span><span class="tok-punct">(</span><span class="tok-constant">GPIOA_ODR</span><span class="tok-punct">,</span> <span class="tok-variable">current</span> <span class="tok-punct">|</span> <span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-punct">&lt;</span><span class="tok-punct">&lt;</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let status_led = led::Led;
-status_led.set_high(); // &lt;- application code never sees a raw pointer or an address
+<span class="tok-keyword">let</span> <span class="tok-variable">status_led</span> <span class="tok-punct">=</span> <span class="tok-module">led</span><span class="tok-punct">::</span><span class="tok-type">Led</span><span class="tok-punct">;</span>
+<span class="tok-variable">status_led</span><span class="tok-punct">.</span><span class="tok-call-method">set_high</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- application code never sees a raw pointer or an address</span>
 </code></pre>
 
       </section>
@@ -1237,32 +1238,32 @@ status_led.set_high(); // &lt;- application code never sees a raw pointer or an 
 the module boundary needs to guarantee no two parts of the firmware can
 ever independently claim the same underlying register block — not just
 by convention, but so the compiler refuses a second claim outright.</p>
-<pre><code class="rust">struct GpioaRegisters; // stands in for a PAC-generated raw register struct
+<pre><code class="rust-hl"><span class="tok-keyword">struct</span> <span class="tok-type-def">GpioaRegisters</span><span class="tok-punct">;</span> <span class="tok-comment">// stands in for a PAC-generated raw register struct</span>
 
-static mut TAKEN: bool = false;
+<span class="tok-keyword">static</span> <span class="tok-keyword">mut</span> <span class="tok-constant">TAKEN</span><span class="tok-punct">:</span> <span class="tok-type">bool</span> <span class="tok-punct">=</span> <span class="tok-number">false</span><span class="tok-punct">;</span>
 
-pub struct Peripherals {
-    pub gpioa: GpioaRegisters,
-}
+<span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Peripherals</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">GpioaRegisters</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
 
-impl Peripherals {
-    /// Returns the peripherals exactly once per program; a second call gets `None`.
-    pub fn take() -&gt; Option&lt;Self&gt; {
-        unsafe {
-            // SAFETY: firmware is single-threaded at startup, before interrupts are enabled,
-            // so this check-and-set has no concurrent caller to race against.
-            if TAKEN {
-                return None;
-            }
-            TAKEN = true;
-        }
-        Some(Peripherals { gpioa: GpioaRegisters })
-    }
-}
+<span class="tok-keyword">impl</span> <span class="tok-type">Peripherals</span> <span class="tok-punct">{</span>
+    <span class="tok-comment">/// Returns the peripherals exactly once per program; a second call gets `None`.</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+            <span class="tok-comment">// SAFETY: firmware is single-threaded at startup, before interrupts are enabled,</span>
+            <span class="tok-comment">// so this check-and-set has no concurrent caller to race against.</span>
+            <span class="tok-keyword">if</span> <span class="tok-constant">TAKEN</span> <span class="tok-punct">{</span>
+                <span class="tok-keyword">return</span> <span class="tok-field">None</span><span class="tok-punct">;</span>
+            <span class="tok-punct">}</span>
+            <span class="tok-constant">TAKEN</span> <span class="tok-punct">=</span> <span class="tok-number">true</span><span class="tok-punct">;</span>
+        <span class="tok-punct">}</span>
+        <span class="tok-field">Some</span><span class="tok-punct">(</span><span class="tok-type">Peripherals</span> <span class="tok-punct">{</span> <span class="tok-variable">gpioa</span><span class="tok-punct">:</span> <span class="tok-type">GpioaRegisters</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let peripherals = Peripherals::take().expect("peripherals not yet taken");
-let second_attempt = Peripherals::take();
-assert!(second_attempt.is_none()); // &lt;- the type system, not a reviewer, prevents a second owner of GPIOA
+<span class="tok-keyword">let</span> <span class="tok-variable">peripherals</span> <span class="tok-punct">=</span> <span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;peripherals not yet taken&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">second_attempt</span> <span class="tok-punct">=</span> <span class="tok-type">Peripherals</span><span class="tok-punct">::</span><span class="tok-call-assoc">take</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">second_attempt</span><span class="tok-punct">.</span><span class="tok-call-method">is_none</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the type system, not a reviewer, prevents a second owner of GPIOA</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> privacy alone would stop <em>other modules'</em> code from
@@ -1287,38 +1288,38 @@ functions; rather than letting <code>unsafe extern "C"</code> calls spread acros
 the firmware wherever radio functionality is needed, one module owns
 every call into the SDK and translates its error codes into a typed Rust
 <code>Result</code>.</p>
-<pre><code class="rust">mod radio_sdk {
-    unsafe extern "C" {
-        fn radio_init() -&gt; i32;
-        fn radio_send(data: *const u8, len: u32) -&gt; i32;
-    }
+<pre><code class="rust-hl"><span class="tok-keyword">mod</span> <span class="tok-variable">radio_sdk</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">fn</span> <span class="tok-fn-def">radio_init</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+        <span class="tok-keyword">fn</span> <span class="tok-fn-def">radio_send</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+    <span class="tok-punct">}</span>
 
-    pub struct RadioError(pub i32);
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">RadioError</span><span class="tok-punct">(</span><span class="tok-keyword">pub</span> <span class="tok-type">i32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
-    pub struct Radio; // &lt;- the module's only public item
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">Radio</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the module's only public item</span>
 
-    impl Radio {
-        pub fn init() -&gt; Result&lt;Self, RadioError&gt; {
-            let code = unsafe {
-                // SAFETY: `radio_init` has no preconditions per the vendor SDK's header comment.
-                radio_init() // &lt;- the only place in the crate this call is allowed to happen
-            };
-            if code == 0 { Ok(Radio) } else { Err(RadioError(code)) }
-        }
+    <span class="tok-keyword">impl</span> <span class="tok-type">Radio</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">init</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-keyword">Self</span><span class="tok-punct">,</span> <span class="tok-type-return">RadioError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">code</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+                <span class="tok-comment">// SAFETY: `radio_init` has no preconditions per the vendor SDK's header comment.</span>
+                <span class="tok-call-free">radio_init</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- the only place in the crate this call is allowed to happen</span>
+            <span class="tok-punct">}</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">if</span> <span class="tok-variable">code</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Radio</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-field">RadioError</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
 
-        pub fn send(&amp;self, data: &amp;[u8]) -&gt; Result&lt;(), RadioError&gt; {
-            let code = unsafe {
-                // SAFETY: `data` is a valid Rust slice for its full length, which satisfies
-                // `radio_send`'s documented pointer+length contract.
-                radio_send(data.as_ptr(), data.len() as u32)
-            };
-            if code == 0 { Ok(()) } else { Err(RadioError(code)) }
-        }
-    }
-}
+        <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">send</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type-return">RadioError</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+            <span class="tok-keyword">let</span> <span class="tok-variable">code</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
+                <span class="tok-comment">// SAFETY: `data` is a valid Rust slice for its full length, which satisfies</span>
+                <span class="tok-comment">// `radio_send`'s documented pointer+length contract.</span>
+                <span class="tok-call-free">radio_send</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span><span class="tok-punct">)</span>
+            <span class="tok-punct">}</span><span class="tok-punct">;</span>
+            <span class="tok-keyword">if</span> <span class="tok-variable">code</span> <span class="tok-punct">==</span> <span class="tok-number">0</span> <span class="tok-punct">{</span> <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-field">Err</span><span class="tok-punct">(</span><span class="tok-field">RadioError</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+        <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
 
-let radio = radio_sdk::Radio::init().expect("radio init failed");
-radio.send(b"ping").expect("send failed");
+<span class="tok-keyword">let</span> <span class="tok-variable">radio</span> <span class="tok-punct">=</span> <span class="tok-module">radio_sdk</span><span class="tok-punct">::</span><span class="tok-type">Radio</span><span class="tok-punct">::</span><span class="tok-call-assoc">init</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;radio init failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">radio</span><span class="tok-punct">.</span><span class="tok-call-method">send</span><span class="tok-punct">(</span><span class="tok-variable">b</span><span class="tok-string">&quot;ping&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">expect</span><span class="tok-punct">(</span><span class="tok-string">&quot;send failed&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 </code></pre>
 
             <div class="rationale"><p><strong>Why this way:</strong> every one of the vendor SDK's undocumented assumptions
