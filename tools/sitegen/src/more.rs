@@ -10,7 +10,7 @@ use std::path::Path;
 
 use crate::model::Page;
 use crate::nav::{render_sidebar, TopNav};
-use crate::render::{abs_url, href_from, shell, Head};
+use crate::render::{abs_url, href_from, shell, shell_with_page_class, Head};
 
 /// `docs/more/*.html` — one directory below the site root.
 const DEPTH: usize = 1;
@@ -125,9 +125,9 @@ fn render_colormap(pages: &[Page]) -> String {
         </div>
       </div>
 
-      <p class="lead">Most syntax highlighting colours by token class &mdash; keywords one colour, identifiers another, and everything that looks like a name painted the same. Rust carries more than that. Reaching a function through a type is a different act from reaching one through a value, and declaring a struct is not the same as naming it as a type. This map gives each of those roles a colour of its own, used for that role and nothing else, so that a snippet tells you what every name <em>is</em> before you have read what it says.</p>
+      <p class="lead">This is an index I went looking for and could not find. The goal is a different colour for every kind of syntax, so that code can be understood much more quickly without reading all of it &mdash; you see a certain colour and you already know what something is, before you have actually read the word. It looks bad right now, I know. I am still tuning it, and I want to open it up so other people can have a go at setting the colours better too.</p>
 
-      <p class="cmap-note">Ordered by hue, so neighbouring entries are neighbouring colours. Hover a row for what it covers. The palette is still being tuned and this page moves with it.</p>
+      <p class="cmap-note">Ordered by hue, so neighbouring entries are neighbouring colours. Hover a row for what it covers.</p>
 
       <hr class="divider">
 
@@ -159,7 +159,10 @@ fn render_colormap(pages: &[Page]) -> String {
         og_type: "website",
         image: None,
     };
-    shell(&head, DEPTH, &sidebar, &main)
+    // Wider than the site's prose measure: two columns of swatches inside 84ch
+    // squeeze both halves until the longer slot names truncate. The prose on
+    // the page keeps its own measure — see `.page-colormap .lead`.
+    shell_with_page_class(&head, DEPTH, &sidebar, &main, "page-colormap")
 }
 
 fn render_hub(pages: &[Page]) -> String {
