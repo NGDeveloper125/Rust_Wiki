@@ -1022,7 +1022,7 @@ spell out against Euclidean division.</p>
             <p>Where the divisor isn't guaranteed to be nonzero — say, an average
 computed over a possibly-empty batch of readings — <code>checked_div</code> turns
 the panic this page warns about into an <code>Option</code> the caller must handle.</p>
-<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">average</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">average</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">i32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
     <span class="tok-variable">total</span><span class="tok-punct">.</span><span class="tok-call-method">checked_div</span><span class="tok-punct">(</span><span class="tok-variable">count</span><span class="tok-punct">)</span> <span class="tok-comment">// returns None instead of panicking when count == 0</span>
 <span class="tok-punct">}</span>
 
@@ -1074,7 +1074,7 @@ embedded code.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Dividing on a core without a hardware divider</h3>
-            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">average_temp</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">average_temp</span><span class="tok-punct">(</span><span class="tok-variable">total</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">count</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i32</span> <span class="tok-punct">{</span>
     <span class="tok-variable">total</span> <span class="tok-punct">/</span> <span class="tok-variable">count</span> <span class="tok-comment tok-anno">// &lt;- `/` here compiles to a software-division routine on a divider-less Cortex-M0</span>
 <span class="tok-punct">}</span>
 </code></pre>
@@ -1084,7 +1084,7 @@ embedded code.</p>
             <h3 class="scenario-title">Replacing a fixed power-of-two divisor with an explicit shift</h3>
             <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">SAMPLE_RATE_SHIFT</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-number">10</span><span class="tok-punct">;</span> <span class="tok-comment">// sample rate is 1024 Hz == 2^10</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">ms_from_samples</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">ms_from_samples</span><span class="tok-punct">(</span><span class="tok-variable">samples</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span>
     <span class="tok-punct">(</span><span class="tok-variable">samples</span> <span class="tok-punct">*</span> <span class="tok-number">1000</span><span class="tok-punct">)</span> <span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span> <span class="tok-constant">SAMPLE_RATE_SHIFT</span> <span class="tok-comment">// stands in for `samples * 1000 / 1024`; no divide instruction emitted</span>
 <span class="tok-punct">}</span>
 </code></pre>

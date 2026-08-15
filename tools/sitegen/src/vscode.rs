@@ -55,13 +55,10 @@ const SEMANTIC: &[(&str, &[&str])] = &[
     ("punct", &["operator"]),
 ];
 
-/// Slots VS Code cannot express, and why. Kept explicit so the coverage test
-/// can tell "deliberately unmapped" from "forgotten".
-const UNMAPPABLE: &[(&str, &str)] = &[(
-    "type-return",
-    "VS Code has no return-position token — rust-analyzer reports a return type \
-     as an ordinary type, so it falls back to the `type` colour.",
-)];
+/// Slots VS Code cannot express, and why. Empty: the palette was reshaped so
+/// every role it draws is one the editor can draw too. Kept in place because
+/// the coverage test reads it — a future slot must be mapped or listed here.
+const UNMAPPABLE: &[(&str, &str)] = &[];
 
 /// The coarse TextMate fallback, for files rust-analyzer has not analysed.
 /// Only the roles TextMate can actually get right appear here; anything that

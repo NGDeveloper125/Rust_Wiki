@@ -1048,10 +1048,10 @@ memory layout that unsafe code frequently has to reason about explicitly.</p>
 function does with its arguments.</p>
 <pre><code class="rust-hl"><span class="tok-comment">// Rustonomicon-style FFI example (std-only, no crate needed).</span>
 <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">abs</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- foreign function; the compiler cannot check its body</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">abs</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i32</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- foreign function; the compiler cannot check its body</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">absolute_value</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">absolute_value</span><span class="tok-punct">(</span><span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i32</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
         <span class="tok-comment">// SAFETY: `abs` from the C standard library is a pure function</span>
         <span class="tok-comment">// with no preconditions on its i32 argument.</span>
@@ -1090,7 +1090,7 @@ needs to write <code>unsafe</code> itself or reason about the invariant directly
         <span class="tok-keyword">Self</span> <span class="tok-punct">{</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">;</span> <span class="tok-variable">capacity</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>
     <span class="tok-punct">}</span>
 
-    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">push</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">byte</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">bool</span> <span class="tok-punct">{</span>
         <span class="tok-keyword">if</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">len</span> <span class="tok-punct">==</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
             <span class="tok-keyword">return</span> <span class="tok-number">false</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- safe wrapper enforces the invariant unsafe code below relies on</span>
         <span class="tok-punct">}</span>
@@ -1191,7 +1191,7 @@ value.</p>
 <span class="tok-keyword">pub</span> <span class="tok-keyword">struct</span> <span class="tok-type-def">TemperatureSensor</span><span class="tok-punct">;</span>
 
 <span class="tok-keyword">impl</span> <span class="tok-type">TemperatureSensor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_celsius</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_celsius</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">f32</span> <span class="tok-punct">{</span>
         <span class="tok-keyword">let</span> <span class="tok-variable">raw</span> <span class="tok-punct">=</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
             <span class="tok-comment">// SAFETY: SENSOR_DATA is always mapped on this chip; a plain</span>
             <span class="tok-comment">// volatile read has no other preconditions.</span>
@@ -1234,7 +1234,7 @@ context, just one triggered by hardware instead of <code>thread::spawn</code>.</
     <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">ticks</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">ticks</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span>
     <span class="tok-module">cortex_m</span><span class="tok-punct">::</span><span class="tok-module">interrupt</span><span class="tok-punct">::</span><span class="tok-call-assoc">free</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span>
         <span class="tok-comment">// SAFETY: interrupts are masked for the duration of this closure,</span>
         <span class="tok-comment">// so TIM2 cannot preempt this read.</span>

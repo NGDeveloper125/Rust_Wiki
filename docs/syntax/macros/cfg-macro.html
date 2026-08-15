@@ -1017,7 +1017,7 @@ some target.</p>
             <p>A logging helper picks a platform-appropriate line ending at compile
 time, without needing two separately-compiled versions of the function
 gated by <code>#[cfg]</code>.</p>
-<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">format_log_line</span><span class="tok-punct">(</span><span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">format_log_line</span><span class="tok-punct">(</span><span class="tok-variable">message</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">String</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">let</span> <span class="tok-variable">newline</span> <span class="tok-punct">=</span> <span class="tok-keyword">if</span> <span class="tok-macro">cfg!</span><span class="tok-punct">(</span><span class="tok-variable">target_os</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;windows&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;\r\n&quot;</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;\n&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
     <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{message}{newline}&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- both branches type-check on every target; cfg! just picks one</span>
 <span class="tok-punct">}</span>
@@ -1037,7 +1037,7 @@ than maintaining two <code>#[cfg]</code>-gated copies of the whole function.</p>
             <p>An internal helper reports a more detailed, less stable error message in
 debug builds and a terse, stable one in release, branching on
 <code>cfg!(debug_assertions)</code> rather than a separate build-time flag.</p>
-<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">describe_failure</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+<pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">describe_failure</span><span class="tok-punct">(</span><span class="tok-variable">code</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">String</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">if</span> <span class="tok-macro">cfg!</span><span class="tok-punct">(</span><span class="tok-variable">debug_assertions</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
         <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;operation failed with raw code {code} (debug build)&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- verbose form; still compiled into release, just unused there</span>
     <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span>
@@ -1093,7 +1093,7 @@ classic explanation is exactly why <code>cfg!</code> is only the right tool for 
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Detecting a bare-metal target at compile time</h3>
-            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">heap_available</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">heap_available</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">bool</span> <span class="tok-punct">{</span>
     <span class="tok-punct">!</span><span class="tok-macro">cfg!</span><span class="tok-punct">(</span><span class="tok-variable">target_os</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;none&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- true on a hosted test build, false on bare-metal firmware</span>
 <span class="tok-punct">}</span>
 </code></pre>
@@ -1101,7 +1101,7 @@ classic explanation is exactly why <code>cfg!</code> is only the right tool for 
           </div>
         <div class="card">
             <h3 class="scenario-title">Picking a chip-specific constant inside shared HAL logic</h3>
-            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">gpio_pin_count</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">gpio_pin_count</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">if</span> <span class="tok-macro">cfg!</span><span class="tok-punct">(</span><span class="tok-variable">feature</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;stm32f401&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- both branches compile in every build of this HAL crate</span>
         <span class="tok-number">16</span>
     <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-keyword">if</span> <span class="tok-macro">cfg!</span><span class="tok-punct">(</span><span class="tok-variable">feature</span> <span class="tok-punct">=</span> <span class="tok-string">&quot;stm32f411&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>

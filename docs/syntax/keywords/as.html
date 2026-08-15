@@ -1051,7 +1051,7 @@ or wire protocol expects.</p>
     <span class="tok-type">Up</span> <span class="tok-punct">=</span> <span class="tok-number">2</span><span class="tok-punct">,</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">to_register_byte</span><span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-type">LinkStatus</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">to_register_byte</span><span class="tok-punct">(</span><span class="tok-variable">status</span><span class="tok-punct">:</span> <span class="tok-type">LinkStatus</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
     <span class="tok-variable">status</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span> <span class="tok-comment tok-anno">// &lt;- `as` reads the enum's discriminant directly, given `#[repr(u8)]` fixes its width</span>
 <span class="tok-punct">}</span>
 </code></pre>
@@ -1100,11 +1100,11 @@ the low bits.</p>
         <div class="scenarios">
         <div class="card">
             <h3 class="scenario-title">Narrowing an ADC reading with `as`, and the `try_from` alternative</h3>
-            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">pack_for_uart</span><span class="tok-punct">(</span><span class="tok-variable">adc_reading</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+            <pre><code class="rust-hl"><span class="tok-keyword">fn</span> <span class="tok-fn-def">pack_for_uart</span><span class="tok-punct">(</span><span class="tok-variable">adc_reading</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
     <span class="tok-variable">adc_reading</span> <span class="tok-keyword">as</span> <span class="tok-type">u8</span> <span class="tok-comment tok-anno">// &lt;- `as`: truncates silently; fine only if the caller already knows the top bits are unused</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">pack_for_uart_checked</span><span class="tok-punct">(</span><span class="tok-variable">adc_reading</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Result</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u8</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">pack_for_uart_checked</span><span class="tok-punct">(</span><span class="tok-variable">adc_reading</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type">str</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
     <span class="tok-module">u8</span><span class="tok-punct">::</span><span class="tok-call-assoc">try_from</span><span class="tok-punct">(</span><span class="tok-variable">adc_reading</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map_err</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-string">&quot;reading exceeds one byte&quot;</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- reports rather than truncates</span>
 <span class="tok-punct">}</span>
 </code></pre>

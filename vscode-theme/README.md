@@ -29,4 +29,3 @@ Editor Tokens and Scopes** from the command palette and click it.
 
 ## What does not survive the trip
 
-- `type-return` — VS Code has no return-position token — rust-analyzer reports a return type as an ordinary type, so it falls back to the `type` colour.

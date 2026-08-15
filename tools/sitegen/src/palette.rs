@@ -70,7 +70,6 @@ pub const SLOTS: &[Slot] = &[
     Slot { class: "call-method",   covers: "x.foo()",                                 dark: "#FFEA00", light: "#7004C8" },
     Slot { class: "punct",         covers: "operators, :: -> ?",                      dark: "#FBF42D", light: "#180070" },
     Slot { class: "module",        covers: "std, collections",                        dark: "#C8D373", light: "#AA261D" },
-    Slot { class: "type-return",   covers: "any type after ->",                       dark: "#8CF584", light: "#04CD08" },
     Slot { class: "type-def",      covers: "the name at struct/enum/trait/type X",    dark: "#1FFF9E", light: "#1189DF" },
     Slot { class: "variable",      covers: "every binding, param, closure param",     dark: "#85FDFF", light: "#06C3C6" },
     Slot { class: "type",          covers: "struct, enum, primitive, alias — at use", dark: "#00DDFA", light: "#2B6B73" },

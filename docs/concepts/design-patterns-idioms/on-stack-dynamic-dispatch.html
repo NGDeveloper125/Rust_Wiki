@@ -1088,11 +1088,11 @@ allocation happens anywhere in the process.</p>
 already lives on the stack for the entire call — adds an allocation that
 buys nothing over a plain reference.</p>
 <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">f64</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 <span class="tok-keyword">struct</span> <span class="tok-type-def">Circle</span> <span class="tok-punct">{</span> <span class="tok-variable">radius</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span>
 <span class="tok-keyword">impl</span> <span class="tok-trait">Shape</span> <span class="tok-keyword">for</span> <span class="tok-type">Circle</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">f64</span> <span class="tok-punct">{</span>
         <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">f64</span><span class="tok-punct">::</span><span class="tok-module">consts</span><span class="tok-punct">::</span><span class="tok-constant">PI</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">radius</span> <span class="tok-punct">*</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">radius</span>
     <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
@@ -1253,12 +1253,12 @@ the direct substitute, not just an optimization over boxing.</p>
 <pre><code class="rust-hl"><span class="tok-attribute">#![no_std]</span>
 
 <span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i16</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">struct</span> <span class="tok-type-def">Thermistor</span><span class="tok-punct">;</span>
 <span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Thermistor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i16</span> <span class="tok-punct">{</span> <span class="tok-number">215</span> <span class="tok-punct">}</span> <span class="tok-comment">// stands in for a real ADC read</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i16</span> <span class="tok-punct">{</span> <span class="tok-number">215</span> <span class="tok-punct">}</span> <span class="tok-comment">// stands in for a real ADC read</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-comment">// Box&lt;dyn Sensor&gt; would require the `alloc` crate plus a #[global_allocator] —</span>
@@ -1293,17 +1293,17 @@ through one shared trait; instantiating a generic driver function once
 per concrete sensor type duplicates the driver's logic in flash for each
 one, where a single <code>&amp;dyn Sensor</code>-based function compiles once.</p>
 <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">struct</span> <span class="tok-type-def">Bme280</span><span class="tok-punct">;</span>
 <span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Bme280</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span> <span class="tok-number">4200</span> <span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span> <span class="tok-punct">{</span> <span class="tok-number">4200</span> <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">struct</span> <span class="tok-type-def">Sht31</span><span class="tok-punct">;</span>
 <span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Sht31</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span> <span class="tok-number">3900</span> <span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span> <span class="tok-punct">{</span> <span class="tok-number">3900</span> <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-comment">// AVOID: a generic function is monomorphized separately for every concrete Sensor it's called with,</span>

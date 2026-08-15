@@ -1051,12 +1051,12 @@ forming a reference to a field that might not be properly aligned.</p>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">impl</span> <span class="tok-type">FrameHeader</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">length</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">length</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span>
         <span class="tok-keyword">let</span> <span class="tok-variable">len_ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">raw</span> <span class="tok-keyword">const</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">length</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- pointer to a possibly-unaligned field</span>
         <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">len_ptr</span><span class="tok-punct">.</span><span class="tok-call-method">read_unaligned</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
     <span class="tok-punct">}</span>
 
-    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">version</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">version</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
         <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">version</span> <span class="tok-comment">// ordinary field access is fine here: u8 has no alignment requirement to violate</span>
     <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
@@ -1081,7 +1081,7 @@ be byte-aligned.</p>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">poll_device</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type-return">DeviceStatus</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">poll_device</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">DeviceStatus</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">fn</span> <span class="tok-fn-def">log_flags</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
@@ -1152,7 +1152,7 @@ pointer into the same MMIO block, for instance.</p>
 <span class="tok-punct">}</span>
 
 <span class="tok-comment">// Called only from the main loop, with interrupts briefly disabled around the read.</span>
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_tick_count</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u32</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_tick_count</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">let</span> <span class="tok-variable">ptr</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-type">u32</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">raw</span> <span class="tok-keyword">const</span> <span class="tok-constant">TICK_COUNT</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same static, read-only pointer, still no `&amp;u32` ever formed</span>
     <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-variable">ptr</span><span class="tok-punct">.</span><span class="tok-call-method">read_volatile</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>

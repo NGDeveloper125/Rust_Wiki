@@ -1008,7 +1008,7 @@ checks already rejected.</p>
     <span class="tok-variable">age</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_valid</span><span class="tok-punct">(</span><span class="tok-variable">form</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SignupForm</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">is_valid</span><span class="tok-punct">(</span><span class="tok-variable">form</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">SignupForm</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">bool</span> <span class="tok-punct">{</span>
     <span class="tok-punct">!</span><span class="tok-variable">form</span><span class="tok-punct">.</span><span class="tok-field">username</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
         <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">form</span><span class="tok-punct">.</span><span class="tok-field">username</span><span class="tok-punct">.</span><span class="tok-call-method">chars</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">next</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_alphabetic</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- only runs if username isn't empty</span>
         <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">form</span><span class="tok-punct">.</span><span class="tok-field">age</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">18</span>                                        <span class="tok-comment tok-anno">// &lt;- `&amp;&amp;` short-circuits before this</span>
@@ -1051,17 +1051,17 @@ hardware reports ready.</p>
             <h3 class="scenario-title">Guarding a retry loop against a non-responsive sensor</h3>
             <pre><code class="rust-hl"><span class="tok-keyword">const</span> <span class="tok-constant">MAX_RETRIES</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">=</span> <span class="tok-number">5</span><span class="tok-punct">;</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">sensor_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">bool</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">sensor_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">bool</span> <span class="tok-punct">{</span>
     <span class="tok-number">false</span> <span class="tok-comment">// placeholder: real code polls a status register bit</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor_raw</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor_raw</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span> <span class="tok-punct">{</span>
     <span class="tok-number">0</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">fn</span> <span class="tok-fn-def">delay_ms</span><span class="tok-punct">(</span><span class="tok-variable">_ms</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor_with_retry</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Option</span><span class="tok-punct">&lt;</span><span class="tok-type-return">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_sensor_with_retry</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">u16</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">retries</span> <span class="tok-punct">=</span> <span class="tok-number">0</span><span class="tok-punct">;</span>
     <span class="tok-keyword">while</span> <span class="tok-punct">!</span><span class="tok-call-free">sensor_ready</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">&amp;&amp;</span> <span class="tok-variable">retries</span> <span class="tok-punct">&lt;</span> <span class="tok-constant">MAX_RETRIES</span> <span class="tok-punct">{</span>
         <span class="tok-comment tok-anno">// &lt;- `&amp;&amp;`: `retries` is only checked once `sensor_ready()` has already failed</span>
