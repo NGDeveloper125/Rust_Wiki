@@ -76,28 +76,60 @@ const TEXTMATE: &[(&str, &[&str])] = &[
 
 /// The workbench around the editor, taken from the site's own chrome so the
 /// two read as one thing.
+///
+/// The site splits into chrome and content: the navigation is metallic grey
+/// with yellow on it, the reading surface is turquoise. VS Code gets the same
+/// split — everything that frames the work (activity bar, explorer, panels,
+/// title and status bars) is chrome; everything that *is* the work (editor,
+/// tabs) is content. The translucent values are 8-digit hex because theme
+/// JSON has no `rgba()`.
 struct Chrome {
     /// The code panel: `--code-bg` on the site.
     editor: &'static str,
     /// The content panel behind the code: `--content-bg`.
     content: &'static str,
-    /// The site's top bar.
-    bar: &'static str,
-    bar_fg: &'static str,
+    /// Border between content surfaces.
     border: &'static str,
+    /// Dim text on content.
     muted: &'static str,
+
+    /// `--chrome-bg-solid`: the navigation's own background.
+    bar: &'static str,
+    /// `--chrome-fg`: what sits on the chrome.
+    bar_fg: &'static str,
+    /// `--chrome-fg-dim`: inactive labels on the chrome.
+    bar_dim: &'static str,
+    /// `--chrome-edge`: divider inside the chrome.
+    bar_edge: &'static str,
+    /// `--chrome-hover` / `--chrome-active-bg`: the washes a tree row uses.
+    bar_hover: &'static str,
+    bar_active: &'static str,
+    /// `--chrome-input-*`: the search box that lives in the chrome.
+    input_bg: &'static str,
+    input_fg: &'static str,
+    input_border: &'static str,
+    input_ph: &'static str,
+
     accent: &'static str,
-    /// Translucent accent, for selections and highlights.
+    /// Translucent accent, for selections and highlights on content.
     wash: &'static str,
 }
 
 const DARK_CHROME: Chrome = Chrome {
     editor: "#0a2c2e",
     content: "#0d3b3d",
-    bar: "#2b2f36",
-    bar_fg: "#F5C518",
     border: "#1c5c5d",
     muted: "#6f9c98",
+    bar: "#2b2f36",
+    bar_fg: "#F5C518",
+    bar_dim: "#b9a24e",
+    bar_edge: "#78808C8C",
+    bar_hover: "#F5C5181F",
+    bar_active: "#F5C51829",
+    input_bg: "#1c1f24",
+    input_fg: "#eef1f4",
+    input_border: "#78808C66",
+    input_ph: "#8a929c",
     accent: "#F5C518",
     wash: "#f5c51826",
 };
@@ -105,10 +137,18 @@ const DARK_CHROME: Chrome = Chrome {
 const LIGHT_CHROME: Chrome = Chrome {
     editor: "#e9f1ef",
     content: "#eef3f2",
-    bar: "#f5c518",
-    bar_fg: "#23262b",
     border: "#cdddda",
     muted: "#6a807c",
+    bar: "#f5c518",
+    bar_fg: "#23262b",
+    bar_dim: "#5b4d1a",
+    bar_edge: "#785A0059",
+    bar_hover: "#23262B1A",
+    bar_active: "#23262B24",
+    input_bg: "#FFFFFFD1",
+    input_fg: "#23262b",
+    input_border: "#785A0066",
+    input_ph: "#7d6a2e",
     accent: "#d9ac0a",
     wash: "#d9ac0a2e",
 };
@@ -152,7 +192,9 @@ fn workbench(t: &Theme) -> Value {
     let fg = colour_of(t, "variable").unwrap_or(c.muted);
     // A flat table rather than a `json!` literal: the object is big enough to
     // blow the macro's recursion limit, and this reads better besides.
-    let entries: &[(&str, &str)] = &[        ("editor.background", c.editor),
+    let entries: &[(&str, &str)] = &[
+        // --- content: the editor and its tabs keep the turquoise reading surface
+        ("editor.background", c.editor),
         ("editor.foreground", fg),
         ("editorLineNumber.foreground", c.muted),
         ("editorLineNumber.activeForeground", c.accent),
@@ -162,46 +204,118 @@ fn workbench(t: &Theme) -> Value {
         ("editorIndentGuide.background1", c.border),
         ("editorWhitespace.foreground", c.border),
         ("editorGutter.background", c.editor),
-        ("sideBar.background", c.content),
-        ("sideBar.foreground", fg),
-        ("sideBar.border", c.border),
-        ("sideBarSectionHeader.background", c.content),
-        ("sideBarTitle.foreground", c.muted),
-        ("activityBar.background", c.bar),
-        ("activityBar.foreground", c.bar_fg),
-        ("activityBar.inactiveForeground", c.muted),
-        ("activityBarBadge.background", c.accent),
-        ("activityBarBadge.foreground", c.bar),
-        ("titleBar.activeBackground", c.bar),
-        ("titleBar.activeForeground", c.bar_fg),
-        ("titleBar.inactiveBackground", c.bar),
-        ("titleBar.inactiveForeground", c.muted),
-        ("statusBar.background", c.bar),
-        ("statusBar.foreground", c.bar_fg),
-        ("statusBar.border", c.border),
+        ("editorWidget.background", c.content),
+        ("editorWidget.border", c.border),
+        ("editorSuggestWidget.background", c.content),
+        ("editorHoverWidget.background", c.content),
+        ("editorGroupHeader.tabsBackground", c.content),
+        ("editorGroupHeader.tabsBorder", c.border),
+        ("editorGroup.border", c.border),
         ("tab.activeBackground", c.editor),
         ("tab.activeForeground", fg),
         ("tab.activeBorderTop", c.accent),
         ("tab.inactiveBackground", c.content),
         ("tab.inactiveForeground", c.muted),
         ("tab.border", c.border),
-        ("editorGroupHeader.tabsBackground", c.content),
-        ("editorGroupHeader.tabsBorder", c.border),
-        ("panel.background", c.editor),
-        ("panel.border", c.border),
         ("terminal.background", c.editor),
         ("terminal.foreground", fg),
-        ("editorWidget.background", c.content),
-        ("editorWidget.border", c.border),
-        ("input.background", c.editor),
-        ("input.foreground", fg),
-        ("input.border", c.border),
-        ("dropdown.background", c.content),
-        ("dropdown.foreground", fg),
-        ("list.activeSelectionBackground", c.wash),
-        ("list.hoverBackground", c.wash),
+
+        // --- chrome: everything that frames the work wears the navigation colours
+        ("activityBar.background", c.bar),
+        ("activityBar.foreground", c.bar_fg),
+        ("activityBar.inactiveForeground", c.bar_dim),
+        ("activityBar.border", c.bar_edge),
+        ("activityBar.activeBorder", c.bar_fg),
+        ("activityBar.activeBackground", c.bar_active),
+        ("activityBarBadge.background", c.bar_fg),
+        ("activityBarBadge.foreground", c.bar),
+        ("activityBarTop.foreground", c.bar_fg),
+        ("activityBarTop.inactiveForeground", c.bar_dim),
+        ("sideBar.background", c.bar),
+        ("sideBar.foreground", c.bar_fg),
+        ("sideBar.border", c.bar_edge),
+        ("sideBarTitle.foreground", c.bar_fg),
+        ("sideBarSectionHeader.background", c.bar),
+        ("sideBarSectionHeader.foreground", c.bar_fg),
+        ("sideBarSectionHeader.border", c.bar_edge),
+        ("sideBarActivityBarTop.border", c.bar_edge),
+
+        // --- trees and lists: the explorer, search results, the extensions list
+        ("list.foreground", c.bar_fg),
+        ("list.hoverBackground", c.bar_hover),
+        ("list.hoverForeground", c.bar_fg),
+        ("list.activeSelectionBackground", c.bar_active),
+        ("list.activeSelectionForeground", c.bar_fg),
+        ("list.inactiveSelectionBackground", c.bar_hover),
+        ("list.inactiveSelectionForeground", c.bar_fg),
+        ("list.focusBackground", c.bar_active),
+        ("list.focusForeground", c.bar_fg),
+        ("list.highlightForeground", c.bar_fg),
+        ("list.inactiveFocusBackground", c.bar_hover),
+        ("list.dropBackground", c.bar_active),
+        ("tree.indentGuidesStroke", c.bar_edge),
+
+        // --- the panel and its title bar (problems, output, terminal tabs)
+        ("panel.background", c.editor),
+        ("panel.border", c.bar_edge),
+        ("panelTitle.activeForeground", c.bar_fg),
+        ("panelTitle.inactiveForeground", c.bar_dim),
+        ("panelTitle.activeBorder", c.bar_fg),
+        ("panelSectionHeader.background", c.bar),
+        ("panelSectionHeader.foreground", c.bar_fg),
+
+        // --- title and status bars
+        ("titleBar.activeBackground", c.bar),
+        ("titleBar.activeForeground", c.bar_fg),
+        ("titleBar.inactiveBackground", c.bar),
+        ("titleBar.inactiveForeground", c.bar_dim),
+        ("titleBar.border", c.bar_edge),
+        ("statusBar.background", c.bar),
+        ("statusBar.foreground", c.bar_fg),
+        ("statusBar.border", c.bar_edge),
+        ("statusBar.noFolderBackground", c.bar),
+        ("statusBarItem.hoverBackground", c.bar_hover),
+        ("statusBarItem.remoteBackground", c.bar_fg),
+        ("statusBarItem.remoteForeground", c.bar),
+
+        // --- inputs, menus and the command palette live in the chrome too
+        ("input.background", c.input_bg),
+        ("input.foreground", c.input_fg),
+        ("input.border", c.input_border),
+        ("input.placeholderForeground", c.input_ph),
+        ("inputOption.activeBorder", c.bar_fg),
+        ("dropdown.background", c.input_bg),
+        ("dropdown.foreground", c.input_fg),
+        ("dropdown.border", c.input_border),
+        ("quickInput.background", c.bar),
+        ("quickInput.foreground", c.bar_fg),
+        ("quickInputList.focusBackground", c.bar_active),
+        ("quickInputList.focusForeground", c.bar_fg),
+        ("menu.background", c.bar),
+        ("menu.foreground", c.bar_fg),
+        ("menu.selectionBackground", c.bar_active),
+        ("menu.selectionForeground", c.bar_fg),
+        ("menubar.selectionBackground", c.bar_active),
+        ("menubar.selectionForeground", c.bar_fg),
+        ("badge.background", c.bar_fg),
+        ("badge.foreground", c.bar),
+        ("scrollbarSlider.background", c.bar_hover),
+        ("scrollbarSlider.hoverBackground", c.bar_active),
+
+        // --- the Extensions view: its Install buttons and section headers
+        ("extensionButton.prominentBackground", c.bar_fg),
+        ("extensionButton.prominentForeground", c.bar),
+        ("extensionButton.prominentHoverBackground", c.accent),
+        ("extensionButton.background", c.bar_fg),
+        ("extensionButton.foreground", c.bar),
+        ("extensionBadge.remoteBackground", c.bar_fg),
+        ("extensionBadge.remoteForeground", c.bar),
+        ("button.background", c.bar_fg),
+        ("button.foreground", c.bar),
+        ("button.hoverBackground", c.accent),
+
         ("focusBorder", c.accent),
-        ("contrastBorder", c.border),
+        ("contrastBorder", c.bar_edge),
     ];
     let mut map = Map::new();
     for (k, v) in entries {
