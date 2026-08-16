@@ -68,7 +68,7 @@ pub const SLOTS: &[Slot] = &[
     Slot { class: "call-method",   covers: "x.foo()",                                 dark: "#FFEA00", light: "#7004C8" },
     Slot { class: "call-assoc",    covers: "Type::new()",                             dark: "#FFF952", light: "#F5A55A" },
     Slot { class: "punct",         covers: "operators, :: -> ?",                      dark: "#FBF42D", light: "#180070" },
-    Slot { class: "module",        covers: "std, collections",                        dark: "#C8D373", light: "#AA261D" },
+    Slot { class: "module",        covers: "std, collections",                        dark: "#00FA1D", light: "#AA261D" },
     Slot { class: "type-def",      covers: "the name at struct/enum/trait/type X",    dark: "#1FFF9E", light: "#1189DF" },
     Slot { class: "variable",      covers: "every binding, param, closure param",     dark: "#6BFFEE", light: "#06C3C6" },
     Slot { class: "trait",         covers: "trait names",                             dark: "#02AEC5", light: "#019D59" },
@@ -80,5 +80,5 @@ pub const SLOTS: &[Slot] = &[
     Slot { class: "attribute",     covers: "#[derive(&hellip;)]",                     dark: "#FED6FF", light: "#752F00" },
     Slot { class: "number",        covers: "int, float, bool",                        dark: "#A17297", light: "#0939C8" },
     Slot { class: "comment",       covers: "all comments",                            dark: "#FFFFFF", light: "#156C04" },
-    Slot { class: "keyword",       covers: "fn let const mut self impl pub &hellip;", dark: "#BABABA", light: "#FA0000" },
+    Slot { class: "keyword",       covers: "fn let const mut self impl pub &hellip;", dark: "#C2BBC3", light: "#FA0000" },
 ];
