@@ -315,10 +315,8 @@ pub fn rust_to_html(src: &str) -> String {
     let toks = lex(src);
     let mut out = String::with_capacity(src.len() * 3);
 
-    // Set while walking a return type (after `->`, until the body or the end of
-    // the signature) and while inside `<…>`, where a bare identifier after `:`
-    // is a trait bound rather than a field.
-    let mut in_return = false;
+    // Set while inside `<…>`, where a bare identifier after `:` is a trait
+    // bound rather than a field.
     let mut angle_depth: i32 = 0;
 
     for i in 0..toks.len() {
@@ -336,10 +334,6 @@ pub fn rust_to_html(src: &str) -> String {
             Kind::MacroCall => Some("macro"),
             Kind::Punct => {
                 match text {
-                    "->" => in_return = true,
-                    // The signature is over once the body, the end of a trait
-                    // method, or a where-clause begins.
-                    "{" | ";" => in_return = false,
                     "<" => angle_depth += 1,
                     ">" => angle_depth = (angle_depth - 1).max(0),
                     _ => {}
@@ -355,9 +349,6 @@ pub fn rust_to_html(src: &str) -> String {
                 if text == "true" || text == "false" {
                     Some("number")
                 } else if KEYWORDS.contains(&text) {
-                    if text == "where" {
-                        in_return = false;
-                    }
                     Some("keyword")
                 } else if prev == Some("fn") {
                     Some("fn-def")
@@ -393,7 +384,7 @@ pub fn rust_to_html(src: &str) -> String {
                     // `std::collections::HashMap` — the lowercase segments are
                     // modules, the capitalised one is the type it resolves to.
                     if starts_upper(text) {
-                        Some(if in_return { "type-return" } else { "type" })
+                        Some("type")
                     } else {
                         Some("module")
                     }
@@ -405,18 +396,16 @@ pub fn rust_to_html(src: &str) -> String {
                     if prev2.is_some_and(starts_upper) {
                         Some("field")
                     } else {
-                        Some(if in_return { "type-return" } else { "type" })
+                        Some("type")
                     }
                 } else if starts_upper(text) {
                     if text.len() == 1 {
                         Some("generic-param")
-                    } else if in_return {
-                        Some("type-return")
                     } else {
                         Some("type")
                     }
                 } else if PRIMITIVES.contains(&text) {
-                    Some(if in_return { "type-return" } else { "type" })
+                    Some("type")
                 } else {
                     Some("variable")
                 }
@@ -449,7 +438,7 @@ mod tests {
         vec![
             "comment", "string", "number", "lifetime", "attribute", "macro", "punct", "keyword",
             "fn-def", "type-def", "call-method", "call-assoc", "call-free", "field", "trait",
-            "constant", "module", "type-return", "type", "generic-param", "variable",
+            "constant", "module", "type", "generic-param", "variable",
         ]
     }
 
@@ -505,9 +494,13 @@ mod tests {
     }
 
     #[test]
-    fn return_position_overrides_type() {
+    fn return_position_is_deliberately_not_distinguished() {
+        // A type is a type wherever it stands. Return position once had its own
+        // colour, but VS Code has no return-position token, so the editor theme
+        // could not have followed — and a distinction the site draws and the
+        // editor cannot is worse than one neither draws.
         let src = "fn f(x: String) -> String { }";
-        assert_eq!(classes_of(src, "String"), ["tok-type", "tok-type-return"]);
+        assert_eq!(classes_of(src, "String"), ["tok-type", "tok-type"]);
     }
 
     #[test]

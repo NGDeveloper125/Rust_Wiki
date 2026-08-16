@@ -1041,7 +1041,7 @@ makes every panic point at the call site that passed the bad value,
 mirroring exactly how <code>Option::unwrap</code> reports the caller's line instead
 of its own.</p>
 <pre><code class="rust-hl"><span class="tok-attribute">#[track_caller]</span> <span class="tok-comment tok-anno">// &lt;- panics from inside this function report the CALLER's source location</span>
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">require_valid_port</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">require_valid_port</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span> <span class="tok-punct">{</span>
     <span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">try_from</span><span class="tok-punct">(</span><span class="tok-variable">port</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or_else</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">_</span><span class="tok-punct">|</span> <span class="tok-punct">{</span>
         <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;port {port} is out of range for u16&quot;</span><span class="tok-punct">)</span> <span class="tok-comment">// reports the call site below, not this line</span>
     <span class="tok-punct">}</span><span class="tok-punct">)</span>
@@ -1125,14 +1125,14 @@ convenience among several.</p>
         <div class="card">
             <h3 class="scenario-title">Reporting the caller's location from a HAL validation panic</h3>
             <pre><code class="rust-hl"><span class="tok-attribute">#[track_caller]</span> <span class="tok-comment tok-anno">// &lt;- panics from inside this function report the CALLER's source location</span>
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">require_valid_channel</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u8</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">require_valid_channel</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u8</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">if</span> <span class="tok-variable">channel</span> <span class="tok-punct">&gt;=</span> <span class="tok-number">8</span> <span class="tok-punct">{</span>
         <span class="tok-macro">panic!</span><span class="tok-punct">(</span><span class="tok-string">&quot;ADC channel {channel} out of range (0..=7)&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
     <span class="tok-punct">}</span>
     <span class="tok-variable">channel</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_adc</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">read_adc</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">let</span> <span class="tok-variable">channel</span> <span class="tok-punct">=</span> <span class="tok-call-free">require_valid_channel</span><span class="tok-punct">(</span><span class="tok-variable">channel</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- an out-of-range call here is what gets reported</span>
     <span class="tok-comment">// ... trigger a conversion on `channel` and return the raw sample</span>
     <span class="tok-number">0</span>

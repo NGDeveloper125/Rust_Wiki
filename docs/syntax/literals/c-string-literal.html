@@ -1011,7 +1011,7 @@ itself is a separate concern, not shown here.</p>
 <span class="tok-comment">// A device name a C driver expects as a nul-terminated string.</span>
 <span class="tok-keyword">const</span> <span class="tok-constant">DEVICE_NAME</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">c</span><span class="tok-string">&quot;sensor-hub-01&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- c-string literal: nul terminator added at compile time</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">device_name</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">CStr</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">device_name</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type">CStr</span> <span class="tok-punct">{</span>
     <span class="tok-constant">DEVICE_NAME</span> <span class="tok-comment">// ready to pass to a C function expecting `*const c_char` -- the call itself is out of scope here</span>
 <span class="tok-punct">}</span>
 </code></pre>
@@ -1054,12 +1054,12 @@ identifier string across that FFI boundary.</p>
             <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-type">CStr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
 <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">hal_register_peripheral</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">hal_register_peripheral</span><span class="tok-punct">(</span><span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i32</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">const</span> <span class="tok-constant">PERIPHERAL_NAME</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">c</span><span class="tok-string">&quot;uart0&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- c-string literal: nul-terminated, ready for the C HAL's `*const c_char` parameter</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">register_uart</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">register_uart</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i32</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-call-free">hal_register_peripheral</span><span class="tok-punct">(</span><span class="tok-constant">PERIPHERAL_NAME</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
 </code></pre>

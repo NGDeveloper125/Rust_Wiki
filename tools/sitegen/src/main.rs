@@ -14,6 +14,7 @@ mod render;
 mod search;
 mod sitemap;
 mod util;
+mod vscode;
 
 use std::path::{Path, PathBuf};
 
@@ -137,6 +138,10 @@ fn main() {
     crates::build(&docs_root, &crate_pages, &pages);
 
     more::build(&docs_root, &pages);
+
+    // Not part of the site: the editor theme is generated from the same palette
+    // so the two cannot drift.
+    vscode::build(&repo_root);
 
     // Best-effort GitHub Discussions mirror. Never fails the build.
     let conversation_urls = conversations::build(&repo_root, &docs_root, &pages);

@@ -1023,7 +1023,7 @@ recommend.</p>
     label = &quot;missing `Renderable` implementation&quot;
 )]</span>
 <span class="tok-keyword">trait</span> <span class="tok-type-def">Renderable</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">render</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">render</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">String</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 </code></pre>
 
@@ -1039,7 +1039,7 @@ directly to the framework's own vocabulary instead.</p>
     label = &quot;not a `Widget`&quot;
 )]</span>
 <span class="tok-keyword">trait</span> <span class="tok-type-def">Widget</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">measure</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">measure</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">struct</span> <span class="tok-type-def">Label</span> <span class="tok-punct">{</span>
@@ -1047,7 +1047,7 @@ directly to the framework's own vocabulary instead.</p>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">impl</span> <span class="tok-trait">Widget</span> <span class="tok-keyword">for</span> <span class="tok-type">Label</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">measure</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type-return">u32</span><span class="tok-punct">,</span> <span class="tok-type-return">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">measure</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-type">u32</span><span class="tok-punct">)</span> <span class="tok-punct">{</span>
         <span class="tok-punct">(</span><span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-field">text</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u32</span> <span class="tok-punct">*</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">16</span><span class="tok-punct">)</span>
     <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
@@ -1077,12 +1077,12 @@ types and a broad blanket impl covering anything convertible through
 trait, suggesting the blanket impl as "the fix" would be more confusing
 than helpful, since the real gap is that the type isn't <code>Display</code> either.</p>
 <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">ToWireFormat</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">to_wire</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">to_wire</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">String</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-attribute">#[diagnostic::do_not_recommend]</span> <span class="tok-comment tok-anno">// &lt;- don't suggest this blanket impl as the fix for unrelated failures</span>
 <span class="tok-keyword">impl</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">T</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">fmt</span><span class="tok-punct">::</span><span class="tok-type">Display</span><span class="tok-punct">&gt;</span> <span class="tok-trait">ToWireFormat</span> <span class="tok-keyword">for</span> <span class="tok-generic-param">T</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">to_wire</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">to_wire</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">String</span> <span class="tok-punct">{</span>
         <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
     <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>

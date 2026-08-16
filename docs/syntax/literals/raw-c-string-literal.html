@@ -1006,7 +1006,7 @@ the FFI call itself.</p>
 <span class="tok-comment">// A firmware image path for a C loader that expects a nul-terminated C string.</span>
 <span class="tok-keyword">const</span> <span class="tok-constant">FIRMWARE_PATH</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">cr</span><span class="tok-string">&quot;C:\firmware\images\boot.bin&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- raw c-string literal: no escapes AND nul-terminated</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">firmware_path</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type-return">CStr</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">firmware_path</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-punct">&amp;</span><span class="tok-lifetime">'static</span> <span class="tok-type">CStr</span> <span class="tok-punct">{</span>
     <span class="tok-constant">FIRMWARE_PATH</span> <span class="tok-comment">// ready to pass across an FFI boundary -- the call itself is out of scope here</span>
 <span class="tok-punct">}</span>
 </code></pre>
@@ -1049,12 +1049,12 @@ terminator.</p>
             <pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">core</span><span class="tok-punct">::</span><span class="tok-module">ffi</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">c_char</span><span class="tok-punct">,</span> <span class="tok-type">CStr</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
 
 <span class="tok-keyword">unsafe</span> <span class="tok-keyword">extern</span> <span class="tok-string">&quot;C&quot;</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">vendor_flash_load_image</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">vendor_flash_load_image</span><span class="tok-punct">(</span><span class="tok-variable">path</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-keyword">const</span> <span class="tok-variable">c_char</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i32</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">const</span> <span class="tok-constant">IMAGE_PATH</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">CStr</span> <span class="tok-punct">=</span> <span class="tok-variable">cr</span><span class="tok-string">&quot;C:\firmware\images\app.bin&quot;</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `cr&quot;...&quot;`: raw (no escapes) + nul-terminated, ready for FFI</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">flash_image</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">i32</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">flash_image</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">i32</span> <span class="tok-punct">{</span>
     <span class="tok-keyword">unsafe</span> <span class="tok-punct">{</span> <span class="tok-call-free">vendor_flash_load_image</span><span class="tok-punct">(</span><span class="tok-constant">IMAGE_PATH</span><span class="tok-punct">.</span><span class="tok-call-method">as_ptr</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
 </code></pre>

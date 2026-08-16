@@ -1013,11 +1013,11 @@ for the broader idea <code>dyn</code> is one instance of.</p>
         <div class="card">
             <h3 class="scenario-title">Boxing a concrete type as a trait object</h3>
             <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">f64</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 <span class="tok-keyword">struct</span> <span class="tok-type-def">Circle</span><span class="tok-punct">;</span>
 <span class="tok-keyword">impl</span> <span class="tok-trait">Shape</span> <span class="tok-keyword">for</span> <span class="tok-type">Circle</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">f64</span> <span class="tok-punct">{</span> <span class="tok-number">3.14</span> <span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">area</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">f64</span> <span class="tok-punct">{</span> <span class="tok-number">3.14</span> <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">let</span> <span class="tok-variable">shape</span><span class="tok-punct">:</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Shape</span><span class="tok-punct">&gt;</span> <span class="tok-punct">=</span> <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-type">Circle</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- `dyn Shape` erases Circle's concrete type</span>
@@ -1139,12 +1139,12 @@ one option is simply wrong.</p>
         <div class="card">
             <h3 class="scenario-title">`&amp;dyn Trait` needs no heap</h3>
             <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">struct</span> <span class="tok-type-def">Thermistor</span><span class="tok-punct">;</span>
 <span class="tok-keyword">impl</span> <span class="tok-trait">Sensor</span> <span class="tok-keyword">for</span> <span class="tok-type">Thermistor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span> <span class="tok-punct">{</span> <span class="tok-number">512</span> <span class="tok-punct">}</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span> <span class="tok-punct">{</span> <span class="tok-number">512</span> <span class="tok-punct">}</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Sensor</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- `&amp;dyn Sensor`: fat pointer to a borrowed value, no allocation</span>
@@ -1162,10 +1162,10 @@ one option is simply wrong.</p>
 <span class="tok-keyword">use</span> <span class="tok-module">alloc</span><span class="tok-punct">::</span><span class="tok-module">boxed</span><span class="tok-punct">::</span><span class="tok-type">Box</span><span class="tok-punct">;</span>
 
 <span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
-<span class="tok-keyword">fn</span> <span class="tok-fn-def">boxed_sensor</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Sensor</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Sensor</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">boxed_sensor</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-keyword">impl</span> <span class="tok-type">Sensor</span> <span class="tok-punct">+</span> <span class="tok-lifetime">'static</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Box</span><span class="tok-punct">&lt;</span><span class="tok-keyword">dyn</span> <span class="tok-trait">Sensor</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
     <span class="tok-type">Box</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">)</span> <span class="tok-comment tok-anno">// &lt;- `dyn Sensor` here still requires `alloc` + a #[global_allocator], same as hosted Rust</span>
 <span class="tok-punct">}</span>
 </code></pre>
@@ -1174,7 +1174,7 @@ one option is simply wrong.</p>
         <div class="card">
             <h3 class="scenario-title">Choosing generics over `dyn` for predictable, allocation-free dispatch</h3>
             <pre><code class="rust-hl"><span class="tok-keyword">trait</span> <span class="tok-type-def">Sensor</span> <span class="tok-punct">{</span>
-    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type-return">u16</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">read_raw</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u16</span><span class="tok-punct">;</span>
 <span class="tok-punct">}</span>
 
 <span class="tok-keyword">fn</span> <span class="tok-fn-def">log_reading_generic</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">Sensor</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">sensor</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-generic-param">S</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-comment tok-anno">// &lt;- monomorphized per concrete S: no vtable, no dyn at all</span>
