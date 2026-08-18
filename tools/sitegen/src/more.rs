@@ -129,7 +129,7 @@ fn render_colormap(pages: &[Page]) -> String {
         </div>
       </div>
 
-      <div class="related">
+      <div class="related cmap-nav">
         <div class="related-row">
           <span class="related-label">On this page</span>
           <a class="chip" href="#palette">The palette</a>
