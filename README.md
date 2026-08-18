@@ -101,6 +101,36 @@ That reads `pages/` and writes HTML into `docs/`. The generator prints a warning
 
 ---
 
+## 🎨 The VS Code colour pack
+
+The site paints Rust with one colour per role: reaching a function through a type
+looks different from reaching one through a value, and declaring a struct looks
+different from naming it as a type.
+[LangColorMap](https://rustyyellowpages.dev/more/langcolormap.html) lays the whole
+palette out, role by role.
+
+The same table generates a VS Code theme, so your editor can do the same thing.
+
+1. Download the [`vscode-theme`](https://github.com/NGDeveloper125/Rust_Wiki/tree/main/vscode-theme) folder.
+2. Copy it into your extensions directory — `%USERPROFILE%\.vscode\extensions\` on Windows, `~/.vscode/extensions/` on macOS and Linux.
+3. Reload the window (`Ctrl+Shift+P` → *Developer: Reload Window*). VS Code only reads that folder at startup, so it will not appear before you do.
+4. Pick it with `Ctrl+K Ctrl+T`: **Rusty Yellow Pages Dark** or **Light**.
+
+Prefer an installable package? Run `npx @vscode/vsce package` inside that folder and
+install the `.vsix` it produces through *Extensions: Install from VSIX…*.
+
+**It needs [rust-analyzer](https://rust-analyzer.github.io/).** The role colours ride
+on its semantic tokens — that is what lets the editor tell `Type::new()` from
+`value.method()`, which no regex-based theme can do. Without it you get comments,
+literals and keywords and nothing more. Give it a moment to finish indexing after you
+switch themes.
+
+Never edit the JSON under `vscode-theme/themes/` by hand — it is generated. Change
+`tools/sitegen/src/palette.rs` and re-run the generator, and the site, the colour map
+and the theme all move together.
+
+---
+
 ## 📬 Contact
 
 Contributions of any size are welcome — a typo fix, an approach, an article, or just an idea.
