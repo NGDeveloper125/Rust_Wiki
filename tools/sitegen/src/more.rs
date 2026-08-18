@@ -117,7 +117,7 @@ fn render_colormap(pages: &[Page]) -> String {
     let more = href_from(DEPTH, "more/");
 
     let main = format!(
-        r#"      <nav class="breadcrumb" aria-label="Breadcrumb">
+        r##"      <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="{home}">Home</a><span class="sep">&rsaquo;</span>
         <a href="{more}">More</a><span class="sep">&rsaquo;</span>
         <span style="color:var(--content-fg);font-weight:600">LangColorMap</span>
@@ -129,6 +129,15 @@ fn render_colormap(pages: &[Page]) -> String {
         </div>
       </div>
 
+      <div class="related">
+        <div class="related-row">
+          <span class="related-label">On this page</span>
+          <a class="chip" href="#palette">The palette</a>
+          <a class="chip" href="#snippet">Every role, one snippet</a>
+          <a class="chip" href="#vscode">Use it in VS Code</a>
+        </div>
+      </div>
+
       <p class="lead">This is an index I went looking for and could not find. The goal is a different colour for every kind of syntax, so that code can be understood much more quickly without reading all of it &mdash; you see a certain colour and you already know what something is, before you have actually read the word. It looks bad right now, I know. I am still tuning it, and I want to open it up so other people can have a go at setting the colours better too.</p>
 
       <p class="cmap-note">Ordered by hue, so neighbouring entries are neighbouring colours. Hover a row for what it covers.</p>
@@ -137,7 +146,7 @@ fn render_colormap(pages: &[Page]) -> String {
 
       {palette}
 
-      <div class="cmap-bar">
+      <div class="cmap-bar" id="palette">
         <span class="cmap-bar-label">Preview on</span>
         <div class="segmented" id="cmap-theme" role="group" aria-label="Preview background">
           <button type="button" data-cm="dark" aria-pressed="true">Dark</button>
@@ -148,7 +157,7 @@ fn render_colormap(pages: &[Page]) -> String {
       <div class="cmap-preview" data-cm-theme="dark">
         {list}
 
-        <h2 class="cmap-specimen-title">Every role, one snippet</h2>
+        <h2 class="cmap-specimen-title" id="snippet">Every role, one snippet</h2>
         <p class="cmap-note">Each colour above appears at least once below.</p>
 
         <pre class="cmap-code"><code>{specimen}</code></pre>
@@ -156,7 +165,7 @@ fn render_colormap(pages: &[Page]) -> String {
 
       {toggle_js}
 
-      <h2 class="cmap-specimen-title">Use it in VS Code</h2>
+      <h2 class="cmap-specimen-title" id="vscode">Use it in VS Code</h2>
       <p class="cmap-note">The same table generates a VS Code theme, so an editor can paint code the way this page does. It needs <a href="https://rust-analyzer.github.io/" target="_blank" rel="noopener">rust-analyzer</a>: the role colours ride on its semantic tokens, which is how the editor tells <code>Type::new()</code> from <code>value.method()</code>. Without it you get comments, literals and keywords and nothing more.</p>
 
       <ol class="cmap-install">
@@ -172,7 +181,7 @@ fn render_colormap(pages: &[Page]) -> String {
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
         <span>One colour per role, and that role only</span>
       </div>
-"#,
+"##,
         palette = palette_style(),
         list = render_slot_list(),
         specimen = rust_to_html(SPECIMEN_SRC),
