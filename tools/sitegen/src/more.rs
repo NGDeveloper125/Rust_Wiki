@@ -12,7 +12,7 @@ use crate::highlight::rust_to_html;
 use crate::model::Page;
 use crate::palette::{Slot, SLOTS};
 use crate::nav::{render_sidebar, TopNav};
-use crate::render::{abs_url, href_from, shell, shell_with_page_class, Head};
+use crate::render::{abs_url, href_from, shell, shell_with_page_class, Head, REPO_URL};
 
 /// `docs/more/*.html` — one directory below the site root.
 const DEPTH: usize = 1;
@@ -156,6 +156,18 @@ fn render_colormap(pages: &[Page]) -> String {
 
       {toggle_js}
 
+      <h2 class="cmap-specimen-title">Use it in VS Code</h2>
+      <p class="cmap-note">The same table generates a VS Code theme, so an editor can paint code the way this page does. It needs <a href="https://rust-analyzer.github.io/" target="_blank" rel="noopener">rust-analyzer</a>: the role colours ride on its semantic tokens, which is how the editor tells <code>Type::new()</code> from <code>value.method()</code>. Without it you get comments, literals and keywords and nothing more.</p>
+
+      <ol class="cmap-install">
+        <li>Download the <a href="{repo}/tree/main/vscode-theme" target="_blank" rel="noopener"><code>vscode-theme</code></a> folder from the repository.</li>
+        <li>Copy it into your extensions directory: <code>%USERPROFILE%\.vscode\extensions\</code> on Windows, <code>~/.vscode/extensions/</code> on macOS and Linux.</li>
+        <li>Reload the window &mdash; <code>Ctrl+Shift+P</code>, then <em>Developer: Reload Window</em>. VS Code only reads that folder at startup, so it will not appear before you do.</li>
+        <li>Choose it with <code>Ctrl+K Ctrl+T</code>: <strong>Rusty Yellow Pages Dark</strong> or <strong>Light</strong>.</li>
+      </ol>
+
+      <p class="cmap-note">For an installable package instead, run <code>npx @vscode/vsce package</code> inside that folder and install the <code>.vsix</code> it produces through <em>Extensions: Install from VSIX&hellip;</em>. Give rust-analyzer a moment to finish indexing after you switch &mdash; the role colours only arrive once it has.</p>
+
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
         <span>One colour per role, and that role only</span>
@@ -165,6 +177,7 @@ fn render_colormap(pages: &[Page]) -> String {
         list = render_slot_list(),
         specimen = rust_to_html(SPECIMEN_SRC),
         toggle_js = PREVIEW_TOGGLE_JS,
+        repo = REPO_URL,
     );
 
     let head = Head {
