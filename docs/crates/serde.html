@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rust - serde crate - Rusty Yellow Pages</title>
+<meta name="description" content="The serialization framework the whole ecosystem shares. Derive Serialize and Deserialize once, and your type reads and writes JSON, TOML, YAML, MessagePack and the rest without knowing about any of them.">
+<link rel="canonical" href="https://rustyyellowpages.dev/crates/serde.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Rusty Yellow Pages">
+<meta property="og:title" content="Rust - serde crate - Rusty Yellow Pages">
+<meta property="og:description" content="The serialization framework the whole ecosystem shares. Derive Serialize and Deserialize once, and your type reads and writes JSON, TOML, YAML, MessagePack and the rest without knowing about any of them.">
+<meta property="og:url" content="https://rustyyellowpages.dev/crates/serde.html">
+<meta property="og:image" content="https://rustyyellowpages.dev/assets/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rust - serde crate - Rusty Yellow Pages">
+<meta name="twitter:description" content="The serialization framework the whole ecosystem shares. Derive Serialize and Deserialize once, and your type reads and writes JSON, TOML, YAML, MessagePack and the rest without knowing about any of them.">
+<meta name="twitter:image" content="https://rustyyellowpages.dev/assets/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Rusty Yellow Pages — a free, open-source Rust reference">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+
+  <a class="wordmark" href="../">
+    <div class="mark">R</div>
+    <div class="name">RUSTY <span class="lo">YELLOW PAGES</span></div>
+  </a>
+
+  <div class="search" id="search">
+    <div class="search-field">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
+      <input id="search-input" type="text" placeholder="Search tokens &amp; concepts&hellip;  &nbsp;try &quot;borrow&quot;, &quot;&amp;&quot;, &quot;lifetime&quot;" autocomplete="off" spellcheck="false">
+      <span class="kbd">/</span>
+    </div>
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">
+    <span class="ic-moon" style="display:inline-flex"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+    <span class="ic-sun"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+    <span class="lbl" id="theme-label">Dark</span>
+  </button>
+</header>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="nav-toplinks">
+      <a class="nav-toplink" href="../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
+      <a class="nav-toplink" href="../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
+      <a class="nav-toplink active" href="../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
+    </div>
+
+    <div class="nav-section-label">Syntax</div>
+
+    <div class="nav-group" data-group="keywords">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Keywords</span><span class="g-count">55</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Basics</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/const.html"><span class="tok">const</span></a>
+        <a class="nav-link" href="../syntax/keywords/false.html"><span class="tok">false</span></a>
+        <a class="nav-link" href="../syntax/keywords/fn.html"><span class="tok">fn</span></a>
+        <a class="nav-link" href="../syntax/keywords/let.html"><span class="tok">let</span></a>
+        <a class="nav-link" href="../syntax/keywords/mut.html"><span class="tok">mut</span></a>
+        <a class="nav-link" href="../syntax/keywords/true.html"><span class="tok">true</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Control Flow</span><span class="g-count">11</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/break.html"><span class="tok">break</span></a>
+        <a class="nav-link" href="../syntax/keywords/continue.html"><span class="tok">continue</span></a>
+        <a class="nav-link" href="../syntax/keywords/else.html"><span class="tok">else</span></a>
+        <a class="nav-link" href="../syntax/keywords/for.html"><span class="tok">for</span></a>
+        <a class="nav-link" href="../syntax/keywords/if.html"><span class="tok">if</span></a>
+        <a class="nav-link" href="../syntax/keywords/if-let.html"><span class="tok">if let</span></a>
+        <a class="nav-link" href="../syntax/keywords/in.html"><span class="tok">in</span></a>
+        <a class="nav-link" href="../syntax/keywords/loop.html"><span class="tok">loop</span></a>
+        <a class="nav-link" href="../syntax/keywords/match.html"><span class="tok">match</span></a>
+        <a class="nav-link" href="../syntax/keywords/return.html"><span class="tok">return</span></a>
+        <a class="nav-link" href="../syntax/keywords/while.html"><span class="tok">while</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Ownership &amp; Borrowing</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/move.html"><span class="tok">move</span></a>
+        <a class="nav-link" href="../syntax/keywords/ref.html"><span class="tok">ref</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Data Structures</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/as.html"><span class="tok">as</span></a>
+        <a class="nav-link" href="../syntax/keywords/enum.html"><span class="tok">enum</span></a>
+        <a class="nav-link" href="../syntax/keywords/struct.html"><span class="tok">struct</span></a>
+        <a class="nav-link" href="../syntax/keywords/type.html"><span class="tok">type</span></a>
+        <a class="nav-link" href="../syntax/keywords/union.html"><span class="tok">union</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Traits &amp; Polymorphism</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/self-type.html"><span class="tok">Self</span></a>
+        <a class="nav-link" href="../syntax/keywords/dyn.html"><span class="tok">dyn</span></a>
+        <a class="nav-link" href="../syntax/keywords/impl.html"><span class="tok">impl</span></a>
+        <a class="nav-link" href="../syntax/keywords/self.html"><span class="tok">self</span></a>
+        <a class="nav-link" href="../syntax/keywords/trait.html"><span class="tok">trait</span></a>
+        <a class="nav-link" href="../syntax/keywords/where.html"><span class="tok">where</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/crate.html"><span class="tok">crate</span></a>
+        <a class="nav-link" href="../syntax/keywords/extern-crate.html"><span class="tok">extern crate</span></a>
+        <a class="nav-link" href="../syntax/keywords/mod.html"><span class="tok">mod</span></a>
+        <a class="nav-link" href="../syntax/keywords/pub.html"><span class="tok">pub</span></a>
+        <a class="nav-link" href="../syntax/keywords/super.html"><span class="tok">super</span></a>
+        <a class="nav-link" href="../syntax/keywords/use.html"><span class="tok">use</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Concurrency &amp; Async</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/async.html"><span class="tok">async</span></a>
+        <a class="nav-link" href="../syntax/keywords/await.html"><span class="tok">await</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Memory &amp; Unsafe</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/extern.html"><span class="tok">extern</span></a>
+        <a class="nav-link" href="../syntax/keywords/static.html"><span class="tok">static</span></a>
+        <a class="nav-link" href="../syntax/keywords/unsafe.html"><span class="tok">unsafe</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macros</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/macro-rules.html"><span class="tok">macro_rules!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Reserved Keywords</span><span class="g-count">13</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/abstract.html"><span class="tok">abstract</span></a>
+        <a class="nav-link" href="../syntax/keywords/become.html"><span class="tok">become</span></a>
+        <a class="nav-link" href="../syntax/keywords/box.html"><span class="tok">box</span></a>
+        <a class="nav-link" href="../syntax/keywords/do.html"><span class="tok">do</span></a>
+        <a class="nav-link" href="../syntax/keywords/final.html"><span class="tok">final</span></a>
+        <a class="nav-link" href="../syntax/keywords/gen.html"><span class="tok">gen</span></a>
+        <a class="nav-link" href="../syntax/keywords/override.html"><span class="tok">override</span></a>
+        <a class="nav-link" href="../syntax/keywords/priv.html"><span class="tok">priv</span></a>
+        <a class="nav-link" href="../syntax/keywords/try.html"><span class="tok">try</span></a>
+        <a class="nav-link" href="../syntax/keywords/typeof.html"><span class="tok">typeof</span></a>
+        <a class="nav-link" href="../syntax/keywords/unsized.html"><span class="tok">unsized</span></a>
+        <a class="nav-link" href="../syntax/keywords/virtual.html"><span class="tok">virtual</span></a>
+        <a class="nav-link" href="../syntax/keywords/yield.html"><span class="tok">yield</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="operators">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Operators & Sigils</span><span class="g-count">34</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Arithmetic</span><span class="g-count">10</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/percent.html"><span class="tok">%</span></a>
+        <a class="nav-link" href="../syntax/operators/percent-equals.html"><span class="tok">%=</span></a>
+        <a class="nav-link" href="../syntax/operators/asterisk.html"><span class="tok">*</span></a>
+        <a class="nav-link" href="../syntax/operators/asterisk-equals.html"><span class="tok">*=</span></a>
+        <a class="nav-link" href="../syntax/operators/plus.html"><span class="tok">+</span></a>
+        <a class="nav-link" href="../syntax/operators/plus-equals.html"><span class="tok">+=</span></a>
+        <a class="nav-link" href="../syntax/operators/minus.html"><span class="tok">-</span></a>
+        <a class="nav-link" href="../syntax/operators/minus-equals.html"><span class="tok">-=</span></a>
+        <a class="nav-link" href="../syntax/operators/slash.html"><span class="tok">/</span></a>
+        <a class="nav-link" href="../syntax/operators/slash-equals.html"><span class="tok">/=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Comparison</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/not-equal.html"><span class="tok">!=</span></a>
+        <a class="nav-link" href="../syntax/operators/less-than.html"><span class="tok">&lt;</span></a>
+        <a class="nav-link" href="../syntax/operators/less-than-or-equal.html"><span class="tok">&lt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/equal-equal.html"><span class="tok">==</span></a>
+        <a class="nav-link" href="../syntax/operators/greater-than.html"><span class="tok">&gt;</span></a>
+        <a class="nav-link" href="../syntax/operators/greater-than-or-equal.html"><span class="tok">&gt;=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Logical</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/exclamation-mark.html"><span class="tok">!</span></a>
+        <a class="nav-link" href="../syntax/operators/ampersand-ampersand.html"><span class="tok">&amp;&amp;</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe-pipe.html"><span class="tok">||</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Bitwise</span><span class="g-count">10</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/ampersand.html"><span class="tok">&amp;</span></a>
+        <a class="nav-link" href="../syntax/operators/ampersand-equals.html"><span class="tok">&amp;=</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-left.html"><span class="tok">&lt;&lt;</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-left-equals.html"><span class="tok">&lt;&lt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-right.html"><span class="tok">&gt;&gt;</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-right-equals.html"><span class="tok">&gt;&gt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/caret.html"><span class="tok">^</span></a>
+        <a class="nav-link" href="../syntax/operators/caret-equals.html"><span class="tok">^=</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe.html"><span class="tok">|</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe-equals.html"><span class="tok">|=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Assignment</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/equals.html"><span class="tok">=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Ownership &amp; Borrowing</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/raw-borrow.html"><span class="tok">&amp;raw const / &amp;raw mut</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Data Structures</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/associated-type-binding.html"><span class="tok">Type&lt;Ident = Type&gt;</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/path-separator.html"><span class="tok">::</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Error Handling</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/question-mark.html"><span class="tok">?</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="lifetimes">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Lifetimes</span><span class="g-count">3</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/lifetimes/named-lifetime.html"><span class="tok">'a (named lifetime)</span></a>
+        <a class="nav-link" href="../syntax/lifetimes/static-lifetime.html"><span class="tok">'static</span></a>
+        <a class="nav-link" href="../syntax/lifetimes/hrtb.html"><span class="tok">for&lt;'a&gt; Type</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="literals">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Literals</span><span class="g-count">17</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/literals/integer-binary.html"><span class="tok">Binary integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/byte-literal.html"><span class="tok">Byte literal</span></a>
+        <a class="nav-link" href="../syntax/literals/byte-string-literal.html"><span class="tok">Byte string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/c-string-literal.html"><span class="tok">C string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/char-literal.html"><span class="tok">Character literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-decimal.html"><span class="tok">Decimal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/digit-separator.html"><span class="tok">Digit separator (_)</span></a>
+        <a class="nav-link" href="../syntax/literals/escape-sequences.html"><span class="tok">Escape sequences</span></a>
+        <a class="nav-link" href="../syntax/literals/float-suffixes.html"><span class="tok">Float suffixes</span></a>
+        <a class="nav-link" href="../syntax/literals/float-literal.html"><span class="tok">Floating-point literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-hexadecimal.html"><span class="tok">Hexadecimal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-suffixes.html"><span class="tok">Integer suffixes</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-octal.html"><span class="tok">Octal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-c-string-literal.html"><span class="tok">Raw C string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-byte-string-literal.html"><span class="tok">Raw byte string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-string-literal.html"><span class="tok">Raw string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/string-literal.html"><span class="tok">String literal</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="punctuation">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Punctuation</span><span class="g-count">13</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/punctuation/parentheses.html"><span class="tok">( )</span></a>
+        <a class="nav-link" href="../syntax/punctuation/comma.html"><span class="tok">,</span></a>
+        <a class="nav-link" href="../syntax/punctuation/arrow.html"><span class="tok">-&gt;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/dot.html"><span class="tok">.</span></a>
+        <a class="nav-link" href="../syntax/punctuation/range.html"><span class="tok">.. / ..= / ...</span></a>
+        <a class="nav-link" href="../syntax/punctuation/colon.html"><span class="tok">:</span></a>
+        <a class="nav-link" href="../syntax/punctuation/semicolon.html"><span class="tok">;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/fat-arrow.html"><span class="tok">=&gt;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/at-sign.html"><span class="tok">@</span></a>
+        <a class="nav-link" href="../syntax/punctuation/reserved-syntax-and-edition-gotchas.html"><span class="tok">Reserved syntax &amp; edition gotchas</span></a>
+        <a class="nav-link" href="../syntax/punctuation/square-brackets.html"><span class="tok">[ ]</span></a>
+        <a class="nav-link" href="../syntax/punctuation/underscore.html"><span class="tok">_</span></a>
+        <a class="nav-link" href="../syntax/punctuation/curly-braces.html"><span class="tok">{ }</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="comments">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Comments</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/comments/block-comment.html"><span class="tok">/* */ (block comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/inner-block-doc-comment.html"><span class="tok">/*! */ (inner block doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/outer-block-doc-comment.html"><span class="tok">/** */ (outer block doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/line-comment.html"><span class="tok">// (line comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/inner-line-doc-comment.html"><span class="tok">//! (inner line doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/outer-line-doc-comment.html"><span class="tok">/// (outer line doc comment)</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="attributes">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Attributes</span><span class="g-count">36</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Core Syntax</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/attribute-syntax.html"><span class="tok">#[meta] / #![meta]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Conditional Compilation</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/cfg-attribute.html"><span class="tok">#[cfg(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/cfg-attr-attribute.html"><span class="tok">#[cfg_attr(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Testing</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/ignore-attribute.html"><span class="tok">#[ignore]</span></a>
+        <a class="nav-link" href="../syntax/attributes/should-panic-attribute.html"><span class="tok">#[should_panic]</span></a>
+        <a class="nav-link" href="../syntax/attributes/test-attribute.html"><span class="tok">#[test]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Lints &amp; Diagnostics</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/allow-and-friends.html"><span class="tok">#[allow(...)] / #[warn(...)] / #[deny(...)] / #[forbid(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/deprecated-attribute.html"><span class="tok">#[deprecated]</span></a>
+        <a class="nav-link" href="../syntax/attributes/diagnostic-attributes.html"><span class="tok">#[diagnostic::on_unimplemented] / #[diagnostic::do_not_recommend]</span></a>
+        <a class="nav-link" href="../syntax/attributes/expect-attribute.html"><span class="tok">#[expect(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/must-use-attribute.html"><span class="tok">#[must_use]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Documentation</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/doc-attribute.html"><span class="tok">#[doc = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Traits &amp; Derives</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/automatically-derived.html"><span class="tok">#[automatically_derived]</span></a>
+        <a class="nav-link" href="../syntax/attributes/derive.html"><span class="tok">#[derive(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macros</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/macro-export-and-use.html"><span class="tok">#[macro_export] / #[macro_use]</span></a>
+        <a class="nav-link" href="../syntax/attributes/proc-macro-attributes.html"><span class="tok">#[proc_macro] / #[proc_macro_derive(...)] / #[proc_macro_attribute]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Layout</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/non-exhaustive.html"><span class="tok">#[non_exhaustive]</span></a>
+        <a class="nav-link" href="../syntax/attributes/repr.html"><span class="tok">#[repr(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/path-attribute.html"><span class="tok">#[path = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">FFI &amp; Linkage</span><span class="g-count">8</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/crate-type-and-name-attributes.html"><span class="tok">#[crate_type = &quot;...&quot;] / #[crate_name = &quot;...&quot;]</span></a>
+        <a class="nav-link" href="../syntax/attributes/naked-attribute.html"><span class="tok">#[naked]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-builtins-attribute.html"><span class="tok">#[no_builtins]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-main-attribute.html"><span class="tok">#[no_main]</span></a>
+        <a class="nav-link" href="../syntax/attributes/linkage-attributes.html"><span class="tok">#[no_mangle] / #[link(...)] / #[link_name] / #[link_ordinal] / #[link_section] / #[no_link] / #[export_name]</span></a>
+        <a class="nav-link" href="../syntax/attributes/target-feature-attributes.html"><span class="tok">#[target_feature(...)] / #[instruction_set(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/used-attribute.html"><span class="tok">#[used]</span></a>
+        <a class="nav-link" href="../syntax/attributes/windows-subsystem-attribute.html"><span class="tok">#[windows_subsystem = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">No-std &amp; Embedded Runtime</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/no-std-attribute.html"><span class="tok">#![no_std]</span></a>
+        <a class="nav-link" href="../syntax/attributes/global-allocator-attribute.html"><span class="tok">#[global_allocator]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-implicit-prelude-attribute.html"><span class="tok">#[no_implicit_prelude]</span></a>
+        <a class="nav-link" href="../syntax/attributes/panic-handler-attribute.html"><span class="tok">#[panic_handler]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Compiler Hints &amp; Limits</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/feature-attribute.html"><span class="tok">#![feature(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/cold-attribute.html"><span class="tok">#[cold]</span></a>
+        <a class="nav-link" href="../syntax/attributes/debugger-attributes.html"><span class="tok">#[debugger_visualizer(...)] / #[collapse_debuginfo]</span></a>
+        <a class="nav-link" href="../syntax/attributes/recursion-and-type-length-limit.html"><span class="tok">#[recursion_limit = &quot;N&quot;] / #[type_length_limit = &quot;N&quot;]</span></a>
+        <a class="nav-link" href="../syntax/attributes/track-caller-attribute.html"><span class="tok">#[track_caller]</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="macros">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Macros</span><span class="g-count">16</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macro Definition Syntax</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/repetition.html"><span class="tok">$(...)…</span></a>
+        <a class="nav-link" href="../syntax/macros/metavariable.html"><span class="tok">$ident</span></a>
+        <a class="nav-link" href="../syntax/macros/fragment-specifier.html"><span class="tok">$ident:kind</span></a>
+        <a class="nav-link" href="../syntax/macros/invocation-forms.html"><span class="tok">ident!(...) / ident!{...} / ident![...]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Output &amp; Formatting</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/format-macro.html"><span class="tok">format!</span></a>
+        <a class="nav-link" href="../syntax/macros/println-and-print.html"><span class="tok">println! / print! / eprintln! / eprint!</span></a>
+        <a class="nav-link" href="../syntax/macros/write-macros.html"><span class="tok">write! / writeln!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Collections</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/vec-macro.html"><span class="tok">vec!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Errors &amp; Assertions</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/assert-macros.html"><span class="tok">assert! / assert_eq! / assert_ne!</span></a>
+        <a class="nav-link" href="../syntax/macros/matches-macro.html"><span class="tok">matches!</span></a>
+        <a class="nav-link" href="../syntax/macros/panic-macro.html"><span class="tok">panic!</span></a>
+        <a class="nav-link" href="../syntax/macros/todo-and-friends.html"><span class="tok">todo! / unimplemented! / unreachable!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Compile-time Introspection</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/cfg-macro.html"><span class="tok">cfg!</span></a>
+        <a class="nav-link" href="../syntax/macros/introspection-macros.html"><span class="tok">concat! / stringify! / line! / column! / file! / module_path!</span></a>
+        <a class="nav-link" href="../syntax/macros/env-macros.html"><span class="tok">env! / option_env!</span></a>
+        <a class="nav-link" href="../syntax/macros/include-macros.html"><span class="tok">include! / include_str! / include_bytes!</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-section-label">Concepts</div>
+
+    <div class="nav-group" data-group="ownership-borrowing">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Ownership & Borrowing</span><span class="g-count">16</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/ownership-borrowing/borrowing-shared-references.html">Borrowing (shared references)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/copy-vs-clone.html">Copy vs Clone</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/deref-coercion.html">Deref &amp; DerefMut coercion</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/immutability-by-default.html">Immutability by default</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/interior-mutability.html">Interior mutability (Cell &amp; RefCell)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/lifetime-elision.html">Lifetime elision</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/lifetimes.html">Lifetimes</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/move-semantics.html">Move semantics</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/mutable-borrowing.html">Mutable borrowing</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/ownership.html">Ownership</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/raii-and-drop.html">RAII &amp; the Drop trait</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/shared-ownership-rc-arc.html">Shared ownership (Rc &amp; Arc)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/smart-pointers-box.html">Smart pointers (Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/stack-vs-heap.html">Stack vs heap allocation</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/borrow-checker.html">The borrow checker</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/weak-references.html">Weak references (Weak&lt;T&gt;)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="types-data-modeling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Types & Data Modeling</span><span class="g-count">15</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/types-data-modeling/arrays-vs-vec.html">Arrays vs Vec</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/associated-types.html">Associated types</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/const-generics.html">Const generics</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/enums-algebraic-data-types.html">Enums (algebraic data types)</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/generics.html">Generics</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/numeric-types-overflow-behavior.html">Numeric types &amp; overflow behavior</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/recursive-types-via-box.html">Recursive types (via Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/slices.html">Slices</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/structs.html">Structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/the-newtype-pattern.html">The newtype pattern</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/tuple-structs.html">Tuple structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/type-aliases.html">Type aliases</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/type-inference.html">Type inference</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/unit-structs.html">Unit structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/zero-sized-types-phantomdata.html">Zero-sized types &amp; PhantomData</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="traits-polymorphism">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Traits & Polymorphism</span><span class="g-count">13</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/traits-polymorphism/blanket-implementations.html">Blanket implementations</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/default-trait-methods.html">Default trait methods</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/dependency-injection-via-traits.html">Dependency injection via traits/generics</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/derivable-traits.html">Derivable traits (Debug, Clone, PartialEq, …)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/marker-traits.html">Marker traits (Send, Sync, Sized, Copy)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/operator-overloading.html">Operator overloading (std::ops traits)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/static-dispatch-monomorphization.html">Static dispatch &amp; monomorphization</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/supertraits.html">Supertraits</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/the-orphan-rule-and-coherence.html">The orphan rule &amp; coherence</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/trait-bounds.html">Trait bounds</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.html">Trait objects &amp; dynamic dispatch (dyn Trait)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/traits.html">Traits</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/type-erasure-dyn-any.html">Type erasure (dyn Any &amp; downcasting)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="functions-closures">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Functions & Closures</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/functions-closures/closures-and-capturing.html">Closures &amp; capturing</a>
+        <a class="nav-link" href="../concepts/functions-closures/expression-oriented-language.html">Expression-oriented language</a>
+        <a class="nav-link" href="../concepts/functions-closures/fn-fnmut-fnonce.html">Fn / FnMut / FnOnce</a>
+        <a class="nav-link" href="../concepts/functions-closures/function-pointers.html">Function pointers (fn types)</a>
+        <a class="nav-link" href="../concepts/functions-closures/functions.html">Functions</a>
+        <a class="nav-link" href="../concepts/functions-closures/higher-order-functions.html">Higher-order functions</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="iterators">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Iterators</span><span class="g-count">7</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/iterators/custom-iterators.html">Custom iterators</a>
+        <a class="nav-link" href="../concepts/iterators/fromiterator-and-collect-targets.html">FromIterator &amp; collect targets</a>
+        <a class="nav-link" href="../concepts/iterators/intoiterator.html">IntoIterator (iter/iter_mut/into_iter)</a>
+        <a class="nav-link" href="../concepts/iterators/iterator-adaptors.html">Iterator adaptors</a>
+        <a class="nav-link" href="../concepts/iterators/iterator-consumers.html">Iterator consumers</a>
+        <a class="nav-link" href="../concepts/iterators/lazy-evaluation.html">Lazy evaluation</a>
+        <a class="nav-link" href="../concepts/iterators/the-iterator-trait.html">The Iterator trait</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="error-handling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Error Handling</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/error-handling/custom-error-types.html">Custom error types</a>
+        <a class="nav-link" href="../concepts/error-handling/option.html">Option&lt;T&gt;</a>
+        <a class="nav-link" href="../concepts/error-handling/panic-and-unwinding.html">Panic &amp; unwinding</a>
+        <a class="nav-link" href="../concepts/error-handling/result.html">Result&lt;T, E&gt;</a>
+        <a class="nav-link" href="../concepts/error-handling/the-question-mark-operator.html">The ? operator (concept angle)</a>
+        <a class="nav-link" href="../concepts/error-handling/the-error-trait.html">The Error trait</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="pattern-matching">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Pattern Matching</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/pattern-matching/destructuring.html">Destructuring</a>
+        <a class="nav-link" href="../concepts/pattern-matching/exhaustiveness-checking.html">Exhaustiveness checking</a>
+        <a class="nav-link" href="../concepts/pattern-matching/match-guards.html">Match guards</a>
+        <a class="nav-link" href="../concepts/pattern-matching/if-let-and-while-let.html">if let / while let</a>
+        <a class="nav-link" href="../concepts/pattern-matching/match-expressions.html">match expressions</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="modules-crates-visibility">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Modules, Crates & Visibility</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/cargo-and-cargo-toml.html">Cargo &amp; Cargo.toml</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/crates.html">Crates</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/dependency-management-and-semver.html">Dependency management &amp; semver</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/modules.html">Modules</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/visibility-and-privacy.html">Visibility &amp; privacy (pub and friends)</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/workspaces.html">Workspaces</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="concurrency-async">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Concurrency & Async</span><span class="g-count">7</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/concurrency-async/async-runtimes.html">Async runtimes</a>
+        <a class="nav-link" href="../concepts/concurrency-async/async-await.html">Async/await</a>
+        <a class="nav-link" href="../concepts/concurrency-async/futures.html">Futures</a>
+        <a class="nav-link" href="../concepts/concurrency-async/message-passing-channels.html">Message passing (channels / mpsc)</a>
+        <a class="nav-link" href="../concepts/concurrency-async/send-and-sync.html">Send &amp; Sync</a>
+        <a class="nav-link" href="../concepts/concurrency-async/shared-state-concurrency.html">Shared-state concurrency (Mutex, RwLock)</a>
+        <a class="nav-link" href="../concepts/concurrency-async/threads.html">Threads (std::thread)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="memory-unsafe">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Memory & Unsafe</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/memory-unsafe/ffi.html">FFI (foreign function interface)</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/memory-layout-and-repr.html">Memory layout &amp; repr</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/raw-pointers.html">Raw pointers (*const T / *mut T)</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/the-undefined-behavior-boundary.html">The undefined-behavior boundary</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/unsafe-rust.html">Unsafe Rust</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="macros-metaprogramming">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Macros & Metaprogramming</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/attribute-like-macros.html">Attribute-like macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/declarative-macros.html">Declarative macros (macro_rules!)</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/derive-macros.html">Derive macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/function-like-macros.html">Function-like macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/procedural-macros.html">Procedural macros</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="collections-strings">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Collections & Strings</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/collections-strings/btreemap-and-btreeset.html">BTreeMap &amp; BTreeSet</a>
+        <a class="nav-link" href="../concepts/collections-strings/hashmap-and-hashset.html">HashMap &amp; HashSet</a>
+        <a class="nav-link" href="../concepts/collections-strings/string-formatting.html">String formatting (Display, Debug, format!)</a>
+        <a class="nav-link" href="../concepts/collections-strings/string-vs-str.html">String vs &amp;str</a>
+        <a class="nav-link" href="../concepts/collections-strings/vec.html">Vec&lt;T&gt;</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="testing-tooling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Testing & Tooling</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/testing-tooling/benchmarking.html">Benchmarking</a>
+        <a class="nav-link" href="../concepts/testing-tooling/clippy-and-rustfmt.html">Clippy &amp; rustfmt</a>
+        <a class="nav-link" href="../concepts/testing-tooling/doc-tests.html">Doc tests</a>
+        <a class="nav-link" href="../concepts/testing-tooling/integration-tests.html">Integration tests</a>
+        <a class="nav-link" href="../concepts/testing-tooling/serialization-serde.html">Serialization (the serde ecosystem)</a>
+        <a class="nav-link" href="../concepts/testing-tooling/unit-tests.html">Unit tests</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="design-patterns-idioms">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Design Patterns & Idioms</span><span class="g-count">19</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Design Patterns</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-builder-pattern.html">The builder pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-command-pattern.html">The command pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-strategy-pattern.html">The strategy pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-typestate-pattern.html">The typestate pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-visitor-pattern.html">The visitor pattern</a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Idioms</span><span class="g-count">11</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/compose-structs.html">Compose structs</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/composition-over-inheritance.html">Composition over inheritance</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/constructor-functions-new.html">Constructor functions (new() convention)</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/contain-unsafety-in-small-modules.html">Contain unsafety in small modules</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.html">On-stack dynamic dispatch</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/prefer-small-crates.html">Prefer small crates</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/privacy-for-extensibility.html">Privacy for extensibility</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/return-consumed-argument-on-error.html">Return consumed argument on error</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/temporary-mutability.html">Temporary mutability</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-default-trait-as-idiom.html">The Default trait as idiom</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/mem-take-and-mem-replace.html">mem::take / mem::replace</a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Anti-patterns</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-deny-warnings.html">Anti-pattern: #[deny(warnings)]</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-deref-polymorphism.html">Anti-pattern: Deref polymorphism (faking inheritance)</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-clone-to-satisfy-borrow-checker.html">Anti-pattern: cloning to satisfy the borrow checker</a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="philosophy-principles">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Rust Philosophy & Design Principles</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/philosophy-principles/make-invalid-states-unrepresentable.html">&quot;Make invalid states unrepresentable&quot;</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/fearless-concurrency.html">Fearless concurrency</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/memory-safety-without-a-garbage-collector.html">Memory safety without a garbage collector</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/the-edition-system.html">The edition system</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/zero-cost-abstractions.html">Zero-cost abstractions</a>
+      </div></div>
+    </div>
+
+  </aside>
+
+  <main class="content">
+    <article class="page">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a><span class="sep">&rsaquo;</span>
+        <a href="./">Crates</a><span class="sep">&rsaquo;</span>
+        <span style="color:var(--content-fg);font-weight:600">serde</span>
+      </nav>
+
+      <div class="page-head">
+        <div class="title-block">
+          <h1 class="page-title">serde<span class="kind">Crate</span></h1>
+        </div>
+        <a class="convo-cta" href="https://crates.io/crates/serde" target="_blank" rel="noopener">Open on crates.io &rarr;</a>
+      </div>
+
+      <div class="crate-meta">
+        
+        <span class="crate-version">v1.0.229</span>
+        <span>published by David Tolnay (dtolnay), publish</span>
+        <span class="support-badge level-partial">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          no_std: optional
+        </span>
+      </div>
+
+      <div class="crate-byline" data-vote-key="crate::serde">
+        <span>page written by <a class="article-author" href="https://github.com/NGDeveloper125" target="_blank" rel="noopener">NGDeveloper125</a> &middot; Aug 31, 2026</span>
+        <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span> &mdash; like this page on GitHub</a>
+      </div>
+
+      <div class="crate-links"><a class="crate-link" href="https://crates.io/crates/serde" target="_blank" rel="noopener">crates.io</a><a class="crate-link" href="https://docs.rs/serde" target="_blank" rel="noopener">docs.rs</a><a class="crate-link" href="https://github.com/serde-rs/serde" target="_blank" rel="noopener">Repository</a></div>
+
+      <p class="lead">The serialization framework the whole ecosystem shares. Derive <code class="tok-inline">Serialize</code> and <code class="tok-inline">Deserialize</code> once, and your type reads and writes JSON, TOML, YAML, MessagePack and the rest without knowing about any of them.</p>
+
+      <div class="article-tags"><span class="article-tag">serialization</span><span class="article-tag">derive</span><span class="article-tag">no-std</span></div>
+
+      <hr class="divider">
+
+      <nav class="section-tabs" id="section-tabs">
+        <button class="tab on" data-target="overview">Overview</button>
+        <button class="tab" data-target="use-cases">When to use it</button>
+        <button class="tab" data-target="api">API map</button>
+      </nav>
+
+      <section class="doc" data-tab="overview">
+        <h2 class="section-title">Overview</h2>
+        <p><code>serde</code> is a framework, not a format. It defines a data model in the middle —
+maps, sequences, structs, enums, primitives — and two traits that connect a Rust
+type to it:</p>
+<ul>
+<li><strong><code>Serialize</code></strong> — how to take your type apart into that model.</li>
+<li><strong><code>Deserialize</code></strong> — how to build it back up.</li>
+</ul>
+<p>Formats sit on the other side. <a href="../crates/serde_json.html"><code>serde_json</code></a>, <code>toml</code>,
+<code>serde_yaml</code>, <code>rmp-serde</code>, <code>bincode</code> and dozens more implement the model, so a
+type that derives these two traits works with all of them and knows about none:</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize, PartialEq, Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Config</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">host</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">Config</span> <span class="tok-punct">{</span> <span class="tok-variable">host</span><span class="tok-punct">:</span> <span class="tok-string">&quot;example.com&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">port</span><span class="tok-punct">:</span> <span class="tok-number">8080</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// One derive, any number of formats.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">json</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">json</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;host&quot;:&quot;example.com&quot;,&quot;port&quot;:8080}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">back</span><span class="tok-punct">:</span> <span class="tok-type">Config</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">json</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">back</span><span class="tok-punct">,</span> <span class="tok-variable">config</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+<p>That indirection is the whole design, and it is why serde sits near the top of
+the download charts: N types times M formats becomes N plus M.</p>
+<p><strong>The derive is not enabled by default.</strong> <code>serde = "1"</code> gives you the traits
+alone; you want <code>features = ["derive"]</code>, and forgetting it produces a confusing
+"cannot find derive macro" error. The crate is split three ways as of recent
+releases — <code>serde_core</code> holds the traits, <code>serde_derive</code> is the proc macro, and
+<code>serde</code> re-exports both — so a library needing only the traits can depend on
+<code>serde_core</code> and keep the proc macro out of its dependents' build graphs.</p>
+<p><strong>What the attributes are for.</strong> The derive alone maps field names to keys
+one-to-one, which is rarely what a real format wants. Almost everything you will
+need to configure is a <code>#[serde(...)]</code> attribute: renaming to <code>camelCase</code>,
+defaulting an absent field, skipping an empty one, choosing how an enum is
+tagged. Those are documented here rather than in a format crate's docs, because
+they belong to serde and apply to every format at once.</p>
+<p>The costs are real but usually accepted. The derive pulls
+<a href="../crates/syn.html"><code>syn</code></a>, <a href="../crates/quote.html"><code>quote</code></a> and <a href="../crates/proc-macro2.html"><code>proc-macro2</code></a>, and
+compiling it is a noticeable share of a cold build in a project with many types.
+Generated code is monomorphised per type and format, which trades binary size
+for speed. <code>miniserde</code> and <code>nanoserde</code> exist for when that trade is wrong, at
+the cost of the ecosystem — nothing else speaks their traits.</p>
+<p>It requires Rust 1.56, and works <code>no_std</code> with <code>alloc</code>, or without <code>alloc</code> for
+the subset that needs no allocation.</p>
+
+      </section>
+
+      <section class="doc" data-tab="use-cases">
+        <h2 class="section-title">When to use it</h2>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Matching an external JSON convention</h3>
+            <p>Rust fields are <code>snake_case</code>; a JSON API is usually <code>camelCase</code>. <code>rename_all</code>
+translates the whole struct at once, so the Rust side stays idiomatic.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize, Debug, PartialEq)]</span>
+<span class="tok-attribute">#[serde(rename_all = &quot;camelCase&quot;)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">User</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">first_name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-variable">last_name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(rename = &quot;id&quot;)]</span> <span class="tok-comment tok-anno">// &lt;- one field that doesn't follow the rule</span>
+    <span class="tok-variable">user_id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">json</span> <span class="tok-punct">=</span> <span class="tok-string">r#&quot;{&quot;firstName&quot;:&quot;Ada&quot;,&quot;lastName&quot;:&quot;Lovelace&quot;,&quot;id&quot;:1}&quot;#</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">user</span><span class="tok-punct">:</span> <span class="tok-type">User</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-variable">json</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">user</span><span class="tok-punct">.</span><span class="tok-field">first_name</span><span class="tok-punct">,</span> <span class="tok-string">&quot;Ada&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">user</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">json</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> the wire format is data, not something your code should have to
+speak. Both directions use the same rule, so the round trip is exact — which is
+what makes it safe to write the document back.</p>
+</div>
+          </div>
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Evolving a format without breaking old data</h3>
+            <p>Config files and stored documents outlive the code that reads them. <code>default</code>
+lets you add a field without invalidating everything written before it.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">default_retries</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span> <span class="tok-number">3</span> <span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize, Debug)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Settings</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">endpoint</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(default = &quot;default_retries&quot;)]</span>
+    <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(default)]</span> <span class="tok-comment tok-anno">// &lt;- Default::default(), so false</span>
+    <span class="tok-variable">verbose</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// An old document, written before either field existed.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">old</span><span class="tok-punct">:</span> <span class="tok-type">Settings</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;endpoint&quot;:&quot;https://api&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">old</span><span class="tok-punct">.</span><span class="tok-field">retries</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">!</span><span class="tok-variable">old</span><span class="tok-punct">.</span><span class="tok-field">verbose</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// A new one, with them present.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">new</span><span class="tok-punct">:</span> <span class="tok-type">Settings</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span>
+    <span class="tok-string">r#&quot;{&quot;endpoint&quot;:&quot;https://api&quot;,&quot;retries&quot;:5,&quot;verbose&quot;:true}&quot;#</span><span class="tok-punct">,</span>
+<span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">new</span><span class="tok-punct">.</span><span class="tok-field">retries</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> adding a field is no longer a breaking change to the format.
+Note the pairing: <code>#[serde(deny_unknown_fields)]</code> is the opposite policy, for
+when a typo in a config should be an error rather than silently ignored — you
+usually want one or the other deliberately, not neither.</p>
+</div>
+          </div>
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Modelling a tagged union</h3>
+            <p>An enum is the natural type for "one of several message kinds", and serde offers
+four ways to put that on the wire. The internally tagged form is what most JSON
+APIs use.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize, Debug)]</span>
+<span class="tok-attribute">#[serde(tag = &quot;type&quot;, rename_all = &quot;snake_case&quot;)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Event</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Click</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-type">i32</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-type">i32</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">KeyPress</span> <span class="tok-punct">{</span> <span class="tok-variable">key</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">json</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Event</span><span class="tok-punct">::</span><span class="tok-field">Click</span> <span class="tok-punct">{</span> <span class="tok-variable">x</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">y</span><span class="tok-punct">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">json</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;type&quot;:&quot;click&quot;,&quot;x&quot;:1,&quot;y&quot;:2}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">parsed</span><span class="tok-punct">:</span> <span class="tok-type">Event</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;type&quot;:&quot;key_press&quot;,&quot;key&quot;:&quot;a&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">parsed</span><span class="tok-punct">,</span> <span class="tok-type">Event</span><span class="tok-punct">::</span><span class="tok-field">KeyPress</span> <span class="tok-punct">{</span> <span class="tok-variable">key</span> <span class="tok-punct">}</span> <span class="tok-keyword">if</span> <span class="tok-variable">key</span> <span class="tok-punct">==</span> <span class="tok-string">&quot;a&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> the discriminant is a field like any other, which is how these
+documents are usually specified. The alternative representations are covered
+below; picking the wrong one is the most common reason an enum won't round-trip
+against someone else's API.</p>
+</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc" data-tab="api">
+        <h2 class="section-title">API map</h2>
+        <p>Serde's surface is two traits and a set of attributes. In practice you write the
+derive and then reach for attributes, so those are what this map covers,
+grouped by where they go. Everything below is inside <code>#[serde(...)]</code>.</p>
+
+        <div class="api-group">
+        <h3 class="api-group-title">The traits<span class="api-group-count">2</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">Serialize</code> and <code class="tok-inline">Deserialize</code></h4>
+            <p>The two traits. Deriving both is the normal case; derive only what you need.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Outgoing</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span> <span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[derive(Deserialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Incoming</span> <span class="tok-punct">{</span> <span class="tok-variable">ok</span><span class="tok-punct">:</span> <span class="tok-type">bool</span> <span class="tok-punct">}</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Outgoing</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;id&quot;:1}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">got</span><span class="tok-punct">:</span> <span class="tok-type">Incoming</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;ok&quot;:true}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">got</span><span class="tok-punct">.</span><span class="tok-field">ok</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> on any type crossing a boundary. Deriving both when you only
+send or only receive costs compile time and can force bounds you don't need — a
+response type usually needs <code>Deserialize</code> alone.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig">Implementing them by hand</h4>
+            <p>The derive covers nearly everything, but the traits are public.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Serialize</span><span class="tok-punct">,</span> <span class="tok-type">Serializer</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Celsius</span><span class="tok-punct">(</span><span class="tok-type">f64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">impl</span> <span class="tok-trait">Serialize</span> <span class="tok-keyword">for</span> <span class="tok-type">Celsius</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">serialize</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">Serializer</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">self</span><span class="tok-punct">,</span> <span class="tok-variable">serializer</span><span class="tok-punct">:</span> <span class="tok-generic-param">S</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-type">S</span><span class="tok-punct">::</span><span class="tok-field">Ok</span><span class="tok-punct">,</span> <span class="tok-type">S</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-comment">// Emit as a string with a unit, rather than a bare number.</span>
+        <span class="tok-variable">serializer</span><span class="tok-punct">.</span><span class="tok-call-method">serialize_str</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}C&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">self</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-field">Celsius</span><span class="tok-punct">(</span><span class="tok-number">21.5</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;&quot;21.5C&quot;&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> rarely — for a type whose representation isn't a
+rearrangement of its fields. Prefer <code>serialize_with</code> on a field, or <code>from</code>/<code>into</code>
+on the container, both of which get you the same result without hand-writing a
+trait impl.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Container attributes<span class="api-group-count">5</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">rename_all</code></h4>
+            <p>Applies a naming convention to every field or variant.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-attribute">#[serde(rename_all = &quot;SCREAMING_SNAKE_CASE&quot;)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Env</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">database_url</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">Env</span> <span class="tok-punct">{</span> <span class="tok-variable">database_url</span><span class="tok-punct">:</span> <span class="tok-string">&quot;postgres://&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;DATABASE_URL&quot;:&quot;postgres://&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> matching an external convention in one line rather than
+renaming each field. It takes <code>camelCase</code>, <code>PascalCase</code>, <code>snake_case</code>,
+<code>SCREAMING_SNAKE_CASE</code>, <code>kebab-case</code> and more; <code>rename_all_fields</code> applies to an
+enum's <em>variant</em> fields rather than the variant names.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">deny_unknown_fields</code></h4>
+            <p>Rejects input containing keys the struct doesn't have.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-type">Deserialize</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Deserialize, Debug)]</span>
+<span class="tok-attribute">#[serde(deny_unknown_fields)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Strict</span> <span class="tok-punct">{</span> <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span>
+
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-module">from_str</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Strict</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;name&quot;:&quot;a&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_ok</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// A typo is now an error instead of being ignored.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">err</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-module">from_str</span><span class="tok-punct">::</span><span class="tok-punct">&lt;</span><span class="tok-type">Strict</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;name&quot;:&quot;a&quot;,&quot;nmae&quot;:&quot;b&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">err</span><span class="tok-punct">.</span><span class="tok-call-method">to_string</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">contains</span><span class="tok-punct">(</span><span class="tok-string">&quot;unknown field&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> config files, where a misspelled key silently doing nothing
+is a bad afternoon. Avoid it for API responses you don't control — a server
+adding a field would break your client.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">default</code> on a container</h4>
+            <p>Fills every missing field from <code>Default</code>, rather than naming them one by one.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-type">Deserialize</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Deserialize, Debug, Default, PartialEq)]</span>
+<span class="tok-attribute">#[serde(default)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Options</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">verbose</span><span class="tok-punct">:</span> <span class="tok-type">bool</span><span class="tok-punct">,</span>
+    <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">empty</span><span class="tok-punct">:</span> <span class="tok-type">Options</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">empty</span><span class="tok-punct">,</span> <span class="tok-type">Options</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">partial</span><span class="tok-punct">:</span> <span class="tok-type">Options</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;retries&quot;:2}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">partial</span><span class="tok-punct">,</span> <span class="tok-type">Options</span> <span class="tok-punct">{</span> <span class="tok-variable">verbose</span><span class="tok-punct">:</span> <span class="tok-number">false</span><span class="tok-punct">,</span> <span class="tok-variable">retries</span><span class="tok-punct">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> options structs where every field is optional. It requires
+<code>Default</code> on the type, and is the concise alternative to <code>#[serde(default)]</code> on
+each field.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">transparent</code></h4>
+            <p>Serialises a one-field wrapper as the field itself.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-attribute">#[serde(transparent)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">UserId</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-field">UserId</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;7&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- not [7] or {&quot;0&quot;:7}</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">UserId</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;7&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">id</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> newtypes that exist for type safety and shouldn't appear in
+the format. Without it a tuple struct serialises as its inner value anyway in
+JSON, but <code>transparent</code> makes the intent explicit and holds across formats that
+would otherwise wrap it.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">from</code>, <code class="tok-inline">into</code> and <code class="tok-inline">try_from</code></h4>
+            <p>Converts through another type on the way in or out.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-attribute">#[serde(from = &quot;String&quot;, into = &quot;String&quot;)]</span>
+<span class="tok-attribute">#[derive(Clone)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Version</span> <span class="tok-punct">{</span> <span class="tok-variable">major</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">minor</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">Version</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">s</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-keyword">Self</span> <span class="tok-punct">{</span>
+        <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">a</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">split_once</span><span class="tok-punct">(</span><span class="tok-string">'.'</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-string">&quot;0&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;0&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+        <span class="tok-type">Version</span> <span class="tok-punct">{</span> <span class="tok-variable">major</span><span class="tok-punct">:</span> <span class="tok-variable">a</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">minor</span><span class="tok-punct">:</span> <span class="tok-variable">b</span><span class="tok-punct">.</span><span class="tok-call-method">parse</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap_or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">impl</span> <span class="tok-type">From</span><span class="tok-punct">&lt;</span><span class="tok-type">Version</span><span class="tok-punct">&gt;</span> <span class="tok-keyword">for</span> <span class="tok-type">String</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">fn</span> <span class="tok-fn-def">from</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">:</span> <span class="tok-type">Version</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">String</span> <span class="tok-punct">{</span> <span class="tok-macro">format!</span><span class="tok-punct">(</span><span class="tok-string">&quot;{}.{}&quot;</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-field">major</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-field">minor</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">v</span><span class="tok-punct">:</span> <span class="tok-type">Version</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;&quot;2.7&quot;&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-field">major</span><span class="tok-punct">,</span> <span class="tok-variable">v</span><span class="tok-punct">.</span><span class="tok-field">minor</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">v</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;&quot;2.7&quot;&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> when the stored form is a different shape entirely — a
+struct stored as a string, a validated type stored as its raw input. <code>try_from</code>
+is the fallible version, and is how you validate during deserialisation rather
+than after it.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Field attributes<span class="api-group-count">6</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">rename</code> and <code class="tok-inline">alias</code></h4>
+            <p>Renames one field; <code>alias</code> accepts extra names when reading.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-type">Deserialize</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Deserialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Record</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[serde(rename = &quot;ID&quot;, alias = &quot;id&quot;, alias = &quot;identifier&quot;)]</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">for</span> <span class="tok-variable">text</span> <span class="tok-keyword">in</span> <span class="tok-punct">[</span><span class="tok-string">r#&quot;{&quot;ID&quot;:1}&quot;#</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;id&quot;:1}&quot;#</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;identifier&quot;:1}&quot;#</span><span class="tok-punct">]</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">r</span><span class="tok-punct">:</span> <span class="tok-type">Record</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-variable">text</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">r</span><span class="tok-punct">.</span><span class="tok-field">id</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-punct">}</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> <code>rename</code> for a field whose wire name differs from the Rust
+one; <code>alias</code> for accepting an old name after a format change, which lets you
+migrate without breaking existing documents. <code>alias</code> affects reading only.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">default</code> on a field</h4>
+            <p>Supplies a value when the field is absent.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-type">Deserialize</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">one</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u32</span> <span class="tok-punct">{</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[derive(Deserialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Job</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">name</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(default)]</span>
+    <span class="tok-variable">tags</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(default = &quot;one&quot;)]</span>
+    <span class="tok-variable">parallelism</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">job</span><span class="tok-punct">:</span> <span class="tok-type">Job</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;name&quot;:&quot;build&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">.</span><span class="tok-field">tags</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">job</span><span class="tok-punct">.</span><span class="tok-field">parallelism</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> any optional field. Bare <code>default</code> uses <code>Default::default()</code>;
+the string form names a function, which is how you get a non-zero default.
+<code>Option&lt;T&gt;</code> is the other approach, and says something different — absent versus
+present-and-null are distinguishable with <code>Option</code>.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">skip_serializing_if</code></h4>
+            <p>Omits a field from the output when a predicate says so.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-type">Serialize</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Payload</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(skip_serializing_if = &quot;Option::is_none&quot;)]</span>
+    <span class="tok-variable">note</span><span class="tok-punct">:</span> <span class="tok-type">Option</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(skip_serializing_if = &quot;Vec::is_empty&quot;)]</span>
+    <span class="tok-variable">tags</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">String</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">Payload</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">note</span><span class="tok-punct">:</span> <span class="tok-field">None</span><span class="tok-punct">,</span> <span class="tok-variable">tags</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;id&quot;:1}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> keeping documents small and diffs clean by leaving out
+nothing-values. The function takes a reference to the field and returns <code>bool</code>,
+so any predicate works. Pair it with <code>default</code> so the omitted field reads back.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">skip</code></h4>
+            <p>Leaves a field out of both directions entirely.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize, Default)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Session</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">user</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(skip)]</span>
+    <span class="tok-variable">cache</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- never written, never read</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">s</span> <span class="tok-punct">=</span> <span class="tok-type">Session</span> <span class="tok-punct">{</span> <span class="tok-variable">user</span><span class="tok-punct">:</span> <span class="tok-string">&quot;ada&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-variable">cache</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">s</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;user&quot;:&quot;ada&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">back</span><span class="tok-punct">:</span> <span class="tok-type">Session</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;{&quot;user&quot;:&quot;ada&quot;}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-variable">back</span><span class="tok-punct">.</span><span class="tok-field">cache</span><span class="tok-punct">.</span><span class="tok-call-method">is_empty</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- filled from Default</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> derived state, caches, handles — anything meaningless
+outside the running process. The field must implement <code>Default</code> for
+deserialisation, since something has to go there.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">flatten</code></h4>
+            <p>Inlines a nested struct's fields into the parent, or collects the leftovers.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Page</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">,</span>
+    <span class="tok-attribute">#[serde(flatten)]</span>
+    <span class="tok-variable">paging</span><span class="tok-punct">:</span> <span class="tok-type">Paging</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Paging</span> <span class="tok-punct">{</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-type">u32</span><span class="tok-punct">,</span> <span class="tok-variable">limit</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">Page</span> <span class="tok-punct">{</span> <span class="tok-variable">items</span><span class="tok-punct">:</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">paging</span><span class="tok-punct">:</span> <span class="tok-type">Paging</span> <span class="tok-punct">{</span> <span class="tok-variable">offset</span><span class="tok-punct">:</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">limit</span><span class="tok-punct">:</span> <span class="tok-number">10</span> <span class="tok-punct">}</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">json</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">value</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// One flat object, not a nested &quot;paging&quot; key.</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">json</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;items&quot;:[1],&quot;offset&quot;:0,&quot;limit&quot;:10}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> sharing a common group of fields across types, or capturing
+unknown keys into a <code>HashMap</code>. It is incompatible with <code>deny_unknown_fields</code>,
+and it forces a buffering deserialiser, so it costs a little performance on hot
+paths.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">serialize_with</code> and <code class="tok-inline">with</code></h4>
+            <p>Uses your own functions for one field's representation.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">mod</span> <span class="tok-variable">millis</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Deserializer</span><span class="tok-punct">,</span> <span class="tok-type">Serializer</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+    <span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Duration</span><span class="tok-punct">;</span>
+
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">serialize</span><span class="tok-punct">&lt;</span><span class="tok-generic-param">S</span><span class="tok-punct">:</span> <span class="tok-trait">Serializer</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">d</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">Duration</span><span class="tok-punct">,</span> <span class="tok-variable">s</span><span class="tok-punct">:</span> <span class="tok-generic-param">S</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-type">S</span><span class="tok-punct">::</span><span class="tok-field">Ok</span><span class="tok-punct">,</span> <span class="tok-type">S</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">serialize_u64</span><span class="tok-punct">(</span><span class="tok-variable">d</span><span class="tok-punct">.</span><span class="tok-call-method">as_millis</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">as</span> <span class="tok-type">u64</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+
+    <span class="tok-keyword">pub</span> <span class="tok-keyword">fn</span> <span class="tok-fn-def">deserialize</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'de</span><span class="tok-punct">,</span> <span class="tok-generic-param">D</span><span class="tok-punct">:</span> <span class="tok-trait">Deserializer</span><span class="tok-punct">&lt;</span><span class="tok-lifetime">'de</span><span class="tok-punct">&gt;</span><span class="tok-punct">&gt;</span><span class="tok-punct">(</span><span class="tok-variable">d</span><span class="tok-punct">:</span> <span class="tok-generic-param">D</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Result</span><span class="tok-punct">&lt;</span><span class="tok-type">Duration</span><span class="tok-punct">,</span> <span class="tok-type">D</span><span class="tok-punct">::</span><span class="tok-field">Error</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+        <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_millis</span><span class="tok-punct">(</span><span class="tok-module">u64</span><span class="tok-punct">::</span><span class="tok-call-assoc">deserialize</span><span class="tok-punct">(</span><span class="tok-variable">d</span><span class="tok-punct">)</span><span class="tok-punct">?</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Timeout</span> <span class="tok-punct">{</span>
+    <span class="tok-attribute">#[serde(with = &quot;millis&quot;)]</span>
+    <span class="tok-variable">after</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Duration</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">t</span> <span class="tok-punct">=</span> <span class="tok-type">Timeout</span> <span class="tok-punct">{</span> <span class="tok-variable">after</span><span class="tok-punct">:</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">time</span><span class="tok-punct">::</span><span class="tok-type">Duration</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_secs</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">t</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;after&quot;:2000}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> representing a foreign type the way your format expects — a
+timestamp as an integer, bytes as base64. <code>with</code> names a module containing both
+functions; <code>serialize_with</code> and <code>deserialize_with</code> name them individually when
+you need only one.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Enum representations<span class="api-group-count">4</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig">Externally tagged (the default)</h4>
+            <p>The variant name wraps its content.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Message</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Text</span> <span class="tok-punct">{</span> <span class="tok-variable">body</span><span class="tok-punct">:</span> <span class="tok-type">String</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Ping</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">json</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Message</span><span class="tok-punct">::</span><span class="tok-field">Text</span> <span class="tok-punct">{</span> <span class="tok-variable">body</span><span class="tok-punct">:</span> <span class="tok-string">&quot;hi&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">into</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">json</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;Text&quot;:{&quot;body&quot;:&quot;hi&quot;}}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Message</span><span class="tok-punct">::</span><span class="tok-field">Ping</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;&quot;Ping&quot;&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> when you own both ends and want the representation that is
+always unambiguous. It is the default because it round-trips for every enum
+shape, including the ones the other three cannot handle.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig">Internally tagged — <code class="tok-inline">tag</code></h4>
+            <p>The discriminant becomes a field alongside the content.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-attribute">#[serde(tag = &quot;kind&quot;)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Shape</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Circle</span> <span class="tok-punct">{</span> <span class="tok-variable">r</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+    <span class="tok-type">Square</span> <span class="tok-punct">{</span> <span class="tok-variable">side</span><span class="tok-punct">:</span> <span class="tok-type">f64</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">json</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Shape</span><span class="tok-punct">::</span><span class="tok-field">Circle</span> <span class="tok-punct">{</span> <span class="tok-variable">r</span><span class="tok-punct">:</span> <span class="tok-number">1.0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">json</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;kind&quot;:&quot;Circle&quot;,&quot;r&quot;:1.0}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> most JSON APIs, which specify exactly this shape. It only
+works for struct variants and newtype variants wrapping a struct — a tuple
+variant has nowhere to put the tag, and the derive rejects it at compile time.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig">Adjacently tagged — <code class="tok-inline">tag</code> and <code class="tok-inline">content</code></h4>
+            <p>Tag and content sit in two named fields.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize)]</span>
+<span class="tok-attribute">#[serde(tag = &quot;t&quot;, content = &quot;c&quot;)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Value</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Int</span><span class="tok-punct">(</span><span class="tok-type">i64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Pair</span><span class="tok-punct">(</span><span class="tok-type">i64</span><span class="tok-punct">,</span> <span class="tok-type">i64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Value</span><span class="tok-punct">::</span><span class="tok-field">Int</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;t&quot;:&quot;Int&quot;,&quot;c&quot;:1}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">to_string</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-type">Value</span><span class="tok-punct">::</span><span class="tok-field">Pair</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">r#&quot;{&quot;t&quot;:&quot;Pair&quot;,&quot;c&quot;:[1,2]}&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> when you want a tag but have tuple or primitive variants that
+internal tagging can't express. It handles every enum shape, at the cost of an
+extra level of nesting.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">untagged</code></h4>
+            <p>No discriminant; variants are tried in order until one fits.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">serde</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Deserialize</span><span class="tok-punct">,</span> <span class="tok-type">Serialize</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(Serialize, Deserialize, Debug)]</span>
+<span class="tok-attribute">#[serde(untagged)]</span>
+<span class="tok-keyword">enum</span> <span class="tok-type-def">Id</span> <span class="tok-punct">{</span>
+    <span class="tok-field">Number</span><span class="tok-punct">(</span><span class="tok-type">u64</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-field">Text</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">Id</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">&quot;7&quot;</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">,</span> <span class="tok-type">Id</span><span class="tok-punct">::</span><span class="tok-field">Number</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">t</span><span class="tok-punct">:</span> <span class="tok-type">Id</span> <span class="tok-punct">=</span> <span class="tok-module">serde_json</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_str</span><span class="tok-punct">(</span><span class="tok-string">r#&quot;&quot;abc&quot;&quot;#</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-macro">matches!</span><span class="tok-punct">(</span><span class="tok-variable">t</span><span class="tok-punct">,</span> <span class="tok-type">Id</span><span class="tok-punct">::</span><span class="tok-field">Text</span><span class="tok-punct">(</span><span class="tok-keyword">ref</span> <span class="tok-variable">s</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-variable">s</span> <span class="tok-punct">==</span> <span class="tok-string">&quot;abc&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> a field that legitimately accepts more than one shape — an
+id that may be a number or a string. Order matters, because the first variant
+that parses wins, and error messages are poor when nothing matches: serde can
+only say that no variant fitted, not why each failed.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      </section>
+
+      <div class="convo-actions convo-actions-foot">
+        <a class="convo-open" href="./">&#8592; Back to Crates</a>
+      </div>
+
+      <div class="footer-note">
+        <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
+        <span>Written against serde 1.0.229</span>
+      </div>
+
+    </article>
+  </main>
+</div>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>
