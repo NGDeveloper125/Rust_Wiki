@@ -355,6 +355,9 @@
     var voteCounts = {}; // vote-key -> count
 
     var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll(cfg.cardSel)) : [];
+    // Optional A-Z section headings living in the grid alongside the cards.
+    var letters = (grid && cfg.letterSel)
+      ? Array.prototype.slice.call(grid.querySelectorAll(cfg.letterSel)) : [];
     var searchBox = document.getElementById(cfg.searchId);
     var sortSel = document.getElementById(cfg.sortId);
     var noMatch = document.getElementById(cfg.nomatchId);
@@ -368,12 +371,29 @@
         if (hit) shown++;
       });
       if (noMatch) noMatch.hidden = shown !== 0;
+      applyLetters();
+    }
+
+    /* A letter heading is a claim about A-Z order, so it only stands while the
+       index is sorted that way — and only while its section still has a card
+       the filter didn't hide. */
+    function applyLetters() {
+      if (!letters.length) return;
+      var alpha = !sortSel || sortSel.value === 'name';
+      letters.forEach(function (head) {
+        var letter = head.getAttribute('data-letter');
+        var kept = alpha && cards.some(function (card) {
+          return card.getAttribute('data-letter') === letter &&
+                 !card.classList.contains('is-hidden');
+        });
+        head.classList.toggle('is-hidden', !kept);
+      });
     }
 
     function applySort() {
       if (!grid) return;
       var mode = (sortSel && sortSel.value) || '';
-      cards.slice().sort(function (a, b) {
+      var sorted = cards.slice().sort(function (a, b) {
         if (mode === 'rating') {
           var ca = voteCounts[a.getAttribute('data-vote-key')] || 0;
           var cb = voteCounts[b.getAttribute('data-vote-key')] || 0;
@@ -386,7 +406,27 @@
         }
         // Fall back to the order the build wrote the cards in.
         return (+a.getAttribute('data-i')) - (+b.getAttribute('data-i'));
-      }).forEach(function (card) { grid.appendChild(card); });
+      });
+
+      var seen = {};
+      sorted.forEach(function (card) {
+        if (mode === 'name' || mode === '') {
+          var letter = card.getAttribute('data-letter');
+          if (!seen[letter]) {
+            seen[letter] = 1;
+            letters.forEach(function (head) {
+              if (head.getAttribute('data-letter') === letter) grid.appendChild(head);
+            });
+          }
+        }
+        grid.appendChild(card);
+      });
+      // Headings with no section left (another sort, or an empty letter) are
+      // parked at the end, where applyLetters hides them.
+      letters.forEach(function (head) {
+        if (!seen[head.getAttribute('data-letter')]) grid.appendChild(head);
+      });
+      applyLetters();
     }
 
     if (searchBox) searchBox.addEventListener('input', applyFilter);
@@ -422,6 +462,7 @@
   });
   setupCardIndex({
     gridId: 'crate-grid', cardSel: '.crate-card', bylineSel: '.crate-byline',
+    letterSel: '.crate-letter',
     searchId: 'crate-search', sortId: 'crate-sort', nomatchId: 'crate-nomatch',
     voteLabel: 'crate-vote'
   });
