@@ -764,8 +764,26 @@
   }
 
   /* ============ CRATES ============ */
-  /* index: a denser grid than articles — crate cards carry no image */
-  .crate-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  /* The index is a card grid, not prose, so it gets more room than the site's
+     reading measure — otherwise three columns squeeze each card into a thin
+     ribbon. The lead paragraph above it stays at reading width. */
+  .page-crate-index { max-width: 1120px; }
+  .page-crate-index .lead { max-width: 76ch; }
+
+  /* index: a denser grid than articles — crate cards carry no image, so three
+     fit across without crowding */
+  .crate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+  /* A-Z section heading: the letter, then a hairline across the rest of the
+     row. Spans every column so the cards under it start a fresh row. */
+  .crate-letter {
+    grid-column: 1 / -1; display: flex; align-items: center; gap: 14px;
+    margin: 12px 0 -2px; font-family: var(--font-mono); font-size: 13px;
+    font-weight: 700; letter-spacing: .08em; color: var(--content-fg-dim);
+  }
+  .crate-letter:first-child { margin-top: 0; }
+  .crate-letter::after { content: ""; flex: 1; height: 1px; background: var(--card-border); }
+  .crate-letter.is-hidden { display: none; }
   .crate-card {
     display: flex; flex-direction: column;
     background: var(--card-bg); border: 1px solid var(--card-border);
@@ -872,6 +890,9 @@
     .search .kbd { display: none; }
     h1.page-title { font-size: 38px; }
     .hero { padding-top: 40px; padding-bottom: 34px; }
+  }
+  @media (max-width: 1180px) {
+    .crate-grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 680px) {
     .article-grid, .crate-grid { grid-template-columns: 1fr; }

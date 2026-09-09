@@ -7,7 +7,7 @@ use std::path::Path;
 use super::{ApiGroup, Crate, UseCase, DEPTH};
 use crate::model::Page;
 use crate::nav::{render_sidebar, TopNav};
-use crate::render::{abs_url, href_from, shell, Head};
+use crate::render::{abs_url, href_from, shell, shell_with_page_class, Head};
 use crate::util::{fmt_date, html_escape, render_inline};
 
 /// The repo's contributor guide, linked from the "document a crate" CTA.
@@ -70,12 +70,19 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
           </label>
         </div>"#;
 
-        let cards: String = crates
-            .iter()
-            .enumerate()
-            .map(|(i, c)| render_card(c, i))
-            .collect::<Vec<_>>()
-            .join("\n        ");
+        // Crates arrive sorted A-Z, so one pass is enough to emit each
+        // letter's divider once, ahead of the first card under it.
+        let mut items: Vec<String> = Vec::with_capacity(crates.len() + 8);
+        let mut letter = '\0';
+        for (i, c) in crates.iter().enumerate() {
+            let l = index_letter(c);
+            if l != letter {
+                letter = l;
+                items.push(render_letter_divider(l));
+            }
+            items.push(render_card(c, i));
+        }
+        let cards: String = items.join("\n        ");
 
         format!(
             "{toolbar}\n        <div class=\"crate-grid\" id=\"crate-grid\">\n        {cards}\n        </div>\n        <p class=\"article-nomatch\" id=\"crate-nomatch\" hidden>No crates match your filter.</p>"
@@ -110,7 +117,25 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
         og_type: "website",
         image: None,
     };
-    shell(&head, DEPTH, &sidebar, &main)
+    // Wider than the site's reading measure: this page is a card grid.
+    shell_with_page_class(&head, DEPTH, &sidebar, &main, "page-crate-index")
+}
+
+/// The letter section a crate belongs to: the first character of its title,
+/// uppercased. A title that doesn't start with an ASCII letter is collected
+/// under `#` rather than opening a section of its own.
+fn index_letter(c: &Crate) -> char {
+    match c.title.chars().next() {
+        Some(ch) if ch.is_ascii_alphabetic() => ch.to_ascii_uppercase(),
+        _ => '#',
+    }
+}
+
+/// A letter heading spanning the full width of the grid, dividing the index
+/// into alphabetical sections. site.js hides these when the reader sorts by
+/// anything other than A-Z, or filters every crate out of a section.
+fn render_letter_divider(letter: char) -> String {
+    format!(r#"<div class="crate-letter" data-letter="{letter}"><span>{letter}</span></div>"#)
 }
 
 /// One card in the index grid. `i` is the authored (A-Z) position, used by
@@ -124,7 +149,7 @@ fn render_card(c: &Crate, i: usize) -> String {
     };
 
     format!(
-        r#"<article class="crate-card" data-i="{i}" data-date="{iso}" data-search="{search}" data-vote-key="{vote_key}">
+        r#"<article class="crate-card" data-i="{i}" data-letter="{letter}" data-date="{iso}" data-search="{search}" data-vote-key="{vote_key}">
           <a class="crate-card-link" href="{href}">
             <div class="crate-card-body">
               <div class="crate-card-head">
@@ -141,6 +166,7 @@ fn render_card(c: &Crate, i: usize) -> String {
             <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span></a>
           </div>
         </article>"#,
+        letter = index_letter(c),
         iso = html_escape(&c.date),
         search = html_escape(&search_text(c)),
         vote_key = html_escape(&c.vote_key()),
@@ -543,6 +569,25 @@ mod tests {
         assert!(render_no_std(&c).contains(CHECK));
         c.no_std = Some("optional".into());
         assert!(render_no_std(&c).contains(CHECK));
+    }
+
+    /// Sections follow the displayed title, so a page titled "Serde JSON"
+    /// files under S even though its slug is `serde_json`.
+    #[test]
+    fn letter_sections_follow_the_title() {
+        let mut c = sample();
+        assert_eq!(index_letter(&c), 'A');
+        c.title = "Serde JSON".into();
+        assert_eq!(index_letter(&c), 'S');
+        c.title = "2fa-rs".into();
+        assert_eq!(index_letter(&c), '#');
+    }
+
+    /// site.js pairs a card with its heading by this attribute, so a card
+    /// without one would go missing from its section on every re-sort.
+    #[test]
+    fn a_card_carries_the_letter_of_its_section() {
+        assert!(render_card(&sample(), 0).contains(r#"data-letter="A""#));
     }
 
     #[test]
