@@ -1,0 +1,1513 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rust - zerocopy crate - Rusty Yellow Pages</title>
+<meta name="description" content="Turns bytes into typed values without copying or unsafe. Derives prove at compile time that a type can be reinterpreted from a byte slice, so parsing a packet header is a cast rather than a field-by-field read.">
+<link rel="canonical" href="https://rustyyellowpages.dev/crates/zerocopy.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Rusty Yellow Pages">
+<meta property="og:title" content="Rust - zerocopy crate - Rusty Yellow Pages">
+<meta property="og:description" content="Turns bytes into typed values without copying or unsafe. Derives prove at compile time that a type can be reinterpreted from a byte slice, so parsing a packet header is a cast rather than a field-by-field read.">
+<meta property="og:url" content="https://rustyyellowpages.dev/crates/zerocopy.html">
+<meta property="og:image" content="https://rustyyellowpages.dev/assets/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rust - zerocopy crate - Rusty Yellow Pages">
+<meta name="twitter:description" content="Turns bytes into typed values without copying or unsafe. Derives prove at compile time that a type can be reinterpreted from a byte slice, so parsing a packet header is a cast rather than a field-by-field read.">
+<meta name="twitter:image" content="https://rustyyellowpages.dev/assets/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Rusty Yellow Pages — a free, open-source Rust reference">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+
+  <a class="wordmark" href="../">
+    <div class="mark">R</div>
+    <div class="name">RUSTY <span class="lo">YELLOW PAGES</span></div>
+  </a>
+
+  <div class="search" id="search">
+    <div class="search-field">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
+      <input id="search-input" type="text" placeholder="Search tokens &amp; concepts&hellip;  &nbsp;try &quot;borrow&quot;, &quot;&amp;&quot;, &quot;lifetime&quot;" autocomplete="off" spellcheck="false">
+      <span class="kbd">/</span>
+    </div>
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">
+    <span class="ic-moon" style="display:inline-flex"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+    <span class="ic-sun"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+    <span class="lbl" id="theme-label">Dark</span>
+  </button>
+</header>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="nav-toplinks">
+      <a class="nav-toplink" href="../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
+      <a class="nav-toplink" href="../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
+      <a class="nav-toplink active" href="../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+      <a class="nav-toplink" href="../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
+    </div>
+
+    <div class="nav-section-label">Syntax</div>
+
+    <div class="nav-group" data-group="keywords">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Keywords</span><span class="g-count">55</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Basics</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/const.html"><span class="tok">const</span></a>
+        <a class="nav-link" href="../syntax/keywords/false.html"><span class="tok">false</span></a>
+        <a class="nav-link" href="../syntax/keywords/fn.html"><span class="tok">fn</span></a>
+        <a class="nav-link" href="../syntax/keywords/let.html"><span class="tok">let</span></a>
+        <a class="nav-link" href="../syntax/keywords/mut.html"><span class="tok">mut</span></a>
+        <a class="nav-link" href="../syntax/keywords/true.html"><span class="tok">true</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Control Flow</span><span class="g-count">11</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/break.html"><span class="tok">break</span></a>
+        <a class="nav-link" href="../syntax/keywords/continue.html"><span class="tok">continue</span></a>
+        <a class="nav-link" href="../syntax/keywords/else.html"><span class="tok">else</span></a>
+        <a class="nav-link" href="../syntax/keywords/for.html"><span class="tok">for</span></a>
+        <a class="nav-link" href="../syntax/keywords/if.html"><span class="tok">if</span></a>
+        <a class="nav-link" href="../syntax/keywords/if-let.html"><span class="tok">if let</span></a>
+        <a class="nav-link" href="../syntax/keywords/in.html"><span class="tok">in</span></a>
+        <a class="nav-link" href="../syntax/keywords/loop.html"><span class="tok">loop</span></a>
+        <a class="nav-link" href="../syntax/keywords/match.html"><span class="tok">match</span></a>
+        <a class="nav-link" href="../syntax/keywords/return.html"><span class="tok">return</span></a>
+        <a class="nav-link" href="../syntax/keywords/while.html"><span class="tok">while</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Ownership &amp; Borrowing</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/move.html"><span class="tok">move</span></a>
+        <a class="nav-link" href="../syntax/keywords/ref.html"><span class="tok">ref</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Data Structures</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/as.html"><span class="tok">as</span></a>
+        <a class="nav-link" href="../syntax/keywords/enum.html"><span class="tok">enum</span></a>
+        <a class="nav-link" href="../syntax/keywords/struct.html"><span class="tok">struct</span></a>
+        <a class="nav-link" href="../syntax/keywords/type.html"><span class="tok">type</span></a>
+        <a class="nav-link" href="../syntax/keywords/union.html"><span class="tok">union</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Traits &amp; Polymorphism</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/self-type.html"><span class="tok">Self</span></a>
+        <a class="nav-link" href="../syntax/keywords/dyn.html"><span class="tok">dyn</span></a>
+        <a class="nav-link" href="../syntax/keywords/impl.html"><span class="tok">impl</span></a>
+        <a class="nav-link" href="../syntax/keywords/self.html"><span class="tok">self</span></a>
+        <a class="nav-link" href="../syntax/keywords/trait.html"><span class="tok">trait</span></a>
+        <a class="nav-link" href="../syntax/keywords/where.html"><span class="tok">where</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/crate.html"><span class="tok">crate</span></a>
+        <a class="nav-link" href="../syntax/keywords/extern-crate.html"><span class="tok">extern crate</span></a>
+        <a class="nav-link" href="../syntax/keywords/mod.html"><span class="tok">mod</span></a>
+        <a class="nav-link" href="../syntax/keywords/pub.html"><span class="tok">pub</span></a>
+        <a class="nav-link" href="../syntax/keywords/super.html"><span class="tok">super</span></a>
+        <a class="nav-link" href="../syntax/keywords/use.html"><span class="tok">use</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Concurrency &amp; Async</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/async.html"><span class="tok">async</span></a>
+        <a class="nav-link" href="../syntax/keywords/await.html"><span class="tok">await</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Memory &amp; Unsafe</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/extern.html"><span class="tok">extern</span></a>
+        <a class="nav-link" href="../syntax/keywords/static.html"><span class="tok">static</span></a>
+        <a class="nav-link" href="../syntax/keywords/unsafe.html"><span class="tok">unsafe</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macros</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/macro-rules.html"><span class="tok">macro_rules!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Reserved Keywords</span><span class="g-count">13</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/abstract.html"><span class="tok">abstract</span></a>
+        <a class="nav-link" href="../syntax/keywords/become.html"><span class="tok">become</span></a>
+        <a class="nav-link" href="../syntax/keywords/box.html"><span class="tok">box</span></a>
+        <a class="nav-link" href="../syntax/keywords/do.html"><span class="tok">do</span></a>
+        <a class="nav-link" href="../syntax/keywords/final.html"><span class="tok">final</span></a>
+        <a class="nav-link" href="../syntax/keywords/gen.html"><span class="tok">gen</span></a>
+        <a class="nav-link" href="../syntax/keywords/override.html"><span class="tok">override</span></a>
+        <a class="nav-link" href="../syntax/keywords/priv.html"><span class="tok">priv</span></a>
+        <a class="nav-link" href="../syntax/keywords/try.html"><span class="tok">try</span></a>
+        <a class="nav-link" href="../syntax/keywords/typeof.html"><span class="tok">typeof</span></a>
+        <a class="nav-link" href="../syntax/keywords/unsized.html"><span class="tok">unsized</span></a>
+        <a class="nav-link" href="../syntax/keywords/virtual.html"><span class="tok">virtual</span></a>
+        <a class="nav-link" href="../syntax/keywords/yield.html"><span class="tok">yield</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="operators">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Operators & Sigils</span><span class="g-count">34</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Arithmetic</span><span class="g-count">10</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/percent.html"><span class="tok">%</span></a>
+        <a class="nav-link" href="../syntax/operators/percent-equals.html"><span class="tok">%=</span></a>
+        <a class="nav-link" href="../syntax/operators/asterisk.html"><span class="tok">*</span></a>
+        <a class="nav-link" href="../syntax/operators/asterisk-equals.html"><span class="tok">*=</span></a>
+        <a class="nav-link" href="../syntax/operators/plus.html"><span class="tok">+</span></a>
+        <a class="nav-link" href="../syntax/operators/plus-equals.html"><span class="tok">+=</span></a>
+        <a class="nav-link" href="../syntax/operators/minus.html"><span class="tok">-</span></a>
+        <a class="nav-link" href="../syntax/operators/minus-equals.html"><span class="tok">-=</span></a>
+        <a class="nav-link" href="../syntax/operators/slash.html"><span class="tok">/</span></a>
+        <a class="nav-link" href="../syntax/operators/slash-equals.html"><span class="tok">/=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Comparison</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/not-equal.html"><span class="tok">!=</span></a>
+        <a class="nav-link" href="../syntax/operators/less-than.html"><span class="tok">&lt;</span></a>
+        <a class="nav-link" href="../syntax/operators/less-than-or-equal.html"><span class="tok">&lt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/equal-equal.html"><span class="tok">==</span></a>
+        <a class="nav-link" href="../syntax/operators/greater-than.html"><span class="tok">&gt;</span></a>
+        <a class="nav-link" href="../syntax/operators/greater-than-or-equal.html"><span class="tok">&gt;=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Logical</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/exclamation-mark.html"><span class="tok">!</span></a>
+        <a class="nav-link" href="../syntax/operators/ampersand-ampersand.html"><span class="tok">&amp;&amp;</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe-pipe.html"><span class="tok">||</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Bitwise</span><span class="g-count">10</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/ampersand.html"><span class="tok">&amp;</span></a>
+        <a class="nav-link" href="../syntax/operators/ampersand-equals.html"><span class="tok">&amp;=</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-left.html"><span class="tok">&lt;&lt;</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-left-equals.html"><span class="tok">&lt;&lt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-right.html"><span class="tok">&gt;&gt;</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-right-equals.html"><span class="tok">&gt;&gt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/caret.html"><span class="tok">^</span></a>
+        <a class="nav-link" href="../syntax/operators/caret-equals.html"><span class="tok">^=</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe.html"><span class="tok">|</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe-equals.html"><span class="tok">|=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Assignment</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/equals.html"><span class="tok">=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Ownership &amp; Borrowing</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/raw-borrow.html"><span class="tok">&amp;raw const / &amp;raw mut</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Data Structures</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/associated-type-binding.html"><span class="tok">Type&lt;Ident = Type&gt;</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/path-separator.html"><span class="tok">::</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Error Handling</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/question-mark.html"><span class="tok">?</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="lifetimes">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Lifetimes</span><span class="g-count">3</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/lifetimes/named-lifetime.html"><span class="tok">'a (named lifetime)</span></a>
+        <a class="nav-link" href="../syntax/lifetimes/static-lifetime.html"><span class="tok">'static</span></a>
+        <a class="nav-link" href="../syntax/lifetimes/hrtb.html"><span class="tok">for&lt;'a&gt; Type</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="literals">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Literals</span><span class="g-count">17</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/literals/integer-binary.html"><span class="tok">Binary integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/byte-literal.html"><span class="tok">Byte literal</span></a>
+        <a class="nav-link" href="../syntax/literals/byte-string-literal.html"><span class="tok">Byte string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/c-string-literal.html"><span class="tok">C string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/char-literal.html"><span class="tok">Character literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-decimal.html"><span class="tok">Decimal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/digit-separator.html"><span class="tok">Digit separator (_)</span></a>
+        <a class="nav-link" href="../syntax/literals/escape-sequences.html"><span class="tok">Escape sequences</span></a>
+        <a class="nav-link" href="../syntax/literals/float-suffixes.html"><span class="tok">Float suffixes</span></a>
+        <a class="nav-link" href="../syntax/literals/float-literal.html"><span class="tok">Floating-point literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-hexadecimal.html"><span class="tok">Hexadecimal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-suffixes.html"><span class="tok">Integer suffixes</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-octal.html"><span class="tok">Octal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-c-string-literal.html"><span class="tok">Raw C string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-byte-string-literal.html"><span class="tok">Raw byte string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-string-literal.html"><span class="tok">Raw string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/string-literal.html"><span class="tok">String literal</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="punctuation">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Punctuation</span><span class="g-count">13</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/punctuation/parentheses.html"><span class="tok">( )</span></a>
+        <a class="nav-link" href="../syntax/punctuation/comma.html"><span class="tok">,</span></a>
+        <a class="nav-link" href="../syntax/punctuation/arrow.html"><span class="tok">-&gt;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/dot.html"><span class="tok">.</span></a>
+        <a class="nav-link" href="../syntax/punctuation/range.html"><span class="tok">.. / ..= / ...</span></a>
+        <a class="nav-link" href="../syntax/punctuation/colon.html"><span class="tok">:</span></a>
+        <a class="nav-link" href="../syntax/punctuation/semicolon.html"><span class="tok">;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/fat-arrow.html"><span class="tok">=&gt;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/at-sign.html"><span class="tok">@</span></a>
+        <a class="nav-link" href="../syntax/punctuation/reserved-syntax-and-edition-gotchas.html"><span class="tok">Reserved syntax &amp; edition gotchas</span></a>
+        <a class="nav-link" href="../syntax/punctuation/square-brackets.html"><span class="tok">[ ]</span></a>
+        <a class="nav-link" href="../syntax/punctuation/underscore.html"><span class="tok">_</span></a>
+        <a class="nav-link" href="../syntax/punctuation/curly-braces.html"><span class="tok">{ }</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="comments">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Comments</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/comments/block-comment.html"><span class="tok">/* */ (block comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/inner-block-doc-comment.html"><span class="tok">/*! */ (inner block doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/outer-block-doc-comment.html"><span class="tok">/** */ (outer block doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/line-comment.html"><span class="tok">// (line comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/inner-line-doc-comment.html"><span class="tok">//! (inner line doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/outer-line-doc-comment.html"><span class="tok">/// (outer line doc comment)</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="attributes">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Attributes</span><span class="g-count">36</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Core Syntax</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/attribute-syntax.html"><span class="tok">#[meta] / #![meta]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Conditional Compilation</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/cfg-attribute.html"><span class="tok">#[cfg(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/cfg-attr-attribute.html"><span class="tok">#[cfg_attr(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Testing</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/ignore-attribute.html"><span class="tok">#[ignore]</span></a>
+        <a class="nav-link" href="../syntax/attributes/should-panic-attribute.html"><span class="tok">#[should_panic]</span></a>
+        <a class="nav-link" href="../syntax/attributes/test-attribute.html"><span class="tok">#[test]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Lints &amp; Diagnostics</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/allow-and-friends.html"><span class="tok">#[allow(...)] / #[warn(...)] / #[deny(...)] / #[forbid(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/deprecated-attribute.html"><span class="tok">#[deprecated]</span></a>
+        <a class="nav-link" href="../syntax/attributes/diagnostic-attributes.html"><span class="tok">#[diagnostic::on_unimplemented] / #[diagnostic::do_not_recommend]</span></a>
+        <a class="nav-link" href="../syntax/attributes/expect-attribute.html"><span class="tok">#[expect(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/must-use-attribute.html"><span class="tok">#[must_use]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Documentation</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/doc-attribute.html"><span class="tok">#[doc = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Traits &amp; Derives</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/automatically-derived.html"><span class="tok">#[automatically_derived]</span></a>
+        <a class="nav-link" href="../syntax/attributes/derive.html"><span class="tok">#[derive(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macros</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/macro-export-and-use.html"><span class="tok">#[macro_export] / #[macro_use]</span></a>
+        <a class="nav-link" href="../syntax/attributes/proc-macro-attributes.html"><span class="tok">#[proc_macro] / #[proc_macro_derive(...)] / #[proc_macro_attribute]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Layout</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/non-exhaustive.html"><span class="tok">#[non_exhaustive]</span></a>
+        <a class="nav-link" href="../syntax/attributes/repr.html"><span class="tok">#[repr(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/path-attribute.html"><span class="tok">#[path = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">FFI &amp; Linkage</span><span class="g-count">8</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/crate-type-and-name-attributes.html"><span class="tok">#[crate_type = &quot;...&quot;] / #[crate_name = &quot;...&quot;]</span></a>
+        <a class="nav-link" href="../syntax/attributes/naked-attribute.html"><span class="tok">#[naked]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-builtins-attribute.html"><span class="tok">#[no_builtins]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-main-attribute.html"><span class="tok">#[no_main]</span></a>
+        <a class="nav-link" href="../syntax/attributes/linkage-attributes.html"><span class="tok">#[no_mangle] / #[link(...)] / #[link_name] / #[link_ordinal] / #[link_section] / #[no_link] / #[export_name]</span></a>
+        <a class="nav-link" href="../syntax/attributes/target-feature-attributes.html"><span class="tok">#[target_feature(...)] / #[instruction_set(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/used-attribute.html"><span class="tok">#[used]</span></a>
+        <a class="nav-link" href="../syntax/attributes/windows-subsystem-attribute.html"><span class="tok">#[windows_subsystem = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">No-std &amp; Embedded Runtime</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/no-std-attribute.html"><span class="tok">#![no_std]</span></a>
+        <a class="nav-link" href="../syntax/attributes/global-allocator-attribute.html"><span class="tok">#[global_allocator]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-implicit-prelude-attribute.html"><span class="tok">#[no_implicit_prelude]</span></a>
+        <a class="nav-link" href="../syntax/attributes/panic-handler-attribute.html"><span class="tok">#[panic_handler]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Compiler Hints &amp; Limits</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/feature-attribute.html"><span class="tok">#![feature(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/cold-attribute.html"><span class="tok">#[cold]</span></a>
+        <a class="nav-link" href="../syntax/attributes/debugger-attributes.html"><span class="tok">#[debugger_visualizer(...)] / #[collapse_debuginfo]</span></a>
+        <a class="nav-link" href="../syntax/attributes/recursion-and-type-length-limit.html"><span class="tok">#[recursion_limit = &quot;N&quot;] / #[type_length_limit = &quot;N&quot;]</span></a>
+        <a class="nav-link" href="../syntax/attributes/track-caller-attribute.html"><span class="tok">#[track_caller]</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="macros">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Macros</span><span class="g-count">16</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macro Definition Syntax</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/repetition.html"><span class="tok">$(...)…</span></a>
+        <a class="nav-link" href="../syntax/macros/metavariable.html"><span class="tok">$ident</span></a>
+        <a class="nav-link" href="../syntax/macros/fragment-specifier.html"><span class="tok">$ident:kind</span></a>
+        <a class="nav-link" href="../syntax/macros/invocation-forms.html"><span class="tok">ident!(...) / ident!{...} / ident![...]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Output &amp; Formatting</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/format-macro.html"><span class="tok">format!</span></a>
+        <a class="nav-link" href="../syntax/macros/println-and-print.html"><span class="tok">println! / print! / eprintln! / eprint!</span></a>
+        <a class="nav-link" href="../syntax/macros/write-macros.html"><span class="tok">write! / writeln!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Collections</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/vec-macro.html"><span class="tok">vec!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Errors &amp; Assertions</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/assert-macros.html"><span class="tok">assert! / assert_eq! / assert_ne!</span></a>
+        <a class="nav-link" href="../syntax/macros/matches-macro.html"><span class="tok">matches!</span></a>
+        <a class="nav-link" href="../syntax/macros/panic-macro.html"><span class="tok">panic!</span></a>
+        <a class="nav-link" href="../syntax/macros/todo-and-friends.html"><span class="tok">todo! / unimplemented! / unreachable!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Compile-time Introspection</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/cfg-macro.html"><span class="tok">cfg!</span></a>
+        <a class="nav-link" href="../syntax/macros/introspection-macros.html"><span class="tok">concat! / stringify! / line! / column! / file! / module_path!</span></a>
+        <a class="nav-link" href="../syntax/macros/env-macros.html"><span class="tok">env! / option_env!</span></a>
+        <a class="nav-link" href="../syntax/macros/include-macros.html"><span class="tok">include! / include_str! / include_bytes!</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-section-label">Concepts</div>
+
+    <div class="nav-group" data-group="ownership-borrowing">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Ownership & Borrowing</span><span class="g-count">16</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/ownership-borrowing/borrowing-shared-references.html">Borrowing (shared references)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/copy-vs-clone.html">Copy vs Clone</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/deref-coercion.html">Deref &amp; DerefMut coercion</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/immutability-by-default.html">Immutability by default</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/interior-mutability.html">Interior mutability (Cell &amp; RefCell)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/lifetime-elision.html">Lifetime elision</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/lifetimes.html">Lifetimes</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/move-semantics.html">Move semantics</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/mutable-borrowing.html">Mutable borrowing</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/ownership.html">Ownership</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/raii-and-drop.html">RAII &amp; the Drop trait</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/shared-ownership-rc-arc.html">Shared ownership (Rc &amp; Arc)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/smart-pointers-box.html">Smart pointers (Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/stack-vs-heap.html">Stack vs heap allocation</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/borrow-checker.html">The borrow checker</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/weak-references.html">Weak references (Weak&lt;T&gt;)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="types-data-modeling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Types & Data Modeling</span><span class="g-count">15</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/types-data-modeling/arrays-vs-vec.html">Arrays vs Vec</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/associated-types.html">Associated types</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/const-generics.html">Const generics</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/enums-algebraic-data-types.html">Enums (algebraic data types)</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/generics.html">Generics</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/numeric-types-overflow-behavior.html">Numeric types &amp; overflow behavior</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/recursive-types-via-box.html">Recursive types (via Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/slices.html">Slices</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/structs.html">Structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/the-newtype-pattern.html">The newtype pattern</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/tuple-structs.html">Tuple structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/type-aliases.html">Type aliases</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/type-inference.html">Type inference</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/unit-structs.html">Unit structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/zero-sized-types-phantomdata.html">Zero-sized types &amp; PhantomData</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="traits-polymorphism">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Traits & Polymorphism</span><span class="g-count">13</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/traits-polymorphism/blanket-implementations.html">Blanket implementations</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/default-trait-methods.html">Default trait methods</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/dependency-injection-via-traits.html">Dependency injection via traits/generics</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/derivable-traits.html">Derivable traits (Debug, Clone, PartialEq, …)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/marker-traits.html">Marker traits (Send, Sync, Sized, Copy)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/operator-overloading.html">Operator overloading (std::ops traits)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/static-dispatch-monomorphization.html">Static dispatch &amp; monomorphization</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/supertraits.html">Supertraits</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/the-orphan-rule-and-coherence.html">The orphan rule &amp; coherence</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/trait-bounds.html">Trait bounds</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.html">Trait objects &amp; dynamic dispatch (dyn Trait)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/traits.html">Traits</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/type-erasure-dyn-any.html">Type erasure (dyn Any &amp; downcasting)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="functions-closures">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Functions & Closures</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/functions-closures/closures-and-capturing.html">Closures &amp; capturing</a>
+        <a class="nav-link" href="../concepts/functions-closures/expression-oriented-language.html">Expression-oriented language</a>
+        <a class="nav-link" href="../concepts/functions-closures/fn-fnmut-fnonce.html">Fn / FnMut / FnOnce</a>
+        <a class="nav-link" href="../concepts/functions-closures/function-pointers.html">Function pointers (fn types)</a>
+        <a class="nav-link" href="../concepts/functions-closures/functions.html">Functions</a>
+        <a class="nav-link" href="../concepts/functions-closures/higher-order-functions.html">Higher-order functions</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="iterators">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Iterators</span><span class="g-count">7</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/iterators/custom-iterators.html">Custom iterators</a>
+        <a class="nav-link" href="../concepts/iterators/fromiterator-and-collect-targets.html">FromIterator &amp; collect targets</a>
+        <a class="nav-link" href="../concepts/iterators/intoiterator.html">IntoIterator (iter/iter_mut/into_iter)</a>
+        <a class="nav-link" href="../concepts/iterators/iterator-adaptors.html">Iterator adaptors</a>
+        <a class="nav-link" href="../concepts/iterators/iterator-consumers.html">Iterator consumers</a>
+        <a class="nav-link" href="../concepts/iterators/lazy-evaluation.html">Lazy evaluation</a>
+        <a class="nav-link" href="../concepts/iterators/the-iterator-trait.html">The Iterator trait</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="error-handling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Error Handling</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/error-handling/custom-error-types.html">Custom error types</a>
+        <a class="nav-link" href="../concepts/error-handling/option.html">Option&lt;T&gt;</a>
+        <a class="nav-link" href="../concepts/error-handling/panic-and-unwinding.html">Panic &amp; unwinding</a>
+        <a class="nav-link" href="../concepts/error-handling/result.html">Result&lt;T, E&gt;</a>
+        <a class="nav-link" href="../concepts/error-handling/the-question-mark-operator.html">The ? operator (concept angle)</a>
+        <a class="nav-link" href="../concepts/error-handling/the-error-trait.html">The Error trait</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="pattern-matching">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Pattern Matching</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/pattern-matching/destructuring.html">Destructuring</a>
+        <a class="nav-link" href="../concepts/pattern-matching/exhaustiveness-checking.html">Exhaustiveness checking</a>
+        <a class="nav-link" href="../concepts/pattern-matching/match-guards.html">Match guards</a>
+        <a class="nav-link" href="../concepts/pattern-matching/if-let-and-while-let.html">if let / while let</a>
+        <a class="nav-link" href="../concepts/pattern-matching/match-expressions.html">match expressions</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="modules-crates-visibility">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Modules, Crates & Visibility</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/cargo-and-cargo-toml.html">Cargo &amp; Cargo.toml</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/crates.html">Crates</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/dependency-management-and-semver.html">Dependency management &amp; semver</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/modules.html">Modules</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/visibility-and-privacy.html">Visibility &amp; privacy (pub and friends)</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/workspaces.html">Workspaces</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="concurrency-async">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Concurrency & Async</span><span class="g-count">7</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/concurrency-async/async-runtimes.html">Async runtimes</a>
+        <a class="nav-link" href="../concepts/concurrency-async/async-await.html">Async/await</a>
+        <a class="nav-link" href="../concepts/concurrency-async/futures.html">Futures</a>
+        <a class="nav-link" href="../concepts/concurrency-async/message-passing-channels.html">Message passing (channels / mpsc)</a>
+        <a class="nav-link" href="../concepts/concurrency-async/send-and-sync.html">Send &amp; Sync</a>
+        <a class="nav-link" href="../concepts/concurrency-async/shared-state-concurrency.html">Shared-state concurrency (Mutex, RwLock)</a>
+        <a class="nav-link" href="../concepts/concurrency-async/threads.html">Threads (std::thread)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="memory-unsafe">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Memory & Unsafe</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/memory-unsafe/ffi.html">FFI (foreign function interface)</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/memory-layout-and-repr.html">Memory layout &amp; repr</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/raw-pointers.html">Raw pointers (*const T / *mut T)</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/the-undefined-behavior-boundary.html">The undefined-behavior boundary</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/unsafe-rust.html">Unsafe Rust</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="macros-metaprogramming">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Macros & Metaprogramming</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/attribute-like-macros.html">Attribute-like macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/declarative-macros.html">Declarative macros (macro_rules!)</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/derive-macros.html">Derive macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/function-like-macros.html">Function-like macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/procedural-macros.html">Procedural macros</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="collections-strings">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Collections & Strings</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/collections-strings/btreemap-and-btreeset.html">BTreeMap &amp; BTreeSet</a>
+        <a class="nav-link" href="../concepts/collections-strings/hashmap-and-hashset.html">HashMap &amp; HashSet</a>
+        <a class="nav-link" href="../concepts/collections-strings/string-formatting.html">String formatting (Display, Debug, format!)</a>
+        <a class="nav-link" href="../concepts/collections-strings/string-vs-str.html">String vs &amp;str</a>
+        <a class="nav-link" href="../concepts/collections-strings/vec.html">Vec&lt;T&gt;</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="testing-tooling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Testing & Tooling</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/testing-tooling/benchmarking.html">Benchmarking</a>
+        <a class="nav-link" href="../concepts/testing-tooling/clippy-and-rustfmt.html">Clippy &amp; rustfmt</a>
+        <a class="nav-link" href="../concepts/testing-tooling/doc-tests.html">Doc tests</a>
+        <a class="nav-link" href="../concepts/testing-tooling/integration-tests.html">Integration tests</a>
+        <a class="nav-link" href="../concepts/testing-tooling/serialization-serde.html">Serialization (the serde ecosystem)</a>
+        <a class="nav-link" href="../concepts/testing-tooling/unit-tests.html">Unit tests</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="design-patterns-idioms">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Design Patterns & Idioms</span><span class="g-count">19</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Design Patterns</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-builder-pattern.html">The builder pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-command-pattern.html">The command pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-strategy-pattern.html">The strategy pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-typestate-pattern.html">The typestate pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-visitor-pattern.html">The visitor pattern</a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Idioms</span><span class="g-count">11</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/compose-structs.html">Compose structs</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/composition-over-inheritance.html">Composition over inheritance</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/constructor-functions-new.html">Constructor functions (new() convention)</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/contain-unsafety-in-small-modules.html">Contain unsafety in small modules</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.html">On-stack dynamic dispatch</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/prefer-small-crates.html">Prefer small crates</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/privacy-for-extensibility.html">Privacy for extensibility</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/return-consumed-argument-on-error.html">Return consumed argument on error</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/temporary-mutability.html">Temporary mutability</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-default-trait-as-idiom.html">The Default trait as idiom</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/mem-take-and-mem-replace.html">mem::take / mem::replace</a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Anti-patterns</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-deny-warnings.html">Anti-pattern: #[deny(warnings)]</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-deref-polymorphism.html">Anti-pattern: Deref polymorphism (faking inheritance)</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-clone-to-satisfy-borrow-checker.html">Anti-pattern: cloning to satisfy the borrow checker</a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="philosophy-principles">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Rust Philosophy & Design Principles</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/philosophy-principles/make-invalid-states-unrepresentable.html">&quot;Make invalid states unrepresentable&quot;</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/fearless-concurrency.html">Fearless concurrency</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/memory-safety-without-a-garbage-collector.html">Memory safety without a garbage collector</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/the-edition-system.html">The edition system</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/zero-cost-abstractions.html">Zero-cost abstractions</a>
+      </div></div>
+    </div>
+
+  </aside>
+
+  <main class="content">
+    <article class="page">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a><span class="sep">&rsaquo;</span>
+        <a href="./">Crates</a><span class="sep">&rsaquo;</span>
+        <span style="color:var(--content-fg);font-weight:600">zerocopy</span>
+      </nav>
+
+      <div class="page-head">
+        <div class="title-block">
+          <h1 class="page-title">zerocopy<span class="kind">Crate</span></h1>
+        </div>
+        <a class="convo-cta" href="https://crates.io/crates/zerocopy" target="_blank" rel="noopener">Open on crates.io &rarr;</a>
+      </div>
+
+      <div class="crate-meta">
+        
+        <span class="crate-version">v0.8.57</span>
+        <span>published by Jack Wrenn (jswrenn), Josh Liebow-Feeser (joshlf)</span>
+        <span class="support-badge level-full">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          no_std: yes
+        </span>
+      </div>
+
+      <div class="crate-byline" data-vote-key="crate::zerocopy">
+        <span>page written by <a class="article-author" href="https://github.com/NGDeveloper125" target="_blank" rel="noopener">NGDeveloper125</a> &middot; Sep 12, 2026</span>
+        <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span> &mdash; like this page on GitHub</a>
+      </div>
+
+      <div class="crate-links"><a class="crate-link" href="https://crates.io/crates/zerocopy" target="_blank" rel="noopener">crates.io</a><a class="crate-link" href="https://docs.rs/zerocopy" target="_blank" rel="noopener">docs.rs</a><a class="crate-link" href="https://github.com/google/zerocopy" target="_blank" rel="noopener">Repository</a></div>
+
+      <p class="lead">Turns bytes into typed values without copying or <code class="tok-inline">unsafe</code>. Derives prove at compile time that a type can be reinterpreted from a byte slice, so parsing a packet header is a cast rather than a field-by-field read.</p>
+
+      <div class="article-tags"><span class="article-tag">parsing</span><span class="article-tag">binary</span><span class="article-tag">no-std</span></div>
+
+      <hr class="divider">
+
+      <nav class="section-tabs" id="section-tabs">
+        <button class="tab on" data-target="overview">Overview</button>
+        <button class="tab" data-target="use-cases">When to use it</button>
+        <button class="tab" data-target="api">API map</button>
+      </nav>
+
+      <section class="doc" data-tab="overview">
+        <h2 class="section-title">Overview</h2>
+        <p>Reading a binary format usually means copying: take four bytes, build a <code>u32</code>,
+assign it to a field, repeat. For a packet header on a hot path that copying is
+the work, and the obvious alternative — casting the byte slice to a <code>&amp;Header</code> —
+is <code>unsafe</code> and easy to get wrong. Padding bytes, invalid bit patterns and
+alignment each have their own way of turning it into undefined behaviour.</p>
+<p><code>zerocopy</code> makes the cast safe. You derive traits that state what your type
+allows, the compiler checks the claims, and the conversions become ordinary safe
+calls:</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, IntoBytes, KnownLayout, Immutable, Unaligned)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Header</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">version</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">flags</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">length</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">packet</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">0b0000_0011</span><span class="tok-punct">,</span> <span class="tok-number">0x01</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">,</span> <span class="tok-number">0xaa</span><span class="tok-punct">,</span> <span class="tok-number">0xbb</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// A view into the original bytes: no copy, no unsafe.</span>
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">,</span> <span class="tok-variable">body</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-type">Header</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_prefix</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">packet</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">.</span><span class="tok-field">version</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_le_bytes</span><span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">.</span><span class="tok-field">length</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">body</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0xaa</span><span class="tok-punct">,</span> <span class="tok-number">0xbb</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+<p><strong>The traits are the design, and each one names a distinct hazard:</strong></p>
+<ul>
+<li><strong><code>FromBytes</code></strong> — every bit pattern of this size is a valid value. True for
+integers and arrays of them; false for <code>bool</code>, <code>char</code> and most enums, where
+some patterns are invalid.</li>
+<li><strong><code>IntoBytes</code></strong> — the type has no padding, so exposing it as bytes cannot leak
+uninitialised memory.</li>
+<li><strong><code>Immutable</code></strong> — contains no interior mutability, so a shared reference
+really is read-only.</li>
+<li><strong><code>KnownLayout</code></strong> — the layout is knowable, which is what allows slices and
+trailing dynamically-sized fields.</li>
+<li><strong><code>Unaligned</code></strong> — alignment is 1, so the cast works at any offset.</li>
+</ul>
+<p>A derive that cannot prove its claim is a compile error, which is the point: the
+<code>unsafe</code> reasoning happens once, in the crate, rather than at every call site.</p>
+<p><strong>Alignment is the thing that trips people.</strong> <code>ref_from_bytes</code> borrows the
+original bytes, so the type's alignment must be satisfied by the slice's
+address — and a buffer read off a socket is aligned to nothing in particular. Two
+ways out: make the type <code>Unaligned</code> (store multi-byte fields as byte arrays or
+as <code>zerocopy::byteorder</code> types), or use <code>read_from_bytes</code>, which copies and
+therefore doesn't care. The first is genuinely zero-copy; the second is still
+better than hand-rolled parsing.</p>
+<p><code>bytemuck</code> is the neighbour worth knowing: a similar idea with a smaller,
+simpler surface aimed at plain-old-data casts, especially for graphics buffers.
+<code>zerocopy</code> goes further — unaligned access, dynamically-sized types, fallible
+<code>TryFromBytes</code> for types with invalid patterns — at the cost of more traits to
+learn. It is <code>no_std</code>, has no required dependencies, requires Rust 1.56, and is
+maintained at Google with the <code>unsafe</code> core independently reviewed.</p>
+
+      </section>
+
+      <section class="doc" data-tab="use-cases">
+        <h2 class="section-title">When to use it</h2>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Parsing a network packet header</h3>
+            <p>The archetypal case. Bytes arrive from a socket; the header is a fixed layout,
+and a real parser would copy every field.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-module">byteorder</span><span class="tok-punct">::</span><span class="tok-module">network_endian</span><span class="tok-punct">::</span><span class="tok-constant">U16</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, IntoBytes, KnownLayout, Immutable, Unaligned, Debug)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">UdpHeader</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">src_port</span><span class="tok-punct">:</span> <span class="tok-constant">U16</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- big-endian on the wire, whatever this machine is</span>
+    <span class="tok-variable">dst_port</span><span class="tok-punct">:</span> <span class="tok-constant">U16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">length</span><span class="tok-punct">:</span> <span class="tok-constant">U16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">checksum</span><span class="tok-punct">:</span> <span class="tok-constant">U16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">datagram</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0x00</span><span class="tok-punct">,</span> <span class="tok-number">0x35</span><span class="tok-punct">,</span> <span class="tok-number">0x04</span><span class="tok-punct">,</span> <span class="tok-number">0x01</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">,</span> <span class="tok-number">0x0c</span><span class="tok-punct">,</span> <span class="tok-number">0xab</span><span class="tok-punct">,</span> <span class="tok-number">0xcd</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'h'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'i'</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">,</span> <span class="tok-variable">payload</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-type">UdpHeader</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_prefix</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">datagram</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">.</span><span class="tok-field">src_port</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">53</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">header</span><span class="tok-punct">.</span><span class="tok-field">dst_port</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1025</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">payload</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">&quot;hi&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> the header is a view into the datagram, so parsing is a bounds
+check and a pointer offset. The <code>U16</code> type carries its endianness, so <code>.get()</code>
+does the byte swap and the struct stays <code>Unaligned</code> — which is what lets it
+apply to a buffer at any address.</p>
+</div>
+          </div>
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Writing a struct out as bytes</h3>
+            <p>The same machinery in reverse, for producing a wire format or a file header.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-module">byteorder</span><span class="tok-punct">::</span><span class="tok-module">little_endian</span><span class="tok-punct">::</span><span class="tok-constant">U32</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, IntoBytes, KnownLayout, Immutable, Unaligned)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">FileHeader</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">magic</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">version</span><span class="tok-punct">:</span> <span class="tok-constant">U32</span><span class="tok-punct">,</span>
+    <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-constant">U32</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">header</span> <span class="tok-punct">=</span> <span class="tok-type">FileHeader</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">magic</span><span class="tok-punct">:</span> <span class="tok-punct">*</span><span class="tok-variable">b</span><span class="tok-string">&quot;WIKI&quot;</span><span class="tok-punct">,</span>
+    <span class="tok-variable">version</span><span class="tok-punct">:</span> <span class="tok-constant">U32</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">entries</span><span class="tok-punct">:</span> <span class="tok-constant">U32</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">17</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-variable">header</span><span class="tok-punct">.</span><span class="tok-call-method">as_bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">12</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">bytes</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">&quot;WIKI&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">bytes</span><span class="tok-punct">[</span><span class="tok-number">4</span><span class="tok-punct">..</span><span class="tok-number">8</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- little-endian</span>
+
+<span class="tok-comment">// And straight back again.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">parsed</span> <span class="tok-punct">=</span> <span class="tok-type">FileHeader</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-variable">bytes</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">parsed</span><span class="tok-punct">.</span><span class="tok-field">entries</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">17</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> one struct definition serves both directions, so the read and
+write paths cannot disagree about the layout. <code>IntoBytes</code> will not derive if the
+struct has padding, which is the compiler refusing to let you write
+uninitialised bytes to a file.</p>
+</div>
+          </div>
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Viewing a buffer as a slice of records</h3>
+            <p>A file of fixed-size entries — an index, a sample buffer, a page table — can be
+addressed as a slice without building a <code>Vec</code>.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, IntoBytes, KnownLayout, Immutable, Unaligned, Debug, PartialEq)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Entry</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    <span class="tok-variable">kind</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">flags</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">buffer</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">entries</span> <span class="tok-punct">=</span> <span class="tok-punct">&lt;</span><span class="tok-punct">[</span><span class="tok-type">Entry</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">buffer</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">entries</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">entries</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-type">Entry</span> <span class="tok-punct">{</span> <span class="tok-variable">id</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-variable">kind</span><span class="tok-punct">:</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-variable">flags</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">entries</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">.</span><span class="tok-field">kind</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> the whole file becomes a <code>&amp;[Entry]</code> in one bounds-checked step,
+and indexing it costs nothing. Collecting into a <code>Vec&lt;Entry&gt;</code> would copy every
+record, which for a memory-mapped index is the difference between instant and
+slow.</p>
+</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc" data-tab="api">
+        <h2 class="section-title">API map</h2>
+        <p>The crate is five derives and the conversion methods they unlock. The derives
+are what you write; the methods below are what becomes available once a type has
+them.</p>
+
+        <div class="api-group">
+        <h3 class="api-group-title">The derives<span class="api-group-count">4</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">FromBytes</code></h4>
+            <p>Asserts every bit pattern is valid, which is what allows bytes to become a
+value.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Sample</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">left</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">right</span><span class="tok-punct">:</span> <span class="tok-type">i16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// Integers and arrays of them qualify; bool and char do not.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0x01</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">,</span> <span class="tok-number">0xff</span><span class="tok-punct">,</span> <span class="tok-number">0xff</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">sample</span> <span class="tok-punct">=</span> <span class="tok-type">Sample</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">bytes</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">.</span><span class="tok-field">left</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">sample</span><span class="tok-punct">.</span><span class="tok-field">right</span><span class="tok-punct">,</span> <span class="tok-punct">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> on any type you build from bytes. If the derive fails, a
+field has invalid bit patterns — a <code>bool</code>, a <code>char</code>, an enum — and
+<code>TryFromBytes</code> is the fallible alternative that checks at runtime instead.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">IntoBytes</code></h4>
+            <p>Asserts the type has no padding, so its bytes are all initialised.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(IntoBytes, Immutable)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Packed</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">u16</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- same size, so no padding between them</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">Packed</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-number">0x0201</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-number">0x0403</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">as_bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0x01</span><span class="tok-punct">,</span> <span class="tok-number">0x02</span><span class="tok-punct">,</span> <span class="tok-number">0x03</span><span class="tok-punct">,</span> <span class="tok-number">0x04</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> on anything you serialise. A struct with a <code>u8</code> followed by
+a <code>u32</code> has three padding bytes and will not derive — reorder the fields, or add
+explicit padding you control, because those bytes would otherwise be whatever
+was in that memory before.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">KnownLayout</code> and <code class="tok-inline">Immutable</code></h4>
+            <p>The two supporting claims: the layout can be computed, and there is no interior
+mutability.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Frame</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">len</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">3u8</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'a'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'b'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'c'</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">frame</span> <span class="tok-punct">=</span> <span class="tok-type">Frame</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">bytes</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">frame</span><span class="tok-punct">.</span><span class="tok-field">len</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">frame</span><span class="tok-punct">.</span><span class="tok-field">data</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">&quot;abc&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> derive both alongside <code>FromBytes</code> as a matter of course.
+<code>KnownLayout</code> is what makes <code>ref_from_*</code> and slice casts possible; <code>Immutable</code>
+is required by the methods taking <code>&amp;self</code>, since a <code>Cell</code> inside would let the
+bytes change while something holds a reference to them.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">Unaligned</code></h4>
+            <p>Asserts alignment 1, so a cast works at any address.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable, Unaligned)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Tag</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">kind</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span>
+    <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-comment tok-anno">// &lt;- bytes, not u16, so alignment stays 1</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// Works at an odd offset, where an aligned type would fail.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">buffer</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0xff</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">tag</span> <span class="tok-punct">=</span> <span class="tok-type">Tag</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">buffer</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">..</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">tag</span><span class="tok-punct">.</span><span class="tok-field">kind</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">tag</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> any type cast from a buffer you did not allocate — network
+data, a memory map, a slice at an arbitrary offset. It is the difference between
+<code>ref_from_bytes</code> working and failing at runtime on some inputs and not others,
+which is a miserable bug to chase.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Borrowing from bytes<span class="api-group-count">4</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">ref_from_bytes</code></h4>
+            <p>A reference into the original bytes, requiring an exact size match.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable, Unaligned, Debug, PartialEq)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Pair</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-type">Pair</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">bytes</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-type">Pair</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// Too many bytes is an error, not a silent prefix.</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-type">Pair</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> when the buffer is exactly one value. The strictness is
+deliberate — a size mismatch usually means the format is not what you thought,
+and silently ignoring the remainder would hide it.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">ref_from_prefix</code></h4>
+            <p>Takes a value off the front, returning it and the rest.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable, Unaligned)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Len</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">message</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0x03</span><span class="tok-punct">,</span> <span class="tok-number">0x00</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'a'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'b'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'c'</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">len</span><span class="tok-punct">,</span> <span class="tok-variable">rest</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-type">Len</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_prefix</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">message</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-module">u16</span><span class="tok-punct">::</span><span class="tok-call-assoc">from_le_bytes</span><span class="tok-punct">(</span><span class="tok-variable">len</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rest</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">&quot;abc&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> header-then-body formats, and parsing a stream one record at
+a time. Chaining it is how you walk a structured buffer — each call hands you
+the remainder to feed the next.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">mut_from_bytes</code></h4>
+            <p>A mutable view, so writing through it edits the original buffer.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, IntoBytes, KnownLayout, Immutable, Unaligned)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Counter</span> <span class="tok-punct">{</span> <span class="tok-variable">hits</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">2</span><span class="tok-punct">]</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buffer</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">counter</span> <span class="tok-punct">=</span> <span class="tok-type">Counter</span><span class="tok-punct">::</span><span class="tok-call-assoc">mut_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buffer</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-variable">counter</span><span class="tok-punct">.</span><span class="tok-field">hits</span> <span class="tok-punct">=</span> <span class="tok-number">5u16</span><span class="tok-punct">.</span><span class="tok-call-method">to_le_bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">buffer</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- the original bytes changed</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> editing a memory-mapped file or a shared buffer in place.
+It needs <code>IntoBytes</code> as well, since writing through the reference means the
+bytes must stay valid for the type.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig">Slices of records</h4>
+            <p><code>&lt;[T]&gt;::ref_from_bytes</code> views a whole buffer as a slice.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable, Unaligned, Debug, PartialEq)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Rgb</span> <span class="tok-punct">{</span> <span class="tok-variable">r</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">g</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">pixels</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">255u8</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">255</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">rgb</span> <span class="tok-punct">=</span> <span class="tok-punct">&lt;</span><span class="tok-punct">[</span><span class="tok-type">Rgb</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">pixels</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rgb</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rgb</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-type">Rgb</span> <span class="tok-punct">{</span> <span class="tok-variable">r</span><span class="tok-punct">:</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">g</span><span class="tok-punct">:</span> <span class="tok-number">255</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// The length must divide evenly.</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-punct">&lt;</span><span class="tok-punct">[</span><span class="tok-type">Rgb</span><span class="tok-punct">]</span><span class="tok-punct">&gt;</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> image data, sample buffers, fixed-size record files. The
+even-division check is the bounds check you would otherwise write by hand, and
+getting it wrong is how a parser reads past the end.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Copying instead<span class="api-group-count">2</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">read_from_bytes</code></h4>
+            <p>Copies the bytes into a new value, ignoring alignment entirely.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable, Debug, PartialEq)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Aligned</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span> <span class="tok-comment tok-anno">// &lt;- alignment 4, so casting needs luck</span>
+
+<span class="tok-comment">// An over-aligned buffer, so offset 1 is guaranteed misaligned.</span>
+<span class="tok-attribute">#[repr(align(4))]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Buffer</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">;</span> <span class="tok-number">8</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">buffer</span> <span class="tok-punct">=</span> <span class="tok-field">Buffer</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">0xff</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">bytes</span> <span class="tok-punct">=</span> <span class="tok-punct">&amp;</span><span class="tok-variable">buffer</span><span class="tok-punct">.</span><span class="tok-number">0</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// Borrowing from offset 1 fails: a &amp;u32 must be 4-aligned.</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-type">Aligned</span><span class="tok-punct">::</span><span class="tok-call-assoc">ref_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">bytes</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">..</span><span class="tok-number">5</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// Copying does not care about the source address.</span>
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">Aligned</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_from_bytes</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">bytes</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">..</span><span class="tok-number">5</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">,</span> <span class="tok-type">Aligned</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> when the type has real alignment and the buffer's address is
+not yours to choose. It costs one copy of the struct, which for a small header
+is nothing — and it is still safer and shorter than assembling fields from
+<code>from_le_bytes</code> calls.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">read_from_prefix</code></h4>
+            <p>The copying counterpart to <code>ref_from_prefix</code>.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, KnownLayout, Immutable)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Magic</span> <span class="tok-punct">{</span> <span class="tok-variable">value</span><span class="tok-punct">:</span> <span class="tok-type">u32</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">file</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">1u8</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'r'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'e'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'s'</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">'t'</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-variable">magic</span><span class="tok-punct">,</span> <span class="tok-variable">rest</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-type">Magic</span><span class="tok-punct">::</span><span class="tok-call-assoc">read_from_prefix</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">file</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">magic</span><span class="tok-punct">.</span><span class="tok-field">value</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">rest</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-string">&quot;rest&quot;</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> walking a format whose types are aligned, or whenever you
+want an owned value rather than a borrow tied to the buffer's lifetime.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Writing out<span class="api-group-count">2</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">as_bytes</code></h4>
+            <p>The value's bytes, borrowed.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(IntoBytes, Immutable)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Message</span> <span class="tok-punct">{</span> <span class="tok-variable">kind</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">code</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">msg</span> <span class="tok-punct">=</span> <span class="tok-type">Message</span> <span class="tok-punct">{</span> <span class="tok-variable">kind</span><span class="tok-punct">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-variable">code</span><span class="tok-punct">:</span> <span class="tok-number">9</span> <span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">msg</span><span class="tok-punct">.</span><span class="tok-call-method">as_bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> writing to a socket or a file, hashing a struct, or
+comparing two values byte-wise. It borrows, so there is no allocation — the
+bytes <em>are</em> the value.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">write_to</code> and <code class="tok-inline">write_to_prefix</code></h4>
+            <p>Writes into a buffer you provide.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(IntoBytes, Immutable)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Record</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-type">u8</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-type">u8</span> <span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-keyword">mut</span> <span class="tok-variable">buffer</span> <span class="tok-punct">=</span> <span class="tok-punct">[</span><span class="tok-number">0u8</span><span class="tok-punct">;</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+<span class="tok-type">Record</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">.</span><span class="tok-call-method">write_to_prefix</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buffer</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">unwrap</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">buffer</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// write_to requires an exact fit.</span>
+<span class="tok-macro">assert!</span><span class="tok-punct">(</span><span class="tok-type">Record</span> <span class="tok-punct">{</span> <span class="tok-variable">a</span><span class="tok-punct">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-variable">b</span><span class="tok-punct">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">.</span><span class="tok-call-method">write_to</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-keyword">mut</span> <span class="tok-variable">buffer</span><span class="tok-punct">[</span><span class="tok-punct">..</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">is_err</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> assembling a packet in a reusable buffer, where allocating
+per message is the cost you are avoiding. <code>write_to</code> insisting on an exact size
+catches the off-by-one that <code>write_to_prefix</code> would let through.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Endianness<span class="api-group-count">1</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">byteorder</code> types</h4>
+            <p>Integers that carry their byte order, so a struct stays <code>Unaligned</code> and the wire
+format is explicit.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-module">byteorder</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">big_endian</span><span class="tok-punct">,</span> <span class="tok-variable">little_endian</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">zerocopy</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">FromBytes</span><span class="tok-punct">,</span> <span class="tok-type">Immutable</span><span class="tok-punct">,</span> <span class="tok-type">IntoBytes</span><span class="tok-punct">,</span> <span class="tok-type">KnownLayout</span><span class="tok-punct">,</span> <span class="tok-type">Unaligned</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[derive(FromBytes, IntoBytes, KnownLayout, Immutable, Unaligned)]</span>
+<span class="tok-attribute">#[repr(C)]</span>
+<span class="tok-keyword">struct</span> <span class="tok-type-def">Mixed</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">network</span><span class="tok-punct">:</span> <span class="tok-module">big_endian</span><span class="tok-punct">::</span><span class="tok-constant">U16</span><span class="tok-punct">,</span>
+    <span class="tok-variable">local</span><span class="tok-punct">:</span> <span class="tok-module">little_endian</span><span class="tok-punct">::</span><span class="tok-constant">U16</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">value</span> <span class="tok-punct">=</span> <span class="tok-type">Mixed</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">network</span><span class="tok-punct">:</span> <span class="tok-module">big_endian</span><span class="tok-punct">::</span><span class="tok-constant">U16</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+    <span class="tok-variable">local</span><span class="tok-punct">:</span> <span class="tok-module">little_endian</span><span class="tok-punct">::</span><span class="tok-constant">U16</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+<span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-call-method">as_bytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">;</span> <span class="tok-comment tok-anno">// &lt;- same number, opposite orders</span>
+<span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">value</span><span class="tok-punct">.</span><span class="tok-field">network</span><span class="tok-punct">.</span><span class="tok-call-method">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> every multi-byte field in a wire or file format. They solve
+two problems at once — the byte order is stated in the type rather than
+remembered at each access, and the alignment stays 1 so the struct can be cast
+from any buffer.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      </section>
+
+      <div class="convo-actions convo-actions-foot">
+        <a class="convo-open" href="./">&#8592; Back to Crates</a>
+      </div>
+
+      <div class="footer-note">
+        <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
+        <span>Written against zerocopy 0.8.57</span>
+      </div>
+
+    </article>
+  </main>
+</div>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>
