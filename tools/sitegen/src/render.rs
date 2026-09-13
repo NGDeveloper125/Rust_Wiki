@@ -1,7 +1,7 @@
 use crate::links::{render_chip_row, LinkIndex};
 use crate::model::{group_label, Page, Section};
 use crate::nav::{render_sidebar, TopNav, CHEVRON_SVG};
-use crate::util::html_escape;
+use crate::util::{html_escape, json_escape, meta_description_from_html};
 
 /// Public base URL of the deployed site, used for absolute `<link rel="canonical">`
 /// URLs, Open Graph URLs, the sitemap, and robots.txt. The site is served from
@@ -146,6 +146,35 @@ fn topbar(depth: usize) -> String {
     )
 }
 
+/// The site's schema.org graph, emitted in the `<head>` of every page.
+///
+/// The `WebSite` and `Organization` nodes are repeated on every page rather
+/// than written once on the landing page, so that any single indexed page is
+/// enough to tie the content to the site's name. Both spellings of that name
+/// are given — a search for the domain as one word is the likeliest way anyone
+/// goes looking for this site by name — and `sameAs` points at the repository,
+/// which is the one other place the project is identifiable.
+///
+/// The page's own node hangs off the website node by `@id`, so the three read
+/// as a single graph no matter which page a crawler happens to land on.
+fn json_ld_block(head: &Head) -> String {
+    let site = abs_url("");
+    format!(
+        r#"<script type="application/ld+json">
+{{"@context":"https://schema.org","@graph":[
+{{"@type":"WebSite","@id":"{site}#website","url":"{site}","name":"Rusty Yellow Pages","alternateName":"RustyYellowPages","inLanguage":"en","publisher":{{"@id":"{site}#organization"}}}},
+{{"@type":"Organization","@id":"{site}#organization","name":"Rusty Yellow Pages","url":"{site}","sameAs":["{repo}"]}},
+{{"@type":"WebPage","@id":"{canonical}","url":"{canonical}","name":"{title}","description":"{description}","inLanguage":"en","isPartOf":{{"@id":"{site}#website"}}}}
+]}}
+</script>"#,
+        site = json_escape(&site),
+        repo = json_escape(REPO_URL),
+        canonical = json_escape(&head.canonical),
+        title = json_escape(&head.title),
+        description = json_escape(&head.description),
+    )
+}
+
 /// Wrap `sidebar_html` + `main_html` in the full document shell.
 pub fn shell(head: &Head, depth: usize, sidebar_html: &str, main_html: &str) -> String {
     shell_with_page_class(head, depth, sidebar_html, main_html, "")
@@ -180,6 +209,7 @@ pub fn shell_with_page_class(
 <meta name="description" content="{description}">
 <link rel="canonical" href="{canonical}">
 {social_meta}
+{json_ld}
 <link rel="icon" href="{favicon}" type="image/svg+xml">
 <link rel="stylesheet" href="{css}">
 </head>
@@ -208,6 +238,7 @@ pub fn shell_with_page_class(
         description = html_escape(&head.description),
         canonical = html_escape(&head.canonical),
         social_meta = head.social_meta(),
+        json_ld = json_ld_block(head),
         topbar = topbar(depth),
         // Prefix the search's result links, so it has to follow the same
         // root-absolute rule as every other link on an ANY_URL page.
@@ -1195,9 +1226,18 @@ fn page_title(page: &Page) -> String {
     }
 }
 
-/// A search-friendly `<meta name="description">` for a content page. Returned
-/// raw; [`shell`] escapes it.
+/// A `<meta name="description">` for a content page. Returned raw; [`shell`]
+/// escapes it.
+///
+/// Distilled from the page's own explanation, so that each page describes
+/// itself. The templates below are only a fallback for a page whose prose is
+/// too thin to summarise: filled in from the title alone they differ from one
+/// another by a word or two, which tells a search engine almost nothing about
+/// what separates one page from the next.
 fn page_description(page: &Page) -> String {
+    if let Some(distilled) = meta_description_from_html(&page.explanation_html) {
+        return distilled;
+    }
     let t = &page.front.title;
     match page.section {
         Section::Syntax => format!(
