@@ -137,7 +137,7 @@ fn main() {
 
     crates::build(&docs_root, &crate_pages, &pages);
 
-    more::build(&docs_root, &pages);
+    let more_urls = more::build(&docs_root, &pages);
 
     // Not part of the site: the editor theme is generated from the same palette
     // so the two cannot drift.
@@ -146,7 +146,9 @@ fn main() {
     // Best-effort GitHub Discussions mirror. Never fails the build.
     let conversation_urls = conversations::build(&repo_root, &docs_root, &pages);
 
-    let sitemap_xml = sitemap::build(&pages, &articles, &crate_pages, &conversation_urls);
+    let mut extra_urls = more_urls;
+    extra_urls.extend(conversation_urls);
+    let sitemap_xml = sitemap::build(&pages, &articles, &crate_pages, &extra_urls);
     std::fs::write(docs_root.join("sitemap.xml"), sitemap_xml).expect("write sitemap.xml");
 
     let robots = format!(

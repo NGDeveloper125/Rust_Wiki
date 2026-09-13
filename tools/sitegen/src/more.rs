@@ -14,6 +14,12 @@ use crate::palette::{Slot, SLOTS};
 use crate::nav::{render_sidebar, TopNav};
 use crate::render::{abs_url, href_from, shell, shell_with_page_class, Head, REPO_URL};
 
+/// Site-root-relative URLs of the pages this module writes, in the order
+/// [`write_pages`] writes them. The canonical links and the sitemap are both
+/// built from this list, so a page added here cannot end up in one and not
+/// the other.
+const URLS: [&str; 2] = ["more/", "more/langcolormap.html"];
+
 /// `docs/more/*.html` — one directory below the site root.
 const DEPTH: usize = 1;
 
@@ -194,7 +200,7 @@ fn render_colormap(pages: &[Page]) -> String {
         description:
             "A colour for every distinguishable role in Rust syntax — declarations, types, values, calls, literals and structure — each used for that role and nothing else."
                 .to_string(),
-        canonical: abs_url("more/langcolormap.html"),
+        canonical: abs_url(URLS[1]),
         og_type: "website",
         image: None,
     };
@@ -207,7 +213,7 @@ fn render_colormap(pages: &[Page]) -> String {
 fn render_hub(pages: &[Page]) -> String {
     let sidebar = render_sidebar(pages, None, DEPTH, TopNav::More);
     let home = href_from(DEPTH, "");
-    let colormap = href_from(DEPTH, "more/langcolormap.html");
+    let colormap = href_from(DEPTH, URLS[1]);
 
     let main = format!(
         r#"      <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -242,7 +248,7 @@ fn render_hub(pages: &[Page]) -> String {
         title: "Rust - More - Rusty Yellow Pages".to_string(),
         description: "Reference material about Rusty Yellow Pages and how Rust is presented here."
             .to_string(),
-        canonical: abs_url("more/"),
+        canonical: abs_url(URLS[0]),
         og_type: "website",
         image: None,
     };
@@ -258,12 +264,17 @@ fn write_pages(docs_root: &Path, pages: &[Page]) -> io::Result<()> {
 }
 
 /// Write the More hub and the pages under it.
-pub fn build(docs_root: &Path, pages: &[Page]) {
+///
+/// Returns the site-root-relative paths it wrote, for inclusion in the
+/// sitemap; empty if writing failed, matching how `conversations::build`
+/// reports the same thing.
+pub fn build(docs_root: &Path, pages: &[Page]) -> Vec<String> {
     if let Err(e) = write_pages(docs_root, pages) {
         eprintln!("more: could not write pages: {e}");
-    } else {
-        println!("more: rendered hub + LangColorMap");
+        return Vec::new();
     }
+    println!("more: rendered hub + LangColorMap");
+    URLS.iter().map(|u| u.to_string()).collect()
 }
 
 #[cfg(test)]

@@ -8,8 +8,8 @@ use crate::util::html_escape;
 ///
 /// `pages`, `articles` and `crates` cover the content, article and crate
 /// pages; `extra` holds site-root-relative paths those lists don't cover (the
-/// conversations index and any thread pages). The landing page and the
-/// articles/crates indexes are added here.
+/// More hub and the pages under it, the conversations index and any thread
+/// pages). The landing page and the articles/crates indexes are added here.
 pub fn build(pages: &[Page], articles: &[Article], crates: &[Crate], extra: &[String]) -> String {
     let mut locs: Vec<String> = Vec::new();
 
