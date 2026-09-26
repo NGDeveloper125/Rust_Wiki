@@ -8,6 +8,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-24"
 summary: "A `TokenStream` that works outside a procedural macro. Mirrors the compiler's `proc_macro` API so macro code can be unit tested, called from ordinary functions, and reused by build scripts."
+domain: "Macros, derive & codegen"
 categories: ["macros", "procedural-macros", "testing"]
 repository: "https://github.com/dtolnay/proc-macro2"
 ---

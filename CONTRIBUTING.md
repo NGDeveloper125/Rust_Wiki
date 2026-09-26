@@ -393,6 +393,7 @@ author: "Your Name"                # display name for the byline
 github: "your-handle"              # your GitHub handle (a leading @ is fine)
 date: "2026-07-29"                 # YYYY-MM-DD — the maintainer sets this at merge
 summary: "One or two sentences shown in listings and used for search."
+domain: "Error handling"           # which directory section this page is filed under
 categories: ["error-handling"]     # small free list; `tags:` also accepted
 repository: "https://github.com/dtolnay/anyhow"   # optional
 docs: "https://docs.rs/anyhow"     # optional; defaults to docs.rs/<crate>
@@ -415,6 +416,47 @@ crate line says who publishes the *crate*, the byline below says who wrote the
 can tell at a glance whether a crate works on bare metal. Inline code in the
 `summary` works exactly as it does for articles: backtick a token and it renders
 as monospace on the card.
+
+**`domain` files the page in the directory.** The crates index groups every
+page by what the crate is *for*, and the sidebar's Crates link expands into the
+same list of sections, so `domain` is what decides where a reader finds your
+page. Unlike `categories`, which is a free list of tags, it is one value from a
+closed list, spelled exactly as written here:
+
+- Async runtimes & concurrency
+- HTTP, web & RPC
+- Serialization & data formats
+- Error handling
+- CLI & terminal
+- GUI & app frameworks
+- Game engines
+- Graphics & images
+- Databases & storage
+- Text, parsing & Unicode
+- Collections & data structures
+- Numerics & math
+- Randomness & IDs
+- Dates & time
+- Crypto, hashing & TLS
+- Compression & archives
+- Files, paths & OS
+- Bytes, memory & layout
+- FFI, wasm & bindings
+- Macros, derive & codegen
+- Logging, tracing & metrics
+- Testing & benchmarking
+- Config & environment
+- Build scripts & tooling
+
+Choose by purpose, not construction: `sha2` belongs under Crypto, hashing & TLS
+even though it is mostly trait implementations, and `mio` belongs under Async
+runtimes & concurrency even though it is really an OS wrapper. If two sections
+genuinely both fit, pick the one a reader would look under first.
+
+Omit it, or misspell it, and the build prints a warning naming your file and
+listing the real options. The page still publishes — it just lands in an
+"Everything else" section at the end of the directory instead of where people
+will look for it.
 
 **Keeping a page current.** Crates release; pages go stale. The maintainer runs
 a local `crate-sync` check that compares every page against crates.io and

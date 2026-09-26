@@ -8,6 +8,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-07-29"
 summary: "One error type for applications: `anyhow::Error` holds any error, keeps the whole chain of causes, and lets `?` work everywhere without writing a single `From` impl."
+domain: "Error handling"
 categories: ["error-handling", "application", "beginner"]
 repository: "https://github.com/dtolnay/anyhow"
 ---

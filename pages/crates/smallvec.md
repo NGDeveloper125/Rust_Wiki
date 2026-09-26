@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-08"
 summary: "A `Vec` that keeps its first few elements inline instead of on the heap, spilling only when it outgrows them. A targeted allocation optimisation for collections that are usually small."
+domain: "Collections & data structures"
 categories: ["data-structures", "performance", "no-std"]
 repository: "https://github.com/servo/rust-smallvec"
 ---

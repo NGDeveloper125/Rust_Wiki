@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-08"
 summary: "The SwissTable hash map that `std::collections::HashMap` is built from, available as a crate — for `no_std` code, custom allocators, the low-level `HashTable`, and lookups that don't allocate a key."
+domain: "Collections & data structures"
 categories: ["data-structures", "collections", "no-std"]
 repository: "https://github.com/rust-lang/hashbrown"
 ---

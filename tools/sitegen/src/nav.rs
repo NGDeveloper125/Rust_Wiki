@@ -1,3 +1,4 @@
+use crate::crates::domain::Domain;
 use crate::model::{group_order, nav_bucket, subgroup_order, Page, Section};
 use crate::render::href_from;
 use crate::util::html_escape;
@@ -85,32 +86,89 @@ pub enum TopNav {
     None,
     Conversations,
     Articles,
-    Crates,
+    /// A crate-directory page. The payload is the section the page belongs
+    /// to, so the sidebar can mark it — `None` on the index, which is every
+    /// section at once, and on a page that named no valid `domain:`.
+    Crates(Option<&'static Domain>),
     More,
+}
+
+/// The Crates row: a link to the directory *and* a disclosure for the
+/// sections inside it, so one press of the label opens the page while the
+/// chevron beside it expands the list in place.
+///
+/// The two are separate controls on purpose. An anchor that also toggles
+/// would have to swallow its own click, and a `<button>` alone would lose
+/// middle-click, open-in-new-tab and the status-bar URL preview — everything
+/// that makes a link a link.
+fn render_crates_toplink(
+    domains: &[&'static Domain],
+    from_depth: usize,
+    active: TopNav,
+    out: &mut String,
+) {
+    let on_crates = matches!(active, TopNav::Crates(_));
+    let active_class = if on_crates { " active" } else { "" };
+    let href = href_from(from_depth, "crates/");
+
+    // Nothing to disclose: render exactly the row the other three top links
+    // render, rather than a chevron that expands onto an empty list.
+    if domains.is_empty() {
+        out.push_str(&format!(
+            "      <a class=\"nav-toplink{active_class}\" href=\"{href}\">{CRATE_SVG}<span>Crates</span></a>\n"
+        ));
+        return;
+    }
+
+    // Arriving on a crate page should show where you are in the directory
+    // without a second click; anywhere else the list stays folded away.
+    let open_class = if on_crates { " open" } else { "" };
+    let expanded = if on_crates { "true" } else { "false" };
+
+    out.push_str(&format!(
+        "      <div class=\"nav-group nav-toplink-group{open_class}\">\n        <div class=\"nav-toplink-row\">\n          <a class=\"nav-toplink{active_class}\" href=\"{href}\">{CRATE_SVG}<span>Crates</span></a>\n          <button class=\"nav-toggle nav-toplink-toggle\" aria-expanded=\"{expanded}\" aria-label=\"Show crate sections\">{CHEVRON_SVG}</button>\n        </div>\n        <div class=\"nav-children\"><div>\n"
+    ));
+    for d in domains {
+        let is_active = active == TopNav::Crates(Some(*d));
+        let link_active = if is_active { " active" } else { "" };
+        out.push_str(&format!(
+            "          <a class=\"nav-link nav-domain-link{link_active}\" href=\"{href}#{slug}\">{label}</a>\n",
+            slug = d.slug,
+            label = html_escape(d.label),
+        ));
+    }
+    out.push_str("        </div></div>\n      </div>\n");
 }
 
 /// The site's full sidebar. `active` marks whichever top-level link
 /// (Conversations / Articles / Crates / More) the current page belongs to.
+///
+/// `crate_domains` are the crate-directory sections that currently have at
+/// least one page (see `crates::domain::occupied`), listed under the Crates
+/// link. Pass an empty slice and the Crates link renders as a plain link, the
+/// way the other three do.
 pub fn render_sidebar(
     pages: &[Page],
     current: Option<&Page>,
     from_depth: usize,
     active: TopNav,
+    crate_domains: &[&'static Domain],
 ) -> String {
     let mut out = String::new();
 
     let sel = |t: TopNav| if active == t { " active" } else { "" };
     out.push_str(&format!(
-        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n      <a class=\"nav-toplink{ka}\" href=\"{kh}\">{kicon}<span>Crates</span></a>\n      <a class=\"nav-toplink{ma}\" href=\"{mh}\">{micon}<span>More</span></a>\n    </div>\n",
+        "\n    <div class=\"nav-toplinks\">\n      <a class=\"nav-toplink{ca}\" href=\"{ch}\">{cicon}<span>Conversations</span></a>\n      <a class=\"nav-toplink{aa}\" href=\"{ah}\">{aicon}<span>Articles</span></a>\n",
         ca = sel(TopNav::Conversations),
         ch = href_from(from_depth, "conversations/"),
         cicon = CHAT_SVG,
         aa = sel(TopNav::Articles),
         ah = href_from(from_depth, "articles/"),
         aicon = ARTICLE_SVG,
-        ka = sel(TopNav::Crates),
-        kh = href_from(from_depth, "crates/"),
-        kicon = CRATE_SVG,
+    ));
+    render_crates_toplink(crate_domains, from_depth, active, &mut out);
+    out.push_str(&format!(
+        "      <a class=\"nav-toplink{ma}\" href=\"{mh}\">{micon}<span>More</span></a>\n    </div>\n",
         ma = sel(TopNav::More),
         mh = href_from(from_depth, "more/"),
         micon = MORE_SVG,

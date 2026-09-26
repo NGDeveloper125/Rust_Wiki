@@ -17,11 +17,14 @@
 //! the body is trusted (maintainer-reviewed), so it renders through
 //! `crate::markdown::to_html` rather than the conversations sanitizer.
 
+pub mod domain;
 mod render;
 
 use std::path::Path;
 
 use serde::Deserialize;
+
+use self::domain::Domain;
 
 use crate::bodylinks;
 use crate::markdown;
@@ -61,6 +64,12 @@ struct FrontMatter {
     date: String,
     /// One-to-two sentences for listings and search.
     summary: String,
+    /// Which section of the directory the crate belongs in — one of the
+    /// labels in `domain::DOMAINS`, e.g. `"Error handling"`. Unlike the free
+    /// `categories` list this is single-valued and closed, because it decides
+    /// where the page is filed rather than how it is tagged.
+    #[serde(default)]
+    domain: Option<String>,
     /// Small free list of topics. `tags:` is accepted as an alias.
     #[serde(default, alias = "tags")]
     categories: Vec<String>,
@@ -108,6 +117,10 @@ pub struct Crate {
     pub github: String,
     pub date: String,
     pub summary: String,
+    /// The directory section this page is filed under. `None` means the page
+    /// didn't name one, or named one that isn't in the taxonomy; the build
+    /// warns either way and the page still publishes, filed nowhere.
+    pub domain: Option<&'static Domain>,
     pub categories: Vec<String>,
     pub repository: Option<String>,
     pub docs: String,
@@ -206,6 +219,24 @@ pub fn load(pages_root: &Path) -> Vec<Crate> {
             .docs
             .unwrap_or_else(|| format!("https://docs.rs/{crate_name}"));
 
+        // An unfiled page still publishes — losing a whole page over a
+        // taxonomy slip would be worse than the gap it leaves in the index —
+        // but it is missing from every section and from the sidebar, so say
+        // so loudly enough that a reviewer notices before merge.
+        let domain = match front.domain.as_deref().map(str::trim) {
+            None | Some("") => {
+                unfiled_warning(&path, "has no `domain:`");
+                None
+            }
+            Some(name) => match domain::lookup(name) {
+                Some(d) => Some(d),
+                None => {
+                    unfiled_warning(&path, &format!("has `domain: \"{name}\"`, which isn't one of the directory's sections"));
+                    None
+                }
+            },
+        };
+
         let h2 = markdown::split_h2(body);
         let overview_md = section(&h2, "Overview");
         let when_md = section(&h2, "When to use it");
@@ -250,6 +281,7 @@ pub fn load(pages_root: &Path) -> Vec<Crate> {
             github: front.github,
             date: front.date,
             summary: front.summary,
+            domain,
             categories: front.categories,
             repository: front.repository,
             docs,
@@ -272,6 +304,35 @@ pub fn load(pages_root: &Path) -> Vec<Crate> {
             .then_with(|| a.slug.cmp(&b.slug))
     });
     crates
+}
+
+/// The prose that opens the directory index, from `pages/crates/_index.md`.
+///
+/// It lives in `pages/` rather than in this file because it is content, and
+/// content on this site is markdown a contributor can edit without touching
+/// the generator. Missing file, or no file at all, just means the index opens
+/// straight into the sections.
+pub fn load_intro(pages_root: &Path) -> String {
+    let path = pages_root.join("crates").join("_index.md");
+    match std::fs::read_to_string(&path) {
+        Ok(md) => markdown::to_html(strip_leading_comment(&md).trim()),
+        Err(_) => String::new(),
+    }
+}
+
+/// Drop a leading `<!-- ... -->` block, so the file can carry a note to
+/// whoever edits it next without that note reaching the page. Only the first
+/// one, and only at the very top: a comment further down is the author's, and
+/// markdown passes it through as written.
+fn strip_leading_comment(md: &str) -> &str {
+    let trimmed = md.trim_start();
+    if !trimmed.starts_with("<!--") {
+        return md;
+    }
+    match trimmed.find("-->") {
+        Some(end) => &trimmed[end + 3..],
+        None => md,
+    }
 }
 
 /// Build the API map: `###` headings are groups, each `####` under one is an
@@ -323,6 +384,28 @@ fn intro_before<'a>(md: &'a str, marker: &str) -> &'a str {
     }
 }
 
+/// Every taxonomy label on one line, for the "pick one of" half of a
+/// bad-`domain:` warning.
+fn domain_labels() -> String {
+    domain::DOMAINS
+        .iter()
+        .map(|d| d.label)
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Warn that a page won't be filed anywhere, and list the sections it could
+/// have named. A contributor who mistyped needs to see the real options, not
+/// just be told they got it wrong.
+fn unfiled_warning(path: &Path, problem: &str) {
+    eprintln!(
+        "  warning: {} — {problem}, so the page won't appear in any section of the \
+         crate directory. Pick one of: {}",
+        path.display(),
+        domain_labels(),
+    );
+}
+
 fn section<'a>(h2: &'a [(String, String)], title: &str) -> &'a str {
     h2.iter()
         .find(|(t, _)| t.eq_ignore_ascii_case(title))
@@ -334,9 +417,10 @@ fn section<'a>(h2: &'a [(String, String)], title: &str) -> &'a str {
 /// so crate pages can link liberally into the wiki (mirrors `bodylinks` for
 /// pages). Sources live at `pages/crates/<slug>.md`, so their link base
 /// directory is `crates/`.
-pub fn rewrite_body_links(crates: &mut [Crate], pages: &[Page]) {
+pub fn rewrite_body_links(crates: &mut [Crate], intro_html: &mut String, pages: &[Page]) {
     let known = bodylinks::known_hrefs(pages);
     let fix = |html: &str| bodylinks::rewrite_links_in(html, "crates", DEPTH, &known);
+    *intro_html = fix(intro_html);
     for c in crates.iter_mut() {
         c.overview_html = fix(&c.overview_html);
         c.use_cases_intro_html = fix(&c.use_cases_intro_html);
@@ -360,8 +444,8 @@ pub fn rewrite_body_links(crates: &mut [Crate], pages: &[Page]) {
 }
 
 /// Write the crates index + one page per crate.
-pub fn build(docs_root: &Path, crates: &[Crate], pages: &[Page]) {
-    if let Err(e) = render::write_pages(docs_root, crates, pages) {
+pub fn build(docs_root: &Path, crates: &[Crate], intro_html: &str, pages: &[Page]) {
+    if let Err(e) = render::write_pages(docs_root, crates, intro_html, pages) {
         eprintln!("crates: could not write pages: {e}");
     } else {
         println!("crates: rendered index + {} crate page(s)", crates.len());
@@ -384,6 +468,7 @@ mod tests {
             github: "@handle".into(),
             date: "2026-01-01".into(),
             summary: "s".into(),
+            domain: domain::lookup("Error handling"),
             categories: vec![],
             repository: None,
             docs: "https://docs.rs/anyhow".into(),

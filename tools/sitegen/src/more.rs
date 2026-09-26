@@ -11,6 +11,7 @@ use std::path::Path;
 use crate::highlight::rust_to_html;
 use crate::model::Page;
 use crate::palette::{Slot, SLOTS};
+use crate::crates::domain::Domain;
 use crate::nav::{render_sidebar, TopNav};
 use crate::render::{abs_url, href_from, shell, shell_with_page_class, Head, REPO_URL};
 
@@ -117,8 +118,8 @@ fn render_slot_list() -> String {
     )
 }
 
-fn render_colormap(pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::More);
+fn render_colormap(pages: &[Page], domains: &[&'static Domain]) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::More, domains);
     let home = href_from(DEPTH, "");
     let more = href_from(DEPTH, "more/");
 
@@ -210,8 +211,8 @@ fn render_colormap(pages: &[Page]) -> String {
     shell_with_page_class(&head, DEPTH, &sidebar, &main, "page-colormap")
 }
 
-fn render_hub(pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::More);
+fn render_hub(pages: &[Page], domains: &[&'static Domain]) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::More, domains);
     let home = href_from(DEPTH, "");
     let colormap = href_from(DEPTH, URLS[1]);
 
@@ -255,11 +256,11 @@ fn render_hub(pages: &[Page]) -> String {
     shell(&head, DEPTH, &sidebar, &main)
 }
 
-fn write_pages(docs_root: &Path, pages: &[Page]) -> io::Result<()> {
+fn write_pages(docs_root: &Path, pages: &[Page], domains: &[&'static Domain]) -> io::Result<()> {
     let dir = docs_root.join("more");
     std::fs::create_dir_all(&dir)?;
-    std::fs::write(dir.join("index.html"), render_hub(pages))?;
-    std::fs::write(dir.join("langcolormap.html"), render_colormap(pages))?;
+    std::fs::write(dir.join("index.html"), render_hub(pages, domains))?;
+    std::fs::write(dir.join("langcolormap.html"), render_colormap(pages, domains))?;
     Ok(())
 }
 
@@ -268,8 +269,8 @@ fn write_pages(docs_root: &Path, pages: &[Page]) -> io::Result<()> {
 /// Returns the site-root-relative paths it wrote, for inclusion in the
 /// sitemap; empty if writing failed, matching how `conversations::build`
 /// reports the same thing.
-pub fn build(docs_root: &Path, pages: &[Page]) -> Vec<String> {
-    if let Err(e) = write_pages(docs_root, pages) {
+pub fn build(docs_root: &Path, pages: &[Page], domains: &[&'static Domain]) -> Vec<String> {
+    if let Err(e) = write_pages(docs_root, pages, domains) {
         eprintln!("more: could not write pages: {e}");
         return Vec::new();
     }

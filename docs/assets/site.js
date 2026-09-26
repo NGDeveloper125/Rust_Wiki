@@ -355,9 +355,11 @@
     var voteCounts = {}; // vote-key -> count
 
     var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll(cfg.cardSel)) : [];
-    // Optional A-Z section headings living in the grid alongside the cards.
-    var letters = (grid && cfg.letterSel)
-      ? Array.prototype.slice.call(grid.querySelectorAll(cfg.letterSel)) : [];
+    /* Optional section headings living in the grid alongside the cards. They
+       only mean anything in the sort mode that produced them, named by
+       cfg.sectionSort. */
+    var sections = (grid && cfg.sectionSel)
+      ? Array.prototype.slice.call(grid.querySelectorAll(cfg.sectionSel)) : [];
     var searchBox = document.getElementById(cfg.searchId);
     var sortSel = document.getElementById(cfg.sortId);
     var noMatch = document.getElementById(cfg.nomatchId);
@@ -371,19 +373,19 @@
         if (hit) shown++;
       });
       if (noMatch) noMatch.hidden = shown !== 0;
-      applyLetters();
+      applySections();
     }
 
-    /* A letter heading is a claim about A-Z order, so it only stands while the
-       index is sorted that way — and only while its section still has a card
-       the filter didn't hide. */
-    function applyLetters() {
-      if (!letters.length) return;
-      var alpha = !sortSel || sortSel.value === 'name';
-      letters.forEach(function (head) {
-        var letter = head.getAttribute('data-letter');
-        var kept = alpha && cards.some(function (card) {
-          return card.getAttribute('data-letter') === letter &&
+    /* A section heading is a claim about how the cards below it are grouped,
+       so it only stands while the index is sorted that way — and only while
+       its section still has a card the filter didn't hide. */
+    function applySections() {
+      if (!sections.length) return;
+      var grouped = !sortSel || sortSel.value === cfg.sectionSort;
+      sections.forEach(function (head) {
+        var key = head.getAttribute('data-section');
+        var kept = grouped && cards.some(function (card) {
+          return card.getAttribute('data-section') === key &&
                  !card.classList.contains('is-hidden');
         });
         head.classList.toggle('is-hidden', !kept);
@@ -403,6 +405,10 @@
           var da = a.getAttribute('data-date') || '';
           var db = b.getAttribute('data-date') || '';
           if (db !== da) return db < da ? -1 : 1;
+        } else if (mode === 'name') {
+          var na = a.getAttribute('data-name') || '';
+          var nb = b.getAttribute('data-name') || '';
+          if (na !== nb) return na < nb ? -1 : 1;
         }
         // Fall back to the order the build wrote the cards in.
         return (+a.getAttribute('data-i')) - (+b.getAttribute('data-i'));
@@ -410,23 +416,23 @@
 
       var seen = {};
       sorted.forEach(function (card) {
-        if (mode === 'name' || mode === '') {
-          var letter = card.getAttribute('data-letter');
-          if (!seen[letter]) {
-            seen[letter] = 1;
-            letters.forEach(function (head) {
-              if (head.getAttribute('data-letter') === letter) grid.appendChild(head);
+        if (mode === cfg.sectionSort || mode === '') {
+          var key = card.getAttribute('data-section');
+          if (!seen[key]) {
+            seen[key] = 1;
+            sections.forEach(function (head) {
+              if (head.getAttribute('data-section') === key) grid.appendChild(head);
             });
           }
         }
         grid.appendChild(card);
       });
-      // Headings with no section left (another sort, or an empty letter) are
-      // parked at the end, where applyLetters hides them.
-      letters.forEach(function (head) {
-        if (!seen[head.getAttribute('data-letter')]) grid.appendChild(head);
+      // Headings with nothing left under them (another sort, or a section the
+      // filter emptied) are parked at the end, where applySections hides them.
+      sections.forEach(function (head) {
+        if (!seen[head.getAttribute('data-section')]) grid.appendChild(head);
       });
-      applyLetters();
+      applySections();
     }
 
     if (searchBox) searchBox.addEventListener('input', applyFilter);
@@ -462,7 +468,7 @@
   });
   setupCardIndex({
     gridId: 'crate-grid', cardSel: '.crate-card', bylineSel: '.crate-byline',
-    letterSel: '.crate-letter',
+    sectionSel: '.crate-section', sectionSort: 'section',
     searchId: 'crate-search', sortId: 'crate-sort', nomatchId: 'crate-nomatch',
     voteLabel: 'crate-vote'
   });

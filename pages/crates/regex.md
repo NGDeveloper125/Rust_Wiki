@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-18"
 summary: "Regular expressions with a linear-time guarantee: matching can never blow up exponentially, because the engine deliberately omits backreferences and lookaround."
+domain: "Text, parsing & Unicode"
 categories: ["text-processing", "parsing", "regex"]
 repository: "https://github.com/rust-lang/regex"
 ---

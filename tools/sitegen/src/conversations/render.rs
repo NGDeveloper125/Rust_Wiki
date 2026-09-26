@@ -7,6 +7,7 @@ use std::path::Path;
 use super::sanitize;
 use super::{Author, Conversation, Snapshot, REPO_NAME, REPO_OWNER};
 use crate::model::Page;
+use crate::crates::domain::Domain;
 use crate::nav::{render_sidebar, TopNav};
 use crate::render::{abs_url, href_from, shell, Head};
 use crate::util::html_escape;
@@ -14,13 +15,13 @@ use crate::util::html_escape;
 /// Depth of every conversations page (`docs/conversations/<file>.html`).
 const DEPTH: usize = 1;
 
-pub fn write_pages(docs_root: &Path, snap: &Snapshot, pages: &[Page]) -> io::Result<()> {
+pub fn write_pages(docs_root: &Path, snap: &Snapshot, pages: &[Page], domains: &[&'static Domain]) -> io::Result<()> {
     let dir = docs_root.join("conversations");
     std::fs::create_dir_all(&dir)?;
 
-    std::fs::write(dir.join("index.html"), render_index(snap, pages))?;
+    std::fs::write(dir.join("index.html"), render_index(snap, pages, domains))?;
     for c in &snap.conversations {
-        std::fs::write(dir.join(thread_filename(c)), render_thread(c, pages))?;
+        std::fs::write(dir.join(thread_filename(c)), render_thread(c, pages, domains))?;
     }
     Ok(())
 }
@@ -29,8 +30,8 @@ fn new_discussion_url() -> String {
     format!("https://github.com/{REPO_OWNER}/{REPO_NAME}/discussions/new/choose")
 }
 
-fn render_index(snap: &Snapshot, pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations);
+fn render_index(snap: &Snapshot, pages: &[Page], domains: &[&'static Domain]) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations, domains);
     let home = href_from(DEPTH, "");
 
     let breadcrumb = format!(
@@ -177,8 +178,8 @@ fn render_index_item(c: &Conversation) -> String {
     )
 }
 
-fn render_thread(c: &Conversation, pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations);
+fn render_thread(c: &Conversation, pages: &[Page], domains: &[&'static Domain]) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Conversations, domains);
     let home = href_from(DEPTH, "");
     let index = "./";
 

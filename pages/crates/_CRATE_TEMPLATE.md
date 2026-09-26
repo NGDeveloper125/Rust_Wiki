@@ -21,6 +21,23 @@
   problem, and then actually use it — what it is, the situations it's a good
   fit for, and a map of its API with a small call example for every item. See
   CONTRIBUTING.md ("Crates") for the full guidelines.
+
+  `domain:` decides which section of the crate directory the page appears in,
+  and which sidebar entry leads to it. It is one of these, spelled exactly:
+
+    Async runtimes & concurrency, HTTP, web & RPC, Serialization & data formats,
+    Error handling, CLI & terminal, GUI & app frameworks, Game engines,
+    Graphics & images, Databases & storage, Text, parsing & Unicode,
+    Collections & data structures, Numerics & math, Randomness & IDs,
+    Dates & time, Crypto, hashing & TLS, Compression & archives,
+    Files, paths & OS, Bytes, memory & layout, FFI, wasm & bindings,
+    Macros, derive & codegen, Logging, tracing & metrics,
+    Testing & benchmarking, Config & environment, Build scripts & tooling
+
+  Pick the one that matches what the crate is FOR, not what it is built out
+  of: `sha2` is "Crypto, hashing & TLS" even though it is also a trait impl.
+  Get it wrong or leave it out and the build warns, and the page lands in an
+  "Everything else" section at the bottom of the directory.
 -->
 ---
 title: "crate_name"                 # usually just the crate's name
@@ -33,6 +50,7 @@ author: "Your Name"                 # display name shown in the byline
 github: "your-handle"               # your GitHub handle (a leading @ is fine)
 date: "2026-01-01"                  # YYYY-MM-DD; the maintainer adjusts this at merge
 summary: "One or two sentences shown on the crate card and used for search. Wrap code tokens in backticks, e.g. the `?` operator, so they read as code."
+domain: "Error handling"            # which directory section the page is filed under — see below
 categories: ["error-handling"]      # small free list; `tags:` is also accepted
 repository: "https://github.com/owner/repo"   # optional
 # docs: "https://docs.rs/crate_name"          # optional; defaults to docs.rs/<crate>

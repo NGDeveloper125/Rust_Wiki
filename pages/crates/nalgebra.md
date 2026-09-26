@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-14"
 summary: "Linear algebra with dimensions in the type system: vectors, matrices, transformations and decompositions, where multiplying a 3×2 by a 4×4 is a compile error rather than a runtime one."
+domain: "Numerics & math"
 categories: ["mathematics", "graphics", "no-std"]
 repository: "https://github.com/dimforge/nalgebra"
 docs: "https://www.nalgebra.rs/docs"

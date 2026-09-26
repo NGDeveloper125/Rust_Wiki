@@ -1,5 +1,6 @@
 use crate::links::{render_chip_row, LinkIndex};
 use crate::model::{group_label, Page, Section};
+use crate::crates::domain::Domain;
 use crate::nav::{render_sidebar, TopNav, CHEVRON_SVG};
 use crate::util::{html_escape, json_escape, meta_description_from_html};
 
@@ -961,9 +962,9 @@ fn render_approaches_section(page: &Page, scenario: &crate::model::Scenario) -> 
     )
 }
 
-pub fn render_landing_page(pages: &[Page]) -> String {
+pub fn render_landing_page(pages: &[Page], domains: &[&'static Domain]) -> String {
     let depth = 0;
-    let sidebar = render_sidebar(pages, None, depth, TopNav::None);
+    let sidebar = render_sidebar(pages, None, depth, TopNav::None, domains);
 
     let (syntax_html, syntax_pages, syntax_groups) =
         render_browse_column(pages, Section::Syntax, depth);
@@ -1126,9 +1127,9 @@ pub fn render_landing_page(pages: &[Page]) -> String {
 /// Deliberately absent from `sitemap.xml`, and nothing links to it. It needs no
 /// `noindex`: GitHub Pages serves it with a genuine 404 status, which is what
 /// keeps it out of search results.
-pub fn render_not_found_page(pages: &[Page]) -> String {
+pub fn render_not_found_page(pages: &[Page], domains: &[&'static Domain]) -> String {
     let depth = ANY_URL;
-    let sidebar = render_sidebar(pages, None, depth, TopNav::None);
+    let sidebar = render_sidebar(pages, None, depth, TopNav::None, domains);
 
     let main = format!(
         r#"      <section class="doc">
@@ -1261,9 +1262,9 @@ fn page_head(page: &Page) -> Head {
     }
 }
 
-pub fn render_page_document(page: &Page, pages: &[Page], index: &LinkIndex) -> String {
+pub fn render_page_document(page: &Page, pages: &[Page], index: &LinkIndex, domains: &[&'static Domain]) -> String {
     let depth = page.href.matches('/').count();
-    let sidebar = render_sidebar(pages, Some(page), depth, TopNav::None);
+    let sidebar = render_sidebar(pages, Some(page), depth, TopNav::None, domains);
     let main = render_content_page(page, pages, index);
     shell(&page_head(page), depth, &sidebar, &main)
 }

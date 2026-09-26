@@ -6,6 +6,7 @@ use std::path::Path;
 
 use super::{Article, DEPTH};
 use crate::model::Page;
+use crate::crates::domain::Domain;
 use crate::nav::{render_sidebar, TopNav};
 use crate::render::{abs_url, href_from, shell, Head};
 use crate::util::{fmt_date, html_escape, render_inline};
@@ -14,19 +15,19 @@ use crate::util::{fmt_date, html_escape, render_inline};
 const CONTRIBUTE_URL: &str =
     "https://github.com/NGDeveloper125/Rust_Wiki/blob/main/CONTRIBUTING.md#articles";
 
-pub fn write_pages(docs_root: &Path, articles: &[Article], pages: &[Page]) -> io::Result<()> {
+pub fn write_pages(docs_root: &Path, articles: &[Article], pages: &[Page], domains: &[&'static Domain]) -> io::Result<()> {
     let dir = docs_root.join("articles");
     std::fs::create_dir_all(&dir)?;
 
-    std::fs::write(dir.join("index.html"), render_index(articles, pages))?;
+    std::fs::write(dir.join("index.html"), render_index(articles, pages, domains))?;
     for a in articles {
-        std::fs::write(dir.join(format!("{}.html", a.slug)), render_article(a, pages))?;
+        std::fs::write(dir.join(format!("{}.html", a.slug)), render_article(a, pages, domains))?;
     }
     Ok(())
 }
 
-fn render_index(articles: &[Article], pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Articles);
+fn render_index(articles: &[Article], pages: &[Page], domains: &[&'static Domain]) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Articles, domains);
     let home = href_from(DEPTH, "");
 
     let breadcrumb = format!(
@@ -157,8 +158,8 @@ fn search_text(a: &Article) -> String {
         .to_lowercase()
 }
 
-fn render_article(a: &Article, pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Articles);
+fn render_article(a: &Article, pages: &[Page], domains: &[&'static Domain]) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Articles, domains);
     let home = href_from(DEPTH, "");
     let index = "./";
 

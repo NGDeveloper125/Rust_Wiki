@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-12"
 summary: "Turns bytes into typed values without copying or `unsafe`. Derives prove at compile time that a type can be reinterpreted from a byte slice, so parsing a packet header is a cast rather than a field-by-field read."
+domain: "Bytes, memory & layout"
 categories: ["parsing", "binary", "no-std"]
 repository: "https://github.com/google/zerocopy"
 ---

@@ -4,6 +4,7 @@
 use std::io;
 use std::path::Path;
 
+use super::domain::{self, Domain};
 use super::{ApiGroup, Crate, UseCase, DEPTH};
 use crate::model::Page;
 use crate::nav::{render_sidebar, TopNav};
@@ -14,19 +15,36 @@ use crate::util::{fmt_date, html_escape, render_inline};
 const CONTRIBUTE_URL: &str =
     "https://github.com/NGDeveloper125/Rust_Wiki/blob/main/CONTRIBUTING.md#crates";
 
-pub fn write_pages(docs_root: &Path, crates: &[Crate], pages: &[Page]) -> io::Result<()> {
+pub fn write_pages(
+    docs_root: &Path,
+    crates: &[Crate],
+    intro_html: &str,
+    pages: &[Page],
+) -> io::Result<()> {
     let dir = docs_root.join("crates");
     std::fs::create_dir_all(&dir)?;
 
-    std::fs::write(dir.join("index.html"), render_index(crates, pages))?;
+    let domains = domain::occupied(crates);
+    std::fs::write(
+        dir.join("index.html"),
+        render_index(crates, intro_html, pages, &domains),
+    )?;
     for c in crates {
-        std::fs::write(dir.join(format!("{}.html", c.slug)), render_crate(c, pages))?;
+        std::fs::write(
+            dir.join(format!("{}.html", c.slug)),
+            render_crate(c, pages, &domains),
+        )?;
     }
     Ok(())
 }
 
-fn render_index(crates: &[Crate], pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Crates);
+fn render_index(
+    crates: &[Crate],
+    intro_html: &str,
+    pages: &[Page],
+    domains: &[&'static Domain],
+) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Crates(None), domains);
     let home = href_from(DEPTH, "");
 
     let breadcrumb = format!(
@@ -45,7 +63,21 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
       </div>"#
     );
 
-    let lead = r#"<p class="lead">A directory of the crates people actually reach for. Every page follows the same three sections &mdash; what the crate is, the situations it fits, and a map of its API with a small call example for each item &mdash; so you can look up an unfamiliar crate the same way every time. Crate pages are contributed as markdown pull requests.</p>"#;
+    let lead = r#"<p class="lead">A directory of the crates people actually reach for, filed by what they are for. Every page follows the same three sections &mdash; what the crate is, the situations it fits, and a map of its API with a small call example for each item &mdash; so you can look up an unfamiliar crate the same way every time. Crate pages are contributed as markdown pull requests.</p>"#;
+
+    // The intro is prose about the ecosystem; the directory below it is the
+    // reason most people are here. The skip link comes first so anyone who
+    // already knows what a crate is sees the way past before the prose.
+    let intro = if intro_html.trim().is_empty() {
+        String::new()
+    } else {
+        format!(
+            r##"<div class="crate-intro">
+        <p class="crate-intro-skip"><a href="#directory">Skip to the directory &darr;</a></p>
+        {intro_html}
+      </div>"##
+        )
+    };
 
     let body = if crates.is_empty() {
         format!(
@@ -63,29 +95,17 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
           <label class="article-sort">
             <span>Sort</span>
             <select id="crate-sort" aria-label="Sort crates">
-              <option value="name" selected>A &ndash; Z</option>
+              <option value="section" selected>By type</option>
+              <option value="name">A &ndash; Z</option>
               <option value="date">Newest</option>
               <option value="rating">Top rated</option>
             </select>
           </label>
         </div>"#;
 
-        // Crates arrive sorted A-Z, so one pass is enough to emit each
-        // letter's divider once, ahead of the first card under it.
-        let mut items: Vec<String> = Vec::with_capacity(crates.len() + 8);
-        let mut letter = '\0';
-        for (i, c) in crates.iter().enumerate() {
-            let l = index_letter(c);
-            if l != letter {
-                letter = l;
-                items.push(render_letter_divider(l));
-            }
-            items.push(render_card(c, i));
-        }
-        let cards: String = items.join("\n        ");
-
         format!(
-            "{toolbar}\n        <div class=\"crate-grid\" id=\"crate-grid\">\n        {cards}\n        </div>\n        <p class=\"article-nomatch\" id=\"crate-nomatch\" hidden>No crates match your filter.</p>"
+            "{toolbar}\n        <div class=\"crate-grid\" id=\"crate-grid\">\n        {cards}\n        </div>\n        <p class=\"article-nomatch\" id=\"crate-nomatch\" hidden>No crates match your filter.</p>",
+            cards = render_sections(crates, domains),
         )
     };
 
@@ -97,6 +117,10 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
       {lead}
 
       <hr class="divider">
+
+      {intro}
+
+      <div id="directory"></div>
 
       {body}
 
@@ -121,26 +145,73 @@ fn render_index(crates: &[Crate], pages: &[Page]) -> String {
     shell_with_page_class(&head, DEPTH, &sidebar, &main, "page-crate-index")
 }
 
-/// The letter section a crate belongs to: the first character of its title,
-/// uppercased. A title that doesn't start with an ASCII letter is collected
-/// under `#` rather than opening a section of its own.
-fn index_letter(c: &Crate) -> char {
-    match c.title.chars().next() {
-        Some(ch) if ch.is_ascii_alphabetic() => ch.to_ascii_uppercase(),
-        _ => '#',
+/// The grid's contents: every section that has a page, each one a heading
+/// followed by its crates A-Z, then anything the taxonomy didn't catch.
+///
+/// `crates` arrives sorted A-Z, so filtering it per section preserves that
+/// order inside each one for free. The running index handed to `render_card`
+/// is the position in *this* sequence, which is what site.js restores when
+/// the reader sorts one way and then back.
+fn render_sections(crates: &[Crate], domains: &[&'static Domain]) -> String {
+    let mut items: Vec<String> = Vec::with_capacity(crates.len() + domains.len() + 2);
+    let mut i = 0;
+
+    for d in domains {
+        items.push(render_section_head(d));
+        for c in crates.iter().filter(|c| c.domain == Some(*d)) {
+            items.push(render_card(c, i, d.slug));
+            i += 1;
+        }
     }
+
+    // A page whose `domain:` was missing or unrecognised is still a page, and
+    // hiding it here would make it reachable only through search. The build
+    // already warned about each one by name; this is the visible half of that
+    // warning.
+    let unfiled: Vec<&Crate> = crates.iter().filter(|c| c.domain.is_none()).collect();
+    if !unfiled.is_empty() {
+        items.push(render_unfiled_head());
+        for c in unfiled {
+            items.push(render_card(c, i, UNFILED_SLUG));
+            i += 1;
+        }
+    }
+
+    items.join("\n        ")
 }
 
-/// A letter heading spanning the full width of the grid, dividing the index
-/// into alphabetical sections. site.js hides these when the reader sorts by
-/// anything other than A-Z, or filters every crate out of a section.
-fn render_letter_divider(letter: char) -> String {
-    format!(r#"<div class="crate-letter" data-letter="{letter}"><span>{letter}</span></div>"#)
+/// The section a page lands in when its `domain:` was missing or unrecognised.
+const UNFILED_SLUG: &str = "unfiled";
+
+/// A section heading spanning the full width of the grid. site.js hides these
+/// when the reader sorts by anything other than type, or filters every crate
+/// out of a section.
+fn render_section_head(d: &Domain) -> String {
+    format!(
+        r#"<div class="crate-section" data-section="{slug}" id="{slug}">
+          <h2 class="crate-section-title">{label}</h2>
+          <p class="crate-section-blurb">{blurb}</p>
+        </div>"#,
+        slug = d.slug,
+        label = html_escape(d.label),
+        blurb = html_escape(d.blurb),
+    )
 }
 
-/// One card in the index grid. `i` is the authored (A-Z) position, used by
-/// site.js to restore alphabetical order after a different sort.
-fn render_card(c: &Crate, i: usize) -> String {
+fn render_unfiled_head() -> String {
+    format!(
+        r#"<div class="crate-section" data-section="{UNFILED_SLUG}" id="{UNFILED_SLUG}">
+          <h2 class="crate-section-title">Everything else</h2>
+          <p class="crate-section-blurb">Pages that haven&rsquo;t been filed under a type yet.</p>
+        </div>"#
+    )
+}
+
+/// One card in the index grid. `i` is the authored position, used by site.js
+/// to restore the by-type order after a different sort; `section` is the slug
+/// of the heading it sits under, so that heading can be hidden when the
+/// filter empties it.
+fn render_card(c: &Crate, i: usize, section: &str) -> String {
     let api_count = c.api_count();
     let apis = match api_count {
         0 => String::new(),
@@ -149,7 +220,7 @@ fn render_card(c: &Crate, i: usize) -> String {
     };
 
     format!(
-        r#"<article class="crate-card" data-i="{i}" data-letter="{letter}" data-date="{iso}" data-search="{search}" data-vote-key="{vote_key}">
+        r#"<article class="crate-card" data-i="{i}" data-section="{section}" data-name="{name}" data-date="{iso}" data-search="{search}" data-vote-key="{vote_key}">
           <a class="crate-card-link" href="{href}">
             <div class="crate-card-body">
               <div class="crate-card-head">
@@ -166,7 +237,8 @@ fn render_card(c: &Crate, i: usize) -> String {
             <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span></a>
           </div>
         </article>"#,
-        letter = index_letter(c),
+        section = html_escape(section),
+        name = html_escape(&c.title.to_lowercase()),
         iso = html_escape(&c.date),
         search = html_escape(&search_text(c)),
         vote_key = html_escape(&c.vote_key()),
@@ -203,11 +275,14 @@ fn render_card_links(c: &Crate) -> String {
 /// the card so the client never has to scrape it back out of the DOM.
 fn search_text(c: &Crate) -> String {
     format!(
-        "{} {} {} {} {}",
+        "{} {} {} {} {} {}",
         c.title,
         c.crate_name,
         c.summary,
         c.categories.join(" "),
+        // Typing a section's name should find its crates, the same way
+        // clicking it in the sidebar does.
+        c.domain.map(|d| d.label).unwrap_or_default(),
         c.publisher.as_deref().unwrap_or_default(),
     )
     .replace('`', "")
@@ -364,8 +439,8 @@ fn render_api_groups(groups: &[ApiGroup]) -> String {
         .join("\n      ")
 }
 
-fn render_crate(c: &Crate, pages: &[Page]) -> String {
-    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Crates);
+fn render_crate(c: &Crate, pages: &[Page], domains: &[&'static Domain]) -> String {
+    let sidebar = render_sidebar(pages, None, DEPTH, TopNav::Crates(c.domain), domains);
     let home = href_from(DEPTH, "");
     let index = "./";
 
@@ -523,6 +598,7 @@ mod tests {
             github: "handle".into(),
             date: "2026-07-29".into(),
             summary: "Flexible errors.".into(),
+            domain: domain::lookup("Error handling"),
             categories: vec!["error-handling".into()],
             repository: None,
             docs: "https://docs.rs/anyhow".into(),
@@ -538,7 +614,7 @@ mod tests {
 
     #[test]
     fn card_links_to_a_sibling_page_not_the_site_root_href() {
-        let html = render_card(&sample(), 0);
+        let html = render_card(&sample(), 0, "error-handling");
         assert!(html.contains(r#"href="anyhow.html""#));
         assert!(!html.contains(r#"href="crates/anyhow.html""#));
     }
@@ -571,23 +647,45 @@ mod tests {
         assert!(render_no_std(&c).contains(CHECK));
     }
 
-    /// Sections follow the displayed title, so a page titled "Serde JSON"
-    /// files under S even though its slug is `serde_json`.
-    #[test]
-    fn letter_sections_follow_the_title() {
-        let mut c = sample();
-        assert_eq!(index_letter(&c), 'A');
-        c.title = "Serde JSON".into();
-        assert_eq!(index_letter(&c), 'S');
-        c.title = "2fa-rs".into();
-        assert_eq!(index_letter(&c), '#');
-    }
-
     /// site.js pairs a card with its heading by this attribute, so a card
     /// without one would go missing from its section on every re-sort.
     #[test]
-    fn a_card_carries_the_letter_of_its_section() {
-        assert!(render_card(&sample(), 0).contains(r#"data-letter="A""#));
+    fn a_card_carries_the_slug_of_its_section() {
+        let html = render_card(&sample(), 0, "error-handling");
+        assert!(html.contains(r#"data-section="error-handling""#));
+    }
+
+    /// The A-Z sort reorders cards in the browser, so the key it sorts on has
+    /// to be on the card and has to be case-folded — otherwise `Serde JSON`
+    /// sorts before `anyhow`.
+    #[test]
+    fn a_card_carries_a_lowercased_sort_name() {
+        let mut c = sample();
+        c.title = "Serde JSON".into();
+        assert!(render_card(&c, 0, "serialization-data-formats")
+            .contains(r#"data-name="serde json""#));
+    }
+
+    /// Every page reaches the grid: one that named no section, or named one
+    /// the taxonomy doesn't have, still gets a card under "Everything else".
+    #[test]
+    fn an_unfiled_page_still_gets_a_card() {
+        let mut c = sample();
+        c.domain = None;
+        let html = render_sections(std::slice::from_ref(&c), &[]);
+        assert!(html.contains(r#"data-section="unfiled""#), "{html}");
+        assert!(html.contains("Everything else"));
+    }
+
+    /// A section the reader can reach from the sidebar has to exist as an
+    /// anchor on the page, or the link lands at the top of the index.
+    #[test]
+    fn a_section_heading_is_an_anchor_target() {
+        let c = sample();
+        let d = domain::lookup("Error handling").unwrap();
+        let html = render_sections(std::slice::from_ref(&c), &[d]);
+        assert!(html.contains(r#"id="error-handling""#), "{html}");
+        assert!(html.contains("Error handling"));
     }
 
     #[test]

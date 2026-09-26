@@ -8,6 +8,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-22"
 summary: "Quasi-quoting for procedural macros: write the Rust you want to generate as Rust, and interpolate values into it with `#name`. The output half of every macro, opposite `syn`."
+domain: "Macros, derive & codegen"
 categories: ["macros", "procedural-macros", "codegen"]
 repository: "https://github.com/dtolnay/quote"
 ---

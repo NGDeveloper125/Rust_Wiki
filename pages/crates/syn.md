@@ -8,6 +8,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-08"
 summary: "Parses a stream of Rust tokens into a syntax tree. The parsing half of every procedural macro — `DeriveInput` for derives, the `Parse` trait for custom syntax, and spanned errors that point at the user's code."
+domain: "Macros, derive & codegen"
 categories: ["macros", "procedural-macros", "parsing"]
 repository: "https://github.com/dtolnay/syn"
 ---

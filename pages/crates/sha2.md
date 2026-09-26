@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-19"
 summary: "The SHA-2 family — SHA-256, SHA-512 and the truncated variants — as pure-Rust implementations of the `Digest` traits, with hardware acceleration where the CPU offers it."
+domain: "Crypto, hashing & TLS"
 categories: ["cryptography", "hashing", "no-std"]
 repository: "https://github.com/RustCrypto/hashes"
 ---

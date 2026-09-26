@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-12"
 summary: "Raw declarations of the platform's C library — types, constants, structs and functions, exactly as C sees them. The bottom layer under every crate that talks to the operating system, and `unsafe` all the way down."
+domain: "Files, paths & OS"
 categories: ["ffi", "os", "no-std"]
 repository: "https://github.com/rust-lang/libc"
 ---

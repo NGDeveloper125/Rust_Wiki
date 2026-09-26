@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-26"
 summary: "Extra iterator adaptors, as one extension trait: grouping, chunking, deduplication, combinations, and the `Result`-aware adaptors that let a fallible pipeline stay a pipeline."
+domain: "Collections & data structures"
 categories: ["iterators", "algorithms", "no-std"]
 repository: "https://github.com/rust-itertools/itertools"
 ---

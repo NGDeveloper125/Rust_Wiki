@@ -18,6 +18,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::crates::domain::Domain;
 use crate::model::Page;
 
 /// Repo whose Discussions we mirror. Matches `VOTES_REPO` in site.js.
@@ -80,7 +81,7 @@ pub struct Snapshot {
 /// degrades rather than returning an error, so `main` never has to guard it.
 /// Returns the site-root-relative paths of the pages it wrote (index + each
 /// thread) for inclusion in the sitemap; empty if writing failed.
-pub fn build(repo_root: &Path, docs_root: &Path, pages: &[Page]) -> Vec<String> {
+pub fn build(repo_root: &Path, docs_root: &Path, pages: &[Page], domains: &[&'static Domain]) -> Vec<String> {
     let snapshot_path = repo_root.join("data").join("conversations.json");
 
     let token = std::env::var("GITHUB_TOKEN")
@@ -118,7 +119,7 @@ pub fn build(repo_root: &Path, docs_root: &Path, pages: &[Page]) -> Vec<String> 
         }
     };
 
-    if let Err(e) = render::write_pages(docs_root, &snapshot, pages) {
+    if let Err(e) = render::write_pages(docs_root, &snapshot, pages, domains) {
         eprintln!("conversations: could not write pages: {e}");
         return Vec::new();
     }

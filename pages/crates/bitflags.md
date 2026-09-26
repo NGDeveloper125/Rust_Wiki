@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-09"
 summary: "Turns a set of named bits into a real type. The `bitflags!` macro generates a struct with typed set operations, so a permissions mask stops being a bare `u32` that anything can be assigned to."
+domain: "Macros, derive & codegen"
 categories: ["data-structures", "macros", "no-std"]
 repository: "https://github.com/bitflags/bitflags"
 ---
