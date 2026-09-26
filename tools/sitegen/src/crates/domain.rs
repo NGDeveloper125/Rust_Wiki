@@ -1,12 +1,11 @@
 //! The crate directory's type taxonomy — the buckets a crate page is filed
 //! under, in the sidebar and as sections on the index.
 //!
-//! The list mirrors the editorial `Domain` classification in
-//! `.claude/tools/crate-backlog/generate.py`, which already sorts the whole
-//! coverage backlog, with one deliberate difference: that file's single
-//! "GUI, graphics & games" bucket is split three ways here, because someone
-//! choosing a desktop app framework, someone choosing a game engine and
-//! someone choosing an image library are not the same reader.
+//! The list mirrors the editorial classification the maintainer already uses
+//! to sort the coverage backlog, with one deliberate difference: that list's
+//! single "GUI, graphics & games" bucket is split three ways here, because
+//! someone choosing a desktop app framework, someone choosing a game engine
+//! and someone choosing an image library are not the same reader.
 //!
 //! A page names its bucket with `domain:` in its frontmatter, matched against
 //! `label` case-insensitively. It is a closed list on purpose: a typo should
