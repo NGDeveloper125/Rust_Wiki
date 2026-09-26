@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-20"
 summary: "A hash map that remembers insertion order and can be indexed by position. Hash lookup like `HashMap`, deterministic iteration like a `Vec`, and sorting without changing the type."
+domain: "Collections & data structures"
 categories: ["data-structures", "collections", "no-std"]
 repository: "https://github.com/indexmap-rs/indexmap"
 ---

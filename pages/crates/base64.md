@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-29"
 summary: "Base64 encoding and decoding, with the alphabet and padding rules made explicit. Pick an engine — standard, URL-safe, padded or not — and call `encode` and `decode` on it."
+domain: "Serialization & data formats"
 categories: ["encoding", "no-std"]
 repository: "https://github.com/marshallpierce/rust-base64"
 ---

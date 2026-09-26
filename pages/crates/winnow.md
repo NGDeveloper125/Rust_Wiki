@@ -8,6 +8,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-09"
 summary: "A parser combinator library: build a parser from small functions that compose, instead of writing a state machine or reaching for a regex. Parsers are ordinary functions taking `&mut Stream`."
+domain: "Text, parsing & Unicode"
 categories: ["parsing", "text-processing", "no-std"]
 repository: "https://github.com/winnow-rs/winnow"
 ---

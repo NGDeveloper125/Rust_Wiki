@@ -20,6 +20,7 @@ use std::path::Path;
 use serde::Deserialize;
 
 use crate::bodylinks;
+use crate::crates::domain::Domain;
 use crate::markdown;
 use crate::model::Page;
 use crate::parse::split_frontmatter;
@@ -181,9 +182,9 @@ pub fn rewrite_body_links(articles: &mut [Article], pages: &[Page]) {
 }
 
 /// Copy any repo-local article images and write the index + article pages.
-pub fn build(pages_root: &Path, docs_root: &Path, articles: &[Article], pages: &[Page]) {
+pub fn build(pages_root: &Path, docs_root: &Path, articles: &[Article], pages: &[Page], domains: &[&'static Domain]) {
     copy_images(pages_root, docs_root);
-    if let Err(e) = render::write_pages(docs_root, articles, pages) {
+    if let Err(e) = render::write_pages(docs_root, articles, pages, domains) {
         eprintln!("articles: could not write pages: {e}");
     } else {
         println!("articles: rendered index + {} article page(s)", articles.len());

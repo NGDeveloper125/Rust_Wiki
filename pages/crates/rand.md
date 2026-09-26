@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-09"
 summary: "Random number generation: a thread-local generator that needs no setup, seedable generators for reproducible runs, and the distributions and sequence operations — shuffle, choose, weighted pick — built on top."
+domain: "Randomness & IDs"
 categories: ["algorithms", "randomness", "no-std"]
 repository: "https://github.com/rust-random/rand"
 ---

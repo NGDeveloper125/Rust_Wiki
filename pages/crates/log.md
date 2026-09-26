@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-07"
 summary: "The logging facade the ecosystem agrees on. Libraries call `info!` and `warn!` against it; the application chooses one implementation, and every library's output goes there."
+domain: "Logging, tracing & metrics"
 categories: ["logging", "diagnostics", "no-std"]
 repository: "https://github.com/rust-lang/log"
 ---

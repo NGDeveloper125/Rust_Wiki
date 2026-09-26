@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-06"
 summary: "The traits every RustCrypto hash implements. Write code once against `Digest` and it works with SHA-2, BLAKE2, SHA-3 or MD5 — and swapping the algorithm becomes a type parameter."
+domain: "Crypto, hashing & TLS"
 categories: ["cryptography", "traits", "no-std"]
 repository: "https://github.com/RustCrypto/traits"
 ---

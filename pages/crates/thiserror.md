@@ -8,6 +8,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-18"
 summary: "A derive for `std::error::Error`. Write the enum, put the message on each variant, and get `Display`, `source()` and the `From` conversions that make `?` work — without the boilerplate, and without the macro appearing in your public API."
+domain: "Error handling"
 categories: ["error-handling", "library", "macros"]
 repository: "https://github.com/dtolnay/thiserror"
 ---

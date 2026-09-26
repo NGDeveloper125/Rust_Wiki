@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-30"
 summary: "JSON for Rust: parse into your own types with `from_str`, write them back with `to_string`, or work with untyped `Value` when the shape isn't known ahead of time."
+domain: "Serialization & data formats"
 categories: ["serialization", "json", "no-std"]
 repository: "https://github.com/serde-rs/json"
 ---

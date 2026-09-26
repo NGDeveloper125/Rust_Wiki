@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-23"
 summary: "Byte buffers that slice and share without copying. `Bytes` clones by bumping a reference count, `BytesMut` splits a read buffer into frames, and the `Buf`/`BufMut` traits abstract over both."
+domain: "Bytes, memory & layout"
 categories: ["data-structures", "networking", "no-std"]
 repository: "https://github.com/tokio-rs/bytes"
 ---

@@ -8,6 +8,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-04"
 summary: "Compiles C, C++ and assembly from a build script and links the result into your crate. The standard way a Rust crate wraps existing native code — and the reason that crate needs a C compiler to build."
+domain: "Build scripts & tooling"
 categories: ["build-scripts", "ffi", "build-utils"]
 repository: "https://github.com/rust-lang/cc-rs"
 ---

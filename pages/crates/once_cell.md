@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-02"
 summary: "Values initialised once, on first use: a cell you can fill later and a lazy static that runs its initialiser at first access. Most of it is now in `std` — this is the version for older toolchains, `no_std`, and the parts `std` still lacks."
+domain: "Async runtimes & concurrency"
 categories: ["memory-management", "concurrency", "no-std"]
 repository: "https://github.com/matklad/once_cell"
 ---

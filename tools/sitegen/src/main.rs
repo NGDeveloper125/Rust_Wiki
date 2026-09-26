@@ -98,7 +98,13 @@ fn main() {
     articles::rewrite_body_links(&mut articles, &pages);
 
     let mut crate_pages = crates::load(&pages_root);
-    crates::rewrite_body_links(&mut crate_pages, &pages);
+    let mut crate_intro = crates::load_intro(&pages_root);
+    crates::rewrite_body_links(&mut crate_pages, &mut crate_intro, &pages);
+
+    // The crate-directory sections that have at least one page. Every
+    // sidebar on the site lists them under the Crates link, so they are
+    // computed once here and handed down rather than recomputed per page.
+    let crate_domains = crates::domain::occupied(&crate_pages);
 
     let index = links::LinkIndex::build(&pages);
 
@@ -121,30 +127,30 @@ fn main() {
         .expect("write search-index.js");
 
     for page in &pages {
-        let html = render::render_page_document(page, &pages, &index);
+        let html = render::render_page_document(page, &pages, &index, &crate_domains);
         let out_path = docs_root.join(&page.href);
         std::fs::create_dir_all(out_path.parent().unwrap()).expect("create page dir");
         std::fs::write(&out_path, html).expect("write page html");
     }
 
-    let landing_html = render::render_landing_page(&pages);
+    let landing_html = render::render_landing_page(&pages, &crate_domains);
     std::fs::write(docs_root.join("index.html"), landing_html).expect("write index.html");
 
-    let not_found_html = render::render_not_found_page(&pages);
+    let not_found_html = render::render_not_found_page(&pages, &crate_domains);
     std::fs::write(docs_root.join("404.html"), not_found_html).expect("write 404.html");
 
-    articles::build(&pages_root, &docs_root, &articles, &pages);
+    articles::build(&pages_root, &docs_root, &articles, &pages, &crate_domains);
 
-    crates::build(&docs_root, &crate_pages, &pages);
+    crates::build(&docs_root, &crate_pages, &crate_intro, &pages);
 
-    let more_urls = more::build(&docs_root, &pages);
+    let more_urls = more::build(&docs_root, &pages, &crate_domains);
 
     // Not part of the site: the editor theme is generated from the same palette
     // so the two cannot drift.
     vscode::build(&repo_root);
 
     // Best-effort GitHub Discussions mirror. Never fails the build.
-    let conversation_urls = conversations::build(&repo_root, &docs_root, &pages);
+    let conversation_urls = conversations::build(&repo_root, &docs_root, &pages, &crate_domains);
 
     let mut extra_urls = more_urls;
     extra_urls.extend(conversation_urls);

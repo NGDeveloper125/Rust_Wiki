@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-01"
 summary: "Case conversion between the shapes identifiers take: `snake_case`, `camelCase`, `UpperCamelCase`, `kebab-case` and the shouty variants — with one consistent rule for where a word begins."
+domain: "Text, parsing & Unicode"
 categories: ["text-processing", "codegen", "no-std"]
 repository: "https://github.com/withoutboats/heck"
 ---

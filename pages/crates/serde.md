@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-08-31"
 summary: "The serialization framework the whole ecosystem shares. Derive `Serialize` and `Deserialize` once, and your type reads and writes JSON, TOML, YAML, MessagePack and the rest without knowing about any of them."
+domain: "Serialization & data formats"
 categories: ["serialization", "derive", "no-std"]
 repository: "https://github.com/serde-rs/serde"
 ---

@@ -7,6 +7,7 @@ author: "NGDeveloper125"
 github: "NGDeveloper125"
 date: "2026-09-21"
 summary: "A thin, portable wrapper over the operating system's readiness API — epoll, kqueue, IOCP. The event loop `tokio` is built on, and almost never what application code should use directly."
+domain: "Async runtimes & concurrency"
 categories: ["networking", "async", "io"]
 repository: "https://github.com/tokio-rs/mio"
 ---
