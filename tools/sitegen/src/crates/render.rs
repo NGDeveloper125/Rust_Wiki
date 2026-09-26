@@ -66,15 +66,15 @@ fn render_index(
     let lead = r#"<p class="lead">A directory of the crates people actually reach for, filed by what they are for. Every page follows the same three sections &mdash; what the crate is, the situations it fits, and a map of its API with a small call example for each item &mdash; so you can look up an unfamiliar crate the same way every time. Crate pages are contributed as markdown pull requests.</p>"#;
 
     // The intro is prose about the ecosystem; the directory below it is the
-    // reason most people are here. Anyone who already knows what a crate is
-    // gets a way past it.
+    // reason most people are here. The skip link comes first so anyone who
+    // already knows what a crate is sees the way past before the prose.
     let intro = if intro_html.trim().is_empty() {
         String::new()
     } else {
         format!(
             r##"<div class="crate-intro">
-        {intro_html}
         <p class="crate-intro-skip"><a href="#directory">Skip to the directory &darr;</a></p>
+        {intro_html}
       </div>"##
         )
     };
