@@ -1,0 +1,55 @@
+# The site documents templates that live in another repository, so the two can
+# disagree: a page describing a template that no longer exists, or a template
+# with no page. This checks both directions.
+#
+# Deliberately not part of the build-and-deploy workflow. It depends on another
+# repository being reachable, and a network failure there should not stop the
+# site from publishing.
+name: Templates drift
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Site and templates repository agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone the templates repository
+        run: git clone --depth 1 https://github.com/NGDeveloper125/rusty-yellow-pages-templates.git "$RUNNER_TEMP/templates"
+
+      # Three places name a template: the directory in the templates
+      # repository, its markdown body under pages/, and its entry in the
+      # generator's TEMPLATES array. All three have to list the same set.
+      - name: Compare both directions
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          status=0
+
+          for manifest in "$RUNNER_TEMP"/templates/*/cargo-generate.toml; do
+            name="$(basename "$(dirname "$manifest")")"
+            if [ ! -f "pages/more/templates/$name.md" ]; then
+              echo "::error::template '$name' exists but pages/more/templates/$name.md does not"
+              status=1
+            fi
+            if ! grep -qF "name: \"$name\"," tools/sitegen/src/more.rs; then
+              echo "::error::template '$name' is not listed in the TEMPLATES array in tools/sitegen/src/more.rs"
+              status=1
+            fi
+          done
+
+          for body in pages/more/templates/*.md; do
+            name="$(basename "$body" .md)"
+            if [ ! -f "$RUNNER_TEMP/templates/$name/cargo-generate.toml" ]; then
+              echo "::error::$body documents '$name', which is not a template in the templates repository"
+              status=1
+            fi
+          done
+
+          exit $status

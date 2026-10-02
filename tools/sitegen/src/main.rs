@@ -143,7 +143,7 @@ fn main() {
 
     crates::build(&docs_root, &crate_pages, &crate_intro, &pages);
 
-    let more_urls = more::build(&docs_root, &pages, &crate_domains);
+    let more_urls = more::build(&docs_root, &pages_root, &pages, &crate_domains);
 
     // Not part of the site: the editor theme is generated from the same palette
     // so the two cannot drift.
