@@ -30,8 +30,8 @@
     Graphics & images, Databases & storage, Text, parsing & Unicode,
     Collections & data structures, Numerics & math, Randomness & IDs,
     Dates & time, Crypto, hashing & TLS, Compression & archives,
-    Files, paths & OS, Bytes, memory & layout, FFI, wasm & bindings,
-    Macros, derive & codegen, Logging, tracing & metrics,
+    Files, paths & OS, Bytes, memory & layout, WebAssembly & JS interop,
+    FFI & bindings, Macros, derive & codegen, Logging, tracing & metrics,
     Testing & benchmarking, Config & environment, Build scripts & tooling
 
   Pick the one that matches what the crate is FOR, not what it is built out

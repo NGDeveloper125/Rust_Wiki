@@ -15,6 +15,7 @@ mod search;
 mod sitemap;
 mod util;
 mod vscode;
+mod wasm;
 
 use std::path::{Path, PathBuf};
 
@@ -145,6 +146,8 @@ fn main() {
 
     let more_urls = more::build(&docs_root, &pages_root, &pages, &crate_domains);
 
+    let wasm_urls = wasm::build(&docs_root, &pages_root, &pages, &crate_domains);
+
     // Not part of the site: the editor theme is generated from the same palette
     // so the two cannot drift.
     vscode::build(&repo_root);
@@ -153,6 +156,7 @@ fn main() {
     let conversation_urls = conversations::build(&repo_root, &docs_root, &pages, &crate_domains);
 
     let mut extra_urls = more_urls;
+    extra_urls.extend(wasm_urls);
     extra_urls.extend(conversation_urls);
     let sitemap_xml = sitemap::build(&pages, &articles, &crate_pages, &extra_urls);
     std::fs::write(docs_root.join("sitemap.xml"), sitemap_xml).expect("write sitemap.xml");
