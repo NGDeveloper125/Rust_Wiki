@@ -35,6 +35,21 @@ pub fn to_html(md: &str) -> String {
     html_out
 }
 
+/// Drop a leading `<!-- ... -->` block, so a hand-edited markdown file can
+/// carry a note to whoever edits it next without that note reaching the page.
+/// Only the first one, and only at the very top: a comment further down is the
+/// author's, and markdown passes it through as written.
+pub fn strip_leading_comment(md: &str) -> &str {
+    let trimmed = md.trim_start();
+    if !trimmed.starts_with("<!--") {
+        return md;
+    }
+    match trimmed.find("-->") {
+        Some(end) => &trimmed[end + 3..],
+        None => md,
+    }
+}
+
 /// Split a body on top-level `## Heading` lines, preserving heading order.
 /// Returns (heading text, raw markdown body under that heading).
 pub fn split_h2(body: &str) -> Vec<(String, String)> {

@@ -315,23 +315,8 @@ pub fn load(pages_root: &Path) -> Vec<Crate> {
 pub fn load_intro(pages_root: &Path) -> String {
     let path = pages_root.join("crates").join("_index.md");
     match std::fs::read_to_string(&path) {
-        Ok(md) => markdown::to_html(strip_leading_comment(&md).trim()),
+        Ok(md) => markdown::to_html(markdown::strip_leading_comment(&md).trim()),
         Err(_) => String::new(),
-    }
-}
-
-/// Drop a leading `<!-- ... -->` block, so the file can carry a note to
-/// whoever edits it next without that note reaching the page. Only the first
-/// one, and only at the very top: a comment further down is the author's, and
-/// markdown passes it through as written.
-fn strip_leading_comment(md: &str) -> &str {
-    let trimmed = md.trim_start();
-    if !trimmed.starts_with("<!--") {
-        return md;
-    }
-    match trimmed.find("-->") {
-        Some(end) => &trimmed[end + 3..],
-        None => md,
     }
 }
 
