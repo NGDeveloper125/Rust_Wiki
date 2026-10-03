@@ -353,14 +353,21 @@ fn template_source_url(name: &str) -> String {
 /// page. A reader who arrives on a template page from a search has not passed
 /// through the directory, and the commands on that page do not work until
 /// both steps are done.
+///
+/// The second step is given as a command rather than as a file to edit.
+/// Installing cargo-generate cannot carry the repository with it — `cargo
+/// install` builds a binary from the registry and has nowhere to put
+/// configuration — so registering it is a separate step, and the least it can
+/// be is something to paste.
 fn setup_block() -> String {
     format!(
         r#"      <h2 class="tmpl-h2" id="setup">One-time setup</h2>
-      <p class="tmpl-note">cargo-generate is a separate subcommand, installed once.</p>
+      <p class="tmpl-note">Two commands, once per machine. cargo-generate is a subcommand of its own rather than part of cargo:</p>
       <pre class="tmpl-cmd"><code>cargo install cargo-generate</code></pre>
-      <p class="tmpl-note">Naming this repository once, in <code>$CARGO_HOME/cargo-generate.toml</code>, keeps its URL out of every command after it. The name is yours to pick; the commands here use <code>{fav}</code>.</p>
-      <pre class="tmpl-cmd"><code>[favorites.{fav}]
-git = "{repo}"</code></pre>
+      <p class="tmpl-note">Then file this repository under a name, so no command after it has to carry the URL. It writes <code>$CARGO_HOME/cargo-generate.toml</code>, creating the file if it is not there. The name is yours to pick; the commands here use <code>{fav}</code>.</p>
+      <pre class="tmpl-cmd"><code>printf '[favorites.{fav}]\ngit = "{repo}"\n' &gt;&gt; ~/.cargo/cargo-generate.toml</code></pre>
+      <p class="tmpl-caption">PowerShell</p>
+      <pre class="tmpl-cmd"><code>Add-Content "$HOME\.cargo\cargo-generate.toml" @('[favorites.{fav}]', 'git = "{repo}"')</code></pre>
 "#,
         fav = FAVORITE,
         repo = TEMPLATES_REPO,
