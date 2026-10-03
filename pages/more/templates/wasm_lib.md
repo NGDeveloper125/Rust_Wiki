@@ -31,7 +31,7 @@ which link a crate the way an outside dependant does. Unit tests inside
 Two prerequisites beyond cargo-generate, since this template targets wasm
 rather than the host: the `wasm32-unknown-unknown` target, added with
 `rustup target add wasm32-unknown-unknown`, and `wasm-pack`, installed with
-`cargo install wasm-pack`. The generated README repeats both.
+`cargo install wasm-pack --locked`. The generated README repeats both.
 
 `wasm-pack build crates/<name>_wasm --target web --out-dir ../../pkg` writes
 `pkg/` at the project root — the `.wasm`, the JavaScript that loads it, and
