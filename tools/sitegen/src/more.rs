@@ -31,6 +31,12 @@ const TEMPLATES_REPO: &str = "https://github.com/NGDeveloper125/rusty-yellow-pag
 /// The Templates directory and the pages under it. They sit one level deeper
 /// than the rest of More, so a template's own page can be reached at
 /// `more/templates/<name>.html` while the directory keeps a clean URL.
+/// The name the setup block tells a reader to file this repository under in
+/// their cargo-generate config, and therefore the first word of every command
+/// on these pages. Naming the repository once is what keeps its URL out of
+/// each command; the reader can of course choose another name.
+const FAVORITE: &str = "ryp";
+
 const TEMPLATES_URL: &str = "more/templates/";
 const TEMPLATES_DEPTH: usize = 2;
 
@@ -238,39 +244,69 @@ struct TemplateEntry {
     name: &'static str,
     /// One line. Used on the card, and again as the lead of its own page.
     summary: &'static str,
-    /// The crates it generates: (crate name, what that crate is for). The name
-    /// is written as the reader sees it, with `<name>` standing in for
-    /// whatever they pass to `--name`.
+    /// What it generates: (name, what that thing is for) — the crates, and any
+    /// file worth naming beside them. The name is written as the reader sees
+    /// it, with `<name>` standing in for whatever they pass to `--name`.
     produces: &'static [(&'static str, &'static str)],
     /// Worked invocations: (what this one shows, the arguments following the
     /// `--git ... <subfolder>` prefix that every template shares).
     examples: &'static [(&'static str, &'static str)],
 }
 
-const TEMPLATES: [TemplateEntry; 1] = [TemplateEntry {
-    name: "cli_lib",
-    summary: "A workspace with a console crate and a library crate, the path dependency and the call between them already written.",
-    produces: &[
-        (
-            "&lt;name&gt;_cli",
-            "a binary crate that depends on the library by path and calls its example method",
-        ),
-        (
-            "&lt;name&gt;_lib",
-            "a library crate holding one example method and the unit test for it",
-        ),
-    ],
-    examples: &[
-        (
-            "Crate names default to the project name",
-            "--name inventory_tool",
-        ),
-        (
-            "Or name either crate yourself",
-            "--name shop -d cli_name=shop_console -d lib_name=shop_engine",
-        ),
-    ],
-}];
+const TEMPLATES: [TemplateEntry; 2] = [
+    TemplateEntry {
+        name: "cli_lib",
+        summary: "A workspace with a console crate and a library crate, the path dependency and the call between them already written.",
+        produces: &[
+            (
+                "&lt;name&gt;_cli",
+                "a binary crate that depends on the library by path and calls its example method",
+            ),
+            (
+                "&lt;name&gt;_lib",
+                "a library crate holding one example method and the unit test for it",
+            ),
+        ],
+        examples: &[
+            (
+                "Crate names default to the project name",
+                "--name inventory_tool",
+            ),
+            (
+                "Or name either crate yourself",
+                "--name shop -d cli_name=console -d lib_name=engine",
+            ),
+        ],
+    },
+    TemplateEntry {
+        name: "wasm_lib",
+        summary: "A workspace with a WebAssembly module and the library it calls, and a page that loads the module and runs it.",
+        produces: &[
+            (
+                "&lt;name&gt;_wasm",
+                "a cdylib crate whose wasm-bindgen export converts between JavaScript's types and the library's",
+            ),
+            (
+                "&lt;name&gt;_lib",
+                "a library crate holding one example method and the unit test for it",
+            ),
+            (
+                "index.html",
+                "a page that imports the generated JavaScript and calls the export",
+            ),
+        ],
+        examples: &[
+            (
+                "Crate names default to the project name",
+                "--name pixel_tool",
+            ),
+            (
+                "Or name either crate yourself",
+                "--name editor -d wasm_name=ui -d lib_name=core",
+            ),
+        ],
+    },
+];
 
 /// A template's page URL, site-root-relative.
 fn template_url(name: &str) -> String {
@@ -293,6 +329,13 @@ fn load_body(path: &Path) -> String {
 /// The `cargo generate` line for a template, followed by one worked example's
 /// arguments.
 fn generate_command(name: &str, tail: &str) -> String {
+    format!("cargo generate {FAVORITE} {name} {tail}")
+}
+
+/// The same command for a reader who has not set the favourite up: the
+/// repository goes in the command instead. Shown once, as the way out, rather
+/// than as the form to copy.
+fn generate_command_explicit(name: &str, tail: &str) -> String {
     format!("cargo generate --git {TEMPLATES_REPO} {name} {tail}")
 }
 
@@ -306,10 +349,30 @@ fn template_source_url(name: &str) -> String {
 /// The shared "install it first" block. Both the directory and every template
 /// page carry it: a reader who lands on a template page from a search has not
 /// passed through the directory.
-const INSTALL_BLOCK: &str = r#"      <h2 class="tmpl-h2" id="install">Installing cargo-generate</h2>
-      <p class="tmpl-note">cargo-generate is a separate subcommand, installed once.</p>
+/// The two one-time steps, carried by the directory and by every template
+/// page. A reader who arrives on a template page from a search has not passed
+/// through the directory, and the commands on that page do not work until
+/// both steps are done.
+///
+/// The second step is given as a command rather than as a file to edit.
+/// Installing cargo-generate cannot carry the repository with it — `cargo
+/// install` builds a binary from the registry and has nowhere to put
+/// configuration — so registering it is a separate step, and the least it can
+/// be is something to paste.
+fn setup_block() -> String {
+    format!(
+        r#"      <h2 class="tmpl-h2" id="setup">One-time setup</h2>
+      <p class="tmpl-note">Two commands, once per machine. cargo-generate is a subcommand of its own rather than part of cargo:</p>
       <pre class="tmpl-cmd"><code>cargo install cargo-generate</code></pre>
-"#;
+      <p class="tmpl-note">Then file this repository under a name, so no command after it has to carry the URL. It writes <code>$CARGO_HOME/cargo-generate.toml</code>, creating the file if it is not there. The name is yours to pick; the commands here use <code>{fav}</code>.</p>
+      <pre class="tmpl-cmd"><code>printf '[favorites.{fav}]\ngit = "{repo}"\n' &gt;&gt; ~/.cargo/cargo-generate.toml</code></pre>
+      <p class="tmpl-caption">PowerShell</p>
+      <pre class="tmpl-cmd"><code>Add-Content "$HOME\.cargo\cargo-generate.toml" @('[favorites.{fav}]', 'git = "{repo}"')</code></pre>
+"#,
+        fav = FAVORITE,
+        repo = TEMPLATES_REPO,
+    )
+}
 
 fn render_template_cards() -> String {
     let cards = TEMPLATES
@@ -355,27 +418,17 @@ fn render_templates_index(pages_root: &Path, pages: &[Page], domains: &[&'static
 
       <hr class="divider">
 
-{install}
+{setup}
       <h2 class="tmpl-h2" id="list">The templates</h2>
       <p class="tmpl-note">One page each: what it generates, and the command.</p>
 
 {cards}
-      <h2 class="tmpl-h2" id="shorthand">A shorter command</h2>
-      <p class="tmpl-note">A favourite in <code>$CARGO_HOME/cargo-generate.toml</code> maps a name to the repository and subfolder, replacing the URL on the command line.</p>
-      <pre class="tmpl-cmd"><code>[favorites.{first}]
-git = "{repo}"
-subfolder = "{first}"</code></pre>
-      <p class="tmpl-caption">After that</p>
-      <pre class="tmpl-cmd"><code>cargo generate {first} --name inventory_tool</code></pre>
-
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
       </div>
 "##,
-        install = INSTALL_BLOCK,
+        setup = setup_block(),
         cards = render_template_cards(),
-        first = TEMPLATES[0].name,
-        repo = TEMPLATES_REPO,
     );
 
     let head = Head {
@@ -452,9 +505,11 @@ fn render_template_page(
 
       <hr class="divider">
 
+{setup}
       <h2 class="tmpl-h2" id="generate">Generating it</h2>
-{examples}
-{install}
+{examples}      <p class="tmpl-note">Without that favourite, the repository goes in the command instead.</p>
+      <pre class="tmpl-cmd"><code>{explicit}</code></pre>
+
       <div class="footer-note">
         <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
         <span><a href="{index}">All templates</a></span>
@@ -463,7 +518,8 @@ fn render_template_page(
         name = t.name,
         summary = t.summary,
         source = template_source_url(t.name),
-        install = INSTALL_BLOCK,
+        explicit = generate_command_explicit(t.name, t.examples[0].1),
+        setup = setup_block(),
     );
 
     let head = Head {
