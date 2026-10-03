@@ -76,11 +76,12 @@ fn render_nested_groups(
 const CHAT_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>"#;
 const ARTICLE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>"#;
 const CRATE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg>"#;
+const WASM_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m7 9 2.5 7L12 11l2.5 5L17 9"/></svg>"#;
 const MORE_SVG: &str = r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>"#;
 
 /// Which top-level ("not a wiki page") nav link is active, if any. The
-/// conversations/articles/crates pages aren't in `pages`, so they can't be
-/// matched via `current` the way syntax/concept pages are.
+/// conversations/articles/crates/wasm pages aren't in `pages`, so they can't
+/// be matched via `current` the way syntax/concept pages are.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TopNav {
     None,
@@ -90,6 +91,7 @@ pub enum TopNav {
     /// to, so the sidebar can mark it — `None` on the index, which is every
     /// section at once, and on a page that named no valid `domain:`.
     Crates(Option<&'static Domain>),
+    Wasm,
     More,
 }
 
@@ -141,7 +143,8 @@ fn render_crates_toplink(
 }
 
 /// The site's full sidebar. `active` marks whichever top-level link
-/// (Conversations / Articles / Crates / More) the current page belongs to.
+/// (Conversations / Articles / Crates / WebAssembly / More) the current page
+/// belongs to.
 ///
 /// `crate_domains` are the crate-directory sections that currently have at
 /// least one page (see `crates::domain::occupied`), listed under the Crates
@@ -168,7 +171,10 @@ pub fn render_sidebar(
     ));
     render_crates_toplink(crate_domains, from_depth, active, &mut out);
     out.push_str(&format!(
-        "      <a class=\"nav-toplink{ma}\" href=\"{mh}\">{micon}<span>More</span></a>\n    </div>\n",
+        "      <a class=\"nav-toplink{wa}\" href=\"{wh}\">{wicon}<span>WebAssembly</span></a>\n      <a class=\"nav-toplink{ma}\" href=\"{mh}\">{micon}<span>More</span></a>\n    </div>\n",
+        wa = sel(TopNav::Wasm),
+        wh = href_from(from_depth, "wasm/"),
+        wicon = WASM_SVG,
         ma = sel(TopNav::More),
         mh = href_from(from_depth, "more/"),
         micon = MORE_SVG,

@@ -122,9 +122,14 @@ pub const DOMAINS: &[Domain] = &[
         blurb: "Buffers, zero-copy casts, allocation control, and how a type is laid out.",
     },
     Domain {
-        label: "FFI, wasm & bindings",
-        slug: "ffi-wasm-bindings",
-        blurb: "Calling other languages, being called by them, and running in the browser.",
+        label: "WebAssembly & JS interop",
+        slug: "webassembly-js-interop",
+        blurb: "Compiling to wasm, and carrying values across the boundary between Rust and JavaScript.",
+    },
+    Domain {
+        label: "FFI & bindings",
+        slug: "ffi-bindings",
+        blurb: "Calling other languages and being called by them.",
     },
     Domain {
         label: "Macros, derive & codegen",

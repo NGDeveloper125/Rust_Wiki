@@ -441,7 +441,8 @@ closed list, spelled exactly as written here:
 - Compression & archives
 - Files, paths & OS
 - Bytes, memory & layout
-- FFI, wasm & bindings
+- WebAssembly & JS interop
+- FFI & bindings
 - Macros, derive & codegen
 - Logging, tracing & metrics
 - Testing & benchmarking
