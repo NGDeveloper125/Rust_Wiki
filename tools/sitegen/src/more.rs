@@ -238,39 +238,69 @@ struct TemplateEntry {
     name: &'static str,
     /// One line. Used on the card, and again as the lead of its own page.
     summary: &'static str,
-    /// The crates it generates: (crate name, what that crate is for). The name
-    /// is written as the reader sees it, with `<name>` standing in for
-    /// whatever they pass to `--name`.
+    /// What it generates: (name, what that thing is for) — the crates, and any
+    /// file worth naming beside them. The name is written as the reader sees
+    /// it, with `<name>` standing in for whatever they pass to `--name`.
     produces: &'static [(&'static str, &'static str)],
     /// Worked invocations: (what this one shows, the arguments following the
     /// `--git ... <subfolder>` prefix that every template shares).
     examples: &'static [(&'static str, &'static str)],
 }
 
-const TEMPLATES: [TemplateEntry; 1] = [TemplateEntry {
-    name: "cli_lib",
-    summary: "A workspace with a console crate and a library crate, the path dependency and the call between them already written.",
-    produces: &[
-        (
-            "&lt;name&gt;_cli",
-            "a binary crate that depends on the library by path and calls its example method",
-        ),
-        (
-            "&lt;name&gt;_lib",
-            "a library crate holding one example method and the unit test for it",
-        ),
-    ],
-    examples: &[
-        (
-            "Crate names default to the project name",
-            "--name inventory_tool",
-        ),
-        (
-            "Or name either crate yourself",
-            "--name shop -d cli_name=shop_console -d lib_name=shop_engine",
-        ),
-    ],
-}];
+const TEMPLATES: [TemplateEntry; 2] = [
+    TemplateEntry {
+        name: "cli_lib",
+        summary: "A workspace with a console crate and a library crate, the path dependency and the call between them already written.",
+        produces: &[
+            (
+                "&lt;name&gt;_cli",
+                "a binary crate that depends on the library by path and calls its example method",
+            ),
+            (
+                "&lt;name&gt;_lib",
+                "a library crate holding one example method and the unit test for it",
+            ),
+        ],
+        examples: &[
+            (
+                "Crate names default to the project name",
+                "--name inventory_tool",
+            ),
+            (
+                "Or name either crate yourself",
+                "--name shop -d cli_name=shop_console -d lib_name=shop_engine",
+            ),
+        ],
+    },
+    TemplateEntry {
+        name: "wasm_lib",
+        summary: "A workspace with a WebAssembly module and the library it calls, and a page that loads the module and runs it.",
+        produces: &[
+            (
+                "&lt;name&gt;_wasm",
+                "a cdylib crate whose wasm-bindgen export converts between JavaScript's types and the library's",
+            ),
+            (
+                "&lt;name&gt;_lib",
+                "a library crate holding one example method and the unit test for it",
+            ),
+            (
+                "index.html",
+                "a page that imports the generated JavaScript and calls the export",
+            ),
+        ],
+        examples: &[
+            (
+                "Crate names default to the project name",
+                "--name pixel_tool",
+            ),
+            (
+                "Or name either crate yourself",
+                "--name editor -d wasm_name=editor_bindings -d lib_name=editor_core",
+            ),
+        ],
+    },
+];
 
 /// A template's page URL, site-root-relative.
 fn template_url(name: &str) -> String {
