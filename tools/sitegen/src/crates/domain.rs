@@ -87,6 +87,11 @@ pub const DOMAINS: &[Domain] = &[
         blurb: "Maps, sets, iterator adaptors, and containers with different trade-offs to the standard library's.",
     },
     Domain {
+        label: "Machine learning",
+        slug: "machine-learning",
+        blurb: "Neural networks, training and inference, and the tensor libraries underneath them.",
+    },
+    Domain {
         label: "Numerics & math",
         slug: "numerics-math",
         blurb: "Linear algebra, arbitrary precision, statistics, and numeric traits.",
