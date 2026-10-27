@@ -127,7 +127,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Prove it answers, using hyper as the client too.
     let stream = tokio::net::TcpStream::connect(addr).await?;
     let (mut sender, conn) = hyper::client::conn::http1::handshake(TokioIo::new(stream)).await?;
-    tokio::spawn(async move {
+    let driver = tokio::spawn(async move {
         let _ = conn.await;
     });
 
@@ -138,6 +138,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let response = sender.send_request(request).await?;
     assert_eq!(response.status(), StatusCode::OK);
+
+    // Dropping the sender closes the connection. Without this, keep-alive
+    // leaves serve_connection waiting for a second request and the await below
+    // never returns.
+    drop(sender);
+    driver.await?;
 
     server.await?;
     Ok(())
@@ -150,7 +156,9 @@ and what happens on shutdown — which is why a proxy, a load balancer or a
 protocol gateway wants this crate rather than a framework. For an ordinary web
 application that control is a cost rather than a benefit, and `axum` writes this
 loop better than you will. In real code each accepted connection goes in its own
-`tokio::spawn`; this example serves one so that it terminates.
+`tokio::spawn`; this example serves one so that it terminates — and note the
+`drop(sender)`, which is what lets it: an HTTP/1.1 connection stays open for
+reuse, so the server keeps waiting until the client's side is closed.
 
 ### Use case: Making a request over a connection you control
 
