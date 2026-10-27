@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rust - gungraun crate - Rusty Yellow Pages</title>
+<meta name="description" content="Benchmarks by counting instructions under Valgrind rather than measuring time, so results are deterministic and usable in CI. Formerly published as iai-callgrind.">
+<link rel="canonical" href="https://rustyyellowpages.dev/crates/gungraun.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Rusty Yellow Pages">
+<meta property="og:title" content="Rust - gungraun crate - Rusty Yellow Pages">
+<meta property="og:description" content="Benchmarks by counting instructions under Valgrind rather than measuring time, so results are deterministic and usable in CI. Formerly published as iai-callgrind.">
+<meta property="og:url" content="https://rustyyellowpages.dev/crates/gungraun.html">
+<meta property="og:image" content="https://rustyyellowpages.dev/assets/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rust - gungraun crate - Rusty Yellow Pages">
+<meta name="twitter:description" content="Benchmarks by counting instructions under Valgrind rather than measuring time, so results are deterministic and usable in CI. Formerly published as iai-callgrind.">
+<meta name="twitter:image" content="https://rustyyellowpages.dev/assets/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Rusty Yellow Pages — a free, open-source Rust reference">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"WebSite","@id":"https://rustyyellowpages.dev/#website","url":"https://rustyyellowpages.dev/","name":"Rusty Yellow Pages","alternateName":"RustyYellowPages","inLanguage":"en","publisher":{"@id":"https://rustyyellowpages.dev/#organization"}},
+{"@type":"Organization","@id":"https://rustyyellowpages.dev/#organization","name":"Rusty Yellow Pages","url":"https://rustyyellowpages.dev/","sameAs":["https://github.com/NGDeveloper125/Rust_Wiki"]},
+{"@type":"WebPage","@id":"https://rustyyellowpages.dev/crates/gungraun.html","url":"https://rustyyellowpages.dev/crates/gungraun.html","name":"Rust - gungraun crate - Rusty Yellow Pages","description":"Benchmarks by counting instructions under Valgrind rather than measuring time, so results are deterministic and usable in CI. Formerly published as iai-callgrind.","inLanguage":"en","isPartOf":{"@id":"https://rustyyellowpages.dev/#website"}}
+]}
+</script>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+
+  <a class="wordmark" href="../">
+    <div class="mark">R</div>
+    <div class="name">RUSTY <span class="lo">YELLOW PAGES</span></div>
+  </a>
+
+  <div class="search" id="search">
+    <div class="search-field">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.6-3.6"/></svg>
+      <input id="search-input" type="text" placeholder="Search tokens &amp; concepts&hellip;  &nbsp;try &quot;borrow&quot;, &quot;&amp;&quot;, &quot;lifetime&quot;" autocomplete="off" spellcheck="false">
+      <span class="kbd">/</span>
+    </div>
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">
+    <span class="ic-moon" style="display:inline-flex"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+    <span class="ic-sun"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+    <span class="lbl" id="theme-label">Dark</span>
+  </button>
+</header>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="nav-toplinks">
+      <a class="nav-toplink" href="../conversations/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Conversations</span></a>
+      <a class="nav-toplink" href="../articles/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 1 1H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg><span>Articles</span></a>
+      <div class="nav-group nav-toplink-group open">
+        <div class="nav-toplink-row">
+          <a class="nav-toplink active" href="../crates/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/></svg><span>Crates</span></a>
+          <button class="nav-toggle nav-toplink-toggle" aria-expanded="true" aria-label="Show crate sections"><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+        </div>
+        <div class="nav-children"><div>
+          <a class="nav-link nav-domain-link" href="../crates/#async-runtimes-concurrency">Async runtimes &amp; concurrency</a>
+          <a class="nav-link nav-domain-link" href="../crates/#http-web-rpc">HTTP, web &amp; RPC</a>
+          <a class="nav-link nav-domain-link" href="../crates/#serialization-data-formats">Serialization &amp; data formats</a>
+          <a class="nav-link nav-domain-link" href="../crates/#error-handling">Error handling</a>
+          <a class="nav-link nav-domain-link" href="../crates/#cli-terminal">CLI &amp; terminal</a>
+          <a class="nav-link nav-domain-link" href="../crates/#text-parsing-unicode">Text, parsing &amp; Unicode</a>
+          <a class="nav-link nav-domain-link" href="../crates/#collections-data-structures">Collections &amp; data structures</a>
+          <a class="nav-link nav-domain-link" href="../crates/#machine-learning">Machine learning</a>
+          <a class="nav-link nav-domain-link" href="../crates/#numerics-math">Numerics &amp; math</a>
+          <a class="nav-link nav-domain-link" href="../crates/#randomness-ids">Randomness &amp; IDs</a>
+          <a class="nav-link nav-domain-link" href="../crates/#crypto-hashing-tls">Crypto, hashing &amp; TLS</a>
+          <a class="nav-link nav-domain-link" href="../crates/#files-paths-os">Files, paths &amp; OS</a>
+          <a class="nav-link nav-domain-link" href="../crates/#bytes-memory-layout">Bytes, memory &amp; layout</a>
+          <a class="nav-link nav-domain-link" href="../crates/#webassembly-js-interop">WebAssembly &amp; JS interop</a>
+          <a class="nav-link nav-domain-link" href="../crates/#macros-derive-codegen">Macros, derive &amp; codegen</a>
+          <a class="nav-link nav-domain-link" href="../crates/#logging-tracing-metrics">Logging, tracing &amp; metrics</a>
+          <a class="nav-link nav-domain-link active" href="../crates/#testing-benchmarking">Testing &amp; benchmarking</a>
+          <a class="nav-link nav-domain-link" href="../crates/#build-scripts-tooling">Build scripts &amp; tooling</a>
+        </div></div>
+      </div>
+      <a class="nav-toplink" href="../wasm/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m7 9 2.5 7L12 11l2.5 5L17 9"/></svg><span>WebAssembly</span></a>
+      <a class="nav-toplink" href="../more/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></a>
+    </div>
+
+    <div class="nav-section-label">Syntax</div>
+
+    <div class="nav-group" data-group="keywords">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Keywords</span><span class="g-count">55</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Basics</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/const.html"><span class="tok">const</span></a>
+        <a class="nav-link" href="../syntax/keywords/false.html"><span class="tok">false</span></a>
+        <a class="nav-link" href="../syntax/keywords/fn.html"><span class="tok">fn</span></a>
+        <a class="nav-link" href="../syntax/keywords/let.html"><span class="tok">let</span></a>
+        <a class="nav-link" href="../syntax/keywords/mut.html"><span class="tok">mut</span></a>
+        <a class="nav-link" href="../syntax/keywords/true.html"><span class="tok">true</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Control Flow</span><span class="g-count">11</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/break.html"><span class="tok">break</span></a>
+        <a class="nav-link" href="../syntax/keywords/continue.html"><span class="tok">continue</span></a>
+        <a class="nav-link" href="../syntax/keywords/else.html"><span class="tok">else</span></a>
+        <a class="nav-link" href="../syntax/keywords/for.html"><span class="tok">for</span></a>
+        <a class="nav-link" href="../syntax/keywords/if.html"><span class="tok">if</span></a>
+        <a class="nav-link" href="../syntax/keywords/if-let.html"><span class="tok">if let</span></a>
+        <a class="nav-link" href="../syntax/keywords/in.html"><span class="tok">in</span></a>
+        <a class="nav-link" href="../syntax/keywords/loop.html"><span class="tok">loop</span></a>
+        <a class="nav-link" href="../syntax/keywords/match.html"><span class="tok">match</span></a>
+        <a class="nav-link" href="../syntax/keywords/return.html"><span class="tok">return</span></a>
+        <a class="nav-link" href="../syntax/keywords/while.html"><span class="tok">while</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Ownership &amp; Borrowing</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/move.html"><span class="tok">move</span></a>
+        <a class="nav-link" href="../syntax/keywords/ref.html"><span class="tok">ref</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Data Structures</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/as.html"><span class="tok">as</span></a>
+        <a class="nav-link" href="../syntax/keywords/enum.html"><span class="tok">enum</span></a>
+        <a class="nav-link" href="../syntax/keywords/struct.html"><span class="tok">struct</span></a>
+        <a class="nav-link" href="../syntax/keywords/type.html"><span class="tok">type</span></a>
+        <a class="nav-link" href="../syntax/keywords/union.html"><span class="tok">union</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Traits &amp; Polymorphism</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/self-type.html"><span class="tok">Self</span></a>
+        <a class="nav-link" href="../syntax/keywords/dyn.html"><span class="tok">dyn</span></a>
+        <a class="nav-link" href="../syntax/keywords/impl.html"><span class="tok">impl</span></a>
+        <a class="nav-link" href="../syntax/keywords/self.html"><span class="tok">self</span></a>
+        <a class="nav-link" href="../syntax/keywords/trait.html"><span class="tok">trait</span></a>
+        <a class="nav-link" href="../syntax/keywords/where.html"><span class="tok">where</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/crate.html"><span class="tok">crate</span></a>
+        <a class="nav-link" href="../syntax/keywords/extern-crate.html"><span class="tok">extern crate</span></a>
+        <a class="nav-link" href="../syntax/keywords/mod.html"><span class="tok">mod</span></a>
+        <a class="nav-link" href="../syntax/keywords/pub.html"><span class="tok">pub</span></a>
+        <a class="nav-link" href="../syntax/keywords/super.html"><span class="tok">super</span></a>
+        <a class="nav-link" href="../syntax/keywords/use.html"><span class="tok">use</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Concurrency &amp; Async</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/async.html"><span class="tok">async</span></a>
+        <a class="nav-link" href="../syntax/keywords/await.html"><span class="tok">await</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Memory &amp; Unsafe</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/extern.html"><span class="tok">extern</span></a>
+        <a class="nav-link" href="../syntax/keywords/static.html"><span class="tok">static</span></a>
+        <a class="nav-link" href="../syntax/keywords/unsafe.html"><span class="tok">unsafe</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macros</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/macro-rules.html"><span class="tok">macro_rules!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Reserved Keywords</span><span class="g-count">13</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/keywords/abstract.html"><span class="tok">abstract</span></a>
+        <a class="nav-link" href="../syntax/keywords/become.html"><span class="tok">become</span></a>
+        <a class="nav-link" href="../syntax/keywords/box.html"><span class="tok">box</span></a>
+        <a class="nav-link" href="../syntax/keywords/do.html"><span class="tok">do</span></a>
+        <a class="nav-link" href="../syntax/keywords/final.html"><span class="tok">final</span></a>
+        <a class="nav-link" href="../syntax/keywords/gen.html"><span class="tok">gen</span></a>
+        <a class="nav-link" href="../syntax/keywords/override.html"><span class="tok">override</span></a>
+        <a class="nav-link" href="../syntax/keywords/priv.html"><span class="tok">priv</span></a>
+        <a class="nav-link" href="../syntax/keywords/try.html"><span class="tok">try</span></a>
+        <a class="nav-link" href="../syntax/keywords/typeof.html"><span class="tok">typeof</span></a>
+        <a class="nav-link" href="../syntax/keywords/unsized.html"><span class="tok">unsized</span></a>
+        <a class="nav-link" href="../syntax/keywords/virtual.html"><span class="tok">virtual</span></a>
+        <a class="nav-link" href="../syntax/keywords/yield.html"><span class="tok">yield</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="operators">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Operators & Sigils</span><span class="g-count">34</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Arithmetic</span><span class="g-count">10</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/percent.html"><span class="tok">%</span></a>
+        <a class="nav-link" href="../syntax/operators/percent-equals.html"><span class="tok">%=</span></a>
+        <a class="nav-link" href="../syntax/operators/asterisk.html"><span class="tok">*</span></a>
+        <a class="nav-link" href="../syntax/operators/asterisk-equals.html"><span class="tok">*=</span></a>
+        <a class="nav-link" href="../syntax/operators/plus.html"><span class="tok">+</span></a>
+        <a class="nav-link" href="../syntax/operators/plus-equals.html"><span class="tok">+=</span></a>
+        <a class="nav-link" href="../syntax/operators/minus.html"><span class="tok">-</span></a>
+        <a class="nav-link" href="../syntax/operators/minus-equals.html"><span class="tok">-=</span></a>
+        <a class="nav-link" href="../syntax/operators/slash.html"><span class="tok">/</span></a>
+        <a class="nav-link" href="../syntax/operators/slash-equals.html"><span class="tok">/=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Comparison</span><span class="g-count">6</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/not-equal.html"><span class="tok">!=</span></a>
+        <a class="nav-link" href="../syntax/operators/less-than.html"><span class="tok">&lt;</span></a>
+        <a class="nav-link" href="../syntax/operators/less-than-or-equal.html"><span class="tok">&lt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/equal-equal.html"><span class="tok">==</span></a>
+        <a class="nav-link" href="../syntax/operators/greater-than.html"><span class="tok">&gt;</span></a>
+        <a class="nav-link" href="../syntax/operators/greater-than-or-equal.html"><span class="tok">&gt;=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Logical</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/exclamation-mark.html"><span class="tok">!</span></a>
+        <a class="nav-link" href="../syntax/operators/ampersand-ampersand.html"><span class="tok">&amp;&amp;</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe-pipe.html"><span class="tok">||</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Bitwise</span><span class="g-count">10</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/ampersand.html"><span class="tok">&amp;</span></a>
+        <a class="nav-link" href="../syntax/operators/ampersand-equals.html"><span class="tok">&amp;=</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-left.html"><span class="tok">&lt;&lt;</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-left-equals.html"><span class="tok">&lt;&lt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-right.html"><span class="tok">&gt;&gt;</span></a>
+        <a class="nav-link" href="../syntax/operators/shift-right-equals.html"><span class="tok">&gt;&gt;=</span></a>
+        <a class="nav-link" href="../syntax/operators/caret.html"><span class="tok">^</span></a>
+        <a class="nav-link" href="../syntax/operators/caret-equals.html"><span class="tok">^=</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe.html"><span class="tok">|</span></a>
+        <a class="nav-link" href="../syntax/operators/pipe-equals.html"><span class="tok">|=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Assignment</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/equals.html"><span class="tok">=</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Ownership &amp; Borrowing</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/raw-borrow.html"><span class="tok">&amp;raw const / &amp;raw mut</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Data Structures</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/associated-type-binding.html"><span class="tok">Type&lt;Ident = Type&gt;</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/path-separator.html"><span class="tok">::</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Error Handling</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/operators/question-mark.html"><span class="tok">?</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="lifetimes">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Lifetimes</span><span class="g-count">3</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/lifetimes/named-lifetime.html"><span class="tok">'a (named lifetime)</span></a>
+        <a class="nav-link" href="../syntax/lifetimes/static-lifetime.html"><span class="tok">'static</span></a>
+        <a class="nav-link" href="../syntax/lifetimes/hrtb.html"><span class="tok">for&lt;'a&gt; Type</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="literals">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Literals</span><span class="g-count">17</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/literals/integer-binary.html"><span class="tok">Binary integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/byte-literal.html"><span class="tok">Byte literal</span></a>
+        <a class="nav-link" href="../syntax/literals/byte-string-literal.html"><span class="tok">Byte string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/c-string-literal.html"><span class="tok">C string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/char-literal.html"><span class="tok">Character literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-decimal.html"><span class="tok">Decimal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/digit-separator.html"><span class="tok">Digit separator (_)</span></a>
+        <a class="nav-link" href="../syntax/literals/escape-sequences.html"><span class="tok">Escape sequences</span></a>
+        <a class="nav-link" href="../syntax/literals/float-suffixes.html"><span class="tok">Float suffixes</span></a>
+        <a class="nav-link" href="../syntax/literals/float-literal.html"><span class="tok">Floating-point literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-hexadecimal.html"><span class="tok">Hexadecimal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-suffixes.html"><span class="tok">Integer suffixes</span></a>
+        <a class="nav-link" href="../syntax/literals/integer-octal.html"><span class="tok">Octal integer literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-c-string-literal.html"><span class="tok">Raw C string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-byte-string-literal.html"><span class="tok">Raw byte string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/raw-string-literal.html"><span class="tok">Raw string literal</span></a>
+        <a class="nav-link" href="../syntax/literals/string-literal.html"><span class="tok">String literal</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="punctuation">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Punctuation</span><span class="g-count">13</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/punctuation/parentheses.html"><span class="tok">( )</span></a>
+        <a class="nav-link" href="../syntax/punctuation/comma.html"><span class="tok">,</span></a>
+        <a class="nav-link" href="../syntax/punctuation/arrow.html"><span class="tok">-&gt;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/dot.html"><span class="tok">.</span></a>
+        <a class="nav-link" href="../syntax/punctuation/range.html"><span class="tok">.. / ..= / ...</span></a>
+        <a class="nav-link" href="../syntax/punctuation/colon.html"><span class="tok">:</span></a>
+        <a class="nav-link" href="../syntax/punctuation/semicolon.html"><span class="tok">;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/fat-arrow.html"><span class="tok">=&gt;</span></a>
+        <a class="nav-link" href="../syntax/punctuation/at-sign.html"><span class="tok">@</span></a>
+        <a class="nav-link" href="../syntax/punctuation/reserved-syntax-and-edition-gotchas.html"><span class="tok">Reserved syntax &amp; edition gotchas</span></a>
+        <a class="nav-link" href="../syntax/punctuation/square-brackets.html"><span class="tok">[ ]</span></a>
+        <a class="nav-link" href="../syntax/punctuation/underscore.html"><span class="tok">_</span></a>
+        <a class="nav-link" href="../syntax/punctuation/curly-braces.html"><span class="tok">{ }</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="comments">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Comments</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/comments/block-comment.html"><span class="tok">/* */ (block comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/inner-block-doc-comment.html"><span class="tok">/*! */ (inner block doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/outer-block-doc-comment.html"><span class="tok">/** */ (outer block doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/line-comment.html"><span class="tok">// (line comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/inner-line-doc-comment.html"><span class="tok">//! (inner line doc comment)</span></a>
+        <a class="nav-link" href="../syntax/comments/outer-line-doc-comment.html"><span class="tok">/// (outer line doc comment)</span></a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="attributes">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Attributes</span><span class="g-count">36</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Core Syntax</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/attribute-syntax.html"><span class="tok">#[meta] / #![meta]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Conditional Compilation</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/cfg-attribute.html"><span class="tok">#[cfg(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/cfg-attr-attribute.html"><span class="tok">#[cfg_attr(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Testing</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/ignore-attribute.html"><span class="tok">#[ignore]</span></a>
+        <a class="nav-link" href="../syntax/attributes/should-panic-attribute.html"><span class="tok">#[should_panic]</span></a>
+        <a class="nav-link" href="../syntax/attributes/test-attribute.html"><span class="tok">#[test]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Lints &amp; Diagnostics</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/allow-and-friends.html"><span class="tok">#[allow(...)] / #[warn(...)] / #[deny(...)] / #[forbid(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/deprecated-attribute.html"><span class="tok">#[deprecated]</span></a>
+        <a class="nav-link" href="../syntax/attributes/diagnostic-attributes.html"><span class="tok">#[diagnostic::on_unimplemented] / #[diagnostic::do_not_recommend]</span></a>
+        <a class="nav-link" href="../syntax/attributes/expect-attribute.html"><span class="tok">#[expect(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/must-use-attribute.html"><span class="tok">#[must_use]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Documentation</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/doc-attribute.html"><span class="tok">#[doc = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Traits &amp; Derives</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/automatically-derived.html"><span class="tok">#[automatically_derived]</span></a>
+        <a class="nav-link" href="../syntax/attributes/derive.html"><span class="tok">#[derive(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macros</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/macro-export-and-use.html"><span class="tok">#[macro_export] / #[macro_use]</span></a>
+        <a class="nav-link" href="../syntax/attributes/proc-macro-attributes.html"><span class="tok">#[proc_macro] / #[proc_macro_derive(...)] / #[proc_macro_attribute]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Types &amp; Layout</span><span class="g-count">2</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/non-exhaustive.html"><span class="tok">#[non_exhaustive]</span></a>
+        <a class="nav-link" href="../syntax/attributes/repr.html"><span class="tok">#[repr(...)]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Modules &amp; Visibility</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/path-attribute.html"><span class="tok">#[path = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">FFI &amp; Linkage</span><span class="g-count">8</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/crate-type-and-name-attributes.html"><span class="tok">#[crate_type = &quot;...&quot;] / #[crate_name = &quot;...&quot;]</span></a>
+        <a class="nav-link" href="../syntax/attributes/naked-attribute.html"><span class="tok">#[naked]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-builtins-attribute.html"><span class="tok">#[no_builtins]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-main-attribute.html"><span class="tok">#[no_main]</span></a>
+        <a class="nav-link" href="../syntax/attributes/linkage-attributes.html"><span class="tok">#[no_mangle] / #[link(...)] / #[link_name] / #[link_ordinal] / #[link_section] / #[no_link] / #[export_name]</span></a>
+        <a class="nav-link" href="../syntax/attributes/target-feature-attributes.html"><span class="tok">#[target_feature(...)] / #[instruction_set(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/used-attribute.html"><span class="tok">#[used]</span></a>
+        <a class="nav-link" href="../syntax/attributes/windows-subsystem-attribute.html"><span class="tok">#[windows_subsystem = &quot;...&quot;]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">No-std &amp; Embedded Runtime</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/no-std-attribute.html"><span class="tok">#![no_std]</span></a>
+        <a class="nav-link" href="../syntax/attributes/global-allocator-attribute.html"><span class="tok">#[global_allocator]</span></a>
+        <a class="nav-link" href="../syntax/attributes/no-implicit-prelude-attribute.html"><span class="tok">#[no_implicit_prelude]</span></a>
+        <a class="nav-link" href="../syntax/attributes/panic-handler-attribute.html"><span class="tok">#[panic_handler]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Compiler Hints &amp; Limits</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/attributes/feature-attribute.html"><span class="tok">#![feature(...)]</span></a>
+        <a class="nav-link" href="../syntax/attributes/cold-attribute.html"><span class="tok">#[cold]</span></a>
+        <a class="nav-link" href="../syntax/attributes/debugger-attributes.html"><span class="tok">#[debugger_visualizer(...)] / #[collapse_debuginfo]</span></a>
+        <a class="nav-link" href="../syntax/attributes/recursion-and-type-length-limit.html"><span class="tok">#[recursion_limit = &quot;N&quot;] / #[type_length_limit = &quot;N&quot;]</span></a>
+        <a class="nav-link" href="../syntax/attributes/track-caller-attribute.html"><span class="tok">#[track_caller]</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="macros">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Macros</span><span class="g-count">16</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Macro Definition Syntax</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/repetition.html"><span class="tok">$(...)…</span></a>
+        <a class="nav-link" href="../syntax/macros/metavariable.html"><span class="tok">$ident</span></a>
+        <a class="nav-link" href="../syntax/macros/fragment-specifier.html"><span class="tok">$ident:kind</span></a>
+        <a class="nav-link" href="../syntax/macros/invocation-forms.html"><span class="tok">ident!(...) / ident!{...} / ident![...]</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Output &amp; Formatting</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/format-macro.html"><span class="tok">format!</span></a>
+        <a class="nav-link" href="../syntax/macros/println-and-print.html"><span class="tok">println! / print! / eprintln! / eprint!</span></a>
+        <a class="nav-link" href="../syntax/macros/write-macros.html"><span class="tok">write! / writeln!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Collections</span><span class="g-count">1</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/vec-macro.html"><span class="tok">vec!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Errors &amp; Assertions</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/assert-macros.html"><span class="tok">assert! / assert_eq! / assert_ne!</span></a>
+        <a class="nav-link" href="../syntax/macros/matches-macro.html"><span class="tok">matches!</span></a>
+        <a class="nav-link" href="../syntax/macros/panic-macro.html"><span class="tok">panic!</span></a>
+        <a class="nav-link" href="../syntax/macros/todo-and-friends.html"><span class="tok">todo! / unimplemented! / unreachable!</span></a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Compile-time Introspection</span><span class="g-count">4</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../syntax/macros/cfg-macro.html"><span class="tok">cfg!</span></a>
+        <a class="nav-link" href="../syntax/macros/introspection-macros.html"><span class="tok">concat! / stringify! / line! / column! / file! / module_path!</span></a>
+        <a class="nav-link" href="../syntax/macros/env-macros.html"><span class="tok">env! / option_env!</span></a>
+        <a class="nav-link" href="../syntax/macros/include-macros.html"><span class="tok">include! / include_str! / include_bytes!</span></a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-section-label">Concepts</div>
+
+    <div class="nav-group" data-group="ownership-borrowing">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Ownership & Borrowing</span><span class="g-count">16</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/ownership-borrowing/borrowing-shared-references.html">Borrowing (shared references)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/copy-vs-clone.html">Copy vs Clone</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/deref-coercion.html">Deref &amp; DerefMut coercion</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/immutability-by-default.html">Immutability by default</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/interior-mutability.html">Interior mutability (Cell &amp; RefCell)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/lifetime-elision.html">Lifetime elision</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/lifetimes.html">Lifetimes</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/move-semantics.html">Move semantics</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/mutable-borrowing.html">Mutable borrowing</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/ownership.html">Ownership</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/raii-and-drop.html">RAII &amp; the Drop trait</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/shared-ownership-rc-arc.html">Shared ownership (Rc &amp; Arc)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/smart-pointers-box.html">Smart pointers (Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/stack-vs-heap.html">Stack vs heap allocation</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/borrow-checker.html">The borrow checker</a>
+        <a class="nav-link" href="../concepts/ownership-borrowing/weak-references.html">Weak references (Weak&lt;T&gt;)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="types-data-modeling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Types & Data Modeling</span><span class="g-count">15</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/types-data-modeling/arrays-vs-vec.html">Arrays vs Vec</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/associated-types.html">Associated types</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/const-generics.html">Const generics</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/enums-algebraic-data-types.html">Enums (algebraic data types)</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/generics.html">Generics</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/numeric-types-overflow-behavior.html">Numeric types &amp; overflow behavior</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/recursive-types-via-box.html">Recursive types (via Box&lt;T&gt;)</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/slices.html">Slices</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/structs.html">Structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/the-newtype-pattern.html">The newtype pattern</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/tuple-structs.html">Tuple structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/type-aliases.html">Type aliases</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/type-inference.html">Type inference</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/unit-structs.html">Unit structs</a>
+        <a class="nav-link" href="../concepts/types-data-modeling/zero-sized-types-phantomdata.html">Zero-sized types &amp; PhantomData</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="traits-polymorphism">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Traits & Polymorphism</span><span class="g-count">13</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/traits-polymorphism/blanket-implementations.html">Blanket implementations</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/default-trait-methods.html">Default trait methods</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/dependency-injection-via-traits.html">Dependency injection via traits/generics</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/derivable-traits.html">Derivable traits (Debug, Clone, PartialEq, …)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/marker-traits.html">Marker traits (Send, Sync, Sized, Copy)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/operator-overloading.html">Operator overloading (std::ops traits)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/static-dispatch-monomorphization.html">Static dispatch &amp; monomorphization</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/supertraits.html">Supertraits</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/the-orphan-rule-and-coherence.html">The orphan rule &amp; coherence</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/trait-bounds.html">Trait bounds</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/trait-objects-dynamic-dispatch.html">Trait objects &amp; dynamic dispatch (dyn Trait)</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/traits.html">Traits</a>
+        <a class="nav-link" href="../concepts/traits-polymorphism/type-erasure-dyn-any.html">Type erasure (dyn Any &amp; downcasting)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="functions-closures">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Functions & Closures</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/functions-closures/closures-and-capturing.html">Closures &amp; capturing</a>
+        <a class="nav-link" href="../concepts/functions-closures/expression-oriented-language.html">Expression-oriented language</a>
+        <a class="nav-link" href="../concepts/functions-closures/fn-fnmut-fnonce.html">Fn / FnMut / FnOnce</a>
+        <a class="nav-link" href="../concepts/functions-closures/function-pointers.html">Function pointers (fn types)</a>
+        <a class="nav-link" href="../concepts/functions-closures/functions.html">Functions</a>
+        <a class="nav-link" href="../concepts/functions-closures/higher-order-functions.html">Higher-order functions</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="iterators">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Iterators</span><span class="g-count">7</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/iterators/custom-iterators.html">Custom iterators</a>
+        <a class="nav-link" href="../concepts/iterators/fromiterator-and-collect-targets.html">FromIterator &amp; collect targets</a>
+        <a class="nav-link" href="../concepts/iterators/intoiterator.html">IntoIterator (iter/iter_mut/into_iter)</a>
+        <a class="nav-link" href="../concepts/iterators/iterator-adaptors.html">Iterator adaptors</a>
+        <a class="nav-link" href="../concepts/iterators/iterator-consumers.html">Iterator consumers</a>
+        <a class="nav-link" href="../concepts/iterators/lazy-evaluation.html">Lazy evaluation</a>
+        <a class="nav-link" href="../concepts/iterators/the-iterator-trait.html">The Iterator trait</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="error-handling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Error Handling</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/error-handling/custom-error-types.html">Custom error types</a>
+        <a class="nav-link" href="../concepts/error-handling/option.html">Option&lt;T&gt;</a>
+        <a class="nav-link" href="../concepts/error-handling/panic-and-unwinding.html">Panic &amp; unwinding</a>
+        <a class="nav-link" href="../concepts/error-handling/result.html">Result&lt;T, E&gt;</a>
+        <a class="nav-link" href="../concepts/error-handling/the-question-mark-operator.html">The ? operator (concept angle)</a>
+        <a class="nav-link" href="../concepts/error-handling/the-error-trait.html">The Error trait</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="pattern-matching">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Pattern Matching</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/pattern-matching/destructuring.html">Destructuring</a>
+        <a class="nav-link" href="../concepts/pattern-matching/exhaustiveness-checking.html">Exhaustiveness checking</a>
+        <a class="nav-link" href="../concepts/pattern-matching/match-guards.html">Match guards</a>
+        <a class="nav-link" href="../concepts/pattern-matching/if-let-and-while-let.html">if let / while let</a>
+        <a class="nav-link" href="../concepts/pattern-matching/match-expressions.html">match expressions</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="modules-crates-visibility">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Modules, Crates & Visibility</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/cargo-and-cargo-toml.html">Cargo &amp; Cargo.toml</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/crates.html">Crates</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/dependency-management-and-semver.html">Dependency management &amp; semver</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/modules.html">Modules</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/visibility-and-privacy.html">Visibility &amp; privacy (pub and friends)</a>
+        <a class="nav-link" href="../concepts/modules-crates-visibility/workspaces.html">Workspaces</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="concurrency-async">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Concurrency & Async</span><span class="g-count">7</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/concurrency-async/async-runtimes.html">Async runtimes</a>
+        <a class="nav-link" href="../concepts/concurrency-async/async-await.html">Async/await</a>
+        <a class="nav-link" href="../concepts/concurrency-async/futures.html">Futures</a>
+        <a class="nav-link" href="../concepts/concurrency-async/message-passing-channels.html">Message passing (channels / mpsc)</a>
+        <a class="nav-link" href="../concepts/concurrency-async/send-and-sync.html">Send &amp; Sync</a>
+        <a class="nav-link" href="../concepts/concurrency-async/shared-state-concurrency.html">Shared-state concurrency (Mutex, RwLock)</a>
+        <a class="nav-link" href="../concepts/concurrency-async/threads.html">Threads (std::thread)</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="memory-unsafe">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Memory & Unsafe</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/memory-unsafe/ffi.html">FFI (foreign function interface)</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/memory-layout-and-repr.html">Memory layout &amp; repr</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/raw-pointers.html">Raw pointers (*const T / *mut T)</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/the-undefined-behavior-boundary.html">The undefined-behavior boundary</a>
+        <a class="nav-link" href="../concepts/memory-unsafe/unsafe-rust.html">Unsafe Rust</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="macros-metaprogramming">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Macros & Metaprogramming</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/attribute-like-macros.html">Attribute-like macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/declarative-macros.html">Declarative macros (macro_rules!)</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/derive-macros.html">Derive macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/function-like-macros.html">Function-like macros</a>
+        <a class="nav-link" href="../concepts/macros-metaprogramming/procedural-macros.html">Procedural macros</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="collections-strings">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Collections & Strings</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/collections-strings/btreemap-and-btreeset.html">BTreeMap &amp; BTreeSet</a>
+        <a class="nav-link" href="../concepts/collections-strings/hashmap-and-hashset.html">HashMap &amp; HashSet</a>
+        <a class="nav-link" href="../concepts/collections-strings/string-formatting.html">String formatting (Display, Debug, format!)</a>
+        <a class="nav-link" href="../concepts/collections-strings/string-vs-str.html">String vs &amp;str</a>
+        <a class="nav-link" href="../concepts/collections-strings/vec.html">Vec&lt;T&gt;</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="testing-tooling">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Testing & Tooling</span><span class="g-count">6</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/testing-tooling/benchmarking.html">Benchmarking</a>
+        <a class="nav-link" href="../concepts/testing-tooling/clippy-and-rustfmt.html">Clippy &amp; rustfmt</a>
+        <a class="nav-link" href="../concepts/testing-tooling/doc-tests.html">Doc tests</a>
+        <a class="nav-link" href="../concepts/testing-tooling/integration-tests.html">Integration tests</a>
+        <a class="nav-link" href="../concepts/testing-tooling/serialization-serde.html">Serialization (the serde ecosystem)</a>
+        <a class="nav-link" href="../concepts/testing-tooling/unit-tests.html">Unit tests</a>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="design-patterns-idioms">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Design Patterns & Idioms</span><span class="g-count">19</span>
+      </button>
+      <div class="nav-children"><div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Design Patterns</span><span class="g-count">5</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-builder-pattern.html">The builder pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-command-pattern.html">The command pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-strategy-pattern.html">The strategy pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-typestate-pattern.html">The typestate pattern</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-visitor-pattern.html">The visitor pattern</a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Idioms</span><span class="g-count">11</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/compose-structs.html">Compose structs</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/composition-over-inheritance.html">Composition over inheritance</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/constructor-functions-new.html">Constructor functions (new() convention)</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/contain-unsafety-in-small-modules.html">Contain unsafety in small modules</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/on-stack-dynamic-dispatch.html">On-stack dynamic dispatch</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/prefer-small-crates.html">Prefer small crates</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/privacy-for-extensibility.html">Privacy for extensibility</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/return-consumed-argument-on-error.html">Return consumed argument on error</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/temporary-mutability.html">Temporary mutability</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/the-default-trait-as-idiom.html">The Default trait as idiom</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/mem-take-and-mem-replace.html">mem::take / mem::replace</a>
+          </div></div>
+        </div>
+
+        <div class="nav-group nav-subgroup">
+          <button class="nav-toggle" aria-expanded="false">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="g-label">Anti-patterns</span><span class="g-count">3</span>
+          </button>
+          <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-deny-warnings.html">Anti-pattern: #[deny(warnings)]</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-deref-polymorphism.html">Anti-pattern: Deref polymorphism (faking inheritance)</a>
+        <a class="nav-link" href="../concepts/design-patterns-idioms/anti-pattern-clone-to-satisfy-borrow-checker.html">Anti-pattern: cloning to satisfy the borrow checker</a>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="philosophy-principles">
+      <button class="nav-toggle" aria-expanded="false">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="g-label">Rust Philosophy & Design Principles</span><span class="g-count">5</span>
+      </button>
+      <div class="nav-children"><div>
+        <a class="nav-link" href="../concepts/philosophy-principles/make-invalid-states-unrepresentable.html">&quot;Make invalid states unrepresentable&quot;</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/fearless-concurrency.html">Fearless concurrency</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/memory-safety-without-a-garbage-collector.html">Memory safety without a garbage collector</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/the-edition-system.html">The edition system</a>
+        <a class="nav-link" href="../concepts/philosophy-principles/zero-cost-abstractions.html">Zero-cost abstractions</a>
+      </div></div>
+    </div>
+
+  </aside>
+
+  <main class="content">
+    <article class="page">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a><span class="sep">&rsaquo;</span>
+        <a href="./">Crates</a><span class="sep">&rsaquo;</span>
+        <span style="color:var(--content-fg);font-weight:600">gungraun</span>
+      </nav>
+
+      <div class="page-head">
+        <div class="title-block">
+          <h1 class="page-title">gungraun<span class="kind">Crate</span></h1>
+        </div>
+        <a class="convo-cta" href="https://crates.io/crates/gungraun" target="_blank" rel="noopener">Open on crates.io &rarr;</a>
+      </div>
+
+      <div class="crate-meta">
+        
+        <span class="crate-version">v0.20.0</span>
+        <span>published by Joining7943, gamma0987</span>
+        <span class="support-badge level-none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          no_std: no
+        </span>
+      </div>
+
+      <div class="crate-byline" data-vote-key="crate::gungraun">
+        <span>page written by <a class="article-author" href="https://github.com/NGDeveloper125" target="_blank" rel="noopener">NGDeveloper125</a> &middot; Oct 27, 2026</span>
+        <a class="article-like" hidden target="_blank" rel="noopener">&#128077; <span class="like-n"></span> &mdash; like this page on GitHub</a>
+      </div>
+
+      <div class="crate-links"><a class="crate-link" href="https://crates.io/crates/gungraun" target="_blank" rel="noopener">crates.io</a><a class="crate-link" href="https://docs.rs/gungraun/0.20.0/gungraun/" target="_blank" rel="noopener">docs.rs</a><a class="crate-link" href="https://github.com/gungraun/gungraun" target="_blank" rel="noopener">Repository</a></div>
+
+      <p class="lead">Benchmarks by counting instructions under Valgrind rather than measuring time, so results are deterministic and usable in CI. Formerly published as <code class="tok-inline">iai-callgrind</code>.</p>
+
+      <div class="article-tags"><span class="article-tag">development-tools::testing</span><span class="article-tag">development-tools::profiling</span></div>
+
+      <hr class="divider">
+
+      <nav class="section-tabs" id="section-tabs">
+        <button class="tab on" data-target="overview">Overview</button>
+        <button class="tab" data-target="use-cases">When to use it</button>
+        <button class="tab" data-target="api">API map</button>
+      </nav>
+
+      <section class="doc" data-tab="overview">
+        <h2 class="section-title">Overview</h2>
+        <p>Every wall-clock benchmark has the same weakness: the number depends on what
+else the machine was doing. <code>criterion</code> and <code>divan</code> fight this with statistics,
+and on a quiet workstation they win. On a shared CI runner they do not, which
+is why performance regressions are so rarely caught automatically.</p>
+<p><code>gungraun</code> takes the other route. It runs your code under Valgrind's Callgrind
+and <strong>counts instructions, cache accesses and memory writes</strong> instead of timing
+anything. Those counts are deterministic: the same binary on the same input
+produces the same numbers on a loaded machine, a quiet one, and a colleague's
+laptop. A diff of one instruction is a real diff.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">library_benchmark</span><span class="tok-punct">,</span> <span class="tok-variable">library_benchmark_group</span><span class="tok-punct">,</span> <span class="tok-variable">main</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hint</span><span class="tok-punct">::</span><span class="tok-variable">black_box</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">fib</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">n</span> <span class="tok-punct">&lt;</span> <span class="tok-number">2</span> <span class="tok-punct">{</span> <span class="tok-variable">n</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-call-free">fib</span><span class="tok-punct">(</span><span class="tok-variable">n</span> <span class="tok-punct">-</span> <span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-call-free">fib</span><span class="tok-punct">(</span><span class="tok-variable">n</span> <span class="tok-punct">-</span> <span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_fib</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-call-free">fib</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// A bench file is these three pieces: the benchmarks, a group, and main!.</span>
+<span class="tok-macro">library_benchmark_group!</span><span class="tok-punct">(</span><span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">fibonacci</span><span class="tok-punct">;</span> <span class="tok-variable">benchmarks</span> <span class="tok-punct">=</span> <span class="tok-variable">bench_fib</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">main!</span><span class="tok-punct">(</span><span class="tok-variable">library_benchmark_groups</span> <span class="tok-punct">=</span> <span class="tok-variable">fibonacci</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+<p><strong>It was called <code>iai-callgrind</code> until recently.</strong> The crate and its repository
+were renamed to <code>gungraun</code>; <code>iai-callgrind</code> stopped at 0.16.1 in July 2025 and
+development continues here. If you are following a tutorial or a <code>Cargo.toml</code>
+mentioning <code>iai-callgrind</code>, this is the same project under a new name. The
+original <code>iai</code>, which both descend from, has been unmaintained for years.</p>
+<p><strong>The hard requirement is Valgrind</strong>, and it shapes where this is usable.
+Valgrind runs on Linux and other Unix systems; there is no usable Windows
+support, and macOS support lags. In practice this means Linux CI, which is also
+exactly where it is most valuable. It must be installed on the machine running
+the benchmarks — the crate shells out to it.</p>
+<p><strong>What the numbers are and are not.</strong> An instruction count is not a time.
+Fewer instructions usually means faster, but not always: a branch-free version
+doing more work can beat a branchy one doing less, and cache behaviour often
+dominates both. Gungraun reports cache and branch statistics alongside the
+instruction count and estimates cycles from them, which helps, but the estimate
+is a model rather than a measurement. <strong>Use it to detect change, not to
+establish absolute speed</strong> — and when it flags a regression, confirm the wall
+clock with <a href="../crates/criterion.html"><code>criterion</code></a> before acting.</p>
+<p>The other cost is that running under Valgrind is roughly fifty times slower
+than running natively, so a benchmark doing real work needs a small input.
+Against that, it needs only one iteration rather than hundreds of samples, so
+the totals often come out comparable.</p>
+<p>Requires <strong>Rust 1.88 and edition 2024</strong>, which is aggressive. Benchmarks go in
+<code>benches/</code> with <code>harness = false</code>, as with the other two.</p>
+
+      </section>
+
+      <section class="doc" data-tab="use-cases">
+        <h2 class="section-title">When to use it</h2>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Catching performance regressions in CI</h3>
+            <p>The case that justifies the Valgrind dependency.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">library_benchmark</span><span class="tok-punct">,</span> <span class="tok-variable">library_benchmark_group</span><span class="tok-punct">,</span> <span class="tok-variable">main</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hint</span><span class="tok-punct">::</span><span class="tok-variable">black_box</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">encode</span><span class="tok-punct">(</span><span class="tok-variable">input</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-punct">[</span><span class="tok-type">u8</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">input</span><span class="tok-punct">.</span><span class="tok-call-method">iter</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">map</span><span class="tok-punct">(</span><span class="tok-punct">|</span><span class="tok-variable">b</span><span class="tok-punct">|</span> <span class="tok-variable">b</span><span class="tok-punct">.</span><span class="tok-call-method">wrapping_add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// The count for this is identical on every machine and every run,</span>
+<span class="tok-comment">// so a change in it is a change in the code, not in the weather.</span>
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_encode</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u8</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">data</span> <span class="tok-punct">=</span> <span class="tok-macro">vec!</span><span class="tok-punct">[</span><span class="tok-number">7u8</span><span class="tok-punct">;</span> <span class="tok-number">256</span><span class="tok-punct">]</span><span class="tok-punct">;</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-call-free">encode</span><span class="tok-punct">(</span><span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-punct">&amp;</span><span class="tok-variable">data</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-macro">library_benchmark_group!</span><span class="tok-punct">(</span><span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">encoding</span><span class="tok-punct">;</span> <span class="tok-variable">benchmarks</span> <span class="tok-punct">=</span> <span class="tok-variable">bench_encode</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">main!</span><span class="tok-punct">(</span><span class="tok-variable">library_benchmark_groups</span> <span class="tok-punct">=</span> <span class="tok-variable">encoding</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> a CI job comparing wall-clock timings against a stored baseline
+produces false alarms often enough that teams stop reading it. Instruction
+counts do not drift, so the threshold can be tight — a few per cent, or even
+zero — and an alert means something. This is the one benchmarking approach that
+works properly on a noisy shared runner, and the reason to accept that it only
+runs on Linux.</p>
+</div>
+          </div>
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Comparing implementations at fixed inputs</h3>
+            <p>Parameterised benchmarks, named per case.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">library_benchmark</span><span class="tok-punct">,</span> <span class="tok-variable">library_benchmark_group</span><span class="tok-punct">,</span> <span class="tok-variable">main</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hint</span><span class="tok-punct">::</span><span class="tok-variable">black_box</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">fib</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">if</span> <span class="tok-variable">n</span> <span class="tok-punct">&lt;</span> <span class="tok-number">2</span> <span class="tok-punct">{</span> <span class="tok-variable">n</span> <span class="tok-punct">}</span> <span class="tok-keyword">else</span> <span class="tok-punct">{</span> <span class="tok-call-free">fib</span><span class="tok-punct">(</span><span class="tok-variable">n</span> <span class="tok-punct">-</span> <span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">+</span> <span class="tok-call-free">fib</span><span class="tok-punct">(</span><span class="tok-variable">n</span> <span class="tok-punct">-</span> <span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// Each #[bench::name(args)] is a separate, separately-reported benchmark.</span>
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-attribute">#[bench::small(5)]</span>
+<span class="tok-attribute">#[bench::medium(10)]</span>
+<span class="tok-attribute">#[bench::large(15)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_fib</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">u64</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-call-free">fib</span><span class="tok-punct">(</span><span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-macro">library_benchmark_group!</span><span class="tok-punct">(</span><span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">fibonacci</span><span class="tok-punct">;</span> <span class="tok-variable">benchmarks</span> <span class="tok-punct">=</span> <span class="tok-variable">bench_fib</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">main!</span><span class="tok-punct">(</span><span class="tok-variable">library_benchmark_groups</span> <span class="tok-punct">=</span> <span class="tok-variable">fibonacci</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> the attribute names each case, so the report lists <code>small</code>,
+<code>medium</code> and <code>large</code> separately and each gets its own history. Because the
+measurement is exact, the ratio between them is meaningful in a way noisy
+timings are not — if <code>large</code> costs 11 times <code>medium</code> today and 14 times
+tomorrow, something changed in the algorithm rather than in the machine.</p>
+</div>
+          </div>
+        <div class="card crate-use-case">
+            <div class="scen-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Use case
+            </div>
+            <h3 class="scenario-title">Keeping setup out of the count</h3>
+            <p><code>setup</code> functions, which run outside the measured region.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">library_benchmark</span><span class="tok-punct">,</span> <span class="tok-variable">library_benchmark_group</span><span class="tok-punct">,</span> <span class="tok-variable">main</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hint</span><span class="tok-punct">::</span><span class="tok-variable">black_box</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">make_data</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">1000</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">rev</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">collect</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// setup runs before measurement begins; its instructions are not counted.</span>
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-attribute">#[bench::reversed(setup = make_data)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_sort</span><span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">data</span><span class="tok-punct">:</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Vec</span><span class="tok-punct">&lt;</span><span class="tok-type">u32</span><span class="tok-punct">&gt;</span> <span class="tok-punct">{</span>
+    <span class="tok-variable">data</span><span class="tok-punct">.</span><span class="tok-call-method">sort</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-variable">data</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-macro">library_benchmark_group!</span><span class="tok-punct">(</span><span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">sorting</span><span class="tok-punct">;</span> <span class="tok-variable">benchmarks</span> <span class="tok-punct">=</span> <span class="tok-variable">bench_sort</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">main!</span><span class="tok-punct">(</span><span class="tok-variable">library_benchmark_groups</span> <span class="tok-punct">=</span> <span class="tok-variable">sorting</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>Why it fits:</strong> building the input is work, and under instruction counting that
+work is just as visible as the thing you meant to measure — more so, since
+allocating a thousand-element vector is not cheap. <code>setup</code> is gungraun's
+equivalent of criterion's <code>iter_batched</code>, and it matters more here, because
+there is no statistical averaging to hide the difference. There is a matching
+<code>teardown</code> for cleanup that should likewise not be counted.</p>
+</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc" data-tab="api">
+        <h2 class="section-title">API map</h2>
+        <p>Three macros and a configuration type. The surface is small; the complexity is
+in Valgrind, not in the API.</p>
+
+        <div class="api-group">
+        <h3 class="api-group-title">Library benchmarks<span class="api-group-count">3</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">#[library_benchmark]</code></h4>
+            <p>Marks a function as a benchmark.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">library_benchmark</span><span class="tok-punct">,</span> <span class="tok-variable">library_benchmark_group</span><span class="tok-punct">,</span> <span class="tok-variable">main</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hint</span><span class="tok-punct">::</span><span class="tok-variable">black_box</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// The return value is kept so the work is not optimised away.</span>
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">..</span><span class="tok-number">100u64</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">sum</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-macro">library_benchmark_group!</span><span class="tok-punct">(</span><span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">arithmetic</span><span class="tok-punct">;</span> <span class="tok-variable">benchmarks</span> <span class="tok-punct">=</span> <span class="tok-variable">bench_sum</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">main!</span><span class="tok-punct">(</span><span class="tok-variable">library_benchmark_groups</span> <span class="tok-punct">=</span> <span class="tok-variable">arithmetic</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> on every benchmark of a function in your own crate — the
+"library" in the name distinguishes it from benchmarking a whole binary.
+There is no per-benchmark rename parameter; the reported name is the
+function's. <code>black_box</code> matters as much as in the other harnesses, and
+arguably more: with
+only one iteration there is no noise to disguise a body the optimiser removed,
+so a suspiciously small count is the symptom.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">#[bench::name(...)]</code> and <code class="tok-inline">setup</code></h4>
+            <p>Cases and their inputs.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">library_benchmark</span><span class="tok-punct">,</span> <span class="tok-variable">library_benchmark_group</span><span class="tok-punct">,</span> <span class="tok-variable">main</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hint</span><span class="tok-punct">::</span><span class="tok-variable">black_box</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">build</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">:</span> <span class="tok-type">usize</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">String</span> <span class="tok-punct">{</span>
+    <span class="tok-string">&quot;x&quot;</span><span class="tok-punct">.</span><span class="tok-call-method">repeat</span><span class="tok-punct">(</span><span class="tok-variable">n</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-attribute">#[bench::short(args = (4,), setup = build)]</span>
+<span class="tok-attribute">#[bench::long(args = (64,), setup = build)]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_len</span><span class="tok-punct">(</span><span class="tok-variable">s</span><span class="tok-punct">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">usize</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-variable">s</span><span class="tok-punct">.</span><span class="tok-call-method">len</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-macro">library_benchmark_group!</span><span class="tok-punct">(</span><span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">lengths</span><span class="tok-punct">;</span> <span class="tok-variable">benchmarks</span> <span class="tok-punct">=</span> <span class="tok-variable">bench_len</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+<span class="tok-macro">main!</span><span class="tok-punct">(</span><span class="tok-variable">library_benchmark_groups</span> <span class="tok-punct">=</span> <span class="tok-variable">lengths</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> for every variant you want reported separately. The <code>args</code>
+tuple is passed to <code>setup</code>, whose return value becomes the benchmark function's
+argument — so the construction cost stays outside the count while the parameter
+stays visible in the report. Without <code>setup</code>, <code>args</code> goes straight to the
+benchmark function, which is right when the argument is a cheap scalar.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig"><code class="tok-inline">library_benchmark_group!</code> and <code class="tok-inline">main!</code></h4>
+            <p>Registration.</p>
+<pre><code class="rust-hl"><span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">library_benchmark</span><span class="tok-punct">,</span> <span class="tok-variable">library_benchmark_group</span><span class="tok-punct">,</span> <span class="tok-variable">main</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+<span class="tok-keyword">use</span> <span class="tok-module">std</span><span class="tok-punct">::</span><span class="tok-module">hint</span><span class="tok-punct">::</span><span class="tok-variable">black_box</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_one</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-number">1u64</span> <span class="tok-punct">+</span> <span class="tok-number">1</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-attribute">#[library_benchmark]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_two</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punct">{</span>
+    <span class="tok-call-free">black_box</span><span class="tok-punct">(</span><span class="tok-number">2u64</span> <span class="tok-punct">*</span> <span class="tok-number">2</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// Groups collect benchmarks; main! collects groups.</span>
+<span class="tok-macro">library_benchmark_group!</span><span class="tok-punct">(</span>
+    <span class="tok-variable">name</span> <span class="tok-punct">=</span> <span class="tok-variable">arithmetic</span><span class="tok-punct">;</span>
+    <span class="tok-variable">benchmarks</span> <span class="tok-punct">=</span> <span class="tok-variable">bench_one</span><span class="tok-punct">,</span> <span class="tok-variable">bench_two</span>
+<span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-macro">main!</span><span class="tok-punct">(</span><span class="tok-variable">library_benchmark_groups</span> <span class="tok-punct">=</span> <span class="tok-variable">arithmetic</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> once per file. The group gives the benchmarks a shared name
+in the report and a place to hang shared configuration; <code>main!</code> is what makes
+the file an executable benchmark target, and it must list every group. The
+semicolon separators inside these macros are easy to get wrong — they are
+semicolons, not commas, between the named sections.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      <div class="api-group">
+        <h3 class="api-group-title">Configuration<span class="api-group-count">2</span></h3>
+        
+        <div class="scenarios crate-scenarios">
+        <div class="card api-entry">
+            <h4 class="api-sig">Valgrind tools and options</h4>
+            <p>Choosing what to measure.</p>
+<pre><code class="rust-hl"><span class="tok-comment">// no-compile — illustrative configuration, see the gungraun guide</span>
+<span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-type">LibraryBenchmarkConfig</span><span class="tok-punct">,</span> <span class="tok-type">Callgrind</span><span class="tok-punct">,</span> <span class="tok-type">EventKind</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-keyword">let</span> <span class="tok-variable">config</span> <span class="tok-punct">=</span> <span class="tok-type">LibraryBenchmarkConfig</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-punct">.</span><span class="tok-call-method">tool</span><span class="tok-punct">(</span><span class="tok-type">Callgrind</span><span class="tok-punct">::</span><span class="tok-call-assoc">default</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-call-method">soft_limits</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">EventKind</span><span class="tok-punct">::</span><span class="tok-field">Ir</span><span class="tok-punct">,</span> <span class="tok-number">5.0</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+<span class="tok-comment">// Applied at the group or main level:</span>
+<span class="tok-comment">//   library_benchmark_group!(</span>
+<span class="tok-comment">//       name = grp;</span>
+<span class="tok-comment">//       config = config;</span>
+<span class="tok-comment">//       benchmarks = bench_one</span>
+<span class="tok-comment">//   );</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> when the defaults are not what you want to measure.
+Callgrind is the default tool and gives instruction and cache counts; the crate
+also drives DHAT for heap profiling, Massif, Memcheck and Linux <code>perf</code>, which is
+the reason for the rename away from a Callgrind-specific name. Soft and hard
+limits are how a benchmark fails CI on a regression rather than merely reporting
+one — a hard limit turns a threshold breach into a non-zero exit.</p>
+</div>
+          </div>
+        <div class="card api-entry">
+            <h4 class="api-sig">Binary benchmarks</h4>
+            <p>Measuring a whole executable rather than a function.</p>
+<pre><code class="rust-hl"><span class="tok-comment">// no-compile — requires a binary target in the same crate</span>
+<span class="tok-keyword">use</span> <span class="tok-module">gungraun</span><span class="tok-punct">::</span><span class="tok-punct">{</span><span class="tok-variable">binary_benchmark</span><span class="tok-punct">,</span> <span class="tok-type">Command</span><span class="tok-punct">}</span><span class="tok-punct">;</span>
+
+<span class="tok-attribute">#[binary_benchmark]</span>
+<span class="tok-attribute">#[bench::help(args = [&quot;--help&quot;])]</span>
+<span class="tok-keyword">fn</span> <span class="tok-fn-def">bench_cli</span><span class="tok-punct">(</span><span class="tok-variable">arg</span><span class="tok-punct">:</span> <span class="tok-punct">&amp;</span><span class="tok-type">str</span><span class="tok-punct">)</span> <span class="tok-punct">-&gt;</span> <span class="tok-type">Command</span> <span class="tok-punct">{</span>
+    <span class="tok-type">Command</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-macro">env!</span><span class="tok-punct">(</span><span class="tok-string">&quot;CARGO_BIN_EXE_my-tool&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">arg</span><span class="tok-punct">(</span><span class="tok-variable">arg</span><span class="tok-punct">)</span>
+        <span class="tok-punct">.</span><span class="tok-call-method">build</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span>
+
+<span class="tok-comment">// Registered with binary_benchmark_group! and listed in main!.</span>
+</code></pre>
+
+            <div class="rationale"><p><strong>When to use it:</strong> for a command-line tool, where the interesting cost includes
+start-up, argument parsing and I/O rather than one function. It measures the
+whole process under Valgrind, so the count covers everything the binary does —
+which makes it the right instrument for "did my CLI get slower to start", a
+question function-level benchmarks cannot answer. <code>CARGO_BIN_EXE_&lt;name&gt;</code> is the
+Cargo-provided path to your built binary.</p>
+</div>
+          </div>
+        </div>
+      </div>
+      </section>
+
+      <div class="convo-actions convo-actions-foot">
+        <a class="convo-open" href="./">&#8592; Back to Crates</a>
+      </div>
+
+      <div class="footer-note">
+        <span>Rusty Yellow Pages &middot; a free, open-source Rust reference</span>
+        <span>Written against gungraun 0.20.0</span>
+      </div>
+
+    </article>
+  </main>
+</div>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>
