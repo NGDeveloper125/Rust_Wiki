@@ -1121,7 +1121,7 @@ are shared with every other HTTP crate and the page for those is over there.</li
     <span class="tok-comment">// Prove it answers, using hyper as the client too.</span>
     <span class="tok-keyword">let</span> <span class="tok-variable">stream</span> <span class="tok-punct">=</span> <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-module">net</span><span class="tok-punct">::</span><span class="tok-type">TcpStream</span><span class="tok-punct">::</span><span class="tok-call-assoc">connect</span><span class="tok-punct">(</span><span class="tok-variable">addr</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
     <span class="tok-keyword">let</span> <span class="tok-punct">(</span><span class="tok-keyword">mut</span> <span class="tok-variable">sender</span><span class="tok-punct">,</span> <span class="tok-variable">conn</span><span class="tok-punct">)</span> <span class="tok-punct">=</span> <span class="tok-module">hyper</span><span class="tok-punct">::</span><span class="tok-module">client</span><span class="tok-punct">::</span><span class="tok-module">conn</span><span class="tok-punct">::</span><span class="tok-module">http1</span><span class="tok-punct">::</span><span class="tok-call-assoc">handshake</span><span class="tok-punct">(</span><span class="tok-type">TokioIo</span><span class="tok-punct">::</span><span class="tok-call-assoc">new</span><span class="tok-punct">(</span><span class="tok-variable">stream</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
-    <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">async</span> <span class="tok-keyword">move</span> <span class="tok-punct">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-variable">driver</span> <span class="tok-punct">=</span> <span class="tok-module">tokio</span><span class="tok-punct">::</span><span class="tok-call-assoc">spawn</span><span class="tok-punct">(</span><span class="tok-keyword">async</span> <span class="tok-keyword">move</span> <span class="tok-punct">{</span>
         <span class="tok-keyword">let</span> <span class="tok-variable">_</span> <span class="tok-punct">=</span> <span class="tok-variable">conn</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">;</span>
     <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
 
@@ -1132,6 +1132,12 @@ are shared with every other HTTP crate and the page for those is over there.</li
 
     <span class="tok-keyword">let</span> <span class="tok-variable">response</span> <span class="tok-punct">=</span> <span class="tok-variable">sender</span><span class="tok-punct">.</span><span class="tok-call-method">send_request</span><span class="tok-punct">(</span><span class="tok-variable">request</span><span class="tok-punct">)</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
     <span class="tok-macro">assert_eq!</span><span class="tok-punct">(</span><span class="tok-variable">response</span><span class="tok-punct">.</span><span class="tok-call-method">status</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">StatusCode</span><span class="tok-punct">::</span><span class="tok-constant">OK</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+
+    <span class="tok-comment">// Dropping the sender closes the connection. Without this, keep-alive</span>
+    <span class="tok-comment">// leaves serve_connection waiting for a second request and the await below</span>
+    <span class="tok-comment">// never returns.</span>
+    <span class="tok-call-free">drop</span><span class="tok-punct">(</span><span class="tok-variable">sender</span><span class="tok-punct">)</span><span class="tok-punct">;</span>
+    <span class="tok-variable">driver</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
 
     <span class="tok-variable">server</span><span class="tok-punct">.</span><span class="tok-keyword">await</span><span class="tok-punct">?</span><span class="tok-punct">;</span>
     <span class="tok-field">Ok</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
@@ -1144,7 +1150,9 @@ and what happens on shutdown — which is why a proxy, a load balancer or a
 protocol gateway wants this crate rather than a framework. For an ordinary web
 application that control is a cost rather than a benefit, and <code>axum</code> writes this
 loop better than you will. In real code each accepted connection goes in its own
-<code>tokio::spawn</code>; this example serves one so that it terminates.</p>
+<code>tokio::spawn</code>; this example serves one so that it terminates — and note the
+<code>drop(sender)</code>, which is what lets it: an HTTP/1.1 connection stays open for
+reuse, so the server keeps waiting until the client's side is closed.</p>
 </div>
           </div>
         <div class="card crate-use-case">
