@@ -27,18 +27,25 @@ fn resolve_relative(current_dir: &str, target: &str) -> String {
     parts.join("/")
 }
 
+/// The set of every generated page's site-root-relative href. Used as the
+/// "known target" set when rewriting body links.
+///
+/// This must be built from *every* tree a `.md` link can name — wiki pages,
+/// articles and crate pages — not just the tree being rewritten. Passing a
+/// partial set still produces correct hrefs, because [`rewrite_links_in`]
+/// rewrites first and only consults the set to decide whether to warn, so the
+/// symptom of a partial set is a build full of warnings about pages that are
+/// in fact present. Callers therefore take the set rather than deriving it,
+/// and `main` builds the one set they all share.
+pub(crate) fn known_hrefs<'a>(hrefs: impl IntoIterator<Item = &'a str>) -> HashSet<String> {
+    hrefs.into_iter().map(str::to_owned).collect()
+}
+
 /// Rewrite every `href="....md"` in rendered section HTML to the
 /// corresponding generated page's relative `.html` href. Non-`.md`,
 /// absolute, and external hrefs are left untouched. Unresolvable targets
 /// (page not yet written) still get a best-effort `.html` link plus a
 /// build warning, matching the front-matter cross-reference policy.
-/// The set of every generated page's site-root-relative href. Used as the
-/// "known target" set when rewriting body links (both wiki pages and, via
-/// [`rewrite_links_in`], articles).
-pub(crate) fn known_hrefs(pages: &[Page]) -> HashSet<String> {
-    pages.iter().map(|p| p.href.clone()).collect()
-}
-
 pub(crate) fn rewrite_links_in(
     html: &str,
     current_dir: &str,
@@ -91,8 +98,7 @@ pub(crate) fn rewrite_links_in(
     out
 }
 
-pub fn rewrite_all(pages: &mut [Page]) {
-    let known = known_hrefs(pages);
+pub fn rewrite_all(pages: &mut [Page], known: &HashSet<String>) {
     for page in pages.iter_mut() {
         let current_dir = format!("{}/{}", section_dir_name(page.section), page.subgroup);
         let depth = page.href.matches('/').count();

@@ -93,14 +93,25 @@ fn main() {
         std::process::exit(1);
     }
 
-    bodylinks::rewrite_all(&mut pages);
-
     let mut articles = articles::load(&pages_root);
-    articles::rewrite_body_links(&mut articles, &pages);
-
     let mut crate_pages = crates::load(&pages_root);
     let mut crate_intro = crates::load_intro(&pages_root);
-    crates::rewrite_body_links(&mut crate_pages, &mut crate_intro, &pages);
+
+    // Every tree a body `.md` link can name, in one set. A crate page linking
+    // to another crate page, or a wiki page linking to either, is ordinary and
+    // common, so each rewriter needs to know about all three trees and not
+    // just its own — hence the loads above happen before any rewriting.
+    let known = bodylinks::known_hrefs(
+        pages
+            .iter()
+            .map(|p| p.href.as_str())
+            .chain(articles.iter().map(|a| a.href.as_str()))
+            .chain(crate_pages.iter().map(|c| c.href.as_str())),
+    );
+
+    bodylinks::rewrite_all(&mut pages, &known);
+    articles::rewrite_body_links(&mut articles, &known);
+    crates::rewrite_body_links(&mut crate_pages, &mut crate_intro, &known);
 
     // The crate-directory sections that have at least one page. Every
     // sidebar on the site lists them under the Crates link, so they are

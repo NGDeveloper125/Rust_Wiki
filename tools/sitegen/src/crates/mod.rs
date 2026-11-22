@@ -20,6 +20,7 @@
 pub mod domain;
 mod render;
 
+use std::collections::HashSet;
 use std::path::Path;
 
 use serde::Deserialize;
@@ -402,9 +403,8 @@ fn section<'a>(h2: &'a [(String, String)], title: &str) -> &'a str {
 /// so crate pages can link liberally into the wiki (mirrors `bodylinks` for
 /// pages). Sources live at `pages/crates/<slug>.md`, so their link base
 /// directory is `crates/`.
-pub fn rewrite_body_links(crates: &mut [Crate], intro_html: &mut String, pages: &[Page]) {
-    let known = bodylinks::known_hrefs(pages);
-    let fix = |html: &str| bodylinks::rewrite_links_in(html, "crates", DEPTH, &known);
+pub fn rewrite_body_links(crates: &mut [Crate], intro_html: &mut String, known: &HashSet<String>) {
+    let fix = |html: &str| bodylinks::rewrite_links_in(html, "crates", DEPTH, known);
     *intro_html = fix(intro_html);
     for c in crates.iter_mut() {
         c.overview_html = fix(&c.overview_html);
