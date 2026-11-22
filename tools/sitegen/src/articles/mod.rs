@@ -15,6 +15,7 @@
 
 mod render;
 
+use std::collections::HashSet;
 use std::path::Path;
 
 use serde::Deserialize;
@@ -174,10 +175,9 @@ pub fn load(pages_root: &Path) -> Vec<Article> {
 /// URL, so articles can link liberally into the wiki (mirrors `bodylinks` for
 /// pages). Article sources live at `pages/articles/<slug>.md`, so their link
 /// base directory is `articles/`.
-pub fn rewrite_body_links(articles: &mut [Article], pages: &[Page]) {
-    let known = bodylinks::known_hrefs(pages);
+pub fn rewrite_body_links(articles: &mut [Article], known: &HashSet<String>) {
     for a in articles.iter_mut() {
-        a.body_html = bodylinks::rewrite_links_in(&a.body_html, "articles", DEPTH, &known);
+        a.body_html = bodylinks::rewrite_links_in(&a.body_html, "articles", DEPTH, known);
     }
 }
 
